@@ -1,0 +1,58 @@
+.exeer-datepicker-wrapper {
+  display: block;
+  width: 100%;
+  font-family: "Zain", system-ui, sans-serif;
+}
+
+.exeer-datepicker-input {
+  cursor: pointer;
+}
+
+.exeer-datepicker-calendar {
+  font-family: "Zain", system-ui, sans-serif !important;
+  border: 1px solid var(--color-md-outline-variant, #e8ecf2);
+  border-radius: 1rem;
+  box-shadow: 0 4px 12px rgb(26 39 68 / 0.1);
+  overflow: hidden;
+}
+
+.exeer-datepicker-calendar .react-datepicker__header {
+  background: #f3f4f8;
+  border-bottom: 1px solid #e8ecf2;
+  font-family: inherit;
+}
+
+.exeer-datepicker-calendar .react-datepicker__current-month,
+.exeer-datepicker-calendar .react-datepicker-time__header,
+.exeer-datepicker-calendar .react-datepicker-year-header {
+  font-weight: 700;
+  color: #1a2744;
+}
+
+.exeer-datepicker-calendar .react-datepicker__day-name,
+.exeer-datepicker-calendar .react-datepicker__day,
+.exeer-datepicker-calendar .react-datepicker__time-name {
+  font-family: inherit;
+  color: #1a2744;
+  border-radius: 0.5rem;
+}
+
+.exeer-datepicker-calendar .react-datepicker__day:hover,
+.exeer-datepicker-calendar .react-datepicker__month-text:hover {
+  background: #eceef4;
+}
+
+.exeer-datepicker-calendar .react-datepicker__day--selected,
+.exeer-datepicker-calendar .react-datepicker__day--keyboard-selected,
+.exeer-datepicker-calendar .react-datepicker__month-text--selected {
+  background: #1a2744 !important;
+  color: #fff !important;
+}
+
+.exeer-datepicker-calendar .react-datepicker__triangle {
+  display: none;
+}
+
+.react-datepicker-popper {
+  z-index: 60 !important;
+}

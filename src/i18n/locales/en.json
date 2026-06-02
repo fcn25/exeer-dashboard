@@ -1,0 +1,65 @@
+{
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Exeer control center — customize your experience and account",
+    "tabs": {
+      "general": "General",
+      "appearance": "Appearance",
+      "support": "Support",
+      "subscription": "Subscription"
+    },
+    "general": {
+      "title": "General settings",
+      "description": "Language and basic display preferences.",
+      "languageLabel": "Interface language",
+      "languageHint": "Full translation will follow — for now this sets layout direction only.",
+      "industryLabel": "Industry sector",
+      "industryHint": "Used to tailor AI reports and insights to your sector."
+    },
+    "appearance": {
+      "title": "Appearance",
+      "description": "Choose light or dark mode with Exeer's premium navy palette.",
+      "themeLabel": "Theme",
+      "light": "Light",
+      "dark": "Dark",
+      "previewTitle": "Preview",
+      "previewBody": "Dark mode uses a deep navy base (#0f172a) — not pitch black."
+    },
+    "support": {
+      "title": "Technical support",
+      "description": "Reach the Exeer team for help or inquiries.",
+      "whatsapp": "WhatsApp support",
+      "email": "Email",
+      "terms": "Terms of Service",
+      "termsHint": "Read Exeer platform terms of use"
+    },
+    "subscription": {
+      "title": "Subscription",
+      "description": "Manage your current plan and upgrade features.",
+      "currentPlan": "Current plan",
+      "planName": "Plan name",
+      "expiry": "Expiry date",
+      "status": "Status",
+      "active": "Active",
+      "upgradeTitle": "Upgrade plan",
+      "upgradeDescription": "Compare tiers and pick what fits your organization. TapPayment integration coming soon.",
+      "upgradeCta": "Upgrade (coming soon)",
+      "tiers": {
+        "basic": "Basic",
+        "pro": "Pro",
+        "enterprise": "Enterprise"
+      },
+      "features": {
+        "employees": "Employee management",
+        "payroll": "Payroll engine",
+        "ai": "AI tools",
+        "support": "Priority support"
+      }
+    },
+    "termsModal": {
+      "title": "Terms of Service",
+      "close": "Close",
+      "body": "This is placeholder Terms of Service text. It will be replaced with the official legal copy for the Exeer platform. By using the platform, you agree to comply with applicable policies and regulations."
+    }
+  }
+}

@@ -1,0 +1,89 @@
+import { calculateGosiDeduction } from "./gosi.js";
+
+function roundMoney(value) {
+  return Math.round((Number(value) + Number.EPSILON) * 100) / 100;
+}
+
+export function formatPayrollMonthFromPicker(value) {
+  const [year, month] = String(value).split("-").map(Number);
+  if (!year || !month) return "";
+  return `${String(month).padStart(2, "0")}/${year}`;
+}
+
+export function formatPickerFromPayrollMonth(payrollMonth) {
+  const [month, year] = String(payrollMonth).split("/").map(Number);
+  if (!year || !month) return "";
+  return `${year}-${String(month).padStart(2, "0")}`;
+}
+
+export function buildPayrollDraftFromEmployee(employee, payrollMonth) {
+  const basic = Number(employee.basic_salary) || 0;
+  const housing = Number(employee.housing_allowance) || 0;
+  const otherAllowances = Number(employee.other_allowance) || 0;
+  const commissions = 0;
+  const additional = 0;
+  const penalties = 0;
+  const lateness = 0;
+
+  const { amount: gosi } = calculateGosiDeduction({
+    basicSalary: basic,
+    housingAllowance: housing,
+    employee,
+    payrollMonth,
+  });
+
+  const gross =
+    basic + housing + otherAllowances + commissions + additional;
+  const deductions = penalties + gosi + lateness;
+  const net = roundMoney(gross - deductions);
+
+  return {
+    employee_id: employee.id,
+    employee_name: employee.full_name,
+    payroll_month: payrollMonth,
+    basic_salary: basic,
+    housing_allowance: housing,
+    other_allowances: otherAllowances,
+    commissions,
+    additional,
+    penalties,
+    gosi_deduction: gosi,
+    lateness_deduction: lateness,
+    net_salary: net,
+    status: "Draft",
+  };
+}
+
+export function mapPayrollRecordRow(row) {
+  if (!row) return null;
+
+  return {
+    id: String(row.id),
+    employeeId: row.employee_id,
+    employeeName: String(
+      row.employee_name ?? row.employees?.full_name ?? "—",
+    ),
+    payrollMonth: row.payroll_month,
+    basic: Number(row.basic_salary) || 0,
+    housing: Number(row.housing_allowance) || 0,
+    allowances: Number(row.other_allowances) || 0,
+    commissions: Number(row.commissions) || 0,
+    additional: Number(row.additional) || 0,
+    penalties: Number(row.penalties) || 0,
+    gosi: Number(row.gosi_deduction ?? row.gosi) || 0,
+    lateness: Number(row.lateness_deduction ?? row.delays) || 0,
+    net: Number(row.net_salary ?? row.net) || 0,
+    status: row.status ?? "Draft",
+  };
+}
+
+export function computePayrollStats(rows) {
+  const employeeCount = rows.length;
+  const totalNet = rows.reduce((sum, row) => sum + row.net, 0);
+  const totalDeductions = rows.reduce(
+    (sum, row) => sum + row.penalties + row.gosi + row.lateness,
+    0,
+  );
+
+  return { employeeCount, totalNet, totalDeductions };
+}

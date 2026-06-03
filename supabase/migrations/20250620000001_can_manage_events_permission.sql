@@ -11,6 +11,11 @@ alter table public.role_permissions
   }'::jsonb;
 
 update public.role_permissions
+set permissions = permissions || '{"can_manage_events": false}'::jsonb
+where permissions is not null
+  and not (permissions ? 'can_manage_events');
+
+update public.role_permissions
 set permissions = permissions || '{"can_manage_events": true}'::jsonb
 where coalesce(permissions->>'can_create_events', 'false') = 'true'
   and coalesce(permissions->>'can_manage_events', 'false') = 'false';

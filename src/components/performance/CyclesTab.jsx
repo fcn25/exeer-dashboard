@@ -82,7 +82,7 @@ export default function CyclesTab() {
         </div>
 
         {error ? (
-          <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
+          <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
             {error}
           </p>
         ) : null}
@@ -150,7 +150,7 @@ export default function CyclesTab() {
                   <tr>
                     <td colSpan={7} className="px-4 py-12">
                       <div className="flex flex-col items-center gap-3 text-center">
-                        <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-exeer-surface text-exeer-primary">
+                        <span className="flex h-12 w-12 items-center justify-center rounded-md bg-exeer-surface text-exeer-primary">
                           <CalendarRange className="h-6 w-6 stroke-[1.75]" aria-hidden />
                         </span>
                         <p className="text-sm text-exeer-muted">لا توجد دورات تقييم بعد.</p>

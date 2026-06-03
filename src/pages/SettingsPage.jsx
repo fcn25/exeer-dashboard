@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   CreditCard,
   LifeBuoy,
@@ -26,17 +27,34 @@ function TabPanel({ tabId, activeTab, children }) {
 
 export default function SettingsPage() {
   const { t } = useTranslation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const showSubscription = isOwner();
   const visibleTabs = useMemo(
     () => TAB_DEFS.filter((tab) => !tab.adminOnly || showSubscription),
     [showSubscription],
   );
 
-  const [activeTab, setActiveTab] = useState("general");
+  const tabFromUrl = searchParams.get("tab");
+  const [activeTab, setActiveTab] = useState(tabFromUrl || "general");
 
   const resolvedTab = visibleTabs.some((tab) => tab.id === activeTab)
     ? activeTab
     : visibleTabs[0]?.id ?? "general";
+
+  useEffect(() => {
+    if (tabFromUrl && visibleTabs.some((tab) => tab.id === tabFromUrl)) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [tabFromUrl, visibleTabs]);
+
+  const selectTab = (tabId) => {
+    setActiveTab(tabId);
+    if (tabId === "general") {
+      setSearchParams({}, { replace: true });
+    } else {
+      setSearchParams({ tab: tabId }, { replace: true });
+    }
+  };
 
   return (
     <div className="md-page">
@@ -58,7 +76,7 @@ export default function SettingsPage() {
               <button
                 key={tab.id}
                 type="button"
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => selectTab(tab.id)}
                 className={`md-settings-tab whitespace-nowrap ${
                   isActive ? "md-settings-tab-active" : ""
                 }`}

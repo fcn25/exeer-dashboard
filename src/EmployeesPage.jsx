@@ -56,7 +56,7 @@ function StatusBadge({ status }) {
 
   return (
     <span
-      className={`inline-flex rounded-xl border px-2.5 py-1 text-xs font-medium ${tone}`}
+      className={`inline-flex rounded-md border px-2.5 py-1 text-xs font-medium ${tone}`}
     >
       {status}
     </span>
@@ -137,12 +137,12 @@ function AddEmployeeSlideOver({
       }
     >
       {error ? (
-        <p className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+        <p className="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
           {error}
         </p>
       ) : null}
       {successMessage ? (
-        <p className="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+        <p className="mb-4 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
           {successMessage}
         </p>
       ) : null}
@@ -297,7 +297,7 @@ function EmployeeDetailsSlideOver({
         </div>
 
         {!canEdit ? (
-          <span className="rounded-2xl border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-900">
+          <span className="rounded-md border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-900">
             قراءة فقط
           </span>
         ) : !isEditing ? (
@@ -310,14 +310,14 @@ function EmployeeDetailsSlideOver({
             تعديل
           </button>
         ) : (
-          <span className="rounded-2xl border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-800">
+          <span className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-800">
             وضع التعديل
           </span>
         )}
       </div>
 
       {achievementSuccess ? (
-        <p className="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
+        <p className="mb-4 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
           {achievementSuccess}
         </p>
       ) : null}
@@ -325,13 +325,13 @@ function EmployeeDetailsSlideOver({
       {isLoading ? (
         <p className="py-16 text-center text-sm text-exeer-muted">جاري التحميل...</p>
       ) : loadError ? (
-        <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+        <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
           {loadError}
         </p>
       ) : (
         <form id="employee-details-form" onSubmit={handleSubmit}>
           {saveError ? (
-            <p className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+            <p className="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
               {saveError}
             </p>
           ) : null}
@@ -496,7 +496,7 @@ export default function EmployeesPage() {
       </header>
 
       {successMessage ? (
-        <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-center text-sm font-medium text-emerald-800">
+        <p className="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-center text-sm font-medium text-emerald-800">
           {successMessage}
         </p>
       ) : null}
@@ -600,7 +600,7 @@ export default function EmployeesPage() {
                   >
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
-                        <span className="flex h-10 w-10 items-center justify-center rounded-2xl border border-exeer-border bg-white text-sm font-bold text-exeer-primary">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-md border border-exeer-border bg-white text-sm font-bold text-exeer-primary">
                           {getInitials(employee.full_name)}
                         </span>
                         <div>

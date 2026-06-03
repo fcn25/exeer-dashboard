@@ -35,7 +35,7 @@ function CycleProgressBar({ completed, total, percentage }) {
         aria-label="نسبة إنجاز دورة التقييم"
       >
         <div
-          className="h-full rounded-full bg-md-primary transition-all duration-500 dark:bg-[#2563eb]"
+          className="h-full rounded-full bg-md-primary transition-all duration-500 dark:bg-slate-700"
           style={{ width: `${Math.min(100, Math.max(0, percentage))}%` }}
         />
       </div>
@@ -116,7 +116,7 @@ export default function CycleDetailsDrawer({ cycleId, onClose, onCycleUpdated })
       <aside
         dir="rtl"
         lang="ar"
-        className="relative flex h-full w-full max-w-xl flex-col bg-md-surface shadow-2xl"
+        className="relative flex h-full w-full max-w-xl flex-col border-s border-gray-200 bg-white"
         role="dialog"
         aria-modal="true"
         aria-labelledby="cycle-details-title"
@@ -138,7 +138,7 @@ export default function CycleDetailsDrawer({ cycleId, onClose, onCycleUpdated })
               type="button"
               onClick={loadDetails}
               disabled={isLoading || isGenerating}
-              className="flex h-9 w-9 items-center justify-center rounded-2xl border border-exeer-border text-exeer-muted transition-colors hover:bg-exeer-hover"
+              className="flex h-9 w-9 items-center justify-center rounded-md border border-exeer-border text-exeer-muted transition-colors hover:bg-exeer-hover"
               aria-label="تحديث"
             >
               <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} aria-hidden />
@@ -146,7 +146,7 @@ export default function CycleDetailsDrawer({ cycleId, onClose, onCycleUpdated })
             <button
               type="button"
               onClick={onClose}
-              className="flex h-9 w-9 items-center justify-center rounded-2xl border border-exeer-border text-exeer-muted transition-colors hover:bg-exeer-hover"
+              className="flex h-9 w-9 items-center justify-center rounded-md border border-exeer-border text-exeer-muted transition-colors hover:bg-exeer-hover"
               aria-label="إغلاق"
             >
               <X className="h-5 w-5" aria-hidden />
@@ -160,13 +160,13 @@ export default function CycleDetailsDrawer({ cycleId, onClose, onCycleUpdated })
           ) : (
             <>
               <div className="grid grid-cols-2 gap-3 text-sm">
-                <div className="md-surface-muted rounded-2xl p-3">
+                <div className="md-surface-muted rounded-md p-3">
                   <p className="text-xs text-exeer-muted">تاريخ البداية</p>
                   <p className="mt-1 font-semibold text-exeer-primary">
                     {formatPortalDate(cycle?.start_date)}
                   </p>
                 </div>
-                <div className="md-surface-muted rounded-2xl p-3">
+                <div className="md-surface-muted rounded-md p-3">
                   <p className="text-xs text-exeer-muted">تاريخ النهاية</p>
                   <p className="mt-1 font-semibold text-exeer-primary">
                     {formatPortalDate(cycle?.end_date)}
@@ -212,7 +212,7 @@ export default function CycleDetailsDrawer({ cycleId, onClose, onCycleUpdated })
                     <p
                       id="ai-summary-disabled-hint"
                       role="tooltip"
-                      className="mt-2 rounded-xl border border-exeer-border bg-exeer-surface px-3 py-2 text-xs leading-relaxed text-exeer-muted"
+                      className="mt-2 rounded-md border border-exeer-border bg-exeer-surface px-3 py-2 text-xs leading-relaxed text-exeer-muted"
                     >
                       يتطلب هذا الإجراء إكمال {AI_SUMMARY_MIN_COMPLETION_PERCENT}% على الأقل
                       من التقييمات. النسبة الحالية: {progress.percentage}%.
@@ -222,7 +222,7 @@ export default function CycleDetailsDrawer({ cycleId, onClose, onCycleUpdated })
               </div>
 
               {error ? (
-                <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
+                <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
                   {error}
                 </p>
               ) : null}
@@ -233,7 +233,7 @@ export default function CycleDetailsDrawer({ cycleId, onClose, onCycleUpdated })
                   <div
                     dir="rtl"
                     lang="ar"
-                    className="rounded-2xl border border-exeer-border bg-gradient-to-br from-white to-exeer-surface/40 p-4 text-sm leading-relaxed text-exeer-primary dark:from-[#1e293b] dark:to-[#0f172a]"
+                    className="rounded-md border border-gray-200 bg-white p-4 text-sm leading-relaxed text-slate-900"
                   >
                     <ReactMarkdown>{aiSummary}</ReactMarkdown>
                   </div>

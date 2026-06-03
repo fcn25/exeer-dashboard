@@ -18,7 +18,7 @@ function AuthMessage({ type, children }) {
 
   return (
     <p
-      className={`rounded-xl border px-4 py-3 text-center text-sm ${toneClass}`}
+      className={`rounded-md border px-4 py-3 text-center text-sm ${toneClass}`}
       style={{ boxShadow: "none" }}
     >
       {children}
@@ -34,7 +34,7 @@ export default function AuthContainer() {
     <div
       dir="rtl"
       lang="ar"
-      className="flex min-h-screen flex-col items-center justify-center bg-md-surface-dim px-4 py-10 font-sans"
+      className="flex min-h-screen flex-col items-center justify-center bg-white px-4 py-10 font-sans"
     >
       <img
         src="/logo.png"
@@ -43,7 +43,7 @@ export default function AuthContainer() {
         style={{ boxShadow: "none", border: "none" }}
       />
 
-      <div className="md-surface w-full max-w-md p-8 md-elevated">
+      <div className="md-surface w-full max-w-md p-8">
         {authView === "login" ? (
           <LoginView
             successMessage={successMessage}
@@ -125,7 +125,7 @@ function LoginView({
 
   return (
     <>
-      <h1 className="mb-6 text-center text-xl font-bold text-[#1a2744]">
+      <h1 className="mb-6 text-center text-xl font-bold text-slate-900">
         مرحباً بك
       </h1>
 
@@ -172,7 +172,7 @@ function LoginView({
         <button
           type="button"
           onClick={onForgot}
-          className="self-start text-sm font-medium text-slate-500 transition-colors hover:text-[#1a2744]"
+          className="self-start text-sm font-medium text-slate-500 transition-colors hover:text-slate-900"
         >
           نسيت كلمة المرور؟
         </button>
@@ -180,7 +180,7 @@ function LoginView({
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full rounded-xl bg-[#1a2744] px-4 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+          className="w-full rounded-md bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
         >
           {isLoading ? "جاري تسجيل الدخول..." : "تسجيل الدخول"}
         </button>
@@ -191,7 +191,7 @@ function LoginView({
         <button
           type="button"
           onClick={onSignup}
-          className="font-semibold text-[#1a2744] hover:underline"
+          className="font-semibold text-slate-900 hover:underline"
         >
           سجل الآن
         </button>
@@ -253,7 +253,7 @@ function SignupView({ onLogin }) {
 
   return (
     <>
-      <h1 className="mb-6 text-center text-xl font-bold text-[#1a2744]">
+      <h1 className="mb-6 text-center text-xl font-bold text-slate-900">
         إنشاء حساب جديد
       </h1>
 
@@ -337,7 +337,7 @@ function SignupView({ onLogin }) {
             checked={agreedToTerms}
             onChange={(e) => setAgreedToTerms(e.target.checked)}
             disabled={isLoading}
-            className="mt-1 h-4 w-4 rounded border-slate-300 text-[#1a2744] focus:ring-0"
+            className="mt-1 h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-0"
           />
           <span>أوافق على الشروط والأحكام</span>
         </label>
@@ -345,7 +345,7 @@ function SignupView({ onLogin }) {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full rounded-xl bg-[#1a2744] px-4 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+          className="w-full rounded-md bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
         >
           {isLoading ? "جاري إنشاء الحساب..." : "إنشاء حساب"}
         </button>
@@ -356,7 +356,7 @@ function SignupView({ onLogin }) {
         <button
           type="button"
           onClick={onLogin}
-          className="font-semibold text-[#1a2744] hover:underline"
+          className="font-semibold text-slate-900 hover:underline"
         >
           تسجيل الدخول
         </button>
@@ -377,7 +377,7 @@ function ForgotPasswordView({ onBack }) {
 
   return (
     <>
-      <h1 className="mb-2 text-center text-xl font-bold text-[#1a2744]">
+      <h1 className="mb-2 text-center text-xl font-bold text-slate-900">
         نسيت كلمة المرور؟
       </h1>
       <p className="mb-6 text-center text-sm leading-relaxed text-slate-500">
@@ -411,7 +411,7 @@ function ForgotPasswordView({ onBack }) {
         <button
           type="submit"
           disabled={!email.trim()}
-          className="w-full rounded-xl bg-[#1a2744] px-4 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+          className="w-full rounded-md bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
         >
           إرسال الرمز
         </button>
@@ -421,7 +421,7 @@ function ForgotPasswordView({ onBack }) {
         <button
           type="button"
           onClick={onBack}
-          className="font-semibold text-[#1a2744] hover:underline"
+          className="font-semibold text-slate-900 hover:underline"
         >
           العودة لتسجيل الدخول
         </button>

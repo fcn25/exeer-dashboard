@@ -29,7 +29,7 @@ export default function SupportSettingsTab() {
             rel="noopener noreferrer"
             className="md-surface flex items-center gap-4 p-5 transition-colors hover:bg-exeer-hover"
           >
-            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
+            <span className="flex h-11 w-11 items-center justify-center rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
               <MessageCircle className="h-5 w-5 stroke-[1.75]" aria-hidden />
             </span>
             <span>
@@ -46,7 +46,7 @@ export default function SupportSettingsTab() {
             href={SUPPORT_EMAIL}
             className="md-surface flex items-center gap-4 p-5 transition-colors hover:bg-exeer-hover"
           >
-            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-md-primary-container text-exeer-primary dark:bg-[#1e3a5f] dark:text-[#e2e8f0]">
+            <span className="flex h-11 w-11 items-center justify-center rounded-md bg-md-primary-container text-exeer-primary dark:bg-[#1e3a5f] dark:text-[#e2e8f0]">
               <Mail className="h-5 w-5 stroke-[1.75]" aria-hidden />
             </span>
             <span>
@@ -65,7 +65,7 @@ export default function SupportSettingsTab() {
           onClick={() => setIsTermsOpen(true)}
           className="md-surface-muted flex w-full max-w-2xl items-center gap-4 p-5 text-start transition-colors hover:bg-exeer-hover"
         >
-          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-exeer-primary md-elevated dark:bg-[#334155] dark:text-[#f1f5f9]">
+          <span className="flex h-11 w-11 items-center justify-center rounded-md bg-white text-exeer-primary dark:bg-[#334155] dark:text-[#f1f5f9]">
             <FileText className="h-5 w-5 stroke-[1.75]" aria-hidden />
           </span>
           <span>

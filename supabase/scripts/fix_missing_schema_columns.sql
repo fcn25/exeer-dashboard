@@ -47,8 +47,20 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------------------
--- tasks: AI feature attribution (Smart Tasks rate limits, analytics)
+-- tasks: title, description, AI attribution
 -- ---------------------------------------------------------------------------
+alter table public.tasks
+  add column if not exists title text;
+
+alter table public.tasks
+  add column if not exists description text;
+
+update public.tasks
+set title = left(trim(description), 120)
+where title is null
+  and description is not null
+  and trim(description) <> '';
+
 alter table public.tasks
   add column if not exists ai_source text;
 

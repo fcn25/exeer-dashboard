@@ -59,10 +59,10 @@ export default function LogAchievementModal({
       aria-modal="true"
       aria-labelledby="log-achievement-title"
     >
-      <div className="md-surface w-full max-w-lg rounded-t-3xl p-6 sm:rounded-3xl sm:p-8 md-elevated">
+      <div className="md-surface w-full max-w-lg rounded-t-md p-6 sm:rounded-md sm:p-8">
         <div className="mb-6 flex items-start justify-between gap-4">
           <div className="flex items-start gap-3">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
               <Trophy className="h-5 w-5 stroke-[1.75]" aria-hidden />
             </span>
             <div className="space-y-1">
@@ -81,7 +81,7 @@ export default function LogAchievementModal({
             type="button"
             onClick={onClose}
             disabled={isSaving}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border border-exeer-border text-exeer-muted transition-colors hover:bg-exeer-hover"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-exeer-border text-exeer-muted transition-colors hover:bg-exeer-hover"
             aria-label="إغلاق"
           >
             <X className="h-5 w-5" aria-hidden />
@@ -140,7 +140,7 @@ export default function LogAchievementModal({
           />
 
           {error ? (
-            <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
+            <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
               {error}
             </p>
           ) : null}

@@ -5,7 +5,6 @@ import {
   Banknote,
   Calendar,
   CheckSquare,
-  CreditCard,
   Home,
   Lock,
   Settings,
@@ -29,14 +28,14 @@ function SidebarLink({ to, label, icon: Icon, end }) {
       to={to}
       end={end}
       className={({ isActive }) =>
-        `flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-colors ${
+        `relative flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
           isActive
-            ? "bg-md-primary text-white dark:bg-[#2563eb] dark:text-white"
-            : "text-exeer-muted hover:bg-exeer-hover hover:text-exeer-primary"
+            ? "bg-gray-100 text-slate-900 before:absolute before:inset-y-1 before:start-0 before:w-0.5 before:rounded-full before:bg-slate-900"
+            : "text-slate-500 hover:bg-gray-50 hover:text-slate-900"
         }`
       }
     >
-      <Icon className="h-5 w-5 shrink-0 stroke-[1.75]" aria-hidden />
+      <Icon className="h-[18px] w-[18px] shrink-0 stroke-[1.75]" aria-hidden />
       <span>{label}</span>
     </NavLink>
   );
@@ -72,11 +71,6 @@ export default function ManagerLayout() {
     }
 
     if (isOwner()) {
-      items.push({
-        to: "/dashboard/subscription",
-        label: "الاشتراك",
-        icon: CreditCard,
-      });
       items.push({
         to: "/dashboard/payroll",
         label: "مسير الرواتب",
@@ -120,31 +114,29 @@ export default function ManagerLayout() {
     <div
       dir={dir}
       lang={lang}
-      className="flex h-screen w-screen overflow-hidden bg-md-surface-dim font-sans text-exeer-primary"
+      className="flex h-screen w-screen overflow-hidden bg-white font-sans text-slate-900"
     >
-      <aside className="flex w-72 shrink-0 flex-col border-l border-exeer-border bg-md-surface px-4 py-6 md-elevated">
-        <div className="mb-8 px-2">
-          <p className="text-center text-2xl font-bold tracking-tight text-exeer-primary">
+      <aside className="flex w-64 shrink-0 flex-col border-e border-gray-200 bg-white px-3 py-5">
+        <div className="mb-6 px-2">
+          <p className="text-lg font-semibold tracking-tight text-slate-900">
             Exeer
           </p>
-          <p className="mt-1 text-center text-xs text-exeer-muted">
-            لوحة المدير
-          </p>
+          <p className="mt-0.5 text-xs text-slate-500">لوحة المدير</p>
         </div>
 
         {canEditEmployeeRecords() ? (
           <button
             type="button"
             onClick={() => navigate("/dashboard/employees?add=1")}
-            className="mb-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-exeer-primary px-4 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+            className="mb-5 flex w-full items-center justify-center gap-2 rounded-md border border-slate-900 bg-slate-900 px-3 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-800"
           >
-            <UserPlus className="h-5 w-5 stroke-[1.75]" aria-hidden />
+            <UserPlus className="h-4 w-4 stroke-[1.75]" aria-hidden />
             إضافة موظف جديد
           </button>
         ) : null}
 
         <nav
-          className="flex flex-1 flex-col gap-1.5"
+          className="flex flex-1 flex-col gap-0.5"
           aria-label="القائمة الرئيسية"
         >
           {navItems.map((item) => (
@@ -152,7 +144,7 @@ export default function ManagerLayout() {
           ))}
         </nav>
 
-        <div className="mt-6 border-t border-exeer-border pt-4">
+        <div className="mt-4 border-t border-gray-200 pt-4">
           <button
             type="button"
             onClick={handleLogout}
@@ -163,7 +155,7 @@ export default function ManagerLayout() {
         </div>
       </aside>
 
-      <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto px-6 py-8 md:px-10 md:py-10">
+      <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto bg-gray-50/50 px-6 py-8 md:px-8 md:py-8">
         <Outlet />
       </main>
     </div>

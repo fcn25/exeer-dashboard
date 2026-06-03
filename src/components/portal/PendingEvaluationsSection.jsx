@@ -13,7 +13,7 @@ function PendingEvaluationCard({ evaluation, onSelect }) {
     <button
       type="button"
       onClick={() => onSelect(evaluation)}
-      className="md-surface group flex w-full flex-col gap-4 rounded-2xl border border-amber-200/70 bg-gradient-to-br from-amber-50/50 to-white p-5 text-right shadow-[0_8px_24px_rgb(26_39_68_/_0.06)] transition-all hover:-translate-y-0.5 hover:border-amber-300 hover:shadow-[0_12px_32px_rgb(26_39_68_/_0.1)] dark:from-amber-950/20 dark:to-[#1e293b]"
+      className="group flex w-full flex-col gap-4 rounded-md border border-amber-200 bg-amber-50/30 p-5 text-right transition-colors hover:border-amber-300 hover:bg-amber-50/50"
     >
       <div className="flex items-start justify-between gap-3">
         <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800 dark:bg-amber-950/50 dark:text-amber-200">
@@ -82,7 +82,7 @@ export default function PendingEvaluationsSection({
   return (
     <>
       {error ? (
-        <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
+        <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
           {error}
         </p>
       ) : null}
@@ -102,7 +102,7 @@ export default function PendingEvaluationsSection({
           ))}
         </div>
       ) : (
-        <div className="md-surface-muted rounded-2xl px-4 py-10 text-center">
+        <div className="md-surface-muted rounded-md px-4 py-10 text-center">
           <p className="text-sm text-exeer-muted">لا توجد تقييمات معلّقة حالياً.</p>
         </div>
       )}

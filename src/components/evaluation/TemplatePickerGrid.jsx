@@ -13,7 +13,7 @@ export default function TemplatePickerGrid({
 }) {
   if (!templates.length) {
     return (
-      <p className="rounded-2xl border border-exeer-border bg-exeer-surface px-4 py-8 text-center text-sm text-exeer-muted">
+      <p className="rounded-md border border-exeer-border bg-exeer-surface px-4 py-8 text-center text-sm text-exeer-muted">
         {emptyMessage}
       </p>
     );
@@ -45,9 +45,9 @@ export default function TemplatePickerGrid({
             aria-selected={isSelected}
             disabled={disabled}
             onClick={() => onSelect(String(template.id))}
-            className={`flex flex-col gap-2 rounded-xl border p-3 text-right transition-colors ${
+            className={`flex flex-col gap-2 rounded-md border p-3 text-right transition-colors ${
               isSelected
-                ? "border-md-primary bg-md-primary-container/30 ring-1 ring-md-primary dark:bg-[#1e3a5f]/30 dark:ring-[#2563eb]"
+                ? "border-md-primary bg-md-primary-container/30 ring-1 ring-md-primary dark:bg-[#1e3a5f]/30 dark:ring-slate-600"
                 : "border-exeer-border bg-md-surface hover:border-md-primary/35 hover:bg-exeer-hover"
             } disabled:cursor-not-allowed disabled:opacity-60`}
           >
@@ -55,7 +55,7 @@ export default function TemplatePickerGrid({
               <span
                 className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
                   isSelected
-                    ? "bg-md-primary text-white dark:bg-[#2563eb]"
+                    ? "bg-md-primary text-white dark:bg-slate-700"
                     : "bg-exeer-surface text-exeer-primary"
                 }`}
               >

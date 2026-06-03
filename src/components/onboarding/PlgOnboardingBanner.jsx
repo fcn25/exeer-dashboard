@@ -12,17 +12,16 @@ export default function PlgOnboardingBanner({ employeeCount }) {
     <div
       role="region"
       aria-label="تفعيل المنشأة"
-      className="relative overflow-hidden rounded-3xl border border-md-primary/20 bg-md-primary-container p-5 shadow-sm dark:border-[#2563eb]/30 dark:bg-[#1e3a5f]/80 md:p-6"
+      className="relative rounded-md border border-gray-200 bg-white p-4 md:p-5"
     >
-      <div className="pointer-events-none absolute -start-6 -top-6 h-24 w-24 rounded-full bg-md-primary/10" />
-      <div className="relative flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="flex gap-4 pe-8">
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-md-primary text-white dark:bg-[#2563eb]">
-            <Sparkles className="h-6 w-6" aria-hidden />
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="flex gap-3 pe-8">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-gray-200 bg-gray-50 text-slate-900">
+            <Sparkles className="h-5 w-5" aria-hidden />
           </span>
-          <p className="text-sm leading-relaxed text-exeer-primary md:text-base">
+          <p className="text-sm leading-relaxed text-slate-700 md:text-base">
             استكشف القيمة الحقيقية للنظام! استخدم{" "}
-            <strong className="font-bold">المعالج الذكي للبيانات</strong> لإضافة فريقك
+            <strong className="font-semibold text-slate-900">المعالج الذكي للبيانات</strong> لإضافة فريقك
             بضغطة زر، وابدأ في استقبال تقارير الأداء والتحليلات المدعومة بالذكاء
             الاصطناعي.
           </p>
@@ -30,7 +29,7 @@ export default function PlgOnboardingBanner({ employeeCount }) {
         <button
           type="button"
           onClick={() => navigate("/dashboard/employees?bulkImport=1")}
-          className="md-btn-primary shrink-0 whitespace-nowrap shadow-md"
+          className="md-btn-primary shrink-0 whitespace-nowrap"
         >
           المعالج الذكي للبيانات
         </button>
@@ -38,10 +37,10 @@ export default function PlgOnboardingBanner({ employeeCount }) {
       <button
         type="button"
         onClick={() => setDismissed(true)}
-        className="absolute end-3 top-3 rounded-xl p-1.5 text-exeer-muted transition-colors hover:bg-white/60 hover:text-exeer-primary dark:hover:bg-black/20"
+        className="absolute end-2 top-2 rounded-md p-1.5 text-slate-400 transition-colors hover:bg-gray-100 hover:text-slate-900"
         aria-label="إخفاء التنبيه"
       >
-        <X className="h-5 w-5" aria-hidden />
+        <X className="h-4 w-4" aria-hidden />
       </button>
     </div>
   );

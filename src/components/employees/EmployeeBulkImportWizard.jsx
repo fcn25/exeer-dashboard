@@ -88,7 +88,7 @@ export default function EmployeeBulkImportWizard({ isOpen, onClose, onSuccess })
       }
     >
       <div className="space-y-6">
-        <div className="rounded-2xl border border-dashed border-md-primary/40 bg-md-primary-container/30 p-6 text-center dark:bg-[#1e3a5f]/30">
+        <div className="rounded-md border border-dashed border-md-primary/40 bg-md-primary-container/30 p-6 text-center dark:bg-[#1e3a5f]/30">
           <FileSpreadsheet
             className="mx-auto mb-3 h-10 w-10 text-md-primary"
             aria-hidden
@@ -99,7 +99,7 @@ export default function EmployeeBulkImportWizard({ isOpen, onClose, onSuccess })
           <p className="mt-1 text-xs text-exeer-muted">
             .xlsx · .xls · .csv — يتطلب عمود الاسم الكامل
           </p>
-          <label className="mt-4 inline-flex cursor-pointer items-center gap-2 rounded-2xl bg-md-primary px-4 py-2.5 text-sm font-semibold text-white dark:bg-[#2563eb]">
+          <label className="mt-4 inline-flex cursor-pointer items-center gap-2 rounded-md bg-md-primary px-4 py-2.5 text-sm font-semibold text-white dark:bg-slate-700">
             <Upload className="h-4 w-4" aria-hidden />
             اختيار ملف
             <input
@@ -140,7 +140,7 @@ export default function EmployeeBulkImportWizard({ isOpen, onClose, onSuccess })
         ) : null}
 
         {error ? (
-          <p className="flex items-start gap-2 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          <p className="flex items-start gap-2 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
             <X className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
             {error}
           </p>

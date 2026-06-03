@@ -58,12 +58,12 @@ function NotificationItem({ item, locale, onMarkRead }) {
     <button
       type="button"
       onClick={handleClick}
-      className={`flex w-full gap-3 rounded-2xl px-4 py-3 text-right transition-colors hover:bg-exeer-hover ${
+      className={`flex w-full gap-3 rounded-md px-4 py-3 text-right transition-colors hover:bg-exeer-hover ${
         item.is_read ? "opacity-80" : "bg-md-primary-container/20 dark:bg-[#1e3a5f]/20"
       }`}
     >
       <span
-        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${accent}`}
+        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-md ${accent}`}
       >
         <Icon className="h-5 w-5 stroke-[1.75]" aria-hidden />
       </span>
@@ -161,7 +161,7 @@ export default function NotificationsDrawer({ isOpen, onClose, userId, onUnreadC
       <aside
         dir={dir}
         lang={i18n.language?.startsWith("en") ? "en" : "ar"}
-        className="relative flex h-full w-full max-w-[480px] flex-col bg-md-surface shadow-2xl"
+        className="relative flex h-full w-full max-w-[480px] flex-col border-s border-gray-200 bg-white"
         role="dialog"
         aria-modal="true"
         aria-labelledby="notifications-drawer-title"
@@ -190,7 +190,7 @@ export default function NotificationsDrawer({ isOpen, onClose, userId, onUnreadC
             <button
               type="button"
               onClick={onClose}
-              className="flex h-9 w-9 items-center justify-center rounded-2xl border border-exeer-border text-exeer-muted transition-colors hover:bg-exeer-hover"
+              className="flex h-9 w-9 items-center justify-center rounded-md border border-exeer-border text-exeer-muted transition-colors hover:bg-exeer-hover"
               aria-label="إغلاق"
             >
               <X className="h-5 w-5" aria-hidden />
@@ -204,7 +204,7 @@ export default function NotificationsDrawer({ isOpen, onClose, userId, onUnreadC
               جاري التحميل...
             </div>
           ) : error ? (
-            <p className="mx-2 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
+            <p className="mx-2 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
               {error}
             </p>
           ) : notifications.length ? (
@@ -221,7 +221,7 @@ export default function NotificationsDrawer({ isOpen, onClose, userId, onUnreadC
             </ul>
           ) : (
             <div className="flex flex-col items-center gap-3 px-6 py-16 text-center">
-              <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-exeer-surface text-exeer-muted">
+              <span className="flex h-14 w-14 items-center justify-center rounded-md bg-exeer-surface text-exeer-muted">
                 <Bell className="h-6 w-6 stroke-[1.75]" aria-hidden />
               </span>
               <p className="text-sm font-medium text-exeer-primary">لا توجد إشعارات</p>

@@ -137,7 +137,7 @@ function MobileNavbar({ user, menuOpen, onToggleMenu, onCloseMenu }) {
 
           {menuOpen ? (
             <div
-              className="absolute top-12 left-0 z-50 min-w-[180px] overflow-hidden rounded-xl border border-exeer-border bg-white text-exeer-primary"
+              className="absolute top-12 left-0 z-50 min-w-[180px] overflow-hidden rounded-md border border-exeer-border bg-white text-exeer-primary"
               style={{ boxShadow: "none" }}
             >
               {MENU_ITEMS.map((item) => (
@@ -172,7 +172,7 @@ function PendingRequestCard({ request, onUpdateStatus, isUpdating }) {
 
   return (
     <article
-      className="rounded-xl border border-exeer-border bg-[#F8FAFC] p-4"
+      className="rounded-md border border-exeer-border bg-[#F8FAFC] p-4"
       style={{ boxShadow: "none" }}
     >
       <button
@@ -285,15 +285,15 @@ export default function MobileDashboard() {
           </h2>
 
           {isLoadingRequests ? (
-            <p className="rounded-xl border border-exeer-border bg-[#F8FAFC] p-4 text-center text-sm text-slate-500">
+            <p className="rounded-md border border-exeer-border bg-[#F8FAFC] p-4 text-center text-sm text-slate-500">
               جاري تحميل الطلبات...
             </p>
           ) : requestsError ? (
-            <p className="rounded-xl border border-exeer-border bg-[#F8FAFC] p-4 text-center text-sm text-slate-500">
+            <p className="rounded-md border border-exeer-border bg-[#F8FAFC] p-4 text-center text-sm text-slate-500">
               {requestsError}
             </p>
           ) : requests.length === 0 ? (
-            <p className="rounded-xl border border-exeer-border bg-[#F8FAFC] p-4 text-center text-sm text-slate-500">
+            <p className="rounded-md border border-exeer-border bg-[#F8FAFC] p-4 text-center text-sm text-slate-500">
               لا توجد طلبات معلقة
             </p>
           ) : (
@@ -326,7 +326,7 @@ export default function MobileDashboard() {
                       ? () => setIsSmartGoalsOpen(true)
                       : undefined
                 }
-                className="flex flex-col items-center justify-center gap-2 rounded-xl border border-exeer-border bg-white px-2 py-4 transition-colors hover:bg-[#F8FAFC]"
+                className="flex flex-col items-center justify-center gap-2 rounded-md border border-exeer-border bg-white px-2 py-4 transition-colors hover:bg-[#F8FAFC]"
               >
                 <service.icon
                   className="h-6 w-6 stroke-[1.75] text-[#0F172A]"
@@ -344,7 +344,7 @@ export default function MobileDashboard() {
           <h2 className="mb-3 text-base font-bold text-[#0F172A]">
             خدمات سريعة
           </h2>
-          <div className="overflow-hidden rounded-xl border border-exeer-border bg-[#F8FAFC]">
+          <div className="overflow-hidden rounded-md border border-exeer-border bg-[#F8FAFC]">
             {QUICK_SERVICES.map((service, index) => (
               <button
                 key={service.id}

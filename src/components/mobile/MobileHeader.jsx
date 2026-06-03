@@ -16,7 +16,7 @@ function HeaderIconButton({ label, onClick, children, badge }) {
     >
       {children}
       {badge > 0 ? (
-        <span className="absolute -top-0.5 end-0 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-md-primary px-1 text-[10px] font-bold leading-none text-white dark:bg-[#2563eb]">
+        <span className="absolute -top-0.5 end-0 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-md-primary px-1 text-[10px] font-bold leading-none text-white dark:bg-slate-700">
           {badge > 9 ? "9+" : badge}
         </span>
       ) : null}

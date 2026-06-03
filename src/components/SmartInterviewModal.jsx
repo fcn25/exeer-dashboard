@@ -55,7 +55,7 @@ function InterviewResultContent({ content }) {
     <div
       dir="rtl"
       lang="ar"
-      className="max-h-72 overflow-y-auto rounded-2xl border border-exeer-border bg-white p-4 text-right text-sm text-slate-800 dark:bg-[#1e293b] dark:text-slate-100"
+      className="max-h-72 overflow-y-auto rounded-md border border-exeer-border bg-white p-4 text-right text-sm text-slate-800 dark:bg-[#1e293b] dark:text-slate-100"
     >
       <ReactMarkdown>{markdown}</ReactMarkdown>
     </div>
@@ -64,7 +64,7 @@ function InterviewResultContent({ content }) {
 
 function GeneratingState() {
   return (
-    <div className="flex flex-col items-center gap-3 rounded-2xl border border-exeer-border bg-exeer-surface px-4 py-8">
+    <div className="flex flex-col items-center gap-3 rounded-md border border-exeer-border bg-exeer-surface px-4 py-8">
       <Loader2
         className="h-8 w-8 animate-spin text-exeer-primary"
         aria-hidden
@@ -196,7 +196,7 @@ export default function SmartInterviewModal({ isOpen, onClose }) {
       role="dialog"
       aria-modal="true"
     >
-      <div className="md-surface relative flex max-h-[92vh] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl sm:max-h-[90vh] sm:rounded-3xl md:max-w-lg md:p-8 md-elevated">
+      <div className="md-surface relative flex max-h-[92vh] w-full max-w-lg flex-col overflow-hidden rounded-t-md sm:max-h-[90vh] sm:rounded-md md:max-w-lg md:p-8">
         <div className="relative shrink-0 px-6 pt-6 md:px-0 md:pt-0">
           <button
             type="button"
@@ -214,7 +214,7 @@ export default function SmartInterviewModal({ isOpen, onClose }) {
           <button
             type="button"
             onClick={handleClose}
-            className="absolute top-6 right-6 flex h-9 w-9 items-center justify-center rounded-2xl border border-exeer-border bg-white text-exeer-muted hover:bg-exeer-hover dark:bg-[#1e293b] md:top-0 md:right-0"
+            className="absolute top-6 right-6 flex h-9 w-9 items-center justify-center rounded-md border border-exeer-border bg-white text-exeer-muted hover:bg-exeer-hover dark:bg-[#1e293b] md:top-0 md:right-0"
             aria-label="إغلاق"
           >
             <X className="h-5 w-5" aria-hidden />
@@ -265,7 +265,7 @@ export default function SmartInterviewModal({ isOpen, onClose }) {
                   <p className="text-sm text-exeer-muted">جاري التحميل...</p>
                 </div>
               ) : archiveError ? (
-                <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-center text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
+                <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-center text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
                   {archiveError}
                 </p>
               ) : archiveJobs.length === 0 ? (
@@ -282,7 +282,7 @@ export default function SmartInterviewModal({ isOpen, onClose }) {
                           setSelectedArchiveJob(job);
                           setViewMode("archive-detail");
                         }}
-                        className="w-full rounded-2xl border border-exeer-border bg-white px-4 py-3 text-start transition-colors hover:bg-exeer-hover dark:bg-[#1e293b]"
+                        className="w-full rounded-md border border-exeer-border bg-white px-4 py-3 text-start transition-colors hover:bg-exeer-hover dark:bg-[#1e293b]"
                       >
                         <span className="block text-sm font-semibold text-exeer-primary">
                           {job.title}
@@ -337,7 +337,7 @@ export default function SmartInterviewModal({ isOpen, onClose }) {
               </button>
               {isLoading ? <GeneratingState /> : null}
               {generateError ? (
-                <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-center text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
+                <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-center text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
                   {generateError}
                 </p>
               ) : null}

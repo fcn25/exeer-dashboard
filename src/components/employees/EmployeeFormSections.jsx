@@ -64,7 +64,7 @@ export default function EmployeeFormSections({
     <div className="space-y-5">
       {showAvatar ? (
         <div className="flex justify-center pb-2">
-          <span className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl border border-exeer-border bg-white text-xl font-bold text-exeer-primary">
+          <span className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-md border border-exeer-border bg-white text-xl font-bold text-exeer-primary">
             {form.image ? (
               <img src={form.image} alt="" className="h-full w-full object-cover" />
             ) : (

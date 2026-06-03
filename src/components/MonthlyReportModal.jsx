@@ -45,7 +45,7 @@ function ReportResultContent({ content }) {
     <div
       dir="rtl"
       lang="ar"
-      className="max-h-[28rem] overflow-y-auto rounded-2xl border border-exeer-border bg-white p-4 text-right text-sm text-slate-800 dark:bg-[#1e293b] dark:text-slate-100 sm:max-h-[32rem] sm:p-5"
+      className="max-h-[28rem] overflow-y-auto rounded-md border border-exeer-border bg-white p-4 text-right text-sm text-slate-800 dark:bg-[#1e293b] dark:text-slate-100 sm:max-h-[32rem] sm:p-5"
     >
       <ReactMarkdown>{markdown}</ReactMarkdown>
     </div>
@@ -54,7 +54,7 @@ function ReportResultContent({ content }) {
 
 function GeneratingState() {
   return (
-    <div className="flex flex-col items-center gap-3 rounded-2xl border border-exeer-border bg-exeer-surface px-4 py-10">
+    <div className="flex flex-col items-center gap-3 rounded-md border border-exeer-border bg-exeer-surface px-4 py-10">
       <Loader2
         className="h-8 w-8 animate-spin text-exeer-primary"
         aria-hidden
@@ -167,7 +167,7 @@ export default function MonthlyReportModal({ isOpen, onClose }) {
           role="dialog"
           aria-modal="true"
         >
-          <div className="md-surface relative flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-t-3xl sm:max-h-[90vh] sm:rounded-3xl md-elevated">
+          <div className="md-surface relative flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-t-md sm:max-h-[90vh] sm:rounded-md">
             <div className="relative shrink-0 border-b border-exeer-border px-6 pt-6 pb-5 sm:px-8">
               <button
                 type="button"
@@ -185,7 +185,7 @@ export default function MonthlyReportModal({ isOpen, onClose }) {
               <button
                 type="button"
                 onClick={handleClose}
-                className="absolute top-6 right-6 flex h-9 w-9 items-center justify-center rounded-2xl border border-exeer-border bg-white text-exeer-muted hover:bg-exeer-hover dark:bg-[#1e293b] sm:right-8"
+                className="absolute top-6 right-6 flex h-9 w-9 items-center justify-center rounded-md border border-exeer-border bg-white text-exeer-muted hover:bg-exeer-hover dark:bg-[#1e293b] sm:right-8"
                 aria-label="إغلاق"
               >
                 <X className="h-5 w-5" aria-hidden />
@@ -234,7 +234,7 @@ export default function MonthlyReportModal({ isOpen, onClose }) {
                       <p className="text-sm text-exeer-muted">جاري التحميل...</p>
                     </div>
                   ) : archiveError ? (
-                    <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-center text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
+                    <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-center text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
                       {archiveError}
                     </p>
                   ) : archiveReports.length === 0 ? (
@@ -251,7 +251,7 @@ export default function MonthlyReportModal({ isOpen, onClose }) {
                               setSelectedReport(report);
                               setViewMode("archive-detail");
                             }}
-                            className="w-full rounded-2xl border border-exeer-border bg-white px-4 py-3 text-start transition-colors hover:bg-exeer-hover dark:bg-[#1e293b]"
+                            className="w-full rounded-md border border-exeer-border bg-white px-4 py-3 text-start transition-colors hover:bg-exeer-hover dark:bg-[#1e293b]"
                           >
                             <span className="block text-sm font-semibold text-exeer-primary">
                               تقرير شهري — {report.createdAtLabel}
@@ -295,7 +295,7 @@ export default function MonthlyReportModal({ isOpen, onClose }) {
                   {isLoading ? <GeneratingState /> : null}
 
                   {generateError ? (
-                    <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-center text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
+                    <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-center text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
                       {generateError}
                     </p>
                   ) : null}

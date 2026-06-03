@@ -72,7 +72,7 @@ function ExportConfirmModal({
       role="dialog"
       aria-modal="true"
     >
-      <div className="md-surface w-full max-w-md p-6 md-elevated">
+      <div className="md-surface w-full max-w-md p-6">
         <h2 className="mb-3 text-lg font-bold text-exeer-primary">
           تأكيد التصدير
         </h2>
@@ -210,26 +210,26 @@ export default function PayrollPage() {
       </header>
 
       {isLocked ? (
-        <div className="flex items-center gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        <div className="flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
           <Lock className="h-4 w-4 shrink-0" aria-hidden />
           مسير شهر {payrollMonthLabel} مُصدَّر ومقفل — لا يمكن إعادة الإنشاء
         </div>
       ) : null}
 
       {successMessage ? (
-        <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-center text-sm font-medium text-emerald-800">
+        <p className="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-center text-sm font-medium text-emerald-800">
           {successMessage}
         </p>
       ) : null}
 
       {schemaWarning ? (
-        <p className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        <p className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
           {schemaWarning}
         </p>
       ) : null}
 
       {error ? (
-        <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+        <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
           {error}
         </p>
       ) : null}

@@ -11,7 +11,7 @@ import EmployeesPage from "./EmployeesPage.jsx";
 import EventsPage from "./EventsPage.jsx";
 import PerformancePage from "./pages/PerformancePage.jsx";
 import PayrollPage from "./PayrollPage.jsx";
-import SubscriptionPage from "./pages/SubscriptionPage.jsx";
+import MobileSubscriptionPage from "./pages/MobileSubscriptionPage.jsx";
 import { ProtectedRoute } from "./components/ProtectedRoute.jsx";
 import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
 
@@ -84,9 +84,7 @@ function DashboardRoutes() {
           <Route
             path="subscription"
             element={
-              <ProtectedRoute allowDashboard requiredRole="owner">
-                <SubscriptionPage />
-              </ProtectedRoute>
+              <Navigate to="/dashboard/settings?tab=subscription" replace />
             }
           />
           <Route
@@ -153,6 +151,16 @@ function AppRoutes() {
         element={
           <ProtectedRoute allowPortal>
             <EmployeePortalPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/mobile/subscription"
+        element={
+          <ProtectedRoute allowPortal>
+            <ProtectedRoute requiredRole="owner">
+              <MobileSubscriptionPage />
+            </ProtectedRoute>
           </ProtectedRoute>
         }
       />

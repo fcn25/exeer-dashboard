@@ -230,11 +230,11 @@ function CreateTaskModal({ isOpen, onClose, onTaskCreated }) {
       aria-modal="true"
       aria-labelledby="create-task-title"
     >
-      <div className="md-surface relative w-full max-w-lg p-6 md:p-8 md-elevated">
+      <div className="md-surface relative w-full max-w-lg p-6 md:p-8">
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 start-4 flex h-9 w-9 items-center justify-center rounded-2xl border border-exeer-border bg-white text-exeer-muted hover:bg-exeer-hover"
+          className="absolute top-4 start-4 flex h-9 w-9 items-center justify-center rounded-md border border-exeer-border bg-white text-exeer-muted hover:bg-exeer-hover"
           aria-label="إغلاق"
         >
           <X className="h-5 w-5" aria-hidden />
@@ -315,7 +315,7 @@ function CreateTaskModal({ isOpen, onClose, onTaskCreated }) {
           />
 
           {submitError ? (
-            <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-center text-sm text-red-800">
+            <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-center text-sm text-red-800">
               {submitError}
             </p>
           ) : null}
@@ -410,7 +410,7 @@ export default function TasksPage() {
       </header>
 
       {error ? (
-        <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+        <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
           {error}
         </p>
       ) : null}
@@ -436,7 +436,7 @@ export default function TasksPage() {
                   <h2 className="text-sm font-bold text-exeer-primary">
                     {column.label}
                   </h2>
-                  <span className="rounded-xl bg-white px-2.5 py-0.5 text-xs font-medium text-exeer-muted">
+                  <span className="rounded-md bg-white px-2.5 py-0.5 text-xs font-medium text-exeer-muted">
                     {columnTasks.length}
                   </span>
                 </header>

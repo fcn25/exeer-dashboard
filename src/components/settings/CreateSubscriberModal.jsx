@@ -60,7 +60,7 @@ export default function CreateSubscriberModal({ isOpen, onClose }) {
             onClick={onClose}
           />
 
-          <div className="relative max-h-[92vh] w-full max-w-xl overflow-hidden rounded-t-3xl bg-md-surface sm:rounded-3xl md-elevated">
+          <div className="relative max-h-[92vh] w-full max-w-xl overflow-hidden rounded-t-md bg-md-surface sm:rounded-md">
             <div className="flex items-start justify-between gap-4 border-b border-exeer-border px-6 py-5">
               <div className="space-y-1">
                 <h2
@@ -77,7 +77,7 @@ export default function CreateSubscriberModal({ isOpen, onClose }) {
                 type="button"
                 onClick={onClose}
                 disabled={isSaving}
-                className="flex h-9 w-9 items-center justify-center rounded-2xl border border-exeer-border text-exeer-muted transition-colors hover:bg-exeer-hover"
+                className="flex h-9 w-9 items-center justify-center rounded-md border border-exeer-border text-exeer-muted transition-colors hover:bg-exeer-hover"
                 aria-label="إغلاق"
               >
                 <X className="h-5 w-5" aria-hidden />
@@ -160,13 +160,13 @@ export default function CreateSubscriberModal({ isOpen, onClose }) {
               </div>
 
               {successMessage ? (
-                <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200">
+                <p className="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200">
                   {successMessage}
                 </p>
               ) : null}
 
               {error ? (
-                <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
+                <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
                   {error}
                 </p>
               ) : null}

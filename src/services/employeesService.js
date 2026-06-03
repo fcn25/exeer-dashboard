@@ -104,6 +104,51 @@ export async function createEmployee(form) {
   };
 }
 
+export async function bulkCreateEmployees(rows, { sendInvites = false } = {}) {
+  const companyId = getCompanyId();
+  if (!Array.isArray(rows) || rows.length === 0) {
+    throw new Error("لا توجد سجلات للاستيراد.");
+  }
+
+  const payload = rows.map((row) => ({
+    company_id: companyId,
+    ...employeeFormToRow(row),
+  }));
+
+  const { data, error } = await supabase
+    .from("employees")
+    .insert(payload)
+    .select("id, full_name, email");
+
+  if (error) throw new Error(mapDbError(error));
+
+  let invitesSent = 0;
+  if (sendInvites) {
+    for (const employee of data ?? []) {
+      const email = String(employee.email ?? "").trim();
+      if (!email) continue;
+      try {
+        await inviteEmployeeByEmail({
+          email,
+          fullName: employee.full_name,
+          role: "Employee",
+          companyId,
+          employeeId: employee.id,
+        });
+        invitesSent += 1;
+      } catch {
+        // Keep imported rows; invites can be retried individually
+      }
+    }
+  }
+
+  return {
+    imported: data?.length ?? 0,
+    invitesSent,
+    rows: data ?? [],
+  };
+}
+
 export async function updateEmployee(employeeId, form) {
   const companyId = getCompanyId();
   const { data, error } = await supabase

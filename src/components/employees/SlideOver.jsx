@@ -56,19 +56,16 @@ export default function SlideOver({
   );
 }
 
-export function BulkImportPlaceholder() {
+export function BulkImportButton({ onClick, disabled = false }) {
   return (
     <button
       type="button"
-      disabled
-      className="md-btn-tonal flex w-full items-center justify-center gap-2 opacity-70"
-      title="قريباً"
+      onClick={onClick}
+      disabled={disabled}
+      className="md-btn-tonal flex w-full items-center justify-center gap-2"
     >
       <Upload className="h-4 w-4" aria-hidden />
-      استيراد جماعي (CSV)
-      <span className="rounded-lg bg-exeer-surface px-2 py-0.5 text-[10px] font-medium text-exeer-muted">
-        قريباً
-      </span>
+      المعالج الذكي للبيانات
     </button>
   );
 }

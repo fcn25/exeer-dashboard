@@ -110,42 +110,67 @@ export async function bulkCreateEmployees(rows, { sendInvites = false } = {}) {
     throw new Error("لا توجد سجلات للاستيراد.");
   }
 
-  const payload = rows.map((row) => ({
-    company_id: companyId,
-    ...employeeFormToRow(row),
-  }));
-
-  const { data, error } = await supabase
-    .from("employees")
-    .insert(payload)
-    .select("id, full_name, email");
-
-  if (error) throw new Error(mapDbError(error));
-
+  const created = [];
+  const failed = [];
   let invitesSent = 0;
-  if (sendInvites) {
-    for (const employee of data ?? []) {
-      const email = String(employee.email ?? "").trim();
-      if (!email) continue;
-      try {
-        await inviteEmployeeByEmail({
-          email,
-          fullName: employee.full_name,
-          role: "Employee",
-          companyId,
-          employeeId: employee.id,
-        });
-        invitesSent += 1;
-      } catch {
-        // Keep imported rows; invites can be retried individually
+
+  for (const row of rows) {
+    const email = String(row.email ?? "").trim();
+    try {
+      const { data, error } = await supabase
+        .from("employees")
+        .insert({
+          company_id: companyId,
+          ...employeeFormToRow(row),
+        })
+        .select("id, full_name, email")
+        .single();
+
+      if (error) throw error;
+
+      created.push(data);
+
+      if (sendInvites && email) {
+        try {
+          await inviteEmployeeByEmail({
+            email,
+            fullName: row.full_name,
+            role: row.role || "Employee",
+            companyId,
+            employeeId: data.id,
+          });
+          invitesSent += 1;
+        } catch {
+          // Row saved; invite can be retried later
+        }
       }
+    } catch (error) {
+      failed.push({
+        full_name: row.full_name,
+        email: email || null,
+        message: mapDbError(error),
+      });
     }
   }
 
+  if (created.length === 0) {
+    const hint =
+      failed.some((item) =>
+        /email|duplicate|unique|بريد/i.test(item.message ?? ""),
+      ) || failed.some((item) => item.email);
+    throw new Error(
+      hint
+        ? "خطأ في بعض السجلات، يرجى التأكد من صحة البريد الإلكتروني."
+        : failed[0]?.message || "تعذّر استيراد الموظفين.",
+    );
+  }
+
   return {
-    imported: data?.length ?? 0,
+    imported: created.length,
+    failed,
     invitesSent,
-    rows: data ?? [],
+    rows: created,
+    partial: failed.length > 0,
   };
 }
 

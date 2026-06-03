@@ -1,4 +1,4 @@
-import { Upload, X } from "lucide-react";
+import { X } from "lucide-react";
 
 export default function SlideOver({
   isOpen,
@@ -51,19 +51,5 @@ export default function SlideOver({
         ) : null}
       </aside>
     </div>
-  );
-}
-
-export function BulkImportButton({ onClick, disabled = false }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className="md-btn-tonal flex w-full items-center justify-center gap-2"
-    >
-      <Upload className="h-4 w-4" aria-hidden />
-      المعالج الذكي للبيانات
-    </button>
   );
 }

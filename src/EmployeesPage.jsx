@@ -8,10 +8,9 @@ import {
   getInitials,
   mapRowToEmployeeForm,
 } from "./components/employees/employeeFormShared.js";
-import SlideOver, { BulkImportButton } from "./components/employees/SlideOver.jsx";
-import EmployeeBulkImportWizard from "./components/employees/EmployeeBulkImportWizard.jsx";
+import SlideOver from "./components/employees/SlideOver.jsx";
+import AddEmployeeModal, { TAB_BULK } from "./components/employees/AddEmployeeModal.jsx";
 import {
-  createEmployee,
   getEmployeeById,
   listEmployees,
   updateEmployee,
@@ -60,102 +59,6 @@ function StatusBadge({ status }) {
     >
       {status}
     </span>
-  );
-}
-
-function AddEmployeeSlideOver({
-  isOpen,
-  onClose,
-  onCreated,
-  onOpenBulkImport,
-  departmentOptions,
-  jobTitleOptions,
-}) {
-  const [form, setForm] = useState({ ...EMPTY_EMPLOYEE_FORM });
-  const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
-
-  useEffect(() => {
-    if (isOpen) {
-      setForm({ ...EMPTY_EMPLOYEE_FORM });
-      setError("");
-      setSuccessMessage("");
-      setIsSaving(false);
-    }
-  }, [isOpen]);
-
-  const handleSave = async (event) => {
-    event.preventDefault();
-    if (!form.full_name.trim()) {
-      setError("الاسم الكامل مطلوب.");
-      return;
-    }
-    if (!form.email?.trim()) {
-      setError("البريد الإلكتروني مطلوب لإرسال دعوة الدخول للموظف.");
-      return;
-    }
-
-    setIsSaving(true);
-    setError("");
-    setSuccessMessage("");
-
-    try {
-      const created = await createEmployee(form);
-      await onCreated();
-      if (created.invitationSent) {
-        setSuccessMessage(
-          `تم حفظ الموظف وإرسال دعوة الدخول إلى ${form.email.trim()}.`,
-        );
-        setTimeout(() => onClose(), 1400);
-        return;
-      }
-      onClose();
-    } catch (err) {
-      setError(err.message || "تعذّر إضافة الموظف.");
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  return (
-    <SlideOver
-      isOpen={isOpen}
-      onClose={onClose}
-      title="إضافة موظف جديد"
-      subtitle="أدخل بيانات الموظف في الأقسام التالية"
-      topAction={<BulkImportButton onClick={onOpenBulkImport} />}
-      footer={
-        <button
-          type="submit"
-          form="add-employee-form"
-          disabled={isSaving}
-          className="md-btn-primary w-full"
-        >
-          {isSaving ? "جاري الحفظ..." : "حفظ الموظف"}
-        </button>
-      }
-    >
-      {error ? (
-        <p className="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-          {error}
-        </p>
-      ) : null}
-      {successMessage ? (
-        <p className="mb-4 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
-          {successMessage}
-        </p>
-      ) : null}
-
-      <form id="add-employee-form" onSubmit={handleSave}>
-        <EmployeeFormSections
-          form={form}
-          onChange={setForm}
-          departmentOptions={departmentOptions}
-          jobTitleOptions={jobTitleOptions}
-        />
-      </form>
-    </SlideOver>
   );
 }
 
@@ -368,7 +271,7 @@ export default function EmployeesPage() {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isAddOpen, setIsAddOpen] = useState(false);
-  const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
+  const [addModalTab, setAddModalTab] = useState("single");
   const [isListLoading, setIsListLoading] = useState(true);
   const [listError, setListError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
@@ -426,11 +329,13 @@ export default function EmployeesPage() {
 
   useEffect(() => {
     if (searchParams.get("add") === "1") {
+      setAddModalTab("single");
       setIsAddOpen(true);
       setSearchParams({}, { replace: true });
     }
     if (searchParams.get("bulkImport") === "1") {
-      setIsBulkImportOpen(true);
+      setAddModalTab(TAB_BULK);
+      setIsAddOpen(true);
       setSearchParams({}, { replace: true });
     }
   }, [searchParams, setSearchParams]);
@@ -643,30 +548,13 @@ export default function EmployeesPage() {
         </div>
       </div>
 
-      <AddEmployeeSlideOver
+      <AddEmployeeModal
         isOpen={isAddOpen}
+        initialTab={addModalTab}
         onClose={() => setIsAddOpen(false)}
-        onOpenBulkImport={() => {
-          setIsAddOpen(false);
-          setIsBulkImportOpen(true);
-        }}
         departmentOptions={departmentOptions}
         jobTitleOptions={jobTitleOptions}
-        onCreated={() => handleMutationSuccess("تم إضافة الموظف بنجاح")}
-      />
-
-      <EmployeeBulkImportWizard
-        isOpen={isBulkImportOpen}
-        onClose={() => setIsBulkImportOpen(false)}
-        onSuccess={(result) =>
-          handleMutationSuccess(
-            `تم استيراد ${result.imported} موظف بنجاح${
-              result.invitesSent
-                ? ` · أُرسلت ${result.invitesSent} دعوة`
-                : ""
-            }`,
-          )
-        }
+        onCreated={loadEmployees}
       />
 
       {isDetailsOpen && selectedEmployeeId ? (

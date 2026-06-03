@@ -68,6 +68,11 @@ export function getHomePathForRole(role) {
   return isDashboardRole(role) ? "/dashboard" : "/employee-portal";
 }
 
+export function getAuthenticatedHomePath(role, isMobile = false) {
+  if (isMobile) return "/mobile";
+  return getHomePathForRole(role);
+}
+
 export function normalizePermissions(value) {
   const source = value && typeof value === "object" ? value : {};
   return {

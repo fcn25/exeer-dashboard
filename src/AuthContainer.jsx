@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getHomePathForRole } from "./constants/roles.js";
+import { getAuthenticatedHomePath } from "./constants/roles.js";
+import { useIsMobile } from "./hooks/useIsMobile.js";
 import { useAuth } from "./providers/AuthProvider.jsx";
 import { signInWithEmail, signUpCompany, SIGNUP_SUCCESS_MESSAGE } from "./services/authService.js";
 import { formatErrorMessage } from "./utils/formatErrorMessage.js";
@@ -87,6 +88,7 @@ function LoginView({
   onSignup,
 }) {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const { hydrateSession } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -113,7 +115,7 @@ function LoginView({
       }
 
       const profile = await hydrateSession(session);
-      navigate(getHomePathForRole(profile?.role), { replace: true });
+      navigate(getAuthenticatedHomePath(profile?.role, isMobile), { replace: true });
     } catch (err) {
       setError(err.message || "بيانات الدخول غير صحيحة.");
     } finally {

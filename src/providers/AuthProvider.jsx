@@ -9,11 +9,12 @@ import {
 } from "react";
 import { supabase } from "../utils/supabaseClient.js";
 import {
-  getHomePathForRole,
+  getAuthenticatedHomePath,
   isAdminRole,
   isDashboardRole,
   normalizePermissions,
 } from "../constants/roles.js";
+import { useIsMobile } from "../hooks/useIsMobile.js";
 import { resolveAuthProfile } from "../services/profileService.js";
 import {
   clearAuthStorage,
@@ -25,6 +26,7 @@ const AuthContext = createContext(null);
 const BOOTSTRAP_TIMEOUT_MS = 12000;
 
 export function AuthProvider({ children, onSignedOut }) {
+  const isMobile = useIsMobile();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isBootstrapping, setIsBootstrapping] = useState(true);
   const [user, setUser] = useState(null);
@@ -168,7 +170,8 @@ export function AuthProvider({ children, onSignedOut }) {
       permissions,
       isAdmin: isAdminRole(role),
       isDashboardUser: isDashboardRole(role),
-      homePath: getHomePathForRole(role),
+      homePath: getAuthenticatedHomePath(role, isMobile),
+      isMobile,
       hydrateSession,
       refreshProfile,
       setAuthenticatedUser: (profile) => {
@@ -177,7 +180,7 @@ export function AuthProvider({ children, onSignedOut }) {
         setIsBootstrapping(false);
       },
     };
-  }, [hydrateSession, isAuthenticated, isBootstrapping, refreshProfile, user]);
+  }, [hydrateSession, isAuthenticated, isBootstrapping, isMobile, refreshProfile, user]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

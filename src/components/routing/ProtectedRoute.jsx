@@ -7,18 +7,22 @@ export function ProtectedRoute({
   allowPortal = false,
   adminOnly = false,
 }) {
-  const { role, isAdmin, isDashboardUser, homePath } = useAuth();
+  const { isAdmin, isDashboardUser, homePath, isMobile } = useAuth();
   const location = useLocation();
 
   if (adminOnly && !isAdmin) {
     return <Navigate to={homePath} replace state={{ from: location }} />;
   }
 
+  if (allowDashboard && isMobile) {
+    return <Navigate to="/mobile" replace state={{ from: location }} />;
+  }
+
   if (allowDashboard && !isDashboardUser) {
     return <Navigate to="/employee-portal" replace state={{ from: location }} />;
   }
 
-  if (allowPortal && isDashboardUser) {
+  if (allowPortal && isDashboardUser && !isMobile) {
     return <Navigate to="/dashboard" replace state={{ from: location }} />;
   }
 

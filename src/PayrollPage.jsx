@@ -10,6 +10,7 @@ import {
   formatPayrollMonthFromPicker,
 } from "./utils/payroll/calculations.js";
 import { downloadPayrollTableCsv } from "./utils/payroll/exportPayrollCsv.js";
+import ExeerEmptyState from "./components/brand/ExeerEmptyState.jsx";
 
 const PAYROLL_SUBTITLE =
   "مسير الرواتب المعتمد — أداة عملية لتوليد الكشوفات المالية نهاية كل شهر، وتصديرها لمشاركتها مع الإدارة المالية.";
@@ -272,13 +273,14 @@ export default function PayrollPage() {
                   </tr>
                 ) : !hasLoaded || rows.length === 0 ? (
                   <tr>
-                    <td
-                      colSpan={TABLE_COLUMNS.length}
-                      className="px-4 py-16 text-center text-slate-500"
-                    >
-                      {hasLoaded
-                        ? "لا توجد سجلات — اضغط «إنشاء المسير الشهري»"
-                        : "اختر الشهر ثم أنشئ المسير"}
+                    <td colSpan={TABLE_COLUMNS.length} className="p-0">
+                      <ExeerEmptyState
+                        message={
+                          hasLoaded
+                            ? "لا توجد سجلات — اضغط «إنشاء المسير الشهري»"
+                            : "اختر الشهر ثم أنشئ المسير"
+                        }
+                      />
                     </td>
                   </tr>
                 ) : (

@@ -9,6 +9,7 @@ import {
   mapRowToEmployeeForm,
 } from "./components/employees/employeeFormShared.js";
 import SlideOver, { BulkImportButton } from "./components/employees/SlideOver.jsx";
+import ExeerEmptyState from "./components/brand/ExeerEmptyState.jsx";
 import EmployeeBulkImportWizard from "./components/employees/EmployeeBulkImportWizard.jsx";
 import {
   createEmployee,
@@ -585,11 +586,8 @@ export default function EmployeesPage() {
                 </tr>
               ) : filteredEmployees.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan={6}
-                    className="px-5 py-16 text-center text-exeer-muted"
-                  >
-                    لا يوجد موظفون مطابقون للبحث
+                  <td colSpan={6} className="p-0">
+                    <ExeerEmptyState message="لا يوجد موظفون مطابقون للبحث" />
                   </td>
                 </tr>
               ) : (

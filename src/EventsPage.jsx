@@ -3,6 +3,7 @@ import { Calendar, MapPin, Plus, X } from "lucide-react";
 import { DateTimeInput } from "./components/ui/DateInput.jsx";
 import { createEvent, listEvents } from "./services/eventsService.js";
 import { canCreateEvents } from "./utils/rbac.js";
+import ExeerEmptyState from "./components/brand/ExeerEmptyState.jsx";
 
 function mapEventRow(row) {
   if (!row || typeof row !== "object") return null;
@@ -278,11 +279,8 @@ export default function EventsPage() {
                 </tr>
               ) : events.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan={4}
-                    className="px-5 py-16 text-center text-exeer-muted"
-                  >
-                    لا توجد فعاليات مسجلة
+                  <td colSpan={4} className="p-0">
+                    <ExeerEmptyState message="لا توجد فعاليات مسجلة" />
                   </td>
                 </tr>
               ) : (

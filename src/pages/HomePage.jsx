@@ -3,7 +3,6 @@ import {
   FileText,
   Lightbulb,
   MessageSquare,
-  Package,
   Sparkles,
   Target,
   Trophy,
@@ -19,6 +18,7 @@ import SmartTasksModal from "../components/SmartTasksModal.jsx";
 import AchievementsArchiveModal from "../components/achievements/AchievementsArchiveModal.jsx";
 import MonthlyReportModal from "../components/MonthlyReportModal.jsx";
 import PlgOnboardingBanner from "../components/onboarding/PlgOnboardingBanner.jsx";
+import ExeerEmptyState from "../components/brand/ExeerEmptyState.jsx";
 
 const SMART_INTERVIEW_ID = "smart-interview";
 const SMART_TASK_ID = "smart-task";
@@ -178,14 +178,11 @@ export default function HomePage() {
                 جاري التحميل...
               </p>
             ) : pendingPreview.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-md border border-gray-200 bg-gray-50 text-slate-400">
-                  <Package className="h-6 w-6 stroke-[1.75]" aria-hidden />
-                </span>
-                <p className="max-w-[220px] text-sm text-slate-500">
-                  لا توجد طلبات معلقة حالياً
-                </p>
-              </div>
+              <ExeerEmptyState
+                message="لا توجد طلبات معلقة حالياً"
+                className="py-12"
+                symbolClassName="mb-3 h-12 w-12 object-contain opacity-[0.18]"
+              />
             ) : (
               <ul className="divide-y divide-gray-200">
                 {pendingPreview.map((request) => (

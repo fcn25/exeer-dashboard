@@ -10,6 +10,7 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import { ar, enUS } from "date-fns/locale";
 import { useTranslation } from "react-i18next";
+import ExeerEmptyState from "../brand/ExeerEmptyState.jsx";
 import {
   listUserNotifications,
   markAllNotificationsRead,
@@ -220,13 +221,9 @@ export default function NotificationsDrawer({ isOpen, onClose, userId, onUnreadC
               ))}
             </ul>
           ) : (
-            <div className="flex flex-col items-center gap-3 px-6 py-16 text-center">
-              <span className="flex h-14 w-14 items-center justify-center rounded-md bg-exeer-surface text-exeer-muted">
-                <Bell className="h-6 w-6 stroke-[1.75]" aria-hidden />
-              </span>
-              <p className="text-sm font-medium text-exeer-primary">لا توجد إشعارات</p>
-              <p className="text-xs text-exeer-muted">ستظهر التحديثات المهمة هنا.</p>
-            </div>
+            <ExeerEmptyState
+              message="لا توجد إشعارات — ستظهر التحديثات المهمة هنا."
+            />
           )}
         </div>
       </aside>

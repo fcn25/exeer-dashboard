@@ -12,7 +12,7 @@ npm run dev
 - Desktop: http://localhost:5173/
 - Mobile: http://localhost:5173/mobile (auto-redirect when viewport &lt; 768px)
 
-Place your brand logo at `public/logo.png` (served as `/logo.png` on the auth screen).
+Brand assets live in `src/assets/` (`logo-dark.png`, `logo-light.png`, `logo-symbol-dark.png`, `logo-symbol-light.png`) and are mirrored under `public/` for the favicon (`/logo-symbol-dark.png`).
 ```
 
 The full UI lives in **`src/App.jsx`** (single copy-pasteable component file).

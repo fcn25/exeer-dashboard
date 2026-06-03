@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Calendar, Plus, User, X } from "lucide-react";
 import { DateInput } from "../components/ui/DateInput.jsx";
+import ExeerEmptyState from "../components/brand/ExeerEmptyState.jsx";
 import { listEmployeesForTasks } from "../services/employeesService.js";
 import {
   createTask,
@@ -442,9 +443,11 @@ export default function TasksPage() {
                 </header>
                 <div className="flex flex-1 flex-col gap-3 overflow-y-auto pe-0.5">
                   {columnTasks.length === 0 ? (
-                    <p className="py-12 text-center text-xs text-exeer-muted">
-                      لا توجد مهام
-                    </p>
+                    <ExeerEmptyState
+                      message="لا توجد مهام"
+                      className="py-10"
+                      symbolClassName="mb-2 h-10 w-10 object-contain opacity-[0.16]"
+                    />
                   ) : (
                     columnTasks.map((task) => (
                       <TaskCard

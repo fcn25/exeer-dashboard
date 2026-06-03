@@ -5,6 +5,7 @@ import { useIsMobile } from "./hooks/useIsMobile.js";
 import { useAuth } from "./context/AuthContext.jsx";
 import { signInWithEmail, signUpCompany, SIGNUP_SUCCESS_MESSAGE } from "./services/authService.js";
 import { formatErrorMessage } from "./utils/formatErrorMessage.js";
+import ExeerLogo from "./components/brand/ExeerLogo.jsx";
 
 const INPUT_CLASS = "md-input";
 
@@ -36,14 +37,11 @@ export default function AuthContainer() {
       lang="ar"
       className="flex min-h-screen flex-col items-center justify-center bg-white px-4 py-10 font-sans"
     >
-      <img
-        src="/logo.png"
-        alt="Exeer"
-        className="mx-auto mb-8 h-20 w-auto object-contain"
-        style={{ boxShadow: "none", border: "none" }}
-      />
+      <div className="mb-8 flex w-full max-w-md flex-col items-center">
+        <ExeerLogo onLightBackground className="h-14 w-auto object-contain" />
+      </div>
 
-      <div className="md-surface w-full max-w-md p-8">
+      <div className="w-full max-w-md rounded-md border border-gray-200 bg-white p-8 shadow-none">
         {authView === "login" ? (
           <LoginView
             successMessage={successMessage}

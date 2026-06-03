@@ -4,6 +4,7 @@ import {
   QUESTION_TYPES,
   resolveEvaluationQuestions,
 } from "../../utils/evaluationTemplateQuestions.js";
+import ExeerLogo from "../brand/ExeerLogo.jsx";
 
 function ExeerFormHeader({ subtitle }) {
   return (
@@ -15,17 +16,10 @@ function ExeerFormHeader({ subtitle }) {
         إكسير
       </p>
       <div className="relative space-y-2">
-        <img
-          src="/logo.png"
-          alt=""
+        <ExeerLogo
+          onLightBackground
           className="mx-auto h-9 w-auto object-contain opacity-90"
         />
-        <div className="space-y-0.5">
-          <p className="text-xl font-bold tracking-tight text-exeer-primary">إكسير</p>
-          <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-exeer-muted">
-            Exeer
-          </p>
-        </div>
         {subtitle ? (
           <p className="pt-1 text-xs leading-relaxed text-exeer-muted">{subtitle}</p>
         ) : null}

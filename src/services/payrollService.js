@@ -62,7 +62,7 @@ export async function listActiveEmployees() {
   const { data, error } = await supabase
     .from("employees")
     .select(
-      "id, full_name, basic_salary, housing_allowance, other_allowance, nationality, is_saudi, employment_status",
+      "id, full_name, email, department, basic_salary, housing_allowance, other_allowance, nationality, is_saudi, employment_status",
     )
     .eq("company_id", companyId)
     .order("full_name", { ascending: true });

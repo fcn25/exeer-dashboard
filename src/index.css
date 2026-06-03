@@ -254,4 +254,41 @@ span {
   color: #f1f5f9;
 }
 
+/* Material 3 range slider */
+.md-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 0.35rem;
+  border-radius: 9999px;
+  background: var(--color-md-surface-container-high);
+  accent-color: var(--color-md-primary);
+}
+
+.md-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 1.25rem;
+  width: 1.25rem;
+  border-radius: 9999px;
+  border: 2px solid var(--color-md-primary);
+  background: var(--color-md-surface);
+  box-shadow: var(--shadow-md-1);
+  cursor: pointer;
+}
+
+.md-slider::-moz-range-thumb {
+  height: 1.25rem;
+  width: 1.25rem;
+  border-radius: 9999px;
+  border: 2px solid var(--color-md-primary);
+  background: var(--color-md-surface);
+  box-shadow: var(--shadow-md-1);
+  cursor: pointer;
+}
+
+.md-slider:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 /* Date pickers use react-datepicker — see components/ui/datepicker.css */

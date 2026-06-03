@@ -1,46 +1,27 @@
-import { useEffect, useState } from "react";
-import { Star, X } from "lucide-react";
-import {
-  EVALUATION_CRITERIA,
-  EMPTY_RATINGS,
-} from "../../constants/evaluationCriteria.js";
+import { useEffect, useMemo, useState } from "react";
+import { X } from "lucide-react";
+import EmployeeEvaluationForm from "../evaluation/EmployeeEvaluationForm.jsx";
+import SuccessToast from "../ui/SuccessToast.jsx";
 import { submitEmployeeEvaluation } from "../../services/performanceService.js";
+import {
+  buildEmptyAnswersFromTemplate,
+  buildEmptyLegacyAnswers,
+  getTemplateDisplayTitle,
+  readFileAnswer,
+  resolveEvaluationQuestions,
+  QUESTION_TYPES,
+} from "../../utils/evaluationTemplateQuestions.js";
 
-function StarRating({ value, onChange, disabled, name }) {
-  return (
-    <div className="flex flex-row-reverse items-center justify-end gap-1">
-      {[5, 4, 3, 2, 1].map((rating) => {
-        const selected = value === rating;
-        return (
-          <label
-            key={rating}
-            className={`cursor-pointer rounded-lg p-1 transition-colors ${
-              disabled ? "cursor-not-allowed opacity-60" : "hover:bg-exeer-hover"
-            }`}
-          >
-            <input
-              type="radio"
-              name={name}
-              value={rating}
-              checked={selected}
-              onChange={() => onChange(rating)}
-              disabled={disabled}
-              className="sr-only"
-            />
-            <Star
-              className={`h-6 w-6 ${
-                selected
-                  ? "fill-amber-400 text-amber-400"
-                  : "text-exeer-border"
-              }`}
-              aria-hidden
-            />
-            <span className="sr-only">{rating}</span>
-          </label>
-        );
-      })}
-    </div>
-  );
+async function prepareAnswersForSubmit(questions, rawAnswers) {
+  const prepared = { ...rawAnswers };
+  for (const question of questions) {
+    if (question.type !== QUESTION_TYPES.FILE) continue;
+    const file = rawAnswers?.[question.id];
+    if (file instanceof File) {
+      prepared[question.id] = await readFileAnswer(file);
+    }
+  }
+  return prepared;
 }
 
 export default function TakeEvaluationModal({
@@ -49,32 +30,45 @@ export default function TakeEvaluationModal({
   onClose,
   onSuccess,
 }) {
-  const [ratings, setRatings] = useState({ ...EMPTY_RATINGS });
-  const [generalComments, setGeneralComments] = useState("");
+  const template = evaluation?.evaluation_templates ?? null;
+  const questions = useMemo(
+    () => resolveEvaluationQuestions(template),
+    [template],
+  );
+
+  const [answers, setAnswers] = useState(() => buildEmptyAnswersFromTemplate(template));
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
+  const [successToast, setSuccessToast] = useState("");
 
   useEffect(() => {
     if (!isOpen) return;
-    setRatings({ ...EMPTY_RATINGS });
-    setGeneralComments("");
+    setAnswers(
+      template?.questions_jsonb
+        ? buildEmptyAnswersFromTemplate(template)
+        : buildEmptyLegacyAnswers(),
+    );
     setError("");
+    setSuccessToast("");
     setIsSaving(false);
-  }, [isOpen, evaluation?.id]);
+  }, [isOpen, evaluation?.id, template]);
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
+  const handleSubmit = async () => {
     if (!evaluation?.id || isSaving) return;
 
     setIsSaving(true);
     setError("");
 
     try {
-      await submitEmployeeEvaluation(evaluation.id, ratings, generalComments);
+      const prepared = await prepareAnswersForSubmit(questions, answers);
+      await submitEmployeeEvaluation(evaluation.id, prepared, template);
+      setSuccessToast("تم إرسال التقييم بنجاح.");
       onSuccess?.();
-      onClose();
+      window.setTimeout(() => {
+        onClose();
+      }, 600);
     } catch (err) {
-      setError(err.message || "تعذّر حفظ التقييم.");
+      setError(err.message || "تعذّر إرسال التقييم.");
     } finally {
       setIsSaving(false);
     }
@@ -82,113 +76,73 @@ export default function TakeEvaluationModal({
 
   if (!isOpen || !evaluation) return null;
 
-  const templateTitle =
-    evaluation.evaluation_templates?.title ?? evaluation.templateTitle ?? "تقييم";
+  const templateTitle = getTemplateDisplayTitle(template);
   const cycleName =
     evaluation.evaluation_cycles?.name ?? evaluation.cycleName ?? "—";
 
   return (
-    <div
-      className="fixed inset-0 z-[70] flex items-end justify-center bg-black/40 p-0 backdrop-blur-[2px] sm:items-center sm:p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="take-evaluation-title"
-    >
-      <button
-        type="button"
-        className="absolute inset-0 cursor-default"
-        aria-label="إغلاق"
-        onClick={onClose}
-      />
+    <>
+      <div
+        className="fixed inset-0 z-[70] flex items-end justify-center bg-black/40 p-0 backdrop-blur-[2px] sm:items-center sm:p-4"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="take-evaluation-title"
+      >
+        <button
+          type="button"
+          className="absolute inset-0 cursor-default"
+          aria-label="إغلاق"
+          onClick={onClose}
+        />
 
-      <div className="relative max-h-[92vh] w-full max-w-2xl overflow-hidden rounded-t-3xl bg-md-surface sm:rounded-3xl md-elevated">
-        <div className="flex items-start justify-between gap-4 border-b border-exeer-border px-6 py-5">
-          <div className="space-y-1">
-            <h2 id="take-evaluation-title" className="text-xl font-bold text-exeer-primary">
-              إجراء التقييم
-            </h2>
-            <p className="text-sm text-exeer-muted">
-              {templateTitle} — {cycleName}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={isSaving}
-            className="flex h-9 w-9 items-center justify-center rounded-2xl border border-exeer-border text-exeer-muted transition-colors hover:bg-exeer-hover"
-            aria-label="إغلاق"
-          >
-            <X className="h-5 w-5" aria-hidden />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="flex max-h-[calc(92vh-88px)] flex-col">
-          <div className="space-y-5 overflow-y-auto px-6 py-5">
-            <div className="space-y-4">
-              {EVALUATION_CRITERIA.map((criterion) => (
-                <div
-                  key={criterion.key}
-                  className="md-surface-muted flex flex-col gap-3 rounded-2xl px-4 py-4 sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <div className="space-y-0.5">
-                    <p className="text-sm font-bold text-exeer-primary">
-                      {criterion.label}
-                    </p>
-                    <p className="text-xs text-exeer-muted">{criterion.labelEn}</p>
-                  </div>
-                  <StarRating
-                    name={criterion.key}
-                    value={ratings[criterion.key]}
-                    onChange={(rating) =>
-                      setRatings((prev) => ({ ...prev, [criterion.key]: rating }))
-                    }
-                    disabled={isSaving}
-                  />
-                </div>
-              ))}
-            </div>
-
-            <div className="space-y-2">
-              <label htmlFor="general-comments" className="md-label block">
-                ملاحظات عامة
-              </label>
-              <textarea
-                id="general-comments"
-                value={generalComments}
-                onChange={(e) => setGeneralComments(e.target.value)}
-                disabled={isSaving}
-                rows={4}
-                placeholder="أضف أي ملاحظات أو توصيات..."
-                className="md-input min-h-[120px] resize-y"
-              />
-            </div>
-
-            {error ? (
-              <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
-                {error}
+        <div className="relative flex max-h-[92vh] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl bg-md-surface sm:max-w-xl sm:rounded-3xl md-elevated">
+          <div className="flex items-start justify-between gap-4 border-b border-exeer-border px-5 py-3">
+            <div className="min-w-0 space-y-0.5">
+              <h2
+                id="take-evaluation-title"
+                className="sr-only"
+              >
+                إجراء التقييم
+              </h2>
+              <p className="truncate text-sm font-medium text-exeer-muted">
+                {cycleName}
               </p>
-            ) : null}
-          </div>
-
-          <div className="flex flex-col gap-3 border-t border-exeer-border px-6 py-4 sm:flex-row sm:justify-end">
+            </div>
             <button
               type="button"
               onClick={onClose}
               disabled={isSaving}
-              className="md-btn-tonal w-full sm:w-auto sm:min-w-[120px]"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border border-exeer-border text-exeer-muted transition-colors hover:bg-exeer-hover"
+              aria-label="إغلاق"
             >
-              إلغاء
-            </button>
-            <button
-              type="submit"
-              disabled={isSaving}
-              className="md-btn-primary w-full sm:w-auto sm:min-w-[160px]"
-            >
-              {isSaving ? "جاري الحفظ..." : "حفظ التقييم"}
+              <X className="h-5 w-5" aria-hidden />
             </button>
           </div>
-        </form>
+
+          <div className="flex min-h-0 flex-1 flex-col px-5 pb-5 pt-2">
+            <EmployeeEvaluationForm
+              template={template}
+              values={answers}
+              onChange={setAnswers}
+              disabled={isSaving}
+              showBranding
+              showSubmit
+              isSubmitting={isSaving}
+              submitLabel="إرسال"
+              subtitle={`${templateTitle} — ${questions.length} ${questions.length === 1 ? "سؤال" : "أسئلة"}`}
+              onSubmit={handleSubmit}
+            />
+
+            {error ? (
+              <p className="mt-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
+                {error}
+              </p>
+            ) : null}
+          </div>
+        </div>
       </div>
-    </div>
+
+      <SuccessToast message={successToast} onDismiss={() => setSuccessToast("")} />
+    </>
   );
 }

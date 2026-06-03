@@ -52,3 +52,15 @@ export async function markAllNotificationsRead(userId) {
 
   if (error) throw new Error(mapDbError(error));
 }
+
+export async function notifyEvaluationAssignments(employeeIds) {
+  const ids = [...new Set((employeeIds ?? []).map(Number).filter(Boolean))];
+  if (ids.length === 0) return 0;
+
+  const { data, error } = await supabase.rpc("notify_evaluation_assignments", {
+    p_employee_ids: ids,
+  });
+
+  if (error) throw new Error(mapDbError(error));
+  return Number(data ?? 0);
+}

@@ -3,6 +3,7 @@ import {
   AlertTriangle,
   Bell,
   CheckCircle2,
+  ClipboardCheck,
   UserPlus,
   X,
 } from "lucide-react";
@@ -19,12 +20,14 @@ const TYPE_ICONS = {
   request_approved: CheckCircle2,
   new_employee: UserPlus,
   subscription_alert: AlertTriangle,
+  evaluation_assigned: ClipboardCheck,
 };
 
 const TYPE_ACCENTS = {
   request_approved: "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40",
   new_employee: "text-md-primary bg-md-primary-container/60 dark:bg-[#1e3a5f]/60 dark:text-[#93c5fd]",
   subscription_alert: "text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40",
+  evaluation_assigned: "text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/40",
 };
 
 function NotificationItem({ item, locale, onMarkRead }) {

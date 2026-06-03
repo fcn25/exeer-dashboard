@@ -1,24 +1,28 @@
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { DateInput } from "../ui/DateInput.jsx";
-import { listActiveEmployees } from "../../services/payrollService.js";
+import TemplatePickerGrid from "../evaluation/TemplatePickerGrid.jsx";
 import {
-  createEvaluationCycleWithAssignments,
+  launchEvaluationCycleForDepartment,
+  listCompanyDepartments,
+  listEmployeesByDepartment,
   listEvaluationTemplates,
 } from "../../services/performanceService.js";
+import { templateHasQuestions } from "../../utils/evaluationTemplateQuestions.js";
 
 const EMPTY_FORM = {
   name: "",
   startDate: "",
   endDate: "",
   templateId: "",
-  employeeIds: [],
+  department: "",
 };
 
 export default function CreateCycleModal({ isOpen, onClose, onSuccess }) {
   const [form, setForm] = useState({ ...EMPTY_FORM });
   const [templates, setTemplates] = useState([]);
-  const [employees, setEmployees] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [targetCount, setTargetCount] = useState(0);
   const [isLoadingOptions, setIsLoadingOptions] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
@@ -26,7 +30,8 @@ export default function CreateCycleModal({ isOpen, onClose, onSuccess }) {
   useEffect(() => {
     if (!isOpen) return;
 
-    setForm({ ...EMPTY_FORM, employeeIds: [] });
+    setForm({ ...EMPTY_FORM });
+    setTargetCount(0);
     setError("");
     setIsSaving(false);
 
@@ -35,13 +40,13 @@ export default function CreateCycleModal({ isOpen, onClose, onSuccess }) {
     async function loadOptions() {
       setIsLoadingOptions(true);
       try {
-        const [templateRows, employeeRows] = await Promise.all([
+        const [templateRows, departmentRows] = await Promise.all([
           listEvaluationTemplates(),
-          listActiveEmployees(),
+          listCompanyDepartments(),
         ]);
         if (cancelled) return;
         setTemplates(templateRows);
-        setEmployees(employeeRows);
+        setDepartments(departmentRows);
       } catch (err) {
         if (!cancelled) setError(err.message || "تعذّر تحميل بيانات النموذج.");
       } finally {
@@ -55,33 +60,56 @@ export default function CreateCycleModal({ isOpen, onClose, onSuccess }) {
     };
   }, [isOpen]);
 
-  const toggleEmployee = (employeeId) => {
-    const id = Number(employeeId);
-    setForm((prev) => {
-      const exists = prev.employeeIds.includes(id);
-      return {
-        ...prev,
-        employeeIds: exists
-          ? prev.employeeIds.filter((value) => value !== id)
-          : [...prev.employeeIds, id],
-      };
-    });
-  };
+  useEffect(() => {
+    if (!isOpen || !form.department) {
+      setTargetCount(0);
+      return undefined;
+    }
+
+    let cancelled = false;
+
+    async function loadTargetCount() {
+      try {
+        const rows = await listEmployeesByDepartment(form.department);
+        if (!cancelled) setTargetCount(rows.length);
+      } catch {
+        if (!cancelled) setTargetCount(0);
+      }
+    }
+
+    loadTargetCount();
+    return () => {
+      cancelled = true;
+    };
+  }, [form.department, isOpen]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (isSaving) return;
 
+    if (!form.templateId) {
+      setError("يرجى اختيار نموذج تقييم جاهز.");
+      return;
+    }
+
+    const selectedTemplate = templates.find(
+      (row) => String(row.id) === String(form.templateId),
+    );
+    if (!templateHasQuestions(selectedTemplate)) {
+      setError("النموذج المحدّد لا يحتوي على أسئلة. اختر نموذجاً جاهزاً أو أضف الأسئلة في قاعدة البيانات.");
+      return;
+    }
+
     setIsSaving(true);
     setError("");
 
     try {
-      await createEvaluationCycleWithAssignments({
+      await launchEvaluationCycleForDepartment({
         name: form.name,
         startDate: form.startDate,
         endDate: form.endDate,
         templateId: form.templateId,
-        employeeIds: form.employeeIds,
+        department: form.department,
       });
       onSuccess?.();
       onClose();
@@ -115,7 +143,7 @@ export default function CreateCycleModal({ isOpen, onClose, onSuccess }) {
               إنشاء دورة تقييم
             </h2>
             <p className="text-sm text-exeer-muted">
-              سيتم إنشاء مهام تقييم معلّقة لكل موظف محدّد.
+              يُنشئ النظام استجابات معلّقة وإشعارات لجميع موظفي القسم المحدّد.
             </p>
           </div>
           <button
@@ -171,73 +199,51 @@ export default function CreateCycleModal({ isOpen, onClose, onSuccess }) {
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="cycle-template" className="md-label block">
-                نموذج التقييم
+              <label className="md-label block">نموذج التقييم الجاهز</label>
+              <p className="text-xs leading-relaxed text-exeer-muted">
+                اختر أحد النماذج المُعدّة مسبقاً — لا حاجة لكتابة الأسئلة يدوياً.
+              </p>
+              {isLoadingOptions ? (
+                <p className="text-sm text-exeer-muted">جاري تحميل النماذج...</p>
+              ) : (
+                <TemplatePickerGrid
+                  templates={templates}
+                  selectedId={form.templateId}
+                  onSelect={(templateId) =>
+                    setForm((prev) => ({ ...prev, templateId }))
+                  }
+                  disabled={isSaving}
+                />
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="cycle-department" className="md-label block">
+                القسم المستهدف
               </label>
               <select
-                id="cycle-template"
-                value={form.templateId}
+                id="cycle-department"
+                value={form.department}
                 onChange={(e) =>
-                  setForm((prev) => ({ ...prev, templateId: e.target.value }))
+                  setForm((prev) => ({ ...prev, department: e.target.value }))
                 }
                 disabled={isSaving || isLoadingOptions}
                 required
                 className="md-input"
               >
-                <option value="">اختر نموذجاً</option>
-                {templates.map((template) => (
-                  <option key={template.id} value={template.id}>
-                    {template.title}
+                <option value="">اختر قسماً</option>
+                {departments.map((department) => (
+                  <option key={department} value={department}>
+                    {department}
                   </option>
                 ))}
               </select>
-            </div>
-
-            <div className="space-y-3">
-              <div className="flex items-center justify-between gap-3">
-                <label className="md-label block">الموظفون المشاركون</label>
-                <span className="text-xs text-exeer-muted">
-                  {form.employeeIds.length} محدّد
-                </span>
-              </div>
-              <div className="md-surface-muted max-h-52 space-y-2 overflow-y-auto rounded-2xl p-3">
-                {isLoadingOptions ? (
-                  <p className="px-2 py-4 text-center text-sm text-exeer-muted">
-                    جاري التحميل...
-                  </p>
-                ) : employees.length ? (
-                  employees.map((employee) => {
-                    const id = Number(employee.id);
-                    const checked = form.employeeIds.includes(id);
-                    return (
-                      <label
-                        key={employee.id}
-                        className="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2 transition-colors hover:bg-exeer-hover"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={() => toggleEmployee(id)}
-                          disabled={isSaving}
-                          className="h-4 w-4 rounded border-exeer-border text-exeer-primary focus:ring-0"
-                        />
-                        <span className="flex-1 text-sm text-exeer-primary">
-                          {employee.full_name}
-                        </span>
-                        {employee.department ? (
-                          <span className="text-xs text-exeer-muted">
-                            {employee.department}
-                          </span>
-                        ) : null}
-                      </label>
-                    );
-                  })
-                ) : (
-                  <p className="px-2 py-4 text-center text-sm text-exeer-muted">
-                    لا يوجد موظفون نشطون.
-                  </p>
-                )}
-              </div>
+              {form.department ? (
+                <p className="text-xs text-exeer-muted">
+                  {targetCount} موظف نشط في هذا القسم — سيتم إنشاء استجابة وإشعار
+                  لكل من لديه حساب مرتبط.
+                </p>
+              ) : null}
             </div>
 
             {error ? (
@@ -261,7 +267,7 @@ export default function CreateCycleModal({ isOpen, onClose, onSuccess }) {
               disabled={isSaving || isLoadingOptions}
               className="md-btn-primary w-full sm:w-auto sm:min-w-[160px]"
             >
-              {isSaving ? "جاري الإنشاء..." : "إنشاء الدورة"}
+              {isSaving ? "جاري الإنشاء..." : "إطلاق الدورة"}
             </button>
           </div>
         </form>

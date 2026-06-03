@@ -2,8 +2,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { Loader2, RefreshCw, Sparkles } from "lucide-react";
 import {
+  AI_SUMMARY_MIN_COMPLETION_PERCENT,
   fetchCompletedEvaluationsForCycle,
   generateAndSaveCycleExecutiveSummary,
+  getCycleResponseProgress,
   listEvaluationCycles,
 } from "../../services/performanceService.js";
 
@@ -48,6 +50,7 @@ export default function ExecutiveSummaryTab() {
   const [cycles, setCycles] = useState([]);
   const [selectedCycleId, setSelectedCycleId] = useState("");
   const [completedCount, setCompletedCount] = useState(0);
+  const [completionPercent, setCompletionPercent] = useState(0);
   const [aiSummary, setAiSummary] = useState("");
   const [isLoadingCycles, setIsLoadingCycles] = useState(true);
   const [isLoadingSummary, setIsLoadingSummary] = useState(false);
@@ -84,6 +87,7 @@ export default function ExecutiveSummaryTab() {
     if (!selectedCycleId) {
       setAiSummary("");
       setCompletedCount(0);
+      setCompletionPercent(0);
       return undefined;
     }
 
@@ -97,15 +101,20 @@ export default function ExecutiveSummaryTab() {
         const cycle = cycles.find(
           (item) => String(item.id) === String(selectedCycleId),
         );
-        const completed = await fetchCompletedEvaluationsForCycle(selectedCycleId);
+        const [completed, progress] = await Promise.all([
+          fetchCompletedEvaluationsForCycle(selectedCycleId),
+          getCycleResponseProgress(selectedCycleId),
+        ]);
         if (cancelled) return;
 
         setCompletedCount(completed.length);
+        setCompletionPercent(progress.percentage);
         setAiSummary(normalizeMarkdown(cycle?.ai_summary ?? ""));
       } catch (err) {
         if (!cancelled) {
           setError(err.message || "تعذّر تحميل ملخص الدورة.");
           setCompletedCount(0);
+          setCompletionPercent(0);
           setAiSummary("");
         }
       } finally {
@@ -130,6 +139,7 @@ export default function ExecutiveSummaryTab() {
       const result = await generateAndSaveCycleExecutiveSummary(selectedCycleId);
       setAiSummary(normalizeMarkdown(result.aiSummary));
       setCompletedCount(result.evaluationCount);
+      setCompletionPercent(result.completionPercent ?? completionPercent);
       setCycles((prev) =>
         prev.map((cycle) =>
           String(cycle.id) === String(selectedCycleId)
@@ -144,7 +154,13 @@ export default function ExecutiveSummaryTab() {
     }
   };
 
+  const canGenerateAi = completionPercent >= AI_SUMMARY_MIN_COMPLETION_PERCENT;
+
   const stats = [
+    {
+      label: "نسبة الإنجاز",
+      value: isLoadingSummary ? "—" : `${completionPercent}%`,
+    },
     {
       label: "التقييمات المكتملة",
       value: isLoadingSummary ? "—" : completedCount,
@@ -203,26 +219,43 @@ export default function ExecutiveSummaryTab() {
 
           <div className="flex flex-wrap gap-3">
             {!aiSummary ? (
-              <button
-                type="button"
-                onClick={() => handleGenerate(false)}
-                disabled={
-                  !selectedCycleId ||
-                  isGenerating ||
-                  isLoadingSummary ||
-                  completedCount === 0
-                }
-                className="md-btn-primary inline-flex items-center gap-2"
-              >
-                <Sparkles className="h-4 w-4" aria-hidden />
-                توليد الملخص الذكي
-              </button>
+              <div className="group relative w-full sm:w-auto">
+                <button
+                  type="button"
+                  onClick={() => handleGenerate(false)}
+                  disabled={
+                    !selectedCycleId ||
+                    isGenerating ||
+                    isLoadingSummary ||
+                    !canGenerateAi
+                  }
+                  aria-describedby={
+                    !canGenerateAi ? "executive-summary-disabled-hint" : undefined
+                  }
+                  className="md-btn-primary inline-flex w-full items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                >
+                  <Sparkles className="h-4 w-4" aria-hidden />
+                  توليد الملخص التنفيذي بالذكاء الاصطناعي
+                </button>
+                {!canGenerateAi && selectedCycleId ? (
+                  <p
+                    id="executive-summary-disabled-hint"
+                    role="tooltip"
+                    className="mt-2 max-w-md rounded-xl border border-exeer-border bg-exeer-surface px-3 py-2 text-xs leading-relaxed text-exeer-muted"
+                  >
+                    يتطلب توليد الملخص إكمال {AI_SUMMARY_MIN_COMPLETION_PERCENT}% على
+                    الأقل من استجابات الدورة. النسبة الحالية: {completionPercent}%.
+                  </p>
+                ) : null}
+              </div>
             ) : (
               <button
                 type="button"
                 onClick={() => handleGenerate(true)}
-                disabled={!selectedCycleId || isGenerating || completedCount === 0}
-                className="md-btn-tonal inline-flex items-center gap-2"
+                disabled={
+                  !selectedCycleId || isGenerating || !canGenerateAi
+                }
+                className="md-btn-tonal inline-flex items-center gap-2 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <RefreshCw className="h-4 w-4" aria-hidden />
                 إعادة التوليد
@@ -257,13 +290,17 @@ export default function ExecutiveSummaryTab() {
             <div className="max-w-md space-y-2">
               <h3 className="text-base font-bold text-exeer-primary">
                 {completedCount === 0
-                  ? "لا توجد تقييمات مكتملة بعد"
-                  : "الملخص غير مُولّد بعد"}
+                  ? "لا توجد استجابات مكتملة بعد"
+                  : !canGenerateAi
+                    ? `الإنجاز ${completionPercent}% — يتطلب ${AI_SUMMARY_MIN_COMPLETION_PERCENT}%`
+                    : "الملخص غير مُولّد بعد"}
               </h3>
               <p className="text-sm leading-relaxed text-exeer-muted">
                 {completedCount === 0
-                  ? "أكمل الموظفون تقييماتهم في هذه الدورة لتتمكن من توليد الملخص الذكي."
-                  : "اضغط «توليد الملخص الذكي» لتحليل النتائج وإعداد تقرير تنفيذي."}
+                  ? "أكمل الموظفون تقييماتهم في هذه الدورة لتتمكن من توليد الملخص."
+                  : !canGenerateAi
+                    ? `عند وصول نسبة الإنجاز إلى ${AI_SUMMARY_MIN_COMPLETION_PERCENT}% يمكنك توليد الملخص التنفيذي.`
+                    : "اضغط «توليد الملخص التنفيذي بالذكاء الاصطناعي» لتحليل النتائج."}
               </p>
             </div>
           </div>

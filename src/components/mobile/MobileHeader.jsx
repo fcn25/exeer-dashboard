@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Bell, Settings } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "../../context/AuthContext.jsx";
 import { countUnreadNotifications } from "../../services/notificationsService.js";
 import { getTimeBasedGreeting } from "../../utils/portalGreeting.js";
 import NotificationsDrawer from "./NotificationsDrawer.jsx";
@@ -29,6 +30,7 @@ export default function MobileHeader({
   employeeName,
   profileImageUrl,
 }) {
+  const { user } = useAuth();
   const greeting = getTimeBasedGreeting();
 
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
@@ -100,6 +102,7 @@ export default function MobileHeader({
       <MobileSettingsDrawer
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
+        employeeId={user?.employee_id}
         fullName={employeeName}
         imageUrl={profileImageUrl}
       />

@@ -1,10 +1,12 @@
 import { CreditCard, LogOut, User, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import EmployeeProfileSummary from "../employees/EmployeeProfileSummary.jsx";
 import ThemeToggle from "../settings/ThemeToggle.jsx";
 import LanguageToggle from "./LanguageToggle.jsx";
 import MobileSubscriptionView from "./MobileSubscriptionView.jsx";
+import { fetchEmployeeProfileById } from "../../services/employeeProfileService.js";
 import { signOut } from "../../utils/mobileAuth.js";
 import { isOwner } from "../../utils/rbac.js";
 
@@ -31,6 +33,7 @@ function ProfileAvatar({ name, imageUrl }) {
 export default function MobileSettingsDrawer({
   isOpen,
   onClose,
+  employeeId,
   fullName,
   imageUrl,
 }) {
@@ -38,7 +41,42 @@ export default function MobileSettingsDrawer({
   const navigate = useNavigate();
   const dir = i18n.language?.startsWith("en") ? "ltr" : "rtl";
   const [isSubscriptionOpen, setIsSubscriptionOpen] = useState(false);
+  const [profile, setProfile] = useState(null);
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileError, setProfileError] = useState("");
   const owner = isOwner();
+
+  useEffect(() => {
+    if (!isOpen || !employeeId) {
+      setProfile(null);
+      setProfileError("");
+      return undefined;
+    }
+
+    let cancelled = false;
+
+    async function loadProfile() {
+      setProfileLoading(true);
+      setProfileError("");
+
+      try {
+        const row = await fetchEmployeeProfileById(employeeId);
+        if (!cancelled) setProfile(row);
+      } catch (err) {
+        if (!cancelled) {
+          setProfile(null);
+          setProfileError(err.message || "تعذّر تحميل الملف الشخصي.");
+        }
+      } finally {
+        if (!cancelled) setProfileLoading(false);
+      }
+    }
+
+    loadProfile();
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, employeeId]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -97,6 +135,23 @@ export default function MobileSettingsDrawer({
             </div>
 
             <div className="space-y-5">
+              {employeeId ? (
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-exeer-muted">
+                    بيانات الموظف
+                  </p>
+                  {profileError ? (
+                    <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-800">
+                      {profileError}
+                    </p>
+                  ) : null}
+                  <EmployeeProfileSummary
+                    employee={profile}
+                    isLoading={profileLoading}
+                  />
+                </div>
+              ) : null}
+
               {owner ? (
                 <div className="md-surface-muted rounded-md p-4">
                   <button

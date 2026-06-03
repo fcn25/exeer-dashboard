@@ -29,6 +29,8 @@ import {
 } from "../services/requestsService.js";
 import { updateTaskStatus } from "../services/tasksService.js";
 import { useAuth } from "../context/AuthContext.jsx";
+import EmployeeProfileSummary from "../components/employees/EmployeeProfileSummary.jsx";
+import { formatDisplayValue } from "../utils/displayValue.js";
 import { formatPortalDate, getTimeBasedGreeting } from "../utils/portalGreeting.js";
 import { signOut } from "../utils/mobileAuth.js";
 
@@ -208,8 +210,18 @@ export default function EmployeePortalPage() {
   const employeeName =
     snapshot?.employee?.full_name ?? user?.name ?? "موظف";
   const profileImageUrl = snapshot?.employee?.image ?? user?.image ?? null;
-  const jobTitle = snapshot?.employee?.job_title_name ?? user?.job_title ?? "—";
-  const department = snapshot?.employee?.department ?? user?.department ?? "—";
+  const jobTitle = formatDisplayValue(
+    snapshot?.employee?.job_title_name ?? user?.job_title,
+  );
+  const department = formatDisplayValue(
+    snapshot?.employee?.department ?? user?.department,
+  );
+  const leaveBalanceDisplay = isLoading
+    ? "—"
+    : formatDisplayValue(snapshot?.stats?.leaveBalance, {
+        asNumber: true,
+        suffix: "يوم",
+      });
   const greeting = getTimeBasedGreeting();
 
   return (
@@ -290,11 +302,20 @@ export default function EmployeePortalPage() {
           />
           <StatCard
             icon={Award}
-            value="قريباً"
+            value={leaveBalanceDisplay}
             label="رصيد الإجازات المتاح"
             accent="text-emerald-700 dark:text-emerald-300"
           />
         </section>
+
+        {isMobileSelfService ? (
+          <SectionShell title="ملفي الشخصي" subtitle="بياناتك من سجل الموارد البشرية">
+            <EmployeeProfileSummary
+              employee={snapshot?.employee}
+              isLoading={isLoading}
+            />
+          </SectionShell>
+        ) : null}
 
         <div
           className={`grid grid-cols-1 gap-8 ${

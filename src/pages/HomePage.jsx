@@ -18,6 +18,7 @@ import SmartGoalsModal from "../components/SmartGoalsModal.jsx";
 import SmartTasksModal from "../components/SmartTasksModal.jsx";
 import AchievementsArchiveModal from "../components/achievements/AchievementsArchiveModal.jsx";
 import MonthlyReportModal from "../components/MonthlyReportModal.jsx";
+import PlgOnboardingBanner from "../components/onboarding/PlgOnboardingBanner.jsx";
 
 const SMART_INTERVIEW_ID = "smart-interview";
 const SMART_TASK_ID = "smart-task";
@@ -130,6 +131,8 @@ export default function HomePage() {
           {error}
         </p>
       ) : null}
+
+      <PlgOnboardingBanner employeeCount={stats.employeeCount} />
 
       <section
         className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4"

@@ -43,7 +43,9 @@ export function canViewPayroll() {
 }
 
 export function canManageEvents() {
-  return hasPermission("can_manage_events");
+  return (
+    hasPermission("can_manage_events") || hasPermission("can_create_events")
+  );
 }
 
 /** @deprecated Use canManageEvents */

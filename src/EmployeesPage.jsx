@@ -8,9 +8,8 @@ import {
   getInitials,
   mapRowToEmployeeForm,
 } from "./components/employees/employeeFormShared.js";
-import SlideOver, {
-  BulkImportPlaceholder,
-} from "./components/employees/SlideOver.jsx";
+import SlideOver, { BulkImportButton } from "./components/employees/SlideOver.jsx";
+import EmployeeBulkImportWizard from "./components/employees/EmployeeBulkImportWizard.jsx";
 import {
   createEmployee,
   getEmployeeById,
@@ -68,6 +67,7 @@ function AddEmployeeSlideOver({
   isOpen,
   onClose,
   onCreated,
+  onOpenBulkImport,
   departmentOptions,
   jobTitleOptions,
 }) {
@@ -124,7 +124,7 @@ function AddEmployeeSlideOver({
       onClose={onClose}
       title="إضافة موظف جديد"
       subtitle="أدخل بيانات الموظف في الأقسام التالية"
-      topAction={<BulkImportPlaceholder />}
+      topAction={<BulkImportButton onClick={onOpenBulkImport} />}
       footer={
         <button
           type="submit"
@@ -368,6 +368,7 @@ export default function EmployeesPage() {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
   const [isListLoading, setIsListLoading] = useState(true);
   const [listError, setListError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
@@ -426,6 +427,10 @@ export default function EmployeesPage() {
   useEffect(() => {
     if (searchParams.get("add") === "1") {
       setIsAddOpen(true);
+      setSearchParams({}, { replace: true });
+    }
+    if (searchParams.get("bulkImport") === "1") {
+      setIsBulkImportOpen(true);
       setSearchParams({}, { replace: true });
     }
   }, [searchParams, setSearchParams]);
@@ -641,9 +646,27 @@ export default function EmployeesPage() {
       <AddEmployeeSlideOver
         isOpen={isAddOpen}
         onClose={() => setIsAddOpen(false)}
+        onOpenBulkImport={() => {
+          setIsAddOpen(false);
+          setIsBulkImportOpen(true);
+        }}
         departmentOptions={departmentOptions}
         jobTitleOptions={jobTitleOptions}
         onCreated={() => handleMutationSuccess("تم إضافة الموظف بنجاح")}
+      />
+
+      <EmployeeBulkImportWizard
+        isOpen={isBulkImportOpen}
+        onClose={() => setIsBulkImportOpen(false)}
+        onSuccess={(result) =>
+          handleMutationSuccess(
+            `تم استيراد ${result.imported} موظف بنجاح${
+              result.invitesSent
+                ? ` · أُرسلت ${result.invitesSent} دعوة`
+                : ""
+            }`,
+          )
+        }
       />
 
       {isDetailsOpen && selectedEmployeeId ? (

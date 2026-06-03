@@ -5,6 +5,7 @@ import {
   Banknote,
   Calendar,
   CheckSquare,
+  CreditCard,
   Home,
   Lock,
   Settings,
@@ -71,6 +72,11 @@ export default function ManagerLayout() {
     }
 
     if (isOwner()) {
+      items.push({
+        to: "/dashboard/subscription",
+        label: "الاشتراك",
+        icon: CreditCard,
+      });
       items.push({
         to: "/dashboard/payroll",
         label: "مسير الرواتب",

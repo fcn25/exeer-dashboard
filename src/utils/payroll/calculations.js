@@ -79,11 +79,25 @@ export function mapPayrollRecordRow(row) {
 
 export function computePayrollStats(rows) {
   const employeeCount = rows.length;
-  const totalNet = rows.reduce((sum, row) => sum + row.net, 0);
+  const totalNet = rows.reduce((sum, row) => sum + (Number(row.net) || 0), 0);
   const totalDeductions = rows.reduce(
-    (sum, row) => sum + row.penalties + row.gosi + row.lateness,
+    (sum, row) =>
+      sum +
+      (Number(row.penalties) || 0) +
+      (Number(row.gosi) || 0) +
+      (Number(row.lateness) || 0),
+    0,
+  );
+  const totalGross = rows.reduce(
+    (sum, row) =>
+      sum +
+      (Number(row.basic) || 0) +
+      (Number(row.housing) || 0) +
+      (Number(row.allowances) || 0) +
+      (Number(row.commissions) || 0) +
+      (Number(row.additional) || 0),
     0,
   );
 
-  return { employeeCount, totalNet, totalDeductions };
+  return { employeeCount, totalNet, totalDeductions, totalGross };
 }

@@ -20,11 +20,12 @@ function escapeCsvCell(value) {
   return text;
 }
 
-function payrollMonthToFilename(payrollMonth) {
-  return String(payrollMonth).replace("/", "-");
-}
+/** Download current payroll grid as Exeer_Payroll.csv */
+export function downloadPayrollCsv(rows, filename = "Exeer_Payroll.csv") {
+  if (!Array.isArray(rows) || rows.length === 0) {
+    throw new Error("لا توجد بيانات لتصديرها.");
+  }
 
-export function downloadPayrollCsv(rows, payrollMonth) {
   const headerLine = EXPORT_COLUMNS.map((col) => col.header).join(",");
   const dataLines = rows.map((row) =>
     EXPORT_COLUMNS.map((col) => escapeCsvCell(row[col.key])).join(","),
@@ -34,12 +35,13 @@ export function downloadPayrollCsv(rows, payrollMonth) {
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;
-  anchor.download = `Exeer_Payroll_${payrollMonthToFilename(payrollMonth)}.csv`;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
   anchor.click();
+  document.body.removeChild(anchor);
   URL.revokeObjectURL(url);
 }
 
-/** @deprecated Use downloadPayrollCsv — kept for export-and-lock flow compatibility */
-export function downloadPayrollExcel(rows, payrollMonth) {
-  downloadPayrollCsv(rows, payrollMonth);
+export function downloadPayrollExcel(rows) {
+  downloadPayrollCsv(rows, "Exeer_Payroll.csv");
 }

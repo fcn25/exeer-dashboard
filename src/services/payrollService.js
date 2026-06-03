@@ -1,10 +1,14 @@
 import { supabase } from "../utils/supabaseClient.js";
 import { getCompanyId } from "../utils/mobileAuth.js";
+import { isMissingColumnError } from "../utils/supabaseErrors.js";
 import {
   buildPayrollDraftFromEmployee,
   formatPayrollMonthFromPicker,
   mapPayrollRecordRow,
 } from "../utils/payroll/calculations.js";
+
+export const PAYROLL_SCHEMA_FIX_HINT =
+  "نفّذ ملف supabase/scripts/fix_payroll_records_schema.sql في Supabase SQL Editor ثم أعد تحميل Schema Cache (Settings → API → Reload).";
 
 const PAYROLL_EMPLOYEE_FK_HINT =
   "نفّذ SQL ربط payroll_records.employee_id → employees.id (ملف 20250603000001_payroll_employee_fk.sql) ثم حدّث Schema Cache من Supabase Dashboard → Settings → API → Reload schema.";
@@ -15,10 +19,19 @@ function isMissingPayrollEmployeeRelationship(error) {
   return /relationship.*payroll_records.*employees/i.test(error.message ?? "");
 }
 
+function isMissingPayrollMonthColumn(error) {
+  if (!error) return false;
+  const message = String(error.message ?? "").toLowerCase();
+  return message.includes("payroll_month") && message.includes("does not exist");
+}
+
 function mapDbError(error) {
   if (!error) return "حدث خطأ غير متوقع.";
   if (error.code === "PGRST205") {
     return "جداول قاعدة البيانات غير جاهزة. نفّذ ملف supabase/migrations/20250602000000_exeer_schema.sql و 20250603000000_payroll_engine.sql في Supabase SQL Editor.";
+  }
+  if (isMissingColumnError(error) || isMissingPayrollMonthColumn(error)) {
+    return `عمود payroll_month غير موجود في payroll_records. ${PAYROLL_SCHEMA_FIX_HINT}`;
   }
   if (isMissingPayrollEmployeeRelationship(error)) {
     return `تعذّر ربط جدول المسير بالموظفين. ${PAYROLL_EMPLOYEE_FK_HINT}`;
@@ -27,6 +40,32 @@ function mapDbError(error) {
     return "سجل المسير موجود مسبقاً لهذا الموظف في نفس الشهر.";
   }
   return error.message || "تعذّر إكمال العملية.";
+}
+
+function buildPayrollInsertPayload(companyId, draft, payrollMonth) {
+  const [monthPart, yearPart] = payrollMonth.split("/");
+  return {
+    company_id: companyId,
+    employee_id: draft.employee_id,
+    employee_name: draft.employee_name,
+    payroll_month: draft.payroll_month,
+    month: Number(monthPart),
+    year: Number(yearPart),
+    basic_salary: draft.basic_salary,
+    housing_allowance: draft.housing_allowance,
+    other_allowances: draft.other_allowances,
+    allowances: draft.other_allowances,
+    commissions: draft.commissions,
+    additional: draft.additional,
+    penalties: draft.penalties,
+    gosi_deduction: draft.gosi_deduction,
+    gosi: draft.gosi_deduction,
+    lateness_deduction: draft.lateness_deduction,
+    delays: draft.lateness_deduction,
+    net_salary: draft.net_salary,
+    net: draft.net_salary,
+    status: "Draft",
+  };
 }
 
 async function queryPayrollRecordsForMonth(companyId, payrollMonth) {
@@ -112,43 +151,27 @@ export async function generatePayrollForMonth(pickerValue) {
     );
   }
 
-  const existingEmployeeIds = new Set(
-    existing.rows.map((row) => String(row.employeeId)).filter(Boolean),
+  const exportedEmployeeIds = new Set(
+    existing.rows
+      .filter((row) => row.status === "Exported")
+      .map((row) => String(row.employeeId))
+      .filter(Boolean),
   );
 
   const employees = await listActiveEmployees();
-  const toCreate = employees.filter(
-    (employee) => !existingEmployeeIds.has(String(employee.id)),
-  );
-
-  if (toCreate.length > 0) {
-    const inserts = toCreate.map((employee) => {
+  const upsertPayloads = employees
+    .filter((employee) => !exportedEmployeeIds.has(String(employee.id)))
+    .map((employee) => {
       const draft = buildPayrollDraftFromEmployee(employee, payrollMonth);
-      return {
-        company_id: companyId,
-        employee_id: draft.employee_id,
-        employee_name: draft.employee_name,
-        payroll_month: draft.payroll_month,
-        month: Number(payrollMonth.split("/")[0]),
-        year: Number(payrollMonth.split("/")[1]),
-        basic_salary: draft.basic_salary,
-        housing_allowance: draft.housing_allowance,
-        other_allowances: draft.other_allowances,
-        allowances: draft.other_allowances,
-        commissions: draft.commissions,
-        additional: draft.additional,
-        penalties: draft.penalties,
-        gosi_deduction: draft.gosi_deduction,
-        gosi: draft.gosi_deduction,
-        lateness_deduction: draft.lateness_deduction,
-        delays: draft.lateness_deduction,
-        net_salary: draft.net_salary,
-        net: draft.net_salary,
-        status: "Draft",
-      };
+      return buildPayrollInsertPayload(companyId, draft, payrollMonth);
     });
 
-    const { error } = await supabase.from("payroll_records").insert(inserts);
+  if (upsertPayloads.length > 0) {
+    const { error } = await supabase
+      .from("payroll_records")
+      .upsert(upsertPayloads, {
+        onConflict: "company_id,employee_id,payroll_month",
+      });
 
     if (error) throw new Error(mapDbError(error));
   }

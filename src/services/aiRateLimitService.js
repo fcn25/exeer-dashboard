@@ -1,6 +1,7 @@
 import { supabase } from "../utils/supabaseClient.js";
 import { getCompanyId } from "../utils/mobileAuth.js";
 import { AiRateLimitError, RATE_LIMIT_MESSAGE } from "../utils/aiRateLimit.js";
+import { isMissingColumnError } from "../utils/supabaseErrors.js";
 
 const MS_PER_HOUR = 60 * 60 * 1000;
 const MS_PER_DAY = 24 * MS_PER_HOUR;
@@ -22,7 +23,17 @@ async function countRowsSince(table, companyId, sinceIso, applyFilter) {
 
   if (applyFilter) query = applyFilter(query);
 
-  const { count, error } = await query;
+  let { count, error } = await query;
+
+  if (error && isMissingColumnError(error) && applyFilter) {
+    let fallbackQuery = supabase
+      .from(table)
+      .select("id", { count: "exact", head: true })
+      .eq("company_id", companyId)
+      .gte("created_at", sinceIso);
+    ({ count, error } = await fallbackQuery);
+  }
+
   if (error) throw error;
   return count ?? 0;
 }

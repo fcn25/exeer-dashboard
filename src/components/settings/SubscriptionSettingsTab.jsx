@@ -44,12 +44,13 @@ export default function SubscriptionSettingsTab() {
     loadBilling();
   }, [loadBilling]);
 
-  const countdown = getTrialCountdown(billing?.trial_ends_at);
-  const trialEndLabel = billing?.trial_ends_at
-    ? new Date(billing.trial_ends_at).toLocaleDateString("ar-SA", {
+  const trialEndsAt = billing?.trial_ends_at ?? null;
+  const countdown = getTrialCountdown(trialEndsAt);
+  const trialEndLabel = trialEndsAt
+    ? new Date(trialEndsAt).toLocaleDateString("ar-SA", {
         dateStyle: "long",
       })
-    : "—";
+    : "يُحدَّد بعد تفعيل الاشتراك";
 
   const handleApplyPromo = async (event) => {
     event.preventDefault();

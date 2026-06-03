@@ -116,7 +116,7 @@ export default function ManagerLayout() {
       lang={lang}
       className="flex h-screen w-screen overflow-hidden bg-white font-sans text-slate-900"
     >
-      <aside className="flex w-64 shrink-0 flex-col border-e border-gray-200 bg-white px-3 py-5">
+      <aside className="flex w-64 shrink-0 flex-col border-e border-gray-200 bg-white px-3 py-5 print:hidden">
         <div className="mb-6 px-2">
           <p className="text-lg font-semibold tracking-tight text-slate-900">
             Exeer

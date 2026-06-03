@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "npm run build && wrangler dev",
+    "deploy": "npm run build && wrangler deploy"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -23,9 +24,11 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.39.2",
     "@tailwindcss/vite": "^4.1.8",
     "@vitejs/plugin-react": "^4.5.2",
     "tailwindcss": "^4.1.8",
-    "vite": "^6.3.5"
+    "vite": "^6.3.5",
+    "wrangler": "^4.97.0"
   }
 }

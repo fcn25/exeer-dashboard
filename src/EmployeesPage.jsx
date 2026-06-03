@@ -17,6 +17,7 @@ import {
   listEmployees,
   updateEmployee,
 } from "./services/employeesService.js";
+import { listDepartments, listJobTitles } from "./services/catalogService.js";
 import {
   canEditEmployeeRecords,
   getCurrentUserRole,
@@ -63,7 +64,13 @@ function StatusBadge({ status }) {
   );
 }
 
-function AddEmployeeSlideOver({ isOpen, onClose, onCreated, departmentOptions }) {
+function AddEmployeeSlideOver({
+  isOpen,
+  onClose,
+  onCreated,
+  departmentOptions,
+  jobTitleOptions,
+}) {
   const [form, setForm] = useState({ ...EMPTY_EMPLOYEE_FORM });
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
@@ -145,6 +152,7 @@ function AddEmployeeSlideOver({ isOpen, onClose, onCreated, departmentOptions })
           form={form}
           onChange={setForm}
           departmentOptions={departmentOptions}
+          jobTitleOptions={jobTitleOptions}
         />
       </form>
     </SlideOver>
@@ -157,6 +165,7 @@ function EmployeeDetailsSlideOver({
   onClose,
   onSave,
   departmentOptions,
+  jobTitleOptions,
   canEdit,
   userRole,
 }) {
@@ -332,6 +341,7 @@ function EmployeeDetailsSlideOver({
             onChange={setForm}
             disabled={fieldsDisabled}
             departmentOptions={departmentOptions}
+            jobTitleOptions={jobTitleOptions}
             showAvatar
           />
         </form>
@@ -361,6 +371,8 @@ export default function EmployeesPage() {
   const [isListLoading, setIsListLoading] = useState(true);
   const [listError, setListError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [departmentOptions, setDepartmentOptions] = useState([]);
+  const [jobTitleOptions, setJobTitleOptions] = useState([]);
 
   const userRole = getCurrentUserRole();
   const canEdit = canEditEmployeeRecords(userRole);
@@ -385,6 +397,33 @@ export default function EmployeesPage() {
   }, [loadEmployees]);
 
   useEffect(() => {
+    let cancelled = false;
+
+    async function loadCatalog() {
+      try {
+        const [departments, jobTitles] = await Promise.all([
+          listDepartments(),
+          listJobTitles(),
+        ]);
+        if (!cancelled) {
+          setDepartmentOptions(departments);
+          setJobTitleOptions(jobTitles);
+        }
+      } catch {
+        if (!cancelled) {
+          setDepartmentOptions([]);
+          setJobTitleOptions([]);
+        }
+      }
+    }
+
+    loadCatalog();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
     if (searchParams.get("add") === "1") {
       setIsAddOpen(true);
       setSearchParams({}, { replace: true });
@@ -396,17 +435,6 @@ export default function EmployeesPage() {
     const timer = setTimeout(() => setSuccessMessage(""), 4000);
     return () => clearTimeout(timer);
   }, [successMessage]);
-
-  const departmentOptions = useMemo(() => {
-    const unique = [
-      ...new Set(
-        employees
-          .map((emp) => emp.department)
-          .filter((dept) => dept && dept !== "—"),
-      ),
-    ];
-    return unique.sort((a, b) => a.localeCompare(b, "ar"));
-  }, [employees]);
 
   const filterOptions = useMemo(
     () => ["الكل", ...departmentOptions],
@@ -614,6 +642,7 @@ export default function EmployeesPage() {
         isOpen={isAddOpen}
         onClose={() => setIsAddOpen(false)}
         departmentOptions={departmentOptions}
+        jobTitleOptions={jobTitleOptions}
         onCreated={() => handleMutationSuccess("تم إضافة الموظف بنجاح")}
       />
 
@@ -625,6 +654,7 @@ export default function EmployeesPage() {
           canEdit={canEdit}
           userRole={userRole}
           departmentOptions={departmentOptions}
+          jobTitleOptions={jobTitleOptions}
           onClose={() => {
             setIsDetailsOpen(false);
             setSelectedEmployeeId(null);

@@ -1,5 +1,6 @@
 import { supabase } from "../utils/supabaseClient.js";
 import { getCompanyId } from "../utils/mobileAuth.js";
+import { listDepartments } from "./catalogService.js";
 import {
   buildEvaluationAnswersPayload,
   calculateEvaluationScore,
@@ -137,15 +138,7 @@ export function resolveEvaluationTemplateId(title, templates = []) {
 }
 
 export async function listCompanyDepartments() {
-  const employees = await listActiveEmployees();
-  const departments = [
-    ...new Set(
-      employees
-        .map((employee) => String(employee.department ?? "").trim())
-        .filter(Boolean),
-    ),
-  ];
-  return departments.sort((a, b) => a.localeCompare(b, "ar"));
+  return listDepartments();
 }
 
 export async function listEmployeesByDepartment(department) {

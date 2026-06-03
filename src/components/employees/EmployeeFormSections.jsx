@@ -51,6 +51,7 @@ export default function EmployeeFormSections({
   onChange,
   disabled = false,
   departmentOptions = [],
+  jobTitleOptions = [],
   showAvatar = false,
 }) {
   const update = (key, value) => {
@@ -229,13 +230,29 @@ export default function EmployeeFormSections({
             />
           </Field>
           <Field label="المسمى الوظيفي">
-            <input
-              type="text"
-              value={form.job_title_name}
-              onChange={(e) => update("job_title_name", e.target.value)}
-              disabled={disabled}
-              className={inputClass}
-            />
+            {jobTitleOptions.length > 0 ? (
+              <select
+                value={form.job_title_name}
+                onChange={(e) => update("job_title_name", e.target.value)}
+                disabled={disabled}
+                className={inputClass}
+              >
+                <option value="">— اختر —</option>
+                {jobTitleOptions.map((title) => (
+                  <option key={title} value={title}>
+                    {title}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input
+                type="text"
+                value={form.job_title_name}
+                onChange={(e) => update("job_title_name", e.target.value)}
+                disabled={disabled}
+                className={inputClass}
+              />
+            )}
           </Field>
           <Field label="موقع العمل">
             <input

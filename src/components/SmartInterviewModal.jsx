@@ -7,6 +7,7 @@ import {
   generateAndSaveInterviewArchive,
   listInterviewArchives,
 } from "../services/interviewService.js";
+import { listJobTitles } from "../services/catalogService.js";
 import { isRateLimitError } from "../utils/aiRateLimit.js";
 import RateLimitToast from "./ui/RateLimitToast.jsx";
 
@@ -80,6 +81,7 @@ function GeneratingState() {
 
 export default function SmartInterviewModal({ isOpen, onClose }) {
   const [jobTitle, setJobTitle] = useState("");
+  const [jobTitleOptions, setJobTitleOptions] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [interviewResult, setInterviewResult] = useState("");
   const [generateError, setGenerateError] = useState("");
@@ -89,6 +91,24 @@ export default function SmartInterviewModal({ isOpen, onClose }) {
   const [selectedArchiveJob, setSelectedArchiveJob] = useState(null);
   const [isArchiveLoading, setIsArchiveLoading] = useState(false);
   const [archiveError, setArchiveError] = useState("");
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+
+    let cancelled = false;
+
+    listJobTitles()
+      .then((titles) => {
+        if (!cancelled) setJobTitleOptions(titles);
+      })
+      .catch(() => {
+        if (!cancelled) setJobTitleOptions([]);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen || viewMode !== "archive") return undefined;
@@ -293,12 +313,20 @@ export default function SmartInterviewModal({ isOpen, onClose }) {
             <div className="flex flex-col gap-4">
               <input
                 type="text"
+                list="interview-job-titles"
                 value={jobTitle}
                 onChange={(e) => setJobTitle(e.target.value)}
                 placeholder="أدخل المسمى الوظيفي..."
                 disabled={isLoading}
                 className="md-input"
               />
+              {jobTitleOptions.length > 0 ? (
+                <datalist id="interview-job-titles">
+                  {jobTitleOptions.map((title) => (
+                    <option key={title} value={title} />
+                  ))}
+                </datalist>
+              ) : null}
               <button
                 type="button"
                 onClick={handleGenerate}

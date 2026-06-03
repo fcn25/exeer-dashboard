@@ -6,11 +6,13 @@ import {
   createEmployeeRequest,
   uploadRequestAttachment,
 } from "../../services/requestsService.js";
+import { listLeaveTypes } from "../../services/catalogService.js";
 
 const MAX_BYTES = 1048576;
 
 const EMPTY_FORM = {
   requestType: "General",
+  leaveType: "",
   details: "",
   amount: "",
   installments: "",
@@ -27,6 +29,25 @@ export default function NewRequestSlideover({
   const [fileError, setFileError] = useState("");
   const [submitError, setSubmitError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [leaveTypes, setLeaveTypes] = useState([]);
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+
+    let cancelled = false;
+
+    listLeaveTypes()
+      .then((rows) => {
+        if (!cancelled) setLeaveTypes(rows);
+      })
+      .catch(() => {
+        if (!cancelled) setLeaveTypes([]);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -74,10 +95,20 @@ export default function NewRequestSlideover({
         attachmentUrl = await uploadRequestAttachment(attachment, employeeId);
       }
 
+      const trimmedDetails = String(form.details ?? "").trim();
+      const details =
+        form.requestType === "Leave" && form.leaveType
+          ? `نوع الإجازة: ${form.leaveType}\n${trimmedDetails}`
+          : trimmedDetails;
+
+      if (form.requestType === "Leave" && !form.leaveType) {
+        throw new Error("نوع الإجازة مطلوب.");
+      }
+
       await createEmployeeRequest({
         employeeId,
         requestType: form.requestType,
-        details: form.details,
+        details,
         amount: form.amount,
         installments: form.installments,
         monthlyDeduction,
@@ -154,6 +185,33 @@ export default function NewRequestSlideover({
                 ))}
               </select>
             </div>
+
+            {form.requestType === "Leave" ? (
+              <div className="space-y-2">
+                <label htmlFor="leave-type" className="md-label block">
+                  نوع الإجازة
+                </label>
+                <select
+                  id="leave-type"
+                  value={form.leaveType}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, leaveType: e.target.value }))
+                  }
+                  disabled={isSaving || leaveTypes.length === 0}
+                  required
+                  className="md-input"
+                >
+                  <option value="">اختر نوع الإجازة</option>
+                  {leaveTypes.map((leaveType) => (
+                    <option key={leaveType.id ?? leaveType.name} value={leaveType.name}>
+                      {leaveType.default_days > 0
+                        ? `${leaveType.name} (${leaveType.default_days} يوم)`
+                        : leaveType.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : null}
 
             {form.requestType === "Financial" ? (
               <div className="space-y-4 rounded-2xl border border-exeer-border bg-exeer-surface p-4">

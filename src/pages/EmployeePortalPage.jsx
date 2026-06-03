@@ -12,7 +12,9 @@ import {
   Trophy,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import LogAchievementModal from "../components/achievements/LogAchievementModal.jsx";
+import MobileHeader from "../components/mobile/MobileHeader.jsx";
 import NewRequestSlideover from "../components/portal/NewRequestSlideover.jsx";
 import PendingEvaluationsSection from "../components/portal/PendingEvaluationsSection.jsx";
 import PersonalMentorCard from "../components/portal/PersonalMentorCard.jsx";
@@ -142,7 +144,10 @@ function AchievementTimelineItem({ item }) {
 export default function EmployeePortalPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { i18n } = useTranslation();
   const isMobileSelfService = location.pathname === "/mobile";
+  const pageDir = i18n.language?.startsWith("en") ? "ltr" : "rtl";
+  const pageLang = i18n.language?.startsWith("en") ? "en" : "ar";
   const { user } = useAuth();
   const employeeId = user?.employee_id;
 
@@ -202,42 +207,47 @@ export default function EmployeePortalPage() {
 
   const employeeName =
     snapshot?.employee?.full_name ?? user?.name ?? "موظف";
+  const profileImageUrl = snapshot?.employee?.image ?? user?.image ?? null;
   const jobTitle = snapshot?.employee?.job_title_name ?? user?.job_title ?? "—";
   const department = snapshot?.employee?.department ?? user?.department ?? "—";
   const greeting = getTimeBasedGreeting();
 
   return (
     <div
-      dir="rtl"
-      lang="ar"
+      dir={isMobileSelfService ? pageDir : "rtl"}
+      lang={isMobileSelfService ? pageLang : "ar"}
       className={`min-h-screen bg-md-surface-dim font-sans text-exeer-primary ${
         isMobileSelfService ? "mx-auto w-full max-w-[480px]" : ""
       }`}
     >
-      <header className="border-b border-exeer-border bg-md-surface/90 backdrop-blur-sm">
-        <div
-          className={`mx-auto flex flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-6 ${
-            isMobileSelfService ? "max-w-[480px]" : "max-w-7xl lg:px-8"
-          }`}
-        >
-          <div className="space-y-1">
-            <p className="text-xs font-medium uppercase tracking-wide text-exeer-muted">
-              الخدمة الذاتية
-            </p>
-            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-              {greeting}، {employeeName}
-            </h1>
+      {isMobileSelfService ? (
+        <MobileHeader
+          userId={user?.id}
+          employeeName={employeeName}
+          profileImageUrl={profileImageUrl}
+        />
+      ) : (
+        <header className="border-b border-exeer-border bg-md-surface/90 backdrop-blur-sm">
+          <div className="mx-auto flex flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-6 max-w-7xl lg:px-8">
+            <div className="space-y-1">
+              <p className="text-xs font-medium uppercase tracking-wide text-exeer-muted">
+                الخدمة الذاتية
+              </p>
+              <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+                {greeting}، {employeeName}
+              </h1>
+            </div>
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="md-btn-tonal inline-flex items-center gap-2"
+            >
+              <LogOut className="h-4 w-4" aria-hidden />
+              تسجيل الخروج
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={handleSignOut}
-            className="md-btn-tonal inline-flex items-center gap-2"
-          >
-            <LogOut className="h-4 w-4" aria-hidden />
-            تسجيل الخروج
-          </button>
-        </div>
-      </header>
+        </header>
+      )}
 
       <main
         className={`mx-auto space-y-8 px-4 py-8 sm:px-6 ${

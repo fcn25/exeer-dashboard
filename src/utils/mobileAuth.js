@@ -1,5 +1,5 @@
 import { supabase } from "./supabaseClient.js";
-import { normalizePermissions } from "../constants/roles.js";
+import { normalizeAppRole, normalizePermissions } from "../constants/roles.js";
 
 export function getAuthToken() {
   return localStorage.getItem("authToken");
@@ -23,12 +23,13 @@ export function persistAuthSession(session, profile) {
       user.user_metadata?.company_id ??
       user.app_metadata?.company_id;
 
-    const role =
+    const role = normalizeAppRole(
       user.role ??
-      user.app_role ??
-      user.user_metadata?.role ??
-      user.user_metadata?.app_role ??
-      "Employee";
+        user.app_role ??
+        user.user_metadata?.role ??
+        user.user_metadata?.app_role ??
+        "Employee",
+    );
 
     const permissions = normalizePermissions(user.permissions);
 

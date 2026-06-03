@@ -10,7 +10,7 @@ import GeneralSettingsTab from "../components/settings/GeneralSettingsTab.jsx";
 import AppearanceSettingsTab from "../components/settings/AppearanceSettingsTab.jsx";
 import SupportSettingsTab from "../components/settings/SupportSettingsTab.jsx";
 import SubscriptionSettingsTab from "../components/settings/SubscriptionSettingsTab.jsx";
-import { isAdmin } from "../utils/rbac.js";
+import { isOwner } from "../utils/rbac.js";
 
 const TAB_DEFS = [
   { id: "general", icon: Settings2, adminOnly: false },
@@ -26,7 +26,7 @@ function TabPanel({ tabId, activeTab, children }) {
 
 export default function SettingsPage() {
   const { t } = useTranslation();
-  const showSubscription = isAdmin();
+  const showSubscription = isOwner();
   const visibleTabs = useMemo(
     () => TAB_DEFS.filter((tab) => !tab.adminOnly || showSubscription),
     [showSubscription],

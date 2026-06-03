@@ -375,7 +375,7 @@ export default function EmployeesPage() {
   const [jobTitleOptions, setJobTitleOptions] = useState([]);
 
   const userRole = getCurrentUserRole();
-  const canEdit = canEditEmployeeRecords(userRole);
+  const canEdit = canEditEmployeeRecords();
 
   const loadEmployees = useCallback(async () => {
     setIsListLoading(true);

@@ -1,18 +1,24 @@
 import { getAuthUser, getUserPermissions } from "./mobileAuth.js";
-import { isAdminRole } from "../constants/roles.js";
+import {
+  isOwnerRole,
+  normalizeAppRole,
+} from "../constants/roles.js";
 
 export function getCurrentUserRole() {
   const user = getAuthUser();
-  return user?.role ? String(user.role).trim() : "Employee";
+  return normalizeAppRole(user?.role);
 }
 
 export function getCurrentPermissions() {
   return getUserPermissions();
 }
 
+export function isOwner() {
+  return isOwnerRole(getCurrentUserRole());
+}
+
 export function hasPermission(key) {
-  const role = getCurrentUserRole();
-  if (isAdminRole(role)) return true;
+  if (isOwner()) return true;
   return Boolean(getUserPermissions()?.[key]);
 }
 
@@ -20,34 +26,44 @@ export function canEditEmployeeRecords() {
   return hasPermission("can_edit_employees");
 }
 
-export function canAccessEmployeeProfile() {
-  return hasPermission("can_access_employee_profile");
+export function isReadOnlyEmployeeAccess() {
+  return (
+    hasPermission("can_access_employee_profile") && !canEditEmployeeRecords()
+  );
 }
 
-export function isReadOnlyEmployeeAccess() {
-  return !canEditEmployeeRecords();
+export function canAccessEmployeeProfile() {
+  return (
+    hasPermission("can_access_employee_profile") || canEditEmployeeRecords()
+  );
 }
 
 export function canViewPayroll() {
-  return hasPermission("can_view_payroll");
+  return isOwner();
 }
 
+export function canManageEvents() {
+  return hasPermission("can_manage_events");
+}
+
+/** @deprecated Use canManageEvents */
 export function canCreateEvents() {
-  return hasPermission("can_create_events");
-}
-
-export function isAdmin() {
-  return isAdminRole(getCurrentUserRole());
+  return canManageEvents();
 }
 
 export function canAccessSettings() {
-  const role = getCurrentUserRole();
-  if (isAdminRole(role)) return true;
-  return ["Executive", "HR_Manager"].includes(role);
+  return hasPermission("can_edit_employees") || isOwner();
 }
 
 export function canAccessPerformance() {
-  const role = getCurrentUserRole();
-  if (isAdminRole(role)) return true;
-  return ["Executive", "HR_Manager"].includes(role);
+  return (
+    isOwner() ||
+    hasPermission("can_edit_employees") ||
+    hasPermission("can_view_payroll")
+  );
+}
+
+/** @deprecated Use isOwner */
+export function isAdmin() {
+  return isOwner();
 }

@@ -1,5 +1,5 @@
 export const STANDARD_ROLES = [
-  "Admin",
+  "owner",
   "Executive",
   "HR_Manager",
   "HR_Assistant",
@@ -15,7 +15,7 @@ export const CONFIGURABLE_ROLES = [
 ];
 
 export const DASHBOARD_ROLES = new Set([
-  "Admin",
+  "owner",
   "Executive",
   "HR_Manager",
   "HR_Assistant",
@@ -24,7 +24,8 @@ export const DASHBOARD_ROLES = new Set([
 export const PORTAL_ROLES = new Set(["Direct_Manager", "Employee"]);
 
 export const ROLE_LABELS = {
-  Admin: "مدير النظام",
+  owner: "مالك المنشأة",
+  Admin: "مالك المنشأة",
   Executive: "تنفيذي",
   HR_Manager: "مدير موارد بشرية",
   HR_Assistant: "مساعد موارد بشرية",
@@ -36,24 +37,29 @@ export const DEFAULT_PERMISSIONS = {
   can_edit_employees: false,
   can_view_payroll: false,
   can_create_events: false,
+  can_manage_events: false,
   can_approve_financial: false,
   can_approve_general: false,
   can_access_employee_profile: false,
 };
 
-export const ADMIN_PERMISSIONS = {
+export const OWNER_PERMISSIONS = {
   can_edit_employees: true,
   can_view_payroll: true,
   can_create_events: true,
+  can_manage_events: true,
   can_approve_financial: true,
   can_approve_general: true,
   can_access_employee_profile: true,
 };
 
+/** @deprecated Use OWNER_PERMISSIONS — Admin is normalized to owner */
+export const ADMIN_PERMISSIONS = OWNER_PERMISSIONS;
+
 export const PERMISSION_DEFINITIONS = [
   { key: "can_edit_employees", label: "تعديل وحذف الموظفين" },
   { key: "can_view_payroll", label: "الوصول إلى مسير الرواتب" },
-  { key: "can_create_events", label: "إنشاء وإدارة الفعاليات" },
+  { key: "can_manage_events", label: "إنشاء وإدارة الفعاليات" },
   { key: "can_approve_financial", label: "الموافقة على الطلبات المالية" },
   { key: "can_approve_general", label: "الموافقة على الطلبات العامة" },
   { key: "can_access_employee_profile", label: "الوصول لملف الموظف" },
@@ -81,7 +87,12 @@ export function normalizePermissions(value) {
   return {
     can_edit_employees: Boolean(source.can_edit_employees),
     can_view_payroll: Boolean(source.can_view_payroll),
-    can_create_events: Boolean(source.can_create_events),
+    can_create_events: Boolean(
+      source.can_create_events ?? source.can_manage_events,
+    ),
+    can_manage_events: Boolean(
+      source.can_manage_events ?? source.can_create_events,
+    ),
     can_approve_financial: Boolean(source.can_approve_financial),
     can_approve_general: Boolean(source.can_approve_general),
     can_access_employee_profile: Boolean(source.can_access_employee_profile),
@@ -99,6 +110,17 @@ export function normalizeAssignedEmployeeIds(value) {
   ].sort((a, b) => a - b);
 }
 
+export function normalizeAppRole(role) {
+  const trimmed = String(role ?? "").trim();
+  if (trimmed === "Admin" || trimmed === "admin") return "owner";
+  return trimmed || "Employee";
+}
+
+export function isOwnerRole(role) {
+  return normalizeAppRole(role) === "owner";
+}
+
+/** @deprecated Use isOwnerRole */
 export function isAdminRole(role) {
-  return String(role ?? "").trim() === "Admin";
+  return isOwnerRole(role);
 }

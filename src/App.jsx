@@ -5,44 +5,40 @@ import HomePage from "./pages/HomePage.jsx";
 import TasksPage from "./pages/TasksPage.jsx";
 import SettingsPage from "./pages/SettingsPage.jsx";
 import PermissionsPage from "./pages/PermissionsPage.jsx";
+import UnauthorizedPage from "./pages/UnauthorizedPage.jsx";
 import EmployeePortalPage from "./pages/EmployeePortalPage.jsx";
 import EmployeesPage from "./EmployeesPage.jsx";
 import EventsPage from "./EventsPage.jsx";
 import PerformancePage from "./pages/PerformancePage.jsx";
 import PayrollPage from "./PayrollPage.jsx";
-import { ProtectedRoute } from "./components/routing/ProtectedRoute.jsx";
-import { AuthProvider, useAuth } from "./providers/AuthProvider.jsx";
-import { canAccessPerformance, canViewPayroll } from "./utils/rbac.js";
+import { ProtectedRoute } from "./components/ProtectedRoute.jsx";
+import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
+
+function LoginPage() {
+  const { isAuthenticated, isBootstrapping, homePath } = useAuth();
+
+  if (isBootstrapping) {
+    return (
+      <div
+        dir="rtl"
+        lang="ar"
+        className="flex min-h-screen items-center justify-center bg-md-surface-dim text-sm text-exeer-muted"
+      >
+        جاري التحميل...
+      </div>
+    );
+  }
+
+  if (isAuthenticated) {
+    return <Navigate to={homePath} replace />;
+  }
+
+  return <AuthContainer />;
+}
 
 function RootRedirect() {
   const { homePath } = useAuth();
   return <Navigate to={homePath} replace />;
-}
-
-function PayrollRoute() {
-  const { homePath } = useAuth();
-  if (!canViewPayroll()) {
-    return <Navigate to={homePath} replace />;
-  }
-  return <PayrollPage />;
-}
-
-function SettingsRoute() {
-  const { homePath, role, isAdmin } = useAuth();
-  const allowed =
-    isAdmin || role === "Executive" || role === "HR_Manager";
-  if (!allowed) {
-    return <Navigate to={homePath} replace />;
-  }
-  return <SettingsPage />;
-}
-
-function PerformanceRoute() {
-  const { homePath } = useAuth();
-  if (!canAccessPerformance()) {
-    return <Navigate to={homePath} replace />;
-  }
-  return <PerformancePage />;
 }
 
 function DashboardRoutes() {
@@ -52,15 +48,42 @@ function DashboardRoutes() {
         <Route element={<ManagerLayout />}>
           <Route index element={<HomePage />} />
           <Route path="tasks" element={<TasksPage />} />
-          <Route path="employees" element={<EmployeesPage />} />
-          <Route path="events" element={<EventsPage />} />
-          <Route path="payroll" element={<PayrollRoute />} />
-          <Route path="performance" element={<PerformanceRoute />} />
-          <Route path="settings" element={<SettingsRoute />} />
+          <Route
+            path="employees"
+            element={
+              <ProtectedRoute
+                allowDashboard
+                requiredPermission="can_edit_employees"
+              >
+                <EmployeesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="events"
+            element={
+              <ProtectedRoute
+                allowDashboard
+                requiredPermission="can_manage_events"
+              >
+                <EventsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="payroll"
+            element={
+              <ProtectedRoute allowDashboard requiredRole="owner">
+                <PayrollPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="performance" element={<PerformancePage />} />
+          <Route path="settings" element={<SettingsPage />} />
           <Route
             path="permissions"
             element={
-              <ProtectedRoute adminOnly>
+              <ProtectedRoute allowDashboard requiredRole="owner">
                 <PermissionsPage />
               </ProtectedRoute>
             }
@@ -71,7 +94,7 @@ function DashboardRoutes() {
   );
 }
 
-function AuthenticatedRoutes() {
+function AppRoutes() {
   const { isBootstrapping, isAuthenticated, homePath } = useAuth();
 
   if (isBootstrapping) {
@@ -86,14 +109,35 @@ function AuthenticatedRoutes() {
     );
   }
 
-  if (!isAuthenticated) {
-    return <AuthContainer />;
-  }
-
   return (
     <Routes>
-      <Route path="/" element={<RootRedirect />} />
-      <Route path="/performance" element={<Navigate to="/dashboard/performance" replace />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route
+        path="/unauthorized"
+        element={
+          isAuthenticated ? (
+            <UnauthorizedPage />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+      <Route
+        path="/"
+        element={
+          <ProtectedRoute>
+            <RootRedirect />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/performance"
+        element={
+          <ProtectedRoute>
+            <Navigate to="/dashboard/performance" replace />
+          </ProtectedRoute>
+        }
+      />
       <Route path="/dashboard/*" element={<DashboardRoutes />} />
       <Route
         path="/employee-portal"
@@ -111,7 +155,16 @@ function AuthenticatedRoutes() {
           </ProtectedRoute>
         }
       />
-      <Route path="*" element={<Navigate to={homePath} replace />} />
+      <Route
+        path="*"
+        element={
+          isAuthenticated ? (
+            <Navigate to={homePath} replace />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
     </Routes>
   );
 }
@@ -119,7 +172,7 @@ function AuthenticatedRoutes() {
 export default function App() {
   return (
     <AuthProvider>
-      <AuthenticatedRoutes />
+      <AppRoutes />
     </AuthProvider>
   );
 }

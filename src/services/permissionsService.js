@@ -1,11 +1,11 @@
 import { supabase } from "../utils/supabaseClient.js";
 import { getCompanyId } from "../utils/mobileAuth.js";
 import {
-  ADMIN_PERMISSIONS,
   CONFIGURABLE_ROLES,
   DEFAULT_PERMISSIONS,
   normalizeAssignedEmployeeIds,
   normalizePermissions,
+  OWNER_PERMISSIONS,
 } from "../constants/roles.js";
 
 function mapDbError(error) {
@@ -31,7 +31,7 @@ export async function fetchRolePermissionsForCompany(companyId = getCompanyId())
 }
 
 export async function fetchPermissionsForRole(roleName, companyId = getCompanyId()) {
-  if (roleName === "Admin") return { ...ADMIN_PERMISSIONS };
+  if (roleName === "owner" || roleName === "Admin") return { ...OWNER_PERMISSIONS };
 
   const { data, error } = await supabase
     .from("role_permissions")

@@ -26,7 +26,7 @@ async function createAdminEmployeeRecord(companyId, adminFullName, adminEmail) {
     full_name: adminFullName.trim(),
     email: adminEmail.trim(),
     employee_number: "EMP-001",
-    role: "Admin",
+    role: "owner",
     employment_status: "Active",
     department: "الإدارة",
     job_title_name: "مدير النظام",
@@ -94,7 +94,7 @@ export async function signUpCompany({
         data: {
           full_name: trimmedName,
           company_id: companyId,
-          role: "Admin",
+          role: "owner",
         },
       },
     });

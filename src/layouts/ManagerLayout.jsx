@@ -13,13 +13,13 @@ import {
   Users,
 } from "lucide-react";
 import { signOut } from "../utils/mobileAuth.js";
-import { useAuth } from "../providers/AuthProvider.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
 import {
   canAccessPerformance,
   canAccessSettings,
   canEditEmployeeRecords,
-  canViewPayroll,
-  isAdmin,
+  canManageEvents,
+  isOwner,
 } from "../utils/rbac.js";
 
 function SidebarLink({ to, label, icon: Icon, end }) {
@@ -44,7 +44,7 @@ function SidebarLink({ to, label, icon: Icon, end }) {
 export default function ManagerLayout() {
   const navigate = useNavigate();
   const { i18n } = useTranslation();
-  const { role } = useAuth();
+  const { permissions, role } = useAuth();
   const dir = i18n.language?.startsWith("en") ? "ltr" : "rtl";
   const lang = i18n.language?.startsWith("en") ? "en" : "ar";
 
@@ -52,11 +52,25 @@ export default function ManagerLayout() {
     const items = [
       { to: "/dashboard", label: "الرئيسية", icon: Home, end: true },
       { to: "/dashboard/tasks", label: "المهام", icon: CheckSquare },
-      { to: "/dashboard/events", label: "الفعاليات", icon: Calendar },
-      { to: "/dashboard/employees", label: "الموظفين", icon: Users },
     ];
 
-    if (canViewPayroll()) {
+    if (canManageEvents()) {
+      items.push({
+        to: "/dashboard/events",
+        label: "الفعاليات",
+        icon: Calendar,
+      });
+    }
+
+    if (canEditEmployeeRecords()) {
+      items.push({
+        to: "/dashboard/employees",
+        label: "الموظفين",
+        icon: Users,
+      });
+    }
+
+    if (isOwner()) {
       items.push({
         to: "/dashboard/payroll",
         label: "مسير الرواتب",
@@ -80,7 +94,7 @@ export default function ManagerLayout() {
       });
     }
 
-    if (isAdmin()) {
+    if (isOwner()) {
       items.push({
         to: "/dashboard/permissions",
         label: "الصلاحيات",
@@ -89,11 +103,11 @@ export default function ManagerLayout() {
     }
 
     return items;
-  }, [role]);
+  }, [permissions, role]);
 
   const handleLogout = async () => {
     await signOut();
-    window.location.href = "/";
+    window.location.href = "/login";
   };
 
   return (

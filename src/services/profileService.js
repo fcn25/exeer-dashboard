@@ -1,9 +1,10 @@
 import { supabase } from "../utils/supabaseClient.js";
 import { getCompanyId } from "../utils/mobileAuth.js";
 import {
-  ADMIN_PERMISSIONS,
   DEFAULT_PERMISSIONS,
+  normalizeAppRole,
   normalizePermissions,
+  OWNER_PERMISSIONS,
 } from "../constants/roles.js";
 import { fetchPermissionsForRole } from "./permissionsService.js";
 
@@ -33,15 +34,17 @@ export async function resolveAuthProfile(sessionUser) {
   const email = sessionUser?.email;
   const employee = await fetchEmployeeProfileByEmail(email);
 
-  const role = employee?.role ?? sessionUser?.user_metadata?.role ?? "Employee";
+  const rawRole =
+    employee?.role ?? sessionUser?.user_metadata?.role ?? "Employee";
+  const role = normalizeAppRole(rawRole);
   const companyId =
     employee?.company_id ??
     sessionUser?.user_metadata?.company_id ??
     getCompanyId();
 
   let permissions = { ...DEFAULT_PERMISSIONS };
-  if (role === "Admin") {
-    permissions = { ...ADMIN_PERMISSIONS };
+  if (role === "owner") {
+    permissions = { ...OWNER_PERMISSIONS };
   } else if (
     companyId &&
     ["Executive", "HR_Manager", "HR_Assistant", "Direct_Manager"].includes(role)

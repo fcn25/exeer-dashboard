@@ -28,7 +28,7 @@ import {
   listEmployeeRequests,
 } from "../services/requestsService.js";
 import { updateTaskStatus } from "../services/tasksService.js";
-import { useAuth } from "../providers/AuthProvider.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
 import { formatPortalDate, getTimeBasedGreeting } from "../utils/portalGreeting.js";
 import { signOut } from "../utils/mobileAuth.js";
 

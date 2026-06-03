@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getAuthenticatedHomePath } from "./constants/roles.js";
 import { useIsMobile } from "./hooks/useIsMobile.js";
-import { useAuth } from "./providers/AuthProvider.jsx";
+import { useAuth } from "./context/AuthContext.jsx";
 import { signInWithEmail, signUpCompany, SIGNUP_SUCCESS_MESSAGE } from "./services/authService.js";
 import { formatErrorMessage } from "./utils/formatErrorMessage.js";
 

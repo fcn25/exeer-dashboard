@@ -20,6 +20,10 @@ export function canEditEmployeeRecords() {
   return hasPermission("can_edit_employees");
 }
 
+export function canAccessEmployeeProfile() {
+  return hasPermission("can_access_employee_profile");
+}
+
 export function isReadOnlyEmployeeAccess() {
   return !canEditEmployeeRecords();
 }

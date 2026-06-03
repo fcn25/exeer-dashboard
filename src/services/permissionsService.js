@@ -4,13 +4,14 @@ import {
   ADMIN_PERMISSIONS,
   CONFIGURABLE_ROLES,
   DEFAULT_PERMISSIONS,
+  normalizeAssignedEmployeeIds,
   normalizePermissions,
 } from "../constants/roles.js";
 
 function mapDbError(error) {
   if (!error) return "حدث خطأ غير متوقع.";
   if (error.code === "PGRST205") {
-    return "جدول role_permissions غير جاهز. نفّذ migration 20250608000000_rbac_roles_permissions.sql.";
+    return "جدول role_permissions غير جاهز. نفّذ migrations 20250608000000_rbac_roles_permissions.sql و 20250618000000_role_permissions_extended.sql.";
   }
   return error.message || "تعذّر إكمال العملية.";
 }
@@ -18,12 +19,15 @@ function mapDbError(error) {
 export async function fetchRolePermissionsForCompany(companyId = getCompanyId()) {
   const { data, error } = await supabase
     .from("role_permissions")
-    .select("id, role_name, permissions, updated_at")
+    .select("id, role_name, permissions, assigned_employees, updated_at")
     .eq("company_id", companyId)
     .order("role_name", { ascending: true });
 
   if (error) throw new Error(mapDbError(error));
-  return data ?? [];
+  return (data ?? []).map((row) => ({
+    ...row,
+    assigned_employees: normalizeAssignedEmployeeIds(row.assigned_employees),
+  }));
 }
 
 export async function fetchPermissionsForRole(roleName, companyId = getCompanyId()) {
@@ -58,11 +62,38 @@ export async function updateRolePermissions(roleName, permissionsPatch) {
       },
       { onConflict: "company_id,role_name" },
     )
-    .select("id, role_name, permissions, updated_at")
+    .select("id, role_name, permissions, assigned_employees, updated_at")
     .single();
 
   if (error) throw new Error(mapDbError(error));
-  return data;
+  return {
+    ...data,
+    assigned_employees: normalizeAssignedEmployeeIds(data?.assigned_employees),
+  };
+}
+
+export async function updateRoleAssignedEmployees(roleName, employeeIds) {
+  const companyId = getCompanyId();
+  const assigned_employees = normalizeAssignedEmployeeIds(employeeIds);
+
+  await ensureDefaultRolePermissions(companyId);
+
+  const { data, error } = await supabase
+    .from("role_permissions")
+    .update({
+      assigned_employees,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("company_id", companyId)
+    .eq("role_name", roleName)
+    .select("id, role_name, permissions, assigned_employees, updated_at")
+    .single();
+
+  if (error) throw new Error(mapDbError(error));
+  return {
+    ...data,
+    assigned_employees: normalizeAssignedEmployeeIds(data?.assigned_employees),
+  };
 }
 
 export async function ensureDefaultRolePermissions(companyId = getCompanyId()) {
@@ -76,6 +107,7 @@ export async function ensureDefaultRolePermissions(companyId = getCompanyId()) {
     company_id: companyId,
     role_name,
     permissions: DEFAULT_PERMISSIONS,
+    assigned_employees: [],
   }));
 
   const { error } = await supabase.from("role_permissions").insert(inserts);

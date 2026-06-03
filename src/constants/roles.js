@@ -38,6 +38,7 @@ export const DEFAULT_PERMISSIONS = {
   can_create_events: false,
   can_approve_financial: false,
   can_approve_general: false,
+  can_access_employee_profile: false,
 };
 
 export const ADMIN_PERMISSIONS = {
@@ -46,6 +47,7 @@ export const ADMIN_PERMISSIONS = {
   can_create_events: true,
   can_approve_financial: true,
   can_approve_general: true,
+  can_access_employee_profile: true,
 };
 
 export const PERMISSION_DEFINITIONS = [
@@ -54,6 +56,7 @@ export const PERMISSION_DEFINITIONS = [
   { key: "can_create_events", label: "إنشاء وإدارة الفعاليات" },
   { key: "can_approve_financial", label: "الموافقة على الطلبات المالية" },
   { key: "can_approve_general", label: "الموافقة على الطلبات العامة" },
+  { key: "can_access_employee_profile", label: "الوصول لملف الموظف" },
 ];
 
 export function isDashboardRole(role) {
@@ -81,7 +84,19 @@ export function normalizePermissions(value) {
     can_create_events: Boolean(source.can_create_events),
     can_approve_financial: Boolean(source.can_approve_financial),
     can_approve_general: Boolean(source.can_approve_general),
+    can_access_employee_profile: Boolean(source.can_access_employee_profile),
   };
+}
+
+export function normalizeAssignedEmployeeIds(value) {
+  if (!Array.isArray(value)) return [];
+  return [
+    ...new Set(
+      value
+        .map((id) => Number(id))
+        .filter((id) => Number.isFinite(id) && id > 0),
+    ),
+  ].sort((a, b) => a - b);
 }
 
 export function isAdminRole(role) {

@@ -1,5 +1,4 @@
-import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { Navigate, Route, Routes } from "react-router-dom";
 import AuthContainer from "./AuthContainer.jsx";
 import ManagerLayout from "./layouts/ManagerLayout.jsx";
 import HomePage from "./pages/HomePage.jsx";
@@ -9,7 +8,6 @@ import PermissionsPage from "./pages/PermissionsPage.jsx";
 import EmployeePortalPage from "./pages/EmployeePortalPage.jsx";
 import EmployeesPage from "./EmployeesPage.jsx";
 import EventsPage from "./EventsPage.jsx";
-import MobileDashboard from "./MobileDashboard.jsx";
 import PerformancePage from "./pages/PerformancePage.jsx";
 import PayrollPage from "./PayrollPage.jsx";
 import { ProtectedRoute } from "./components/routing/ProtectedRoute.jsx";
@@ -47,24 +45,7 @@ function PerformanceRoute() {
   return <PerformancePage />;
 }
 
-function MobileRedirectWrapper() {
-  const navigate = useNavigate();
-  const { isDashboardUser } = useAuth();
-
-  useEffect(() => {
-    if (!isDashboardUser) return undefined;
-
-    const redirectIfMobile = () => {
-      if (window.innerWidth < 768) {
-        navigate("/mobile", { replace: true });
-      }
-    };
-
-    redirectIfMobile();
-    window.addEventListener("resize", redirectIfMobile);
-    return () => window.removeEventListener("resize", redirectIfMobile);
-  }, [isDashboardUser, navigate]);
-
+function DashboardRoutes() {
   return (
     <ProtectedRoute allowDashboard>
       <Routes>
@@ -113,7 +94,7 @@ function AuthenticatedRoutes() {
     <Routes>
       <Route path="/" element={<RootRedirect />} />
       <Route path="/performance" element={<Navigate to="/dashboard/performance" replace />} />
-      <Route path="/dashboard/*" element={<MobileRedirectWrapper />} />
+      <Route path="/dashboard/*" element={<DashboardRoutes />} />
       <Route
         path="/employee-portal"
         element={
@@ -125,8 +106,8 @@ function AuthenticatedRoutes() {
       <Route
         path="/mobile"
         element={
-          <ProtectedRoute allowDashboard>
-            <MobileDashboard />
+          <ProtectedRoute allowPortal>
+            <EmployeePortalPage />
           </ProtectedRoute>
         }
       />

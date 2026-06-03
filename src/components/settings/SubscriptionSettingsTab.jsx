@@ -1,5 +1,6 @@
 import { Check, Crown, Sparkles } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { CreateSubscriberButton } from "./CreateSubscriberModal.jsx";
 
 const TIERS = [
   {
@@ -26,13 +27,16 @@ export default function SubscriptionSettingsTab() {
 
   return (
     <div className="space-y-8">
-      <header className="space-y-1">
-        <h2 className="text-lg font-bold text-exeer-primary">
-          {t("settings.subscription.title")}
-        </h2>
-        <p className="text-sm text-exeer-muted">
-          {t("settings.subscription.description")}
-        </p>
+      <header className="flex flex-wrap items-start justify-between gap-4">
+        <div className="space-y-1">
+          <h2 className="text-lg font-bold text-exeer-primary">
+            {t("settings.subscription.title")}
+          </h2>
+          <p className="text-sm text-exeer-muted">
+            {t("settings.subscription.description")}
+          </p>
+        </div>
+        <CreateSubscriberButton />
       </header>
 
       <article className="md-surface relative overflow-hidden p-6 md:p-8">

@@ -67,11 +67,13 @@ function AddEmployeeSlideOver({ isOpen, onClose, onCreated, departmentOptions })
   const [form, setForm] = useState({ ...EMPTY_EMPLOYEE_FORM });
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
     if (isOpen) {
       setForm({ ...EMPTY_EMPLOYEE_FORM });
       setError("");
+      setSuccessMessage("");
       setIsSaving(false);
     }
   }, [isOpen]);
@@ -82,13 +84,25 @@ function AddEmployeeSlideOver({ isOpen, onClose, onCreated, departmentOptions })
       setError("الاسم الكامل مطلوب.");
       return;
     }
+    if (!form.email?.trim()) {
+      setError("البريد الإلكتروني مطلوب لإرسال دعوة الدخول للموظف.");
+      return;
+    }
 
     setIsSaving(true);
     setError("");
+    setSuccessMessage("");
 
     try {
-      await createEmployee(form);
+      const created = await createEmployee(form);
       await onCreated();
+      if (created.invitationSent) {
+        setSuccessMessage(
+          `تم حفظ الموظف وإرسال دعوة الدخول إلى ${form.email.trim()}.`,
+        );
+        setTimeout(() => onClose(), 1400);
+        return;
+      }
       onClose();
     } catch (err) {
       setError(err.message || "تعذّر إضافة الموظف.");
@@ -118,6 +132,11 @@ function AddEmployeeSlideOver({ isOpen, onClose, onCreated, departmentOptions })
       {error ? (
         <p className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
           {error}
+        </p>
+      ) : null}
+      {successMessage ? (
+        <p className="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+          {successMessage}
         </p>
       ) : null}
 

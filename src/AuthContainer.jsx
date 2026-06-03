@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getHomePathForRole } from "./constants/roles.js";
 import { useAuth } from "./providers/AuthProvider.jsx";
-import { signInWithEmail, signUpCompany } from "./services/authService.js";
+import { signInWithEmail, signUpCompany, SIGNUP_SUCCESS_MESSAGE } from "./services/authService.js";
+import { formatErrorMessage } from "./utils/formatErrorMessage.js";
 
 const INPUT_CLASS = "md-input";
 
@@ -59,10 +60,6 @@ export default function AuthContainer() {
 
         {authView === "signup" ? (
           <SignupView
-            onSuccess={() => {
-              setAuthView("login");
-              setSuccessMessage("تم إنشاء الحساب، يرجى تسجيل الدخول");
-            }}
             onLogin={() => {
               setSuccessMessage("");
               setAuthView("login");
@@ -201,7 +198,7 @@ function LoginView({
   );
 }
 
-function SignupView({ onSuccess, onLogin }) {
+function SignupView({ onLogin }) {
   const [companyName, setCompanyName] = useState("");
   const [adminFullName, setAdminFullName] = useState("");
   const [adminEmail, setAdminEmail] = useState("");
@@ -209,10 +206,12 @@ function SignupView({ onSuccess, onLogin }) {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError("");
+    setSuccessMessage("");
 
     if (
       !companyName.trim() ||
@@ -226,17 +225,25 @@ function SignupView({ onSuccess, onLogin }) {
     }
 
     setIsLoading(true);
+    setError("");
+    setSuccessMessage("");
 
     try {
-      await signUpCompany({
+      const result = await signUpCompany({
         companyName,
         adminFullName,
         adminEmail,
         password,
       });
-      onSuccess();
+      setCompanyName("");
+      setAdminFullName("");
+      setAdminEmail("");
+      setPassword("");
+      setAgreedToTerms(false);
+      setSuccessMessage(result.successMessage ?? SIGNUP_SUCCESS_MESSAGE);
     } catch (err) {
-      setError(err.message || "تعذّر إنشاء الحساب.");
+      setSuccessMessage("");
+      setError(formatErrorMessage(err, "تعذّر إنشاء الحساب."));
     } finally {
       setIsLoading(false);
     }
@@ -249,6 +256,7 @@ function SignupView({ onSuccess, onLogin }) {
       </h1>
 
       <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+        <AuthMessage type="success">{successMessage}</AuthMessage>
         <AuthMessage type="error">{error}</AuthMessage>
 
         <div>

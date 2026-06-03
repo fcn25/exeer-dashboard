@@ -1,5 +1,6 @@
 import { supabase } from "../utils/supabaseClient.js";
 import { getCompanyId } from "../utils/mobileAuth.js";
+import { inviteEmployeeByEmail } from "./employeeInviteService.js";
 
 function mapDbError(error) {
   if (!error) return "حدث خطأ غير متوقع.";
@@ -66,6 +67,8 @@ export async function getEmployeeById(employeeId) {
 
 export async function createEmployee(form) {
   const companyId = getCompanyId();
+  const email = String(form.email ?? "").trim();
+
   const { data, error } = await supabase
     .from("employees")
     .insert({
@@ -76,7 +79,29 @@ export async function createEmployee(form) {
     .single();
 
   if (error) throw new Error(mapDbError(error));
-  return data;
+
+  if (email) {
+    try {
+      await inviteEmployeeByEmail({
+        email,
+        fullName: form.full_name,
+        role: form.role || "Employee",
+        companyId,
+        employeeId: data.id,
+      });
+    } catch (inviteError) {
+      await supabase.from("employees").delete().eq("id", data.id);
+      throw new Error(
+        inviteError.message ||
+          "تعذّر إرسال دعوة الدخول. تأكد من نشر Edge Function: invite-employee.",
+      );
+    }
+  }
+
+  return {
+    ...data,
+    invitationSent: Boolean(email),
+  };
 }
 
 export async function updateEmployee(employeeId, form) {

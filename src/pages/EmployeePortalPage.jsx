@@ -11,7 +11,7 @@ import {
   Star,
   Trophy,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import LogAchievementModal from "../components/achievements/LogAchievementModal.jsx";
 import NewRequestSlideover from "../components/portal/NewRequestSlideover.jsx";
 import PendingEvaluationsSection from "../components/portal/PendingEvaluationsSection.jsx";
@@ -141,6 +141,8 @@ function AchievementTimelineItem({ item }) {
 
 export default function EmployeePortalPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isMobileSelfService = location.pathname === "/mobile";
   const { user } = useAuth();
   const employeeId = user?.employee_id;
 
@@ -208,13 +210,19 @@ export default function EmployeePortalPage() {
     <div
       dir="rtl"
       lang="ar"
-      className="min-h-screen bg-md-surface-dim font-sans text-exeer-primary"
+      className={`min-h-screen bg-md-surface-dim font-sans text-exeer-primary ${
+        isMobileSelfService ? "mx-auto w-full max-w-[480px]" : ""
+      }`}
     >
       <header className="border-b border-exeer-border bg-md-surface/90 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
+        <div
+          className={`mx-auto flex flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-6 ${
+            isMobileSelfService ? "max-w-[480px]" : "max-w-7xl lg:px-8"
+          }`}
+        >
           <div className="space-y-1">
             <p className="text-xs font-medium uppercase tracking-wide text-exeer-muted">
-              بوابة الموظف
+              الخدمة الذاتية
             </p>
             <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
               {greeting}، {employeeName}
@@ -231,7 +239,11 @@ export default function EmployeePortalPage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
+      <main
+        className={`mx-auto space-y-8 px-4 py-8 sm:px-6 ${
+          isMobileSelfService ? "max-w-[480px]" : "max-w-7xl lg:px-8"
+        }`}
+      >
         <section className="md-surface flex flex-col gap-4 p-6 md:flex-row md:items-center md:justify-between md:p-7">
           <div className="flex items-start gap-4">
             <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-exeer-surface text-exeer-primary md-elevated">
@@ -274,8 +286,12 @@ export default function EmployeePortalPage() {
           />
         </section>
 
-        <div className="grid grid-cols-1 gap-8 xl:grid-cols-12">
-          <div className="space-y-8 xl:col-span-7">
+        <div
+          className={`grid grid-cols-1 gap-8 ${
+            isMobileSelfService ? "" : "xl:grid-cols-12"
+          }`}
+        >
+          <div className={`space-y-8 ${isMobileSelfService ? "" : "xl:col-span-7"}`}>
             <SectionShell
               title="مهامي"
               subtitle="المهام المُسندة إليك"
@@ -346,7 +362,7 @@ export default function EmployeePortalPage() {
             </SectionShell>
           </div>
 
-          <div className="space-y-8 xl:col-span-5">
+          <div className={`space-y-8 ${isMobileSelfService ? "" : "xl:col-span-5"}`}>
             <SectionShell
               title="الطلبات"
               subtitle="تقديم ومتابعة طلباتك"

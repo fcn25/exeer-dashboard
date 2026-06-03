@@ -37,11 +37,11 @@ const SMART_TASKS = [
 
 function StatCard({ value, label, isLoading }) {
   return (
-    <article className="md-surface flex flex-col gap-3 p-6 md:p-7">
-      <p className="text-4xl font-bold tracking-tight text-exeer-primary">
+    <article className="flex flex-col gap-2 rounded-md border border-gray-200 bg-white p-5">
+      <p className="text-3xl font-semibold tracking-tight text-slate-900 tabular-nums">
         {isLoading ? "—" : value}
       </p>
-      <p className="text-sm font-medium text-exeer-muted">{label}</p>
+      <p className="text-sm text-slate-500">{label}</p>
     </article>
   );
 }
@@ -51,12 +51,12 @@ function SmartTaskCard({ label, icon: Icon, onClick }) {
     <button
       type="button"
       onClick={onClick}
-      className="md-surface-muted flex min-h-[132px] flex-col items-center justify-center gap-3 px-4 py-6 text-center transition-colors hover:bg-exeer-hover"
+      className="flex min-h-[120px] flex-col items-center justify-center gap-2.5 rounded-md border border-gray-200 bg-white px-4 py-5 text-center transition-colors hover:bg-gray-50"
     >
-      <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-exeer-primary md-elevated">
-        <Icon className="h-6 w-6 stroke-[1.75]" aria-hidden />
+      <span className="flex h-10 w-10 items-center justify-center rounded-md border border-gray-200 bg-gray-50 text-slate-900">
+        <Icon className="h-5 w-5 stroke-[1.75]" aria-hidden />
       </span>
-      <span className="text-sm font-medium text-exeer-primary">{label}</span>
+      <span className="text-sm font-medium text-slate-900">{label}</span>
     </button>
   );
 }
@@ -119,15 +119,15 @@ export default function HomePage() {
 
   return (
     <div className="md-page">
-      <header className="space-y-2">
+      <header className="space-y-1">
         <h1 className="md-page-title">مرحباً بك، {user.name}</h1>
-        <p className="text-sm text-exeer-muted">
+        <p className="text-sm text-slate-500">
           نظرة عامة على نشاط المنشأة اليوم
         </p>
       </header>
 
       {error ? (
-        <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+        <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
           {error}
         </p>
       ) : null}
@@ -135,7 +135,7 @@ export default function HomePage() {
       <PlgOnboardingBanner employeeCount={stats.employeeCount} />
 
       <section
-        className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4"
+        className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4"
         aria-label="إحصائيات سريعة"
       >
         {statCards.map((stat) => (
@@ -143,10 +143,10 @@ export default function HomePage() {
         ))}
       </section>
 
-      <section className="grid flex-1 grid-cols-1 gap-8 lg:grid-cols-3">
-        <div className="space-y-5 lg:col-span-2">
-          <h2 className="text-xl font-bold text-exeer-primary">المهام الذكية</h2>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <section className="grid flex-1 grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="space-y-4 lg:col-span-2">
+          <h2 className="text-base font-semibold text-slate-900">المهام الذكية</h2>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {SMART_TASKS.map((task) => (
               <SmartTaskCard
                 key={task.id}
@@ -170,33 +170,30 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="space-y-5">
-          <h2 className="text-xl font-bold text-exeer-primary">الطلبات المعلقة</h2>
-          <div className="md-surface min-h-[320px] p-5 lg:min-h-[calc(100%-2.5rem)]">
+        <div className="space-y-4">
+          <h2 className="text-base font-semibold text-slate-900">الطلبات المعلقة</h2>
+          <div className="min-h-[280px] rounded-md border border-gray-200 bg-white p-4 lg:min-h-[320px]">
             {isLoading ? (
-              <p className="py-16 text-center text-sm text-exeer-muted">
+              <p className="py-16 text-center text-sm text-slate-500">
                 جاري التحميل...
               </p>
             ) : pendingPreview.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">
-                <span className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-exeer-surface text-exeer-muted">
-                  <Package className="h-8 w-8 stroke-[1.75]" aria-hidden />
+                <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-md border border-gray-200 bg-gray-50 text-slate-400">
+                  <Package className="h-6 w-6 stroke-[1.75]" aria-hidden />
                 </span>
-                <p className="max-w-[220px] text-sm font-medium leading-relaxed text-exeer-muted">
+                <p className="max-w-[220px] text-sm text-slate-500">
                   لا توجد طلبات معلقة حالياً
                 </p>
               </div>
             ) : (
-              <ul className="space-y-3">
+              <ul className="divide-y divide-gray-200">
                 {pendingPreview.map((request) => (
-                  <li
-                    key={request.id}
-                    className="rounded-2xl border border-exeer-border bg-exeer-surface px-4 py-3"
-                  >
-                    <p className="text-sm font-bold text-exeer-primary">
+                  <li key={request.id} className="py-3 first:pt-0">
+                    <p className="text-sm font-medium text-slate-900">
                       {request.employee_name}
                     </p>
-                    <p className="mt-1 text-xs text-exeer-muted">
+                    <p className="mt-0.5 text-xs text-slate-500">
                       {request.request_type}
                     </p>
                   </li>

@@ -7,7 +7,7 @@ import {
 
 function ExeerFormHeader({ subtitle }) {
   return (
-    <div className="relative mb-6 overflow-hidden rounded-2xl border border-exeer-border/60 bg-gradient-to-b from-md-surface to-exeer-surface/40 px-4 py-5 text-center">
+    <div className="relative mb-6 overflow-hidden rounded-md border border-gray-200 bg-white px-4 py-5 text-center">
       <p
         className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 select-none text-5xl font-black tracking-widest text-exeer-primary/[0.04]"
         aria-hidden
@@ -53,7 +53,7 @@ function StarRatingInput({ question, value, onChange, disabled }) {
         return (
           <label
             key={rating}
-            className={`rounded-xl p-1.5 transition-colors ${
+            className={`rounded-md p-1.5 transition-colors ${
               disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer hover:bg-exeer-hover"
             }`}
           >
@@ -166,9 +166,9 @@ function ChoiceQuestionInput({ question, value, onChange, disabled }) {
         return (
           <label
             key={option}
-            className={`flex cursor-pointer items-center gap-3 rounded-xl border px-3 py-2.5 transition-colors ${
+            className={`flex cursor-pointer items-center gap-3 rounded-md border px-3 py-2.5 transition-colors ${
               selected
-                ? "border-md-primary bg-md-primary-container/25 dark:border-[#2563eb] dark:bg-[#1e3a5f]/25"
+                ? "border-md-primary bg-md-primary-container/25 dark:border-slate-600 dark:bg-[#1e3a5f]/25"
                 : "border-exeer-border hover:bg-exeer-hover"
             } ${disabled ? "cursor-not-allowed opacity-60" : ""}`}
           >
@@ -195,7 +195,7 @@ function FileQuestionInput({ question, value, onChange, disabled }) {
     <div className="space-y-2">
       <label
         htmlFor={inputId}
-        className={`md-surface-muted flex cursor-pointer items-center gap-3 rounded-2xl px-4 py-3 transition-colors ${
+        className={`md-surface-muted flex cursor-pointer items-center gap-3 rounded-md px-4 py-3 transition-colors ${
           disabled ? "cursor-not-allowed opacity-60" : "hover:bg-exeer-hover"
         }`}
       >
@@ -222,7 +222,7 @@ function QuestionField({ question, value, onChange, disabled, lang }) {
   const inputId = `eval-q-${question.id}`;
 
   return (
-    <article className="md-surface-muted space-y-3 rounded-2xl px-4 py-4">
+    <article className="md-surface-muted space-y-3 rounded-md px-4 py-4">
       <div className="space-y-1">
         <label htmlFor={inputId} className="text-sm font-bold leading-snug text-exeer-primary">
           {question.text}
@@ -325,7 +325,7 @@ export default function EmployeeEvaluationForm({
   };
 
   const body = !questions.length ? (
-    <p className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+    <p className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
       لا توجد أسئلة مُعرّفة لهذا النموذج.
     </p>
   ) : (
@@ -348,7 +348,7 @@ export default function EmployeeEvaluationForm({
       <button
         type="submit"
         disabled={disabled || isSubmitting || !questions.length}
-        className="md-btn-primary w-full py-3.5 text-base font-semibold shadow-md"
+        className="md-btn-primary w-full py-3.5 text-base font-semibold"
       >
         {isSubmitting ? "جاري الإرسال..." : submitLabel}
       </button>

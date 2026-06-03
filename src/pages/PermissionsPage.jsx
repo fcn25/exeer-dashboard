@@ -16,7 +16,7 @@ import {
 
 function ToggleSwitch({ checked, disabled, onChange, label }) {
   return (
-    <label className="flex cursor-pointer items-center justify-between gap-4 rounded-2xl border border-exeer-border bg-md-surface px-4 py-3">
+    <label className="flex cursor-pointer items-center justify-between gap-4 rounded-md border border-exeer-border bg-md-surface px-4 py-3">
       <span className="text-sm font-medium text-exeer-primary">{label}</span>
       <button
         type="button"
@@ -26,11 +26,11 @@ function ToggleSwitch({ checked, disabled, onChange, label }) {
         disabled={disabled}
         onClick={() => onChange(!checked)}
         className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${
-          checked ? "bg-md-primary dark:bg-[#2563eb]" : "bg-exeer-border"
+          checked ? "bg-md-primary dark:bg-slate-700" : "bg-exeer-border"
         } ${disabled ? "opacity-50" : ""}`}
       >
         <span
-          className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow-sm transition-transform ${
+          className={`absolute top-0.5 h-6 w-6 rounded-full bg-white transition-transform ${
             checked ? "start-0.5 translate-x-5" : "start-0.5 translate-x-0"
           }`}
         />
@@ -101,7 +101,7 @@ function EmployeeAssignMultiselect({
         <div
           role="listbox"
           aria-multiselectable="true"
-          className="absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-2xl border border-exeer-border bg-md-surface shadow-lg"
+          className="absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-md border border-exeer-border bg-md-surface"
         >
           {employees.length === 0 ? (
             <p className="px-4 py-3 text-sm text-exeer-muted">لا يوجد موظفون</p>
@@ -248,7 +248,7 @@ export default function PermissionsPage() {
       </header>
 
       {error ? (
-        <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+        <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
           {error}
         </p>
       ) : null}
@@ -265,7 +265,7 @@ export default function PermissionsPage() {
                 key={row.role_name}
                 type="button"
                 onClick={() => setActiveRole(row.role_name)}
-                className={`rounded-2xl px-4 py-3 text-start text-sm font-medium transition-colors ${
+                className={`rounded-md px-4 py-3 text-start text-sm font-medium transition-colors ${
                   activeRole === row.role_name
                     ? "bg-md-primary-container text-exeer-primary dark:bg-[#1e3a5f] dark:text-[#e2e8f0]"
                     : "text-exeer-muted hover:bg-exeer-hover"

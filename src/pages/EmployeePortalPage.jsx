@@ -35,7 +35,7 @@ import { signOut } from "../utils/mobileAuth.js";
 function StatCard({ icon: Icon, value, label, accent = "text-exeer-primary" }) {
   return (
     <article className="md-surface flex flex-col gap-3 p-5 md:p-6">
-      <span className={`flex h-10 w-10 items-center justify-center rounded-2xl bg-exeer-surface ${accent}`}>
+      <span className={`flex h-10 w-10 items-center justify-center rounded-md bg-exeer-surface ${accent}`}>
         <Icon className="h-5 w-5 stroke-[1.75]" aria-hidden />
       </span>
       <p className="text-3xl font-bold tracking-tight text-exeer-primary">
@@ -256,7 +256,7 @@ export default function EmployeePortalPage() {
       >
         <section className="md-surface flex flex-col gap-4 p-6 md:flex-row md:items-center md:justify-between md:p-7">
           <div className="flex items-start gap-4">
-            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-exeer-surface text-exeer-primary md-elevated">
+            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-md bg-exeer-surface text-exeer-primary">
               <Briefcase className="h-6 w-6 stroke-[1.75]" aria-hidden />
             </span>
             <div className="space-y-1">
@@ -268,7 +268,7 @@ export default function EmployeePortalPage() {
         </section>
 
         {error ? (
-          <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
+          <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
             {error}
           </p>
         ) : null}
@@ -325,7 +325,7 @@ export default function EmployeePortalPage() {
                   ))}
                 </div>
               ) : (
-                <div className="md-surface-muted rounded-2xl px-4 py-10 text-center">
+                <div className="md-surface-muted rounded-md px-4 py-10 text-center">
                   <p className="text-sm text-exeer-muted">لا توجد مهام مسندة إليك حالياً.</p>
                 </div>
               )}
@@ -356,7 +356,7 @@ export default function EmployeePortalPage() {
                   ))}
                 </ol>
               ) : (
-                <div className="md-surface-muted rounded-2xl px-4 py-10 text-center">
+                <div className="md-surface-muted rounded-md px-4 py-10 text-center">
                   <p className="text-sm text-exeer-muted">لم تُسجّل إنجازات بعد.</p>
                 </div>
               )}

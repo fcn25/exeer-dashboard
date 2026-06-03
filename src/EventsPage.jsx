@@ -85,11 +85,11 @@ function CreateEventModal({ isOpen, onClose, onCreated }) {
       aria-modal="true"
       aria-labelledby="create-event-title"
     >
-      <div className="md-surface relative w-full max-w-lg p-6 md:p-8 md-elevated">
+      <div className="md-surface relative w-full max-w-lg p-6 md:p-8">
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 start-4 flex h-9 w-9 items-center justify-center rounded-2xl border border-exeer-border bg-white text-exeer-muted hover:bg-exeer-hover"
+          className="absolute top-4 start-4 flex h-9 w-9 items-center justify-center rounded-md border border-exeer-border bg-white text-exeer-muted hover:bg-exeer-hover"
           aria-label="إغلاق"
         >
           <X className="h-5 w-5" aria-hidden />
@@ -158,7 +158,7 @@ function CreateEventModal({ isOpen, onClose, onCreated }) {
           />
 
           {error ? (
-            <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+            <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
               {error}
             </p>
           ) : null}
@@ -236,13 +236,13 @@ export default function EventsPage() {
       </header>
 
       {successMessage ? (
-        <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-center text-sm font-medium text-emerald-800">
+        <p className="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-center text-sm font-medium text-emerald-800">
           {successMessage}
         </p>
       ) : null}
 
       {error ? (
-        <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+        <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
           {error}
         </p>
       ) : null}

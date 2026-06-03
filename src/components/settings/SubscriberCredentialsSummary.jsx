@@ -49,7 +49,7 @@ export default function SubscriberCredentialsSummary({
         onClick={onClose}
       />
 
-      <div className="relative w-full max-w-lg rounded-t-3xl bg-md-surface p-6 sm:rounded-3xl sm:p-8 md-elevated">
+      <div className="relative w-full max-w-lg rounded-t-md bg-md-surface p-6 sm:rounded-md sm:p-8">
         <div className="mb-6 flex items-start justify-between gap-4">
           <div className="space-y-1">
             <h2
@@ -66,14 +66,14 @@ export default function SubscriberCredentialsSummary({
           <button
             type="button"
             onClick={onClose}
-            className="flex h-9 w-9 items-center justify-center rounded-2xl border border-exeer-border text-exeer-muted transition-colors hover:bg-exeer-hover"
+            className="flex h-9 w-9 items-center justify-center rounded-md border border-exeer-border text-exeer-muted transition-colors hover:bg-exeer-hover"
             aria-label="إغلاق"
           >
             <X className="h-5 w-5" aria-hidden />
           </button>
         </div>
 
-        <div className="md-surface-muted space-y-3 rounded-2xl p-5 text-sm">
+        <div className="md-surface-muted space-y-3 rounded-md p-5 text-sm">
           <p>
             <span className="font-semibold text-exeer-primary">المنشأة: </span>
             {summary.companyName}

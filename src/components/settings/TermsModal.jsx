@@ -12,7 +12,7 @@ export default function TermsModal({ isOpen, onClose }) {
       aria-modal="true"
       aria-labelledby="terms-modal-title"
     >
-      <div className="md-surface w-full max-w-lg p-6 md-elevated">
+      <div className="md-surface w-full max-w-lg p-6">
         <h2
           id="terms-modal-title"
           className="mb-3 text-lg font-bold text-exeer-primary"

@@ -138,7 +138,7 @@ export default function NewRequestSlideover({
       <aside
         dir="rtl"
         lang="ar"
-        className="relative flex h-full w-full max-w-md flex-col bg-md-surface shadow-2xl sm:max-w-lg"
+        className="relative flex h-full w-full max-w-md flex-col border-s border-gray-200 bg-white sm:max-w-lg"
         role="dialog"
         aria-modal="true"
         aria-labelledby="new-request-title"
@@ -156,7 +156,7 @@ export default function NewRequestSlideover({
             type="button"
             onClick={onClose}
             disabled={isSaving}
-            className="flex h-9 w-9 items-center justify-center rounded-2xl border border-exeer-border text-exeer-muted transition-colors hover:bg-exeer-hover"
+            className="flex h-9 w-9 items-center justify-center rounded-md border border-exeer-border text-exeer-muted transition-colors hover:bg-exeer-hover"
             aria-label="إغلاق"
           >
             <X className="h-5 w-5" aria-hidden />
@@ -214,7 +214,7 @@ export default function NewRequestSlideover({
             ) : null}
 
             {form.requestType === "Financial" ? (
-              <div className="space-y-4 rounded-2xl border border-exeer-border bg-exeer-surface p-4">
+              <div className="space-y-4 rounded-md border border-exeer-border bg-exeer-surface p-4">
                 <div className="space-y-2">
                   <label htmlFor="request-amount" className="md-label block">
                     المبلغ (ر.س)
@@ -256,7 +256,7 @@ export default function NewRequestSlideover({
                   />
                 </div>
 
-                <div className="rounded-xl bg-white px-4 py-3 dark:bg-[#1e293b]">
+                <div className="rounded-md bg-white px-4 py-3 dark:bg-[#1e293b]">
                   <p className="text-xs text-exeer-muted">الخصم الشهري التقديري</p>
                   <p className="text-lg font-bold text-exeer-primary">
                     {monthlyDeduction != null
@@ -312,7 +312,7 @@ export default function NewRequestSlideover({
             </div>
 
             {submitError ? (
-              <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
+              <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
                 {submitError}
               </p>
             ) : null}

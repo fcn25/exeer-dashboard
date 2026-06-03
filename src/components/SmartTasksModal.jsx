@@ -14,7 +14,7 @@ function SuccessToast({ message, onDismiss }) {
   return (
     <div
       role="status"
-      className="fixed inset-x-4 top-4 z-[60] mx-auto flex max-w-md items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900 shadow-md sm:inset-x-auto sm:end-6 sm:start-auto sm:top-6 dark:border-emerald-800 dark:bg-emerald-950/90 dark:text-emerald-100"
+      className="fixed inset-x-4 top-4 z-[60] mx-auto flex max-w-md items-center gap-3 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900 sm:inset-x-auto sm:end-6 sm:start-auto sm:top-6 dark:border-emerald-800 dark:bg-emerald-950/90 dark:text-emerald-100"
     >
       <CheckCircle2 className="h-5 w-5 shrink-0" aria-hidden />
       <span className="flex-1">{message}</span>
@@ -136,10 +136,10 @@ export default function SmartTasksModal({ isOpen, onClose, onTaskCreated }) {
           aria-modal="true"
           aria-labelledby="smart-tasks-modal-title"
         >
-          <div className="md-surface flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-3xl sm:max-h-[90vh] sm:max-w-lg sm:rounded-3xl md:max-w-xl md-elevated">
+          <div className="md-surface flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-md sm:max-h-[90vh] sm:max-w-lg sm:rounded-md md:max-w-xl">
             <div className="flex shrink-0 items-start justify-between gap-4 border-b border-exeer-border px-5 py-4 sm:px-6 sm:py-5">
               <div className="flex min-w-0 items-start gap-3">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-md-primary-container text-exeer-primary dark:bg-[#1e3a5f] dark:text-[#e2e8f0] sm:h-11 sm:w-11">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-md-primary-container text-exeer-primary dark:bg-[#1e3a5f] dark:text-[#e2e8f0] sm:h-11 sm:w-11">
                   <Sparkles className="h-5 w-5 stroke-[1.75]" aria-hidden />
                 </span>
                 <div className="min-w-0 space-y-1">
@@ -158,7 +158,7 @@ export default function SmartTasksModal({ isOpen, onClose, onTaskCreated }) {
                 type="button"
                 onClick={handleClose}
                 disabled={isSubmitting}
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border border-exeer-border bg-md-surface text-exeer-muted transition-colors hover:bg-exeer-hover disabled:opacity-50"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-exeer-border bg-md-surface text-exeer-muted transition-colors hover:bg-exeer-hover disabled:opacity-50"
                 aria-label="إغلاق"
               >
                 <X className="h-5 w-5" aria-hidden />
@@ -215,7 +215,7 @@ export default function SmartTasksModal({ isOpen, onClose, onTaskCreated }) {
               </div>
 
               {error ? (
-                <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
+                <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
                   {error}
                 </p>
               ) : null}

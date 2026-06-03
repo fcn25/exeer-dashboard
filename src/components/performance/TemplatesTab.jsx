@@ -10,9 +10,9 @@ function TemplateCard({ template, onSelect }) {
     <button
       type="button"
       onClick={() => onSelect(template)}
-      className="group flex flex-col gap-2 rounded-xl border border-exeer-border bg-md-surface p-3 text-right transition-colors hover:border-md-primary/35 hover:bg-exeer-hover"
+      className="group flex flex-col gap-2 rounded-md border border-exeer-border bg-md-surface p-3 text-right transition-colors hover:border-md-primary/35 hover:bg-exeer-hover"
     >
-      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-exeer-surface text-exeer-primary transition-colors group-hover:bg-md-primary group-hover:text-white dark:group-hover:bg-[#2563eb]">
+      <span className="flex h-9 w-9 items-center justify-center rounded-md border border-gray-200 bg-gray-50 text-slate-900 transition-colors group-hover:border-slate-900 group-hover:bg-slate-900 group-hover:text-white">
         <Icon className="h-4 w-4 stroke-[1.75]" aria-hidden />
       </span>
       <h4 className="line-clamp-2 text-sm font-semibold leading-snug text-exeer-primary">

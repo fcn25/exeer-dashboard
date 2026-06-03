@@ -34,13 +34,13 @@ function EmployeeAvatar({ name, image }) {
       <img
         src={image}
         alt={name}
-        className="h-11 w-11 shrink-0 rounded-2xl border border-exeer-border object-cover"
+        className="h-11 w-11 shrink-0 rounded-md border border-exeer-border object-cover"
       />
     );
   }
 
   return (
-    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-exeer-border bg-white text-sm font-bold text-exeer-primary dark:bg-[#334155]">
+    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-exeer-border bg-white text-sm font-bold text-exeer-primary dark:bg-[#334155]">
       {getInitials(name)}
     </span>
   );
@@ -72,7 +72,7 @@ function AchievementTimelineItem({ item, isLast }) {
           </div>
           <time
             dateTime={item.achievementDate ?? undefined}
-            className="shrink-0 rounded-xl bg-white px-3 py-1.5 text-xs font-medium text-exeer-muted dark:bg-[#1e293b]"
+            className="shrink-0 rounded-md bg-white px-3 py-1.5 text-xs font-medium text-exeer-muted dark:bg-[#1e293b]"
           >
             {item.achievementDateLabel}
           </time>
@@ -130,11 +130,11 @@ export default function AchievementsArchiveModal({ isOpen, onClose }) {
       aria-modal="true"
       aria-labelledby="achievements-archive-title"
     >
-      <div className="md-surface flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-t-3xl sm:max-h-[90vh] sm:rounded-3xl md-elevated">
+      <div className="md-surface flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-t-md sm:max-h-[90vh] sm:rounded-md">
         <header className="shrink-0 border-b border-exeer-border px-5 py-5 sm:px-8 sm:py-6">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-start gap-3">
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
                 <Trophy className="h-6 w-6 stroke-[1.75]" aria-hidden />
               </span>
               <div className="space-y-1">
@@ -152,7 +152,7 @@ export default function AchievementsArchiveModal({ isOpen, onClose }) {
             <button
               type="button"
               onClick={onClose}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-exeer-border text-exeer-muted transition-colors hover:bg-exeer-hover"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-exeer-border text-exeer-muted transition-colors hover:bg-exeer-hover"
               aria-label="إغلاق"
             >
               <X className="h-5 w-5" aria-hidden />
@@ -170,12 +170,12 @@ export default function AchievementsArchiveModal({ isOpen, onClose }) {
               <p className="text-sm text-exeer-muted">جاري التحميل...</p>
             </div>
           ) : error ? (
-            <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
+            <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
               {error}
             </p>
           ) : achievements.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
-              <span className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-exeer-surface text-exeer-muted">
+              <span className="mb-4 flex h-16 w-16 items-center justify-center rounded-md bg-exeer-surface text-exeer-muted">
                 <Trophy className="h-8 w-8 stroke-[1.75]" aria-hidden />
               </span>
               <p className="max-w-sm text-sm font-medium text-exeer-muted">

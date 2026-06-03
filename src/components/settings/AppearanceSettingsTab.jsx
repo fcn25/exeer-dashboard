@@ -28,10 +28,10 @@ export default function AppearanceSettingsTab() {
           {t("settings.appearance.previewBody")}
         </p>
         <div className="mt-4 flex gap-3">
-          <span className="h-10 w-10 rounded-xl bg-[#0f172a] ring-2 ring-exeer-border" title="#0f172a" />
-          <span className="h-10 w-10 rounded-xl bg-[#1e293b] ring-2 ring-exeer-border" title="#1e293b" />
-          <span className="h-10 w-10 rounded-xl bg-[#334155] ring-2 ring-exeer-border" title="#334155" />
-          <span className="h-10 w-10 rounded-xl bg-[#93b4e8] ring-2 ring-exeer-border" title="#93b4e8" />
+          <span className="h-10 w-10 rounded-md bg-[#0f172a] ring-2 ring-exeer-border" title="#0f172a" />
+          <span className="h-10 w-10 rounded-md bg-[#1e293b] ring-2 ring-exeer-border" title="#1e293b" />
+          <span className="h-10 w-10 rounded-md bg-[#334155] ring-2 ring-exeer-border" title="#334155" />
+          <span className="h-10 w-10 rounded-md bg-[#93b4e8] ring-2 ring-exeer-border" title="#93b4e8" />
         </div>
       </div>
     </div>

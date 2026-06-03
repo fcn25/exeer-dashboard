@@ -33,7 +33,7 @@ function PreviewSection({ section, index }) {
         {section.questions.map((question) => (
           <li
             key={question}
-            className="flex items-start gap-2 rounded-xl bg-exeer-surface px-3 py-2 text-xs leading-relaxed text-exeer-muted"
+            className="flex items-start gap-2 rounded-md bg-exeer-surface px-3 py-2 text-xs leading-relaxed text-exeer-muted"
           >
             <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-md-primary" aria-hidden />
             <span>{question}</span>
@@ -60,7 +60,7 @@ function DbQuestionPreview({ questions }) {
       {questions.map((question, index) => (
         <li
           key={question.id}
-          className="rounded-xl bg-exeer-surface px-3 py-2.5 text-xs leading-relaxed"
+          className="rounded-md bg-exeer-surface px-3 py-2.5 text-xs leading-relaxed"
         >
           <p className="font-semibold text-exeer-primary">
             {index + 1}. {getQuestionLabel(question, "ar")}
@@ -205,14 +205,14 @@ export default function TemplatePreviewDrawer({
       <aside
         dir="rtl"
         lang="ar"
-        className="relative flex h-full w-full max-w-lg flex-col bg-md-surface shadow-2xl"
+        className="relative flex h-full w-full max-w-lg flex-col border-s border-gray-200 bg-white"
         role="dialog"
         aria-modal="true"
         aria-labelledby="template-preview-title"
       >
         <div className="flex items-start justify-between gap-3 border-b border-exeer-border px-5 py-4">
           <div className="flex min-w-0 items-start gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-exeer-surface text-exeer-primary">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-exeer-surface text-exeer-primary">
               <Icon className="h-5 w-5 stroke-[1.75]" aria-hidden />
             </span>
             <div className="min-w-0 space-y-0.5">
@@ -243,7 +243,7 @@ export default function TemplatePreviewDrawer({
             type="button"
             onClick={onClose}
             disabled={isSaving}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border border-exeer-border text-exeer-muted transition-colors hover:bg-exeer-hover"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-exeer-border text-exeer-muted transition-colors hover:bg-exeer-hover"
             aria-label="إغلاق"
           >
             <X className="h-5 w-5" aria-hidden />
@@ -356,7 +356,7 @@ export default function TemplatePreviewDrawer({
               </div>
 
               {error ? (
-                <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
+                <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
                   {error}
                 </p>
               ) : null}

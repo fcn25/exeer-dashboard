@@ -3,33 +3,32 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Ultra-minimal SaaS tokens — Notion / Attio / Stripe inspired */
 @theme {
-  --color-md-primary: #1a2744;
+  --color-md-primary: #0f172a;
   --color-md-on-primary: #ffffff;
-  --color-md-primary-container: #e8edf5;
-  --color-md-on-primary-container: #1a2744;
+  --color-md-primary-container: #f4f4f5;
+  --color-md-on-primary-container: #0f172a;
   --color-md-surface: #ffffff;
-  --color-md-surface-dim: #f8f9fc;
-  --color-md-surface-container: #f3f4f8;
-  --color-md-surface-container-high: #eceef4;
-  --color-md-outline: #d7dce5;
-  --color-md-outline-variant: #e8ecf2;
-  --color-md-on-surface: #1a2744;
-  --color-md-on-surface-variant: #5c6678;
-  --color-exeer-bg: var(--color-md-surface);
-  --color-exeer-surface: var(--color-md-surface-container);
-  --color-exeer-primary: var(--color-md-primary);
-  --color-exeer-muted: var(--color-md-on-surface-variant);
-  --color-exeer-border: var(--color-md-outline-variant);
-  --color-exeer-hover: var(--color-md-surface-container-high);
+  --color-md-surface-dim: #fafafa;
+  --color-md-surface-container: #fafafa;
+  --color-md-surface-container-high: #f4f4f5;
+  --color-md-outline: #e5e7eb;
+  --color-md-outline-variant: #e5e7eb;
+  --color-md-on-surface: #0f172a;
+  --color-md-on-surface-variant: #64748b;
+  --color-exeer-bg: #ffffff;
+  --color-exeer-surface: #fafafa;
+  --color-exeer-primary: #0f172a;
+  --color-exeer-muted: #64748b;
+  --color-exeer-border: #e5e7eb;
+  --color-exeer-hover: #f4f4f5;
   --font-sans: "Zain", system-ui, sans-serif;
   --font-display: "Zain", system-ui, sans-serif;
-  --radius-md-sm: 0.75rem;
-  --radius-md-md: 1rem;
-  --radius-md-lg: 1.25rem;
-  --radius-md-xl: 1.75rem;
-  --shadow-md-1: 0 1px 2px rgb(26 39 68 / 0.06), 0 1px 3px rgb(26 39 68 / 0.08);
-  --shadow-md-2: 0 4px 12px rgb(26 39 68 / 0.08);
+  --radius-md-sm: 0.25rem;
+  --radius-md-md: 0.375rem;
+  --radius-md-lg: 0.375rem;
+  --radius-md-xl: 0.5rem;
 }
 
 html {
@@ -40,7 +39,7 @@ html {
 body {
   margin: 0;
   font-family: inherit;
-  background: var(--color-md-surface-dim);
+  background: #ffffff;
   color: var(--color-md-on-surface);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -67,21 +66,23 @@ span {
   font-family: inherit;
 }
 
+/* Flat panels — border only, no elevation */
 .md-surface {
-  background: var(--color-md-surface);
-  border: 1px solid var(--color-md-outline-variant);
-  border-radius: var(--radius-md-lg);
-  box-shadow: var(--shadow-md-1);
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: var(--radius-md-md);
+  box-shadow: none;
 }
 
 .md-surface-muted {
-  background: var(--color-md-surface-container);
-  border: 1px solid var(--color-md-outline-variant);
-  border-radius: var(--radius-md-lg);
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: var(--radius-md-md);
+  box-shadow: none;
 }
 
 .md-elevated {
-  box-shadow: var(--shadow-md-2);
+  box-shadow: none;
 }
 
 .md-page {
@@ -89,109 +90,75 @@ span {
   min-height: 0;
   flex: 1;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1.75rem;
 }
 
 .md-page-title {
-  font-size: 2rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--color-md-on-surface);
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  color: #0f172a;
 }
 
 .md-label {
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 500;
-  color: var(--color-md-on-surface-variant);
+  color: #64748b;
 }
 
 .md-input {
   width: 100%;
   border-radius: var(--radius-md-md);
-  border: 1px solid var(--color-md-outline);
-  background: var(--color-md-surface);
-  padding: 0.875rem 1rem;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  padding: 0.625rem 0.75rem;
   font-size: 0.875rem;
-  color: var(--color-md-on-surface);
+  color: #0f172a;
   outline: none;
-  transition: border-color 0.15s ease;
+  box-shadow: none;
+  transition: border-color 0.12s ease;
 }
 
 .md-input:focus {
-  border-color: var(--color-md-primary);
+  border-color: #0f172a;
+  box-shadow: none;
 }
 
 .md-btn-primary {
   border-radius: var(--radius-md-md);
-  background: var(--color-md-primary);
-  color: var(--color-md-on-primary);
-  padding: 0.75rem 1.25rem;
+  background: #0f172a;
+  color: #ffffff;
+  padding: 0.625rem 1rem;
   font-size: 0.875rem;
-  font-weight: 600;
-  transition: opacity 0.15s ease;
+  font-weight: 500;
+  border: 1px solid #0f172a;
+  box-shadow: none;
+  transition: background-color 0.12s ease;
 }
 
 .md-btn-primary:hover {
-  opacity: 0.92;
+  background: #1e293b;
+  opacity: 1;
 }
 
 .md-btn-primary:disabled {
-  opacity: 0.5;
+  opacity: 0.45;
 }
 
 .md-btn-tonal {
   border-radius: var(--radius-md-md);
-  border: 1px solid var(--color-md-outline-variant);
-  background: var(--color-md-surface-container);
-  color: var(--color-md-on-surface);
-  padding: 0.75rem 1.25rem;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  color: #0f172a;
+  padding: 0.625rem 1rem;
   font-size: 0.875rem;
   font-weight: 500;
-  transition: background-color 0.15s ease;
+  box-shadow: none;
+  transition: background-color 0.12s ease;
 }
 
 .md-btn-tonal:hover {
-  background: var(--color-md-surface-container-high);
-}
-
-/* Exeer premium navy dark mode — base #0f172a (slate-900) */
-.dark {
-  --color-md-primary: #93b4e8;
-  --color-md-on-primary: #0f172a;
-  --color-md-primary-container: #1e3a5f;
-  --color-md-on-primary-container: #e2e8f0;
-  --color-md-surface: #1e293b;
-  --color-md-surface-dim: #0f172a;
-  --color-md-surface-container: #172033;
-  --color-md-surface-container-high: #334155;
-  --color-md-outline: #475569;
-  --color-md-outline-variant: #1e293b;
-  --color-md-on-surface: #f1f5f9;
-  --color-md-on-surface-variant: #94a3b8;
-  --color-exeer-bg: var(--color-md-surface);
-  --color-exeer-surface: var(--color-md-surface-container);
-  --color-exeer-primary: #e2e8f0;
-  --color-exeer-muted: var(--color-md-on-surface-variant);
-  --color-exeer-border: #334155;
-  --color-exeer-hover: var(--color-md-surface-container-high);
-  --shadow-md-1: 0 1px 2px rgb(0 0 0 / 0.25), 0 1px 3px rgb(0 0 0 / 0.3);
-  --shadow-md-2: 0 4px 16px rgb(0 0 0 / 0.35);
-}
-
-.dark .md-surface,
-.dark .md-surface-muted {
-  border-color: var(--color-exeer-border);
-}
-
-.dark .md-btn-primary {
-  background: #2563eb;
-  color: #f8fafc;
-}
-
-.dark .md-btn-tonal {
-  background: var(--color-md-surface-container);
-  border-color: var(--color-exeer-border);
-  color: var(--color-md-on-surface);
+  background: #f4f4f5;
 }
 
 .md-settings-tab {
@@ -199,90 +166,80 @@ span {
   align-items: center;
   gap: 0.625rem;
   border-radius: var(--radius-md-md);
-  padding: 0.75rem 1rem;
+  padding: 0.625rem 0.875rem;
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--color-md-on-surface-variant);
-  transition: background-color 0.15s ease, color 0.15s ease;
+  color: #64748b;
+  transition: background-color 0.12s ease, color 0.12s ease;
 }
 
 .md-settings-tab:hover {
-  background: var(--color-md-surface-container-high);
-  color: var(--color-md-on-surface);
+  background: #f4f4f5;
+  color: #0f172a;
 }
 
 .md-settings-tab-active {
-  background: var(--color-md-primary-container);
-  color: var(--color-md-on-primary-container);
+  background: #f4f4f5;
+  color: #0f172a;
   font-weight: 600;
-}
-
-.dark .md-settings-tab-active {
-  background: #1e3a5f;
-  color: #e2e8f0;
 }
 
 .md-theme-segment {
   display: inline-flex;
   border-radius: var(--radius-md-md);
-  border: 1px solid var(--color-md-outline-variant);
-  background: var(--color-md-surface-container);
-  padding: 0.25rem;
+  border: 1px solid #e5e7eb;
+  background: #fafafa;
+  padding: 0.125rem;
 }
 
 .md-theme-segment-btn {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  border-radius: calc(var(--radius-md-md) - 0.25rem);
-  padding: 0.625rem 1rem;
+  border-radius: calc(var(--radius-md-md) - 2px);
+  padding: 0.5rem 0.875rem;
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--color-md-on-surface-variant);
-  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+  color: #64748b;
+  transition: background-color 0.12s ease, color 0.12s ease;
 }
 
 .md-theme-segment-btn-active {
-  background: var(--color-md-surface);
-  color: var(--color-md-on-surface);
-  box-shadow: var(--shadow-md-1);
+  background: #ffffff;
+  color: #0f172a;
+  border: 1px solid #e5e7eb;
+  box-shadow: none;
   font-weight: 600;
 }
 
-.dark .md-theme-segment-btn-active {
-  background: #334155;
-  color: #f1f5f9;
-}
-
-/* Material 3 range slider */
 .md-slider {
   -webkit-appearance: none;
   appearance: none;
-  height: 0.35rem;
+  height: 0.25rem;
   border-radius: 9999px;
-  background: var(--color-md-surface-container-high);
-  accent-color: var(--color-md-primary);
+  background: #e5e7eb;
+  accent-color: #0f172a;
 }
 
 .md-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  height: 1.25rem;
-  width: 1.25rem;
+  height: 1rem;
+  width: 1rem;
   border-radius: 9999px;
-  border: 2px solid var(--color-md-primary);
-  background: var(--color-md-surface);
-  box-shadow: var(--shadow-md-1);
+  border: 1px solid #0f172a;
+  background: #ffffff;
+  box-shadow: none;
   cursor: pointer;
 }
 
 .md-slider::-moz-range-thumb {
-  height: 1.25rem;
-  width: 1.25rem;
+  height: 1rem;
+  width: 1rem;
   border-radius: 9999px;
-  border: 2px solid var(--color-md-primary);
-  background: var(--color-md-surface);
-  box-shadow: var(--shadow-md-1);
+  border: 1px solid #0f172a;
+  background: #ffffff;
+  box-shadow: none;
   cursor: pointer;
 }
 
@@ -291,4 +248,76 @@ span {
   cursor: not-allowed;
 }
 
-/* Date pickers use react-datepicker — see components/ui/datepicker.css */
+/* Dark mode — flat, no glow */
+.dark {
+  --color-md-primary: #f8fafc;
+  --color-md-on-primary: #0f172a;
+  --color-md-primary-container: #1e293b;
+  --color-md-on-primary-container: #f1f5f9;
+  --color-md-surface: #0f172a;
+  --color-md-surface-dim: #020617;
+  --color-md-surface-container: #0f172a;
+  --color-md-surface-container-high: #1e293b;
+  --color-md-outline: #334155;
+  --color-md-outline-variant: #334155;
+  --color-md-on-surface: #f8fafc;
+  --color-md-on-surface-variant: #94a3b8;
+  --color-exeer-bg: #020617;
+  --color-exeer-surface: #0f172a;
+  --color-exeer-primary: #f8fafc;
+  --color-exeer-muted: #94a3b8;
+  --color-exeer-border: #334155;
+  --color-exeer-hover: #1e293b;
+}
+
+.dark body {
+  background: #020617;
+}
+
+.dark .md-surface,
+.dark .md-surface-muted {
+  background: #0f172a;
+  border-color: #334155;
+  box-shadow: none;
+}
+
+.dark .md-btn-primary {
+  background: #f8fafc;
+  color: #0f172a;
+  border-color: #f8fafc;
+}
+
+.dark .md-btn-primary:hover {
+  background: #e2e8f0;
+}
+
+.dark .md-btn-tonal {
+  background: #0f172a;
+  border-color: #334155;
+  color: #f8fafc;
+}
+
+.dark .md-settings-tab-active {
+  background: #1e293b;
+  color: #f8fafc;
+}
+
+.dark .md-theme-segment-btn-active {
+  background: #1e293b;
+  color: #f1f5f9;
+  border-color: #334155;
+}
+
+/* Eradicate all box shadows (utilities + arbitrary) */
+@layer utilities {
+  .shadow-sm,
+  .shadow,
+  .shadow-md,
+  .shadow-lg,
+  .shadow-xl,
+  .shadow-2xl,
+  .shadow-inner,
+  [class*="shadow-["] {
+    box-shadow: none !important;
+  }
+}

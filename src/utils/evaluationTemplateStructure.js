@@ -202,6 +202,23 @@ export function buildTemplatePreviewSections({ questionsJsonb, uiTemplate }) {
     return mapCategoriesToPreviewSections(source.categories);
   }
 
+  if (Array.isArray(source.questions) && source.questions.length > 0) {
+    const questions = source.questions.map((q, i) => storedQuestionToPreviewDetail(q, i));
+    return [
+      {
+        title: "أسئلة التقييم",
+        criteria: [
+          {
+            id: "default-criterion",
+            title: "أسئلة التقييم",
+            questions,
+            ratingHint: getCriterionRatingHint(questions),
+          },
+        ],
+      },
+    ];
+  }
+
   const flatRecords = flattenTemplateQuestionRecords(source);
   const uiPreviewSections = getTemplatePreviewSections(uiTemplate);
 

@@ -31,19 +31,11 @@ export function resolveTemplateContentPayload(row) {
   }
 
   if (typeof parsed === "object") {
-    if (Array.isArray(parsed.categories) && parsed.categories.length > 0) {
-      return parsed;
+    if (Array.isArray(parsed.categories)) return parsed;
+    if (Array.isArray(parsed.criteria)) {
+      return { version: 3, categories: parsed };
     }
-    if (Array.isArray(parsed.questions)) {
-      return parsed;
-    }
-    if (Array.isArray(parsed.criteria) && parsed.criteria.length > 0) {
-      return {
-        version: 3,
-        categories: [{ title_ar: "أسئلة التقييم", criteria: parsed.criteria }],
-      };
-    }
-    return parsed;
+    if (Array.isArray(parsed.questions)) return parsed;
   }
 
   return null;

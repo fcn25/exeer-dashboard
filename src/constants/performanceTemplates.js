@@ -146,7 +146,27 @@ export const TEMPLATE_PILLARS = [
   },
 ];
 
-/** Read-only preview sections shown in the template drawer (placeholder until DB-backed criteria exist). */
+/** Maps UI template card id → Supabase seed `title_ar` for v3 category building. */
+export const TEMPLATE_UI_SEED_TITLE_AR = {
+  "org-maturity": "تقييم النضج المؤسسي",
+  "gm-evaluation": "تقييم التنفيذيين ومدراء الأقسام",
+  "org-evaluation": "استبيان الشركة العام",
+  "production-lines": "تقييم كفاءة الإنتاج والجودة",
+  "supply-chain": "تقييم كفاءة سلسلة الإمداد والمخزون",
+  "financial-compliance": "تقييم الكفاءة المالية والامتثال",
+  "hr-services": "تقييم جودة خدمات الموارد البشرية",
+  "digital-ai-readiness": "تقييم الجاهزية الرقمية والذكاء الاصطناعي",
+  "innovation-engagement": "استبيان ثقافة الابتكار والارتباط الوظيفي",
+  "sales-effectiveness": "تقييم فعالية فريق المبيعات",
+  "brand-marketing": "تقييم قوة العلامة التجارية وفعالية التسويق",
+  "tech-support": "تقييم البنية التحتية التقنية والدعم الفني",
+  "customer-experience": "تقييم تجربة العميل والتواصل",
+  "self-evaluation": "التقييم الذاتي للموظف",
+  "professional-fitness": "تقييم اللياقة المهنية",
+  "manager-evaluation": "نموذج تقييم المدير للموظف",
+};
+
+/** Read-only preview criterion titles grouped by category (Zoho structure). */
 export const TEMPLATE_PREVIEW_SECTIONS = {
   "org-maturity": [
     {

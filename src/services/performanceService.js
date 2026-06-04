@@ -1,4 +1,5 @@
 import { supabase } from "../utils/supabaseClient.js";
+import { TEMPLATE_UI_SEED_TITLE_AR } from "../constants/performanceTemplates.js";
 import { getCompanyId } from "../utils/mobileAuth.js";
 import { requireCompanyId, scopeQueryByCompany } from "../utils/tenantScope.js";
 import { listDepartments } from "./catalogService.js";
@@ -135,14 +136,28 @@ export async function getEvaluationTemplateById(templateId) {
   return data;
 }
 
-export function resolveEvaluationTemplateId(title, templates = []) {
+export function resolveEvaluationTemplateId(title, templates = [], uiTemplateId = "") {
   const normalized = String(title ?? "").trim();
   if (!normalized) return null;
 
-  const exact = templates.find((row) => row.title === normalized);
+  const withQuestions = templates.filter(
+    (row) =>
+      (row.questions_jsonb?.categories?.length ?? 0) > 0 ||
+      (row.questions_jsonb?.questions?.length ?? 0) > 0,
+  );
+
+  const pool = withQuestions.length ? withQuestions : templates;
+
+  const seedTitle = uiTemplateId ? TEMPLATE_UI_SEED_TITLE_AR[uiTemplateId] : "";
+  if (seedTitle) {
+    const bySeed = pool.find((row) => row.title === seedTitle);
+    if (bySeed) return bySeed.id;
+  }
+
+  const exact = pool.find((row) => row.title === normalized);
   if (exact) return exact.id;
 
-  const partial = templates.find(
+  const partial = pool.find(
     (row) =>
       normalized.includes(row.title) || row.title.includes(normalized),
   );

@@ -11,11 +11,9 @@ import {
 import {
   getTemplateDescription,
   getTemplateDisplayTitle,
-  groupQuestionsForPreview,
-  normalizeStaticPreviewSections,
-  parseTemplateQuestions,
   templateHasQuestions,
 } from "../../utils/evaluationTemplateQuestions.js";
+import { buildTemplatePreviewSections } from "../../utils/evaluationTemplateStructure.js";
 import { DateInput } from "../ui/DateInput.jsx";
 import TemplatePreviewCriterionAccordion from "./TemplatePreviewCriterionAccordion.jsx";
 
@@ -114,7 +112,7 @@ export default function TemplatePreviewModal({
 
   const resolvedTemplateId = useMemo(() => {
     if (!template) return null;
-    return resolveEvaluationTemplateId(template.title, dbTemplates);
+    return resolveEvaluationTemplateId(template.title, dbTemplates, template.id);
   }, [template, dbTemplates]);
 
   const resolvedDbTemplate = useMemo(
@@ -125,17 +123,10 @@ export default function TemplatePreviewModal({
 
   const previewSections = useMemo(() => {
     if (!template) return [];
-    const dbQuestions = parseTemplateQuestions(resolvedDbTemplate?.questions_jsonb);
-    if (dbQuestions.length) {
-      return groupQuestionsForPreview(dbQuestions, {
-        templateCategory: resolvedDbTemplate?.category,
-        fallbackSection: template.pillarTitle ?? "معايير التقييم",
-      });
-    }
-    return normalizeStaticPreviewSections(
-      getTemplatePreviewSections(template),
-      template.id,
-    );
+    return buildTemplatePreviewSections({
+      questionsJsonb: resolvedDbTemplate?.questions_jsonb,
+      uiTemplate: template,
+    });
   }, [template, resolvedDbTemplate]);
 
   const headerTitle = resolvedDbTemplate

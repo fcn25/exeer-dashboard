@@ -3,6 +3,40 @@ import {
   EMPTY_RATINGS,
 } from "../constants/evaluationCriteria.js";
 
+/** Flatten v3 categories or legacy `questions[]` for forms and scoring. */
+export function flattenTemplateQuestionRecords(questionsJsonb) {
+  const source =
+    questionsJsonb && typeof questionsJsonb === "object" ? questionsJsonb : {};
+
+  if (Array.isArray(source.categories) && source.categories.length > 0) {
+    const rows = [];
+    for (const category of source.categories) {
+      const categoryTitle = String(
+        category.title_ar ?? category.title ?? "",
+      ).trim();
+
+      for (const criterion of category.criteria ?? []) {
+        const criterionTitle = String(
+          criterion.title_ar ?? criterion.title ?? "",
+        ).trim();
+
+        for (const question of criterion.questions ?? []) {
+          if (!question?.id || !question?.type) continue;
+          rows.push({
+            ...question,
+            category_ar: categoryTitle,
+            section_ar: categoryTitle,
+            criterion_ar: criterionTitle,
+          });
+        }
+      }
+    }
+    return rows;
+  }
+
+  return Array.isArray(source.questions) ? source.questions : [];
+}
+
 export const QUESTION_TYPES = {
   RATING: "rating",
   RATING_1_5: "rating_1_5",
@@ -74,10 +108,7 @@ export function normalizeQuestion(question, lang = "ar") {
 }
 
 export function parseTemplateQuestions(questionsJsonb, lang = "ar") {
-  const source =
-    questionsJsonb && typeof questionsJsonb === "object" ? questionsJsonb : {};
-  const list = Array.isArray(source.questions) ? source.questions : [];
-  return list
+  return flattenTemplateQuestionRecords(questionsJsonb)
     .filter((item) => item?.id && item?.type)
     .map((item) => normalizeQuestion(item, lang));
 }
@@ -92,7 +123,7 @@ export function getTemplateDisplayTitle(template, lang = "ar") {
 }
 
 export function getTemplateQuestionCount(template) {
-  return parseTemplateQuestions(template?.questions_jsonb).length;
+  return parseTemplateQuestions(template?.questions_jsonb, "ar").length;
 }
 
 export function templateHasQuestions(template) {
@@ -164,150 +195,6 @@ export function mapQuestionToPreviewDetail(question, index = 0) {
     max: bounds.max,
     ratingHint: getQuestionRatingHintAr(question),
   };
-}
-
-function buildStaticCriterionQuestions(label, idPrefix) {
-  const topic = String(label ?? "").trim();
-  return [
-    {
-      id: `${idPrefix}-q1`,
-      text: `ما مدى تحقيق «${topic}» وفق المعايير المعتمدة في المنشأة؟`,
-      ratingHint: "طريقة التقييم: مقياس من 1 إلى 5",
-      type: QUESTION_TYPES.RATING_1_5,
-    },
-    {
-      id: `${idPrefix}-q2`,
-      text: `اذكر مثالاً عملياً يوضح الوضع الحالي لـ «${topic}».`,
-      ratingHint: "طريقة التقييم: إجابة نصية",
-      type: QUESTION_TYPES.TEXT,
-    },
-    {
-      id: `${idPrefix}-q3`,
-      text: `ما أهم إجراء تحسيني مقترح لرفع مستوى «${topic}»؟`,
-      ratingHint: "طريقة التقييم: إجابة نصية",
-      type: QUESTION_TYPES.TEXT,
-    },
-  ];
-}
-
-export function buildStaticPreviewCriterion(text, id) {
-  const label = String(text ?? "").trim();
-  return {
-    id,
-    title: label,
-    questions: buildStaticCriterionQuestions(label, id),
-  };
-}
-
-function normalizePreviewCriterionItem(item, id) {
-  if (!item || typeof item !== "object") {
-    return buildStaticPreviewCriterion(item, id);
-  }
-
-  const title = String(item.title ?? "").trim();
-  const rawQuestions = item.questions ?? [];
-
-  const questions = rawQuestions.map((entry, index) => {
-    if (entry && typeof entry === "object" && (entry.text || entry.text_ar)) {
-      return {
-        id: String(entry.id ?? `${id}-q-${index}`),
-        text: String(entry.text ?? entry.text_ar ?? "").trim(),
-        ratingHint: entry.ratingHint ?? getQuestionRatingHintAr(entry),
-        type: entry.type,
-      };
-    }
-    const text = String(entry ?? "").trim();
-    return {
-      id: `${id}-q-${index}`,
-      text,
-      ratingHint: "طريقة التقييم: مقياس من 1 إلى 5",
-      type: QUESTION_TYPES.RATING_1_5,
-    };
-  });
-
-  if (!questions.length && item.questionText) {
-    questions.push({
-      id: `${id}-q-0`,
-      text: String(item.questionText).trim(),
-      ratingHint: item.ratingHint ?? "طريقة التقييم: حسب النموذج",
-      type: item.type,
-    });
-  }
-
-  return {
-    id: String(item.id ?? id),
-    title,
-    questions: questions.length
-      ? questions
-      : buildStaticCriterionQuestions(title, id),
-  };
-}
-
-/** Normalize legacy static sections (`questions: string[]`) to accordion criteria. */
-export function normalizeStaticPreviewSections(sections, templateId = "template") {
-  return (sections ?? []).map((section, sectionIndex) => ({
-    title: section.title,
-    criteria: (section.questions ?? section.criteria ?? []).map((item, itemIndex) => {
-      const criterionId = `${templateId}-${sectionIndex}-${itemIndex}`;
-      if (item && typeof item === "object" && item.title) {
-        return normalizePreviewCriterionItem(item, criterionId);
-      }
-      return buildStaticPreviewCriterion(item, criterionId);
-    }),
-  }));
-}
-
-/** Group DB questions into sections → criteria → questions[]. */
-export function groupQuestionsForPreview(questions, options = {}) {
-  const {
-    fallbackSection = "معايير التقييم",
-    templateCategory = "",
-  } = options;
-
-  if (!questions?.length) return [];
-
-  const sectionGroups = new Map();
-
-  questions.forEach((question, index) => {
-    const sectionTitle =
-      String(
-        question.section_ar ??
-          question.sectionAr ??
-          question.category_ar ??
-          question.categoryAr ??
-          "",
-      ).trim() ||
-      getTemplateCategoryLabelAr(templateCategory) ||
-      fallbackSection;
-
-    const questionText = getQuestionLabel(question, "ar");
-    const criterionTitle =
-      String(question.criterion_ar ?? question.criterionAr ?? "").trim() ||
-      questionText;
-    const criterionKey = `${sectionTitle}::${criterionTitle}`;
-
-    if (!sectionGroups.has(sectionTitle)) {
-      sectionGroups.set(sectionTitle, new Map());
-    }
-
-    const criteriaMap = sectionGroups.get(sectionTitle);
-    if (!criteriaMap.has(criterionKey)) {
-      criteriaMap.set(criterionKey, {
-        id: criterionKey,
-        title: criterionTitle,
-        questions: [],
-      });
-    }
-
-    criteriaMap.get(criterionKey).questions.push(
-      mapQuestionToPreviewDetail(question, index),
-    );
-  });
-
-  return Array.from(sectionGroups.entries()).map(([title, criteriaMap]) => ({
-    title,
-    criteria: Array.from(criteriaMap.values()),
-  }));
 }
 
 export function getLegacyDefaultQuestions(lang = "ar") {

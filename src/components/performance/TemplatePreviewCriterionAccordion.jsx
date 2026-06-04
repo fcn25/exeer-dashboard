@@ -4,36 +4,35 @@ import { ChevronDown } from "lucide-react";
 function ExpandedQuestionsList({ questions }) {
   if (!questions?.length) {
     return (
-      <p className="text-sm text-gray-500">لا توجد أسئلة تفصيلية لهذا المعيار.</p>
+      <p className="text-sm text-gray-500">
+        لا توجد أسئلة مرتبطة بهذا المعيار في قاعدة البيانات بعد.
+      </p>
     );
   }
 
   return (
-    <ul className="space-y-2 rounded-md bg-gray-50/80 px-3 py-2.5">
+    <ol className="mr-1 list-none space-y-2">
       {questions.map((question, index) => (
         <li
           key={question.id ?? `question-${index}`}
-          className="flex items-start gap-2 text-sm leading-relaxed text-gray-600"
+          className="flex items-start gap-2 rounded-md bg-gray-50/90 px-2.5 py-2 text-sm leading-relaxed text-gray-600"
         >
-          <span className="mt-0.5 shrink-0 text-gray-400" aria-hidden>
-            -
+          <span
+            className="mt-0.5 min-w-[1.25rem] shrink-0 text-xs font-semibold tabular-nums text-gray-400"
+            aria-hidden
+          >
+            {index + 1}.
           </span>
-          <div className="min-w-0 space-y-1">
-            <span>{question.text}</span>
-            {question.ratingHint ? (
-              <p className="text-[11px] text-gray-400">{question.ratingHint}</p>
-            ) : null}
-          </div>
+          <span>{question.text}</span>
         </li>
       ))}
-    </ul>
+    </ol>
   );
 }
 
 function CriterionAccordionItem({ criterion, isOpen, onToggle }) {
   const panelId = `criterion-panel-${criterion.id}`;
   const buttonId = `criterion-trigger-${criterion.id}`;
-  const questions = criterion.questions ?? [];
 
   return (
     <div className="overflow-hidden rounded-md border border-gray-100 bg-white">
@@ -65,8 +64,13 @@ function CriterionAccordionItem({ criterion, isOpen, onToggle }) {
         }`}
       >
         <div className="min-h-0 overflow-hidden">
-          <div className="border-t border-gray-100 bg-white px-3 py-3 ps-5">
-            <ExpandedQuestionsList questions={questions} />
+          <div className="space-y-3 border-t border-gray-100 bg-white px-3 py-3 ps-5">
+            <ExpandedQuestionsList questions={criterion.questions} />
+            {criterion.ratingHint ? (
+              <p className="border-t border-gray-100 pt-2 text-xs text-gray-500">
+                {criterion.ratingHint}
+              </p>
+            ) : null}
           </div>
         </div>
       </div>

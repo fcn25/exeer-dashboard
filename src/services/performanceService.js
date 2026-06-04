@@ -1,11 +1,11 @@
 import { supabase } from "../utils/supabaseClient.js";
 import { TEMPLATE_UI_SEED_TITLE_AR } from "../constants/performanceTemplates.js";
+import { resolveTemplateContentPayload } from "../utils/evaluationTemplateContent.js";
 import {
   fetchEvaluationTemplateById,
   fetchEvaluationTemplateRows,
   getEvaluationTemplateEmbedSelect,
   normalizeEmbeddedTemplate,
-  resolveTemplateContentPayload,
 } from "../utils/evaluationTemplateDb.js";
 import { getCompanyId } from "../utils/mobileAuth.js";
 import { requireCompanyId, scopeQueryByCompany } from "../utils/tenantScope.js";

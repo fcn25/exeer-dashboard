@@ -5,10 +5,10 @@ import { flattenTemplateQuestionRecords } from "./evaluationTemplateFlatten.js";
 import {
   getQuestionRatingHintAr,
   mapQuestionToPreviewDetail,
-  QUESTION_TYPES,
-} from "./evaluationTemplateQuestions.js";
+} from "./evaluationTemplateQuestionHelpers.js";
+import { QUESTION_TYPES } from "./evaluationTemplateTypes.js";
 
-export const TEMPLATE_STRUCTURE_VERSION = 3;
+export { TEMPLATE_STRUCTURE_VERSION } from "./evaluationTemplateTypes.js";
 
 function normalizeStoredQuestion(question) {
   if (!question?.id || !question?.type) return null;

@@ -1,25 +1,11 @@
+import { mapAllSeedTemplatesToDbRows } from "../data/seedTemplateRows.js";
+import { resolveTemplateContentPayload } from "./evaluationTemplateContent.js";
+import {
+  TEMPLATE_EMBED_SELECT_ATTEMPTS,
+  TEMPLATE_SELECT_ATTEMPTS,
+} from "./evaluationTemplateTypes.js";
 import { supabase } from "./supabaseClient.js";
 import { isMissingColumnError } from "./supabaseErrors.js";
-import { resolveTemplateContentPayload } from "./evaluationTemplateContent.js";
-import { mapAllSeedTemplatesToDbRows } from "../data/seedTemplates.js";
-
-export { resolveTemplateContentPayload };
-
-const TEMPLATE_SELECT_ATTEMPTS = [
-  "id, category, title, criteria",
-  "id, category, title, questions",
-  "id, category, title, content",
-  "id, category, title, questions_jsonb",
-  "id, category, title",
-];
-
-const TEMPLATE_EMBED_SELECT_ATTEMPTS = [
-  "id, title, criteria",
-  "id, title, questions",
-  "id, title, content",
-  "id, title, questions_jsonb",
-  "id, title",
-];
 
 export function normalizeEvaluationTemplateRow(row, seedByTitle = new Map()) {
   if (!row) return null;

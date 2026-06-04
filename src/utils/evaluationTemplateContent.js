@@ -38,7 +38,10 @@ export function resolveTemplateContentPayload(row) {
       return parsed;
     }
     if (Array.isArray(parsed.criteria) && parsed.criteria.length > 0) {
-      return { version: 3, categories: parsed.criteria };
+      return {
+        version: 3,
+        categories: [{ title_ar: "أسئلة التقييم", criteria: parsed.criteria }],
+      };
     }
     return parsed;
   }

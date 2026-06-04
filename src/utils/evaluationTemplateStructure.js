@@ -206,12 +206,23 @@ export function buildTemplatePreviewSections({ questionsJsonb, uiTemplate }) {
   const uiPreviewSections = getTemplatePreviewSections(uiTemplate);
 
   if (flatRecords.length > 0) {
-    return mapCategoriesToPreviewSections(
-      buildTemplateCategoriesPayload({
-        previewSections: uiPreviewSections,
-        flatQuestions: flatRecords,
-      }),
-    );
+    const questions = flatRecords
+      .filter((question) => question?.id && question?.type)
+      .map((question, index) => storedQuestionToPreviewDetail(question, index));
+
+    return [
+      {
+        title: "أسئلة التقييم",
+        criteria: [
+          {
+            id: "default-criterion",
+            title: "أسئلة التقييم",
+            questions,
+            ratingHint: "",
+          },
+        ],
+      },
+    ];
   }
 
   if (uiPreviewSections.length > 0) {

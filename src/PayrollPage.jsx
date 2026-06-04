@@ -1,19 +1,23 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { FileSpreadsheet, Lock, Printer } from "lucide-react";
+import { FileSpreadsheet, Lock, Printer, RefreshCw } from "lucide-react";
 import { MonthInput } from "./components/ui/DateInput.jsx";
 import {
   fetchPayrollForMonth,
   generatePayrollForMonth,
 } from "./services/payrollService.js";
 import {
+  fetchPayrollAccountingRows,
+  syncPayrollDeductionsForMonth,
+} from "./services/payrollSyncService.js";
+import {
   computePayrollStats,
   formatPayrollMonthFromPicker,
 } from "./utils/payroll/calculations.js";
-import { downloadPayrollTableCsv } from "./utils/payroll/exportPayrollCsv.js";
+import { downloadPayrollAccountingCsv } from "./utils/payroll/exportPayrollAccountingCsv.js";
 import ExeerEmptyState from "./components/brand/ExeerEmptyState.jsx";
 
 const PAYROLL_SUBTITLE =
-  "مسير الرواتب المعتمد — أداة عملية لتوليد الكشوفات المالية نهاية كل شهر، وتصديرها لمشاركتها مع الإدارة المالية.";
+  "بروتوكول المزامنة الآمن — أنشئ المسير ثم حدّث الخصومات عند الطلب (حضور، إجراءات إدارية، قروض) قبل تصدير ملف المحاسبة.";
 
 const TABLE_COLUMNS = [
   { key: "employeeName", label: "اسم الموظف", tone: "neutral" },
@@ -139,13 +143,38 @@ export default function PayrollPage() {
     }
   };
 
-  const handleExportExcel = () => {
+  const handleSyncDeductions = async () => {
+    if (!selectedMonth || isLocked) return;
+
+    setIsLoading(true);
+    setError("");
+    setSuccessMessage("");
+
     try {
-      downloadPayrollTableCsv(rows);
-      setSuccessMessage("تم تنزيل Exeer_Payroll.csv");
-      setError("");
+      const result = await syncPayrollDeductionsForMonth(selectedMonth);
+      await loadPayroll();
+      let message = `تم تحديث أرقام المسير لشهر ${result.payrollMonth} — ${result.updatedCount} موظف`;
+      if (result.lockedSkipped > 0) {
+        message += ` (تخطّي ${result.lockedSkipped} سجل مُصدَّر)`;
+      }
+      setSuccessMessage(message);
     } catch (err) {
-      setError(err.message || "تعذّر تصدير الملف.");
+      setError(err.message || "تعذّر تحديث أرقام المسير.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleExportAccounting = async () => {
+    if (!selectedMonth) return;
+
+    setError("");
+    try {
+      const records = await fetchPayrollAccountingRows(selectedMonth);
+      downloadPayrollAccountingCsv(records, payrollMonthLabel);
+      setSuccessMessage("تم تنزيل ملف المحاسبة بنجاح");
+    } catch (err) {
+      setError(err.message || "تعذّر تصدير ملف المحاسبة.");
     }
   };
 
@@ -209,16 +238,29 @@ export default function PayrollPage() {
             >
               {isLoading ? "جاري المعالجة..." : "إنشاء المسير الشهري"}
             </button>
+
+            <button
+              type="button"
+              onClick={handleSyncDeductions}
+              disabled={isLoading || !selectedMonth || isLocked || rows.length === 0}
+              className="inline-flex items-center gap-2 rounded-md border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 shadow-none hover:bg-gray-50 disabled:opacity-50"
+              title="مزامنة التأخيرات والجزاءات والقروض للشهر المعروض"
+            >
+              <RefreshCw className="h-4 w-4" aria-hidden />
+              تحديث أرقام المسير
+            </button>
           </div>
 
           <div className="flex flex-wrap gap-3">
             <button
               type="button"
-              onClick={handleExportExcel}
-              className="inline-flex items-center gap-2 rounded-md border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 shadow-none hover:bg-gray-50"
+              onClick={handleExportAccounting}
+              disabled={isLoading || !selectedMonth || rows.length === 0}
+              className="inline-flex items-center gap-2 rounded-md border border-slate-900 bg-slate-900 px-4 py-2.5 text-sm font-medium text-white shadow-none hover:bg-slate-800 disabled:opacity-50"
+              title="تصدير CSV للمحاسبة (يشمل البنك والآيبان — غير معروض في الجدول)"
             >
               <FileSpreadsheet className="h-4 w-4" aria-hidden />
-              تصدير Excel
+              تصدير للمحاسبة
             </button>
             <button
               type="button"

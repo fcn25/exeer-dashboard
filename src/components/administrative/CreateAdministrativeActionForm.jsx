@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "../../context/AuthContext.jsx";
 import {
   ADMINISTRATIVE_ACTION_TYPES,
   ADMINISTRATIVE_ACTION_TYPE_LABELS,
@@ -22,6 +23,7 @@ export default function CreateAdministrativeActionForm({
   onSubmit,
   isSubmitting = false,
 }) {
+  const { user } = useAuth();
   const [employeeId, setEmployeeId] = useState("");
   const [actionType, setActionType] = useState(ADMINISTRATIVE_ACTION_TYPES[0]);
   const [reason, setReason] = useState("");
@@ -65,11 +67,20 @@ export default function CreateAdministrativeActionForm({
     setFormError("");
 
     try {
+      const companyId = Number(user?.company_id);
+      if (!Number.isFinite(companyId) || companyId <= 0) {
+        throw new Error(
+          "لم يتم تحديد شركة حسابك. أعد تسجيل الدخول بعد ربط البريد بموظف في المنشأة.",
+        );
+      }
+
       await onSubmit({
+        companyId,
         employeeId: Number(employeeId),
         actionType,
         reason,
         penaltyAmount: showPenalty ? penaltyAmount : null,
+        issuedByName: user?.name ?? user?.email ?? null,
       });
       setReason("");
       setPenaltyAmount("");

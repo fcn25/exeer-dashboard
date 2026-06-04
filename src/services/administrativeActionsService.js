@@ -10,7 +10,44 @@ function mapDbError(error) {
   if (error.code === "PGRST205") {
     return "جدول الإجراءات الإدارية غير موجود. نفّذ migration 20250629000000_administrative_actions.sql في Supabase.";
   }
+  if (error.code === "42501") {
+    return (
+      "رفضت قاعدة البيانات الإدراج (RLS). تأكد أن company_id في الطلب يطابق شركتك من الجلسة، " +
+      "وأن بريدك مربوط بموظف بنفس الشركة وبدور HR أو Executive أو Owner."
+    );
+  }
   return error.message || "تعذّر إكمال العملية.";
+}
+
+function resolveIssuedByName(payload, authUser) {
+  const fromPayload = String(payload?.issuedByName ?? "").trim();
+  if (fromPayload) return fromPayload;
+
+  const name = String(authUser?.name ?? authUser?.full_name ?? "").trim();
+  if (name) return name;
+
+  const email = String(authUser?.email ?? "").trim();
+  if (email) return email;
+
+  return "الموارد البشرية";
+}
+
+async function assertEmployeeInCompany(companyId, employeeId) {
+  const { data, error } = await scopeQueryByCompany(
+    supabase
+      .from("employees")
+      .select("id, company_id, full_name")
+      .eq("id", employeeId),
+    companyId,
+  ).maybeSingle();
+
+  if (error) throw new Error(mapDbError(error));
+  if (!data) {
+    throw new Error(
+      "الموظف المحدد لا ينتمي لشركتك. اختر موظفاً من نفس المنشأة.",
+    );
+  }
+  return data;
 }
 
 function mapActionRow(row) {
@@ -110,7 +147,21 @@ export async function fetchMyAdministrativeActions(employeeId) {
 }
 
 export async function createAdministrativeAction(payload) {
-  const companyId = requireCompanyId("إصدار إجراء إداري");
+  const authUser = getAuthUser();
+  const companyIdFromPayload = Number(payload?.companyId);
+  const companyIdFromAuth = requireCompanyId("إصدار إجراء إداري");
+
+  const companyId =
+    Number.isFinite(companyIdFromPayload) && companyIdFromPayload > 0
+      ? companyIdFromPayload
+      : companyIdFromAuth;
+
+  if (companyId !== companyIdFromAuth) {
+    throw new Error(
+      "معرّف الشركة في الجلسة لا يطابق الشركة المرسلة. أعد تسجيل الدخول.",
+    );
+  }
+
   const employeeId = Number(payload.employeeId);
   const actionType = String(payload.actionType ?? "").trim();
 
@@ -136,21 +187,23 @@ export async function createAdministrativeAction(payload) {
     penaltyAmount = Math.round(amount * 100) / 100;
   }
 
-  const authUser = getAuthUser();
-  const issuedByName =
-    authUser?.name ?? authUser?.email ?? "الموارد البشرية";
+  await assertEmployeeInCompany(companyId, employeeId);
+
+  const issuedByName = resolveIssuedByName(payload, authUser);
+
+  const insertPayload = {
+    company_id: companyId,
+    employee_id: employeeId,
+    action_type: actionType,
+    reason,
+    penalty_amount: penaltyAmount,
+    action_date: new Date().toISOString(),
+    issued_by_name: issuedByName,
+  };
 
   const { data, error } = await supabase
     .from("administrative_actions")
-    .insert({
-      company_id: companyId,
-      employee_id: employeeId,
-      action_type: actionType,
-      reason,
-      penalty_amount: penaltyAmount,
-      action_date: new Date().toISOString(),
-      issued_by_name: issuedByName,
-    })
+    .insert(insertPayload)
     .select(ACTION_SELECT)
     .single();
 

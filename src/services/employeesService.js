@@ -34,7 +34,9 @@ export function employeeFormToRow(form) {
     basic_salary: Number(form.basic_salary) || 0,
     housing_allowance: Number(form.housing_allowance) || 0,
     other_allowance: Number(form.other_allowance) || 0,
+    bank_name: form.bank_name?.trim() || null,
     iban: form.iban?.trim() || null,
+    transport_allowance: Number(form.transport_allowance) || 0,
   };
 }
 

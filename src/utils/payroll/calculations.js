@@ -1,4 +1,5 @@
 import { calculateGosiDeduction } from "./gosi.js";
+import { calculatePayrollNetSalary } from "./netSalary.js";
 
 function roundMoney(value) {
   return Math.round((Number(value) + Number.EPSILON) * 100) / 100;
@@ -19,11 +20,13 @@ export function formatPickerFromPayrollMonth(payrollMonth) {
 export function buildPayrollDraftFromEmployee(employee, payrollMonth) {
   const basic = Number(employee.basic_salary) || 0;
   const housing = Number(employee.housing_allowance) || 0;
+  const transport = Number(employee.transport_allowance) || 0;
   const otherAllowances = Number(employee.other_allowance) || 0;
   const commissions = 0;
   const additional = 0;
   const penaltyDeductions = 0;
   const delayDeductions = 0;
+  const loanDeductions = 0;
 
   const { amount: gosi } = calculateGosiDeduction({
     basicSalary: basic,
@@ -32,10 +35,19 @@ export function buildPayrollDraftFromEmployee(employee, payrollMonth) {
     payrollMonth,
   });
 
-  const gross =
-    basic + housing + otherAllowances + commissions + additional;
-  const deductions = penaltyDeductions + delayDeductions + gosi;
-  const net = roundMoney(gross - deductions);
+  const draftRow = {
+    basic_salary: basic,
+    housing_allowance: housing,
+    transport_allowance: transport,
+    other_allowances: otherAllowances,
+    commissions,
+    additional,
+    penalty_deductions: penaltyDeductions,
+    delay_deductions: delayDeductions,
+    loan_deductions: loanDeductions,
+    gosi_deduction: gosi,
+  };
+  const net = calculatePayrollNetSalary(draftRow);
 
   return {
     employee_id: employee.id,
@@ -43,11 +55,13 @@ export function buildPayrollDraftFromEmployee(employee, payrollMonth) {
     payroll_month: payrollMonth,
     basic_salary: basic,
     housing_allowance: housing,
+    transport_allowance: transport,
     other_allowances: otherAllowances,
     commissions,
     additional,
     penalty_deductions: penaltyDeductions,
     delay_deductions: delayDeductions,
+    loan_deductions: loanDeductions,
     penalties: penaltyDeductions,
     gosi_deduction: gosi,
     lateness_deduction: delayDeductions,
@@ -78,6 +92,7 @@ export function mapPayrollRecordRow(row) {
       Number(
         row.delay_deductions ?? row.lateness_deduction ?? row.delays,
       ) || 0,
+    loans: Number(row.loan_deductions) || 0,
     net: Number(row.net_salary ?? row.net) || 0,
     status: row.status ?? "Draft",
   };
@@ -98,8 +113,9 @@ export function computePayrollStats(rows) {
       (sum, row) =>
         sum +
         safeAmount(row?.penalties) +
-        safeAmount(row?.gosi) +
-        safeAmount(row?.lateness),
+        safeAmount(row?.lateness) +
+        safeAmount(row?.loans) +
+        safeAmount(row?.gosi),
       0,
     ) || 0;
 

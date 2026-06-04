@@ -313,6 +313,16 @@ export default function EmployeeFormSections({
               className={inputClass}
             />
           </Field>
+          <Field label="بدل النقل">
+            <input
+              type="number"
+              min="0"
+              value={form.transport_allowance}
+              onChange={(e) => update("transport_allowance", e.target.value)}
+              disabled={disabled}
+              className={inputClass}
+            />
+          </Field>
           <Field label="بدلات أخرى">
             <input
               type="number"
@@ -323,13 +333,22 @@ export default function EmployeeFormSections({
               className={inputClass}
             />
           </Field>
+          <Field label="اسم البنك">
+            <input
+              type="text"
+              value={form.bank_name}
+              onChange={(e) => update("bank_name", e.target.value)}
+              disabled={disabled}
+              className={inputClass}
+            />
+          </Field>
           <Field label="رقم الآيبان">
             <input
               type="text"
               value={form.iban}
               onChange={(e) => update("iban", e.target.value)}
               disabled={disabled}
-              className={`${inputClass} sm:col-span-2`}
+              className={inputClass}
             />
           </Field>
         </div>

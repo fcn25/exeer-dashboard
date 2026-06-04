@@ -59,18 +59,28 @@ export function persistAuthSession(session, profile) {
   }
 }
 
-export function getCompanyId() {
+/** Company id from authenticated profile only (no dev fallback). */
+export function getAuthCompanyId() {
   try {
     const user = JSON.parse(localStorage.getItem("auth_user") || "null");
-    const companyId = Number(user?.company_id ?? user?.companyId);
-    if (!Number.isNaN(companyId)) return companyId;
+    const fromUser = Number(user?.company_id ?? user?.companyId);
+    if (Number.isFinite(fromUser) && fromUser > 0) return fromUser;
   } catch {
     // ignore invalid JSON
   }
 
-  const direct = localStorage.getItem("company_id");
-  const parsed = Number(direct);
-  return Number.isNaN(parsed) ? 118 : parsed;
+  const direct = Number(localStorage.getItem("company_id"));
+  if (Number.isFinite(direct) && direct > 0) return direct;
+
+  return null;
+}
+
+export function getCompanyId() {
+  const authCompanyId = getAuthCompanyId();
+  if (authCompanyId != null) return authCompanyId;
+
+  // Legacy dev fallback when profile has no company_id
+  return 118;
 }
 
 export function getEmployeeId() {

@@ -83,8 +83,10 @@ function buildPayrollRecordPayload(companyId, draft, period, includePayrollMonth
     year: period.year,
     basic_salary: draft.basic_salary,
     housing_allowance: draft.housing_allowance,
+    transport_allowance: draft.transport_allowance ?? 0,
     other_allowances: draft.other_allowances,
     allowances: draft.other_allowances,
+    loan_deductions: draft.loan_deductions ?? 0,
     commissions: draft.commissions,
     additional: draft.additional,
     penalty_deductions: draft.penalty_deductions ?? draft.penalties ?? 0,
@@ -189,7 +191,7 @@ export async function listActiveEmployees() {
     supabase
       .from("employees")
       .select(
-        "id, full_name, email, department, basic_salary, housing_allowance, other_allowance, nationality, is_saudi, employment_status",
+        "id, full_name, email, department, basic_salary, housing_allowance, transport_allowance, other_allowance, nationality, is_saudi, employment_status",
       ),
     companyId,
   ).order("full_name", { ascending: true });

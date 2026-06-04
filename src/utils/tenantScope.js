@@ -1,4 +1,4 @@
-import { getCompanyId } from "./mobileAuth.js";
+import { getAuthCompanyId, getCompanyId } from "./mobileAuth.js";
 
 /**
  * Resolves the authenticated user's company for multi-tenant queries.
@@ -6,7 +6,7 @@ import { getCompanyId } from "./mobileAuth.js";
  * @returns {number}
  */
 export function requireCompanyId(context = "العملية") {
-  const companyId = Number(getCompanyId());
+  const companyId = getAuthCompanyId() ?? Number(getCompanyId());
   if (!Number.isFinite(companyId) || companyId <= 0) {
     throw new Error(
       `لم يتم تحديد الشركة الحالية. أعد تسجيل الدخول ثم حاول مرة أخرى (${context}).`,

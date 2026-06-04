@@ -133,12 +133,7 @@ export default function AttendancePage() {
     setError("");
 
     try {
-      const result = await exportAttendanceDeductionsToPayroll({
-        dateFrom,
-        dateTo,
-      });
-
-      setSuccessToast("تم ترحيل خصومات التأخير إلى مسير الرواتب بنجاح");
+      await exportAttendanceDeductionsToPayroll({ dateFrom, dateTo });
     } catch (err) {
       setError(err.message || "تعذّر الترحيل إلى المسير.");
     } finally {
@@ -225,7 +220,7 @@ export default function AttendancePage() {
             className="md-btn-primary inline-flex items-center gap-2 bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
           >
             <ClipboardList className="h-4 w-4" aria-hidden />
-            {isExporting ? "جاري الترحيل..." : "ترحيل للمسير"}
+            {isExporting ? "..." : "ترحيل للمسير (من صفحة المسير)"}
           </button>
         </div>
       </section>

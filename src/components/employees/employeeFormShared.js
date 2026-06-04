@@ -21,7 +21,9 @@ export const EMPTY_EMPLOYEE_FORM = {
   basic_salary: "",
   housing_allowance: "",
   other_allowance: "",
+  bank_name: "",
   iban: "",
+  transport_allowance: "",
 };
 
 export function toDateInputValue(value) {
@@ -74,7 +76,10 @@ export function mapRowToEmployeeForm(row) {
       row.other_allowance != null && row.other_allowance !== ""
         ? String(row.other_allowance)
         : "",
+    bank_name: String(row.bank_name ?? ""),
     iban: String(row.iban ?? ""),
+    transport_allowance:
+      row.transport_allowance != null ? String(row.transport_allowance) : "",
   };
 }
 

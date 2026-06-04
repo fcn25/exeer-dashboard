@@ -14,7 +14,7 @@ import {
   buildTemplateCategoriesPayload,
   TEMPLATE_STRUCTURE_VERSION,
 } from "../utils/evaluationTemplateStructure.js";
-import { flattenTemplateQuestionRecords } from "../utils/evaluationTemplateQuestions.js";
+import { flattenTemplateQuestionRecords } from "../utils/evaluationTemplateFlatten.js";
 
 export { evaluationTemplatesSeedBatch1, evaluationTemplatesSeedBatch2 };
 

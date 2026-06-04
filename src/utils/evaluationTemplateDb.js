@@ -1,6 +1,9 @@
 import { supabase } from "./supabaseClient.js";
 import { isMissingColumnError } from "./supabaseErrors.js";
+import { resolveTemplateContentPayload } from "./evaluationTemplateContent.js";
 import { mapAllSeedTemplatesToDbRows } from "../data/seedTemplates.js";
+
+export { resolveTemplateContentPayload };
 
 const TEMPLATE_SELECT_ATTEMPTS = [
   "id, category, title, criteria",
@@ -17,49 +20,6 @@ const TEMPLATE_EMBED_SELECT_ATTEMPTS = [
   "id, title, questions_jsonb",
   "id, title",
 ];
-
-function parseJsonValue(value) {
-  if (value == null) return null;
-  if (typeof value === "object") return value;
-  if (typeof value !== "string") return null;
-  try {
-    return JSON.parse(value);
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Resolve template JSON from whichever column exists in Supabase.
- * Supports: questions_jsonb, criteria, questions, content.
- */
-export function resolveTemplateContentPayload(row) {
-  if (!row) return null;
-
-  const raw =
-    row.questions_jsonb ??
-    row.criteria ??
-    row.questions ??
-    row.content ??
-    null;
-
-  const parsed = parseJsonValue(raw) ?? raw;
-  if (!parsed) return null;
-
-  if (Array.isArray(parsed)) {
-    return { version: 3, categories: parsed };
-  }
-
-  if (typeof parsed === "object") {
-    if (Array.isArray(parsed.categories)) return parsed;
-    if (Array.isArray(parsed.criteria)) {
-      return { version: 3, categories: parsed };
-    }
-    if (Array.isArray(parsed.questions)) return parsed;
-  }
-
-  return null;
-}
 
 export function normalizeEvaluationTemplateRow(row, seedByTitle = new Map()) {
   if (!row) return null;

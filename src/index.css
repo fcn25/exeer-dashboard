@@ -112,11 +112,27 @@ span {
   border: 1px solid #e5e7eb;
   background: #ffffff;
   padding: 0.625rem 0.75rem;
-  font-size: 0.875rem;
+  /* 16px on mobile prevents iOS Safari auto-zoom on focus */
+  font-size: 16px;
   color: #0f172a;
   outline: none;
   box-shadow: none;
   transition: border-color 0.12s ease;
+}
+
+@media (min-width: 768px) {
+  .md-input {
+    font-size: 0.875rem;
+  }
+}
+
+/* Enforce minimum 16px on mobile for all text-like form controls */
+@media (max-width: 767px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="hidden"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="image"]),
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
 }
 
 .md-input:focus {

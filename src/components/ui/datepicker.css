@@ -4,6 +4,13 @@
 
 .exeer-datepicker-input {
   width: 100%;
+  font-size: 16px;
+}
+
+@media (min-width: 768px) {
+  .exeer-datepicker-input {
+    font-size: 0.875rem;
+  }
 }
 
 .exeer-datepicker-calendar {

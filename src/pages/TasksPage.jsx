@@ -115,7 +115,7 @@ function TaskCard({ task, onStatusChange, isUpdating }) {
           value={task.status}
           onChange={(e) => onStatusChange(task.id, e.target.value)}
           disabled={isUpdating}
-          className="md-input py-2 text-xs"
+          className="md-input py-2 text-base md:text-sm"
           aria-label="تغيير حالة المهمة"
         >
           {TASK_COLUMNS.map((column) => (

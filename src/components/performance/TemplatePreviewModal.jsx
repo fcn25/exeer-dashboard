@@ -12,10 +12,12 @@ import {
   getTemplateDescription,
   getTemplateDisplayTitle,
   groupQuestionsForPreview,
+  normalizeStaticPreviewSections,
   parseTemplateQuestions,
   templateHasQuestions,
 } from "../../utils/evaluationTemplateQuestions.js";
 import { DateInput } from "../ui/DateInput.jsx";
+import TemplatePreviewCriterionAccordion from "./TemplatePreviewCriterionAccordion.jsx";
 
 const EMPTY_FORM = {
   name: "",
@@ -30,17 +32,8 @@ function PreviewCategoryBlock({ section, index }) {
       <h3 className="text-sm font-bold text-slate-900">
         {index + 1}. {section.title}
       </h3>
-      <div className="rounded-md border border-gray-100 bg-gray-50 px-3 py-3">
-        <ul className="space-y-2 text-sm leading-relaxed text-slate-700">
-          {section.questions.map((question) => (
-            <li key={question} className="flex items-start gap-2">
-              <span className="shrink-0 text-slate-400" aria-hidden>
-                •
-              </span>
-              <span>{question}</span>
-            </li>
-          ))}
-        </ul>
+      <div className="rounded-md border border-gray-100 bg-gray-50 p-2">
+        <TemplatePreviewCriterionAccordion criteria={section.criteria} />
       </div>
     </section>
   );
@@ -139,7 +132,10 @@ export default function TemplatePreviewModal({
         fallbackSection: template.pillarTitle ?? "معايير التقييم",
       });
     }
-    return getTemplatePreviewSections(template);
+    return normalizeStaticPreviewSections(
+      getTemplatePreviewSections(template),
+      template.id,
+    );
   }, [template, resolvedDbTemplate]);
 
   const headerTitle = resolvedDbTemplate

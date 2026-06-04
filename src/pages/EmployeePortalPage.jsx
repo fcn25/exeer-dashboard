@@ -21,7 +21,7 @@ import NewRequestSlideover from "../components/portal/NewRequestSlideover.jsx";
 import PendingEvaluationsSection from "../components/portal/PendingEvaluationsSection.jsx";
 import PersonalMentorCard from "../components/portal/PersonalMentorCard.jsx";
 import SuccessToast from "../components/ui/SuccessToast.jsx";
-import { normalizeTaskStatus } from "../pages/TasksPage.jsx";
+import { normalizeTaskStatus } from "../utils/taskStatus.js";
 import { fetchPortalSnapshot } from "../services/portalService.js";
 import {
   REQUEST_STATUS_LABELS,

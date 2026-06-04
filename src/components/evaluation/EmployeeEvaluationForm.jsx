@@ -368,5 +368,3 @@ export default function EmployeeEvaluationForm({
     </div>
   );
 }
-
-export { resolveEvaluationQuestions };

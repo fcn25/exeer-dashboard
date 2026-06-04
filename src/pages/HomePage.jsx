@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import {
   FileText,
   Lightbulb,
@@ -12,11 +12,17 @@ import {
   fetchPendingRequestsPreview,
 } from "../services/dashboardService.js";
 import { getUserDisplay } from "../utils/mobileAuth.js";
-import SmartInterviewModal from "../components/SmartInterviewModal.jsx";
-import SmartGoalsModal from "../components/SmartGoalsModal.jsx";
-import SmartTasksModal from "../components/SmartTasksModal.jsx";
-import AchievementsArchiveModal from "../components/achievements/AchievementsArchiveModal.jsx";
-import MonthlyReportModal from "../components/MonthlyReportModal.jsx";
+const SmartInterviewModal = lazy(
+  () => import("../components/SmartInterviewModal.jsx"),
+);
+const SmartGoalsModal = lazy(() => import("../components/SmartGoalsModal.jsx"));
+const SmartTasksModal = lazy(() => import("../components/SmartTasksModal.jsx"));
+const AchievementsArchiveModal = lazy(
+  () => import("../components/achievements/AchievementsArchiveModal.jsx"),
+);
+const MonthlyReportModal = lazy(
+  () => import("../components/MonthlyReportModal.jsx"),
+);
 import PlgOnboardingBanner from "../components/onboarding/PlgOnboardingBanner.jsx";
 import ExeerEmptyState from "../components/brand/ExeerEmptyState.jsx";
 
@@ -201,30 +207,32 @@ export default function HomePage() {
         </div>
       </section>
 
-      <SmartInterviewModal
-        isOpen={isSmartInterviewOpen}
-        onClose={() => setIsSmartInterviewOpen(false)}
-      />
+      <Suspense fallback={null}>
+        <SmartInterviewModal
+          isOpen={isSmartInterviewOpen}
+          onClose={() => setIsSmartInterviewOpen(false)}
+        />
 
-      <SmartTasksModal
-        isOpen={isSmartTasksOpen}
-        onClose={() => setIsSmartTasksOpen(false)}
-      />
+        <SmartTasksModal
+          isOpen={isSmartTasksOpen}
+          onClose={() => setIsSmartTasksOpen(false)}
+        />
 
-      <SmartGoalsModal
-        isOpen={isSmartGoalsOpen}
-        onClose={() => setIsSmartGoalsOpen(false)}
-      />
+        <SmartGoalsModal
+          isOpen={isSmartGoalsOpen}
+          onClose={() => setIsSmartGoalsOpen(false)}
+        />
 
-      <AchievementsArchiveModal
-        isOpen={isAchievementsArchiveOpen}
-        onClose={() => setIsAchievementsArchiveOpen(false)}
-      />
+        <AchievementsArchiveModal
+          isOpen={isAchievementsArchiveOpen}
+          onClose={() => setIsAchievementsArchiveOpen(false)}
+        />
 
-      <MonthlyReportModal
-        isOpen={isMonthlyReportOpen}
-        onClose={() => setIsMonthlyReportOpen(false)}
-      />
+        <MonthlyReportModal
+          isOpen={isMonthlyReportOpen}
+          onClose={() => setIsMonthlyReportOpen(false)}
+        />
+      </Suspense>
     </div>
   );
 }

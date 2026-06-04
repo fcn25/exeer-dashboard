@@ -16,7 +16,7 @@ import {
   validateTemplateAnswers,
 } from "../utils/evaluationTemplateQuestions.js";
 import { notifyEvaluationAssignments } from "./notificationsService.js";
-import { listActiveEmployees } from "./payrollService.js";
+import { listActiveEmployees } from "./employeesService.js";
 import { generateExecutiveSummaryWithGemini } from "./geminiService.js";
 
 function mapDbError(error) {

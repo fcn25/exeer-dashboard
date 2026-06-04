@@ -8,6 +8,9 @@ import {
   listTasks,
   updateTaskStatus,
 } from "../services/tasksService.js";
+import { normalizeTaskStatus } from "../utils/taskStatus.js";
+
+export { normalizeTaskStatus };
 
 const TASK_COLUMNS = [
   { id: "todo", status: "قيد الانتظار", label: "قيد الانتظار" },
@@ -15,34 +18,6 @@ const TASK_COLUMNS = [
   { id: "review", status: "للمراجعة", label: "للمراجعة" },
   { id: "done", status: "مكتملة", label: "مكتملة" },
 ];
-
-const COLUMN_STATUS_ORDER = TASK_COLUMNS.map((column) => column.status);
-
-const STATUS_ALIASES = {
-  "to do": "قيد الانتظار",
-  todo: "قيد الانتظار",
-  pending: "قيد الانتظار",
-  "in progress": "قيد التنفيذ",
-  in_progress: "قيد التنفيذ",
-  progress: "قيد التنفيذ",
-  review: "للمراجعة",
-  done: "مكتملة",
-  completed: "مكتملة",
-  complete: "مكتملة",
-};
-
-export function normalizeTaskStatus(status) {
-  const raw = String(status ?? "").trim();
-  if (!raw) return TASK_COLUMNS[0].status;
-  if (COLUMN_STATUS_ORDER.includes(raw)) return raw;
-
-  const key = raw.toLowerCase().replace(/\s+/g, " ");
-  if (STATUS_ALIASES[key]) return STATUS_ALIASES[key];
-  const underscored = key.replace(/ /g, "_");
-  if (STATUS_ALIASES[underscored]) return STATUS_ALIASES[underscored];
-
-  return TASK_COLUMNS[0].status;
-}
 
 function toDateInputValue(value) {
   if (value == null || value === "") return "";

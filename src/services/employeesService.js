@@ -1,5 +1,6 @@
 import { supabase } from "../utils/supabaseClient.js";
 import { getCompanyId } from "../utils/mobileAuth.js";
+import { isActiveEmployee } from "../utils/employeeStatus.js";
 import { inviteEmployeeByEmail } from "./employeeInviteService.js";
 
 function mapDbError(error) {
@@ -52,6 +53,21 @@ export async function listEmployees() {
 
   if (error) throw new Error(mapDbError(error));
   return data ?? [];
+}
+
+/** Active employees for assignments, performance, and payroll (no payroll module dependency). */
+export async function listActiveEmployees() {
+  const companyId = getCompanyId();
+  const { data, error } = await supabase
+    .from("employees")
+    .select(
+      "id, full_name, email, department, basic_salary, housing_allowance, transport_allowance, other_allowance, nationality, is_saudi, employment_status, job_title_name",
+    )
+    .eq("company_id", companyId)
+    .order("full_name", { ascending: true });
+
+  if (error) throw new Error(mapDbError(error));
+  return (data ?? []).filter(isActiveEmployee);
 }
 
 export async function getEmployeeById(employeeId) {

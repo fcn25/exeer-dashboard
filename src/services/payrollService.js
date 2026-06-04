@@ -1,6 +1,7 @@
 import { supabase } from "../utils/supabaseClient.js";
 import { requireCompanyId, scopeQueryByCompany } from "../utils/tenantScope.js";
 import { isMissingColumnError } from "../utils/supabaseErrors.js";
+import { listActiveEmployees } from "./employeesService.js";
 import {
   buildPayrollDraftFromEmployee,
   formatPayrollMonthFromPicker,
@@ -12,16 +13,6 @@ export const PAYROLL_SCHEMA_FIX_HINT =
 
 const PAYROLL_EMPLOYEE_FK_HINT =
   "نفّذ SQL ربط payroll_records.employee_id → employees.id (ملف 20250603000001_payroll_employee_fk.sql) ثم حدّث Schema Cache.";
-
-const INACTIVE_STATUSES = new Set([
-  "مستقيل",
-  "منتهي",
-  "غير نشط",
-  "terminated",
-  "inactive",
-  "resigned",
-  "إجازة بدون راتب",
-]);
 
 function isMissingPayrollEmployeeRelationship(error) {
   if (!error) return false;
@@ -60,18 +51,6 @@ function parsePayrollPeriod(pickerValue) {
   const year = Number(yearPart);
   if (!month || !year) return null;
   return { payrollMonth, month, year };
-}
-
-function isActiveEmployee(employee) {
-  const status = String(employee.employment_status ?? "نشط").trim();
-  if (!status) return true;
-  const lower = status.toLowerCase();
-  for (const inactive of INACTIVE_STATUSES) {
-    if (lower === inactive.toLowerCase() || lower.includes(inactive.toLowerCase())) {
-      return false;
-    }
-  }
-  return true;
 }
 
 function buildPayrollRecordPayload(companyId, draft, period, includePayrollMonth) {
@@ -183,22 +162,6 @@ async function findExistingRecord(companyId, period, employeeId, includePayrollM
   ).maybeSingle();
 
   return legacy;
-}
-
-export async function listActiveEmployees() {
-  const companyId = requireCompanyId("توليد المسير");
-  const { data, error } = await scopeQueryByCompany(
-    supabase
-      .from("employees")
-      .select(
-        "id, full_name, email, department, basic_salary, housing_allowance, transport_allowance, other_allowance, nationality, is_saudi, employment_status",
-      ),
-    companyId,
-  ).order("full_name", { ascending: true });
-
-  if (error) throw new Error(mapDbError(error));
-
-  return (data ?? []).filter(isActiveEmployee);
 }
 
 export async function fetchPayrollForMonth(pickerValue) {

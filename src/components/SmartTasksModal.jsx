@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { CheckCircle2, Sparkles, X } from "lucide-react";
-import { listActiveEmployees } from "../services/payrollService.js";
+import { listEmployeesForTasks } from "../services/employeesService.js";
 import { generateAndAssignSmartTask } from "../services/smartTasksService.js";
 import { isRateLimitError } from "../utils/aiRateLimit.js";
 import RateLimitToast from "./ui/RateLimitToast.jsx";
@@ -50,7 +50,7 @@ export default function SmartTasksModal({ isOpen, onClose, onTaskCreated }) {
       setError("");
 
       try {
-        const rows = await listActiveEmployees();
+        const rows = await listEmployeesForTasks();
         if (cancelled) return;
         setEmployees(rows);
       } catch (err) {
@@ -94,7 +94,7 @@ export default function SmartTasksModal({ isOpen, onClose, onTaskCreated }) {
     try {
       await generateAndAssignSmartTask({
         employeeId: Number(employeeId),
-        employeeName: selected?.full_name ?? "",
+        employeeName: selected?.name ?? "",
         brief,
       });
 
@@ -188,7 +188,7 @@ export default function SmartTasksModal({ isOpen, onClose, onTaskCreated }) {
                   </option>
                   {employees.map((employee) => (
                     <option key={employee.id} value={employee.id}>
-                      {employee.full_name}
+                      {employee.name}
                     </option>
                   ))}
                 </select>

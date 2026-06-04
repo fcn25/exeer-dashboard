@@ -2,6 +2,7 @@ import {
   EVALUATION_CRITERIA,
   EMPTY_RATINGS,
 } from "../constants/evaluationCriteria.js";
+import { resolveTemplateContentPayload } from "./evaluationTemplateDb.js";
 
 /** Flatten v3 categories or legacy `questions[]` for forms and scoring. */
 export function flattenTemplateQuestionRecords(questionsJsonb) {
@@ -107,14 +108,23 @@ export function normalizeQuestion(question, lang = "ar") {
   };
 }
 
-export function parseTemplateQuestions(questionsJsonb, lang = "ar") {
-  return flattenTemplateQuestionRecords(questionsJsonb)
+export function getTemplatePayload(template) {
+  return resolveTemplateContentPayload(template) ?? template?.questions_jsonb ?? null;
+}
+
+export function parseTemplateQuestions(templateOrPayload, lang = "ar") {
+  const source =
+    templateOrPayload?.title != null
+      ? getTemplatePayload(templateOrPayload)
+      : templateOrPayload;
+
+  return flattenTemplateQuestionRecords(source)
     .filter((item) => item?.id && item?.type)
     .map((item) => normalizeQuestion(item, lang));
 }
 
 export function getTemplateDisplayTitle(template, lang = "ar") {
-  const payload = template?.questions_jsonb;
+  const payload = getTemplatePayload(template);
   if (payload && typeof payload === "object") {
     if (lang === "en" && payload.title_en) return payload.title_en;
     if (payload.title_ar) return payload.title_ar;
@@ -123,7 +133,7 @@ export function getTemplateDisplayTitle(template, lang = "ar") {
 }
 
 export function getTemplateQuestionCount(template) {
-  return parseTemplateQuestions(template?.questions_jsonb, "ar").length;
+  return parseTemplateQuestions(getTemplatePayload(template), "ar").length;
 }
 
 export function templateHasQuestions(template) {
@@ -149,7 +159,7 @@ export function getTemplateCategoryLabelAr(category) {
 }
 
 export function getTemplateDescription(template, lang = "ar") {
-  const payload = template?.questions_jsonb;
+  const payload = getTemplatePayload(template);
   if (payload && typeof payload === "object") {
     if (lang === "en" && payload.description_en) return payload.description_en;
     if (payload.description_ar) return payload.description_ar;
@@ -225,7 +235,7 @@ export function getLegacyDefaultQuestions(lang = "ar") {
 }
 
 export function resolveEvaluationQuestions(template, lang = "ar") {
-  const parsed = parseTemplateQuestions(template?.questions_jsonb, lang);
+  const parsed = parseTemplateQuestions(getTemplatePayload(template), lang);
   return parsed.length > 0 ? parsed : getLegacyDefaultQuestions(lang);
 }
 

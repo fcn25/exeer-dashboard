@@ -11,6 +11,7 @@ import {
 import {
   getTemplateDescription,
   getTemplateDisplayTitle,
+  getTemplatePayload,
   templateHasQuestions,
 } from "../../utils/evaluationTemplateQuestions.js";
 import { buildTemplatePreviewSections } from "../../utils/evaluationTemplateStructure.js";
@@ -124,7 +125,7 @@ export default function TemplatePreviewModal({
   const previewSections = useMemo(() => {
     if (!template) return [];
     return buildTemplatePreviewSections({
-      questionsJsonb: resolvedDbTemplate?.questions_jsonb,
+      questionsJsonb: getTemplatePayload(resolvedDbTemplate),
       uiTemplate: template,
     });
   }, [template, resolvedDbTemplate]);

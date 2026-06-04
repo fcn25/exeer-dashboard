@@ -1,5 +1,12 @@
 import { supabase } from "../utils/supabaseClient.js";
 import { TEMPLATE_UI_SEED_TITLE_AR } from "../constants/performanceTemplates.js";
+import {
+  fetchEvaluationTemplateById,
+  fetchEvaluationTemplateRows,
+  getEvaluationTemplateEmbedSelect,
+  normalizeEmbeddedTemplate,
+  resolveTemplateContentPayload,
+} from "../utils/evaluationTemplateDb.js";
 import { getCompanyId } from "../utils/mobileAuth.js";
 import { requireCompanyId, scopeQueryByCompany } from "../utils/tenantScope.js";
 import { listDepartments } from "./catalogService.js";
@@ -63,11 +70,7 @@ function mapPendingResponseRow(row) {
       end_date: cycle.end_date,
     },
     evaluation_templates: template
-      ? {
-          id: template.id,
-          title: template.title,
-          questions_jsonb: template.questions_jsonb ?? null,
-        }
+      ? normalizeEmbeddedTemplate(template)
       : { id: null, title: "نموذج تقييم", questions_jsonb: null },
   };
 }
@@ -113,38 +116,34 @@ export async function getEvaluationCycleById(cycleId) {
 }
 
 export async function listEvaluationTemplates() {
-  const { data, error } = await supabase
-    .from("evaluation_templates")
-    .select("id, category, title, questions_jsonb")
-    .order("category", { ascending: true })
-    .order("title", { ascending: true });
-
-  if (error) throw new Error(mapDbError(error));
-  return data ?? [];
+  try {
+    return await fetchEvaluationTemplateRows();
+  } catch (error) {
+    throw new Error(mapDbError(error));
+  }
 }
 
 export async function getEvaluationTemplateById(templateId) {
   if (!templateId) return null;
 
-  const { data, error } = await supabase
-    .from("evaluation_templates")
-    .select("id, category, title, questions_jsonb")
-    .eq("id", Number(templateId))
-    .maybeSingle();
-
-  if (error) throw new Error(mapDbError(error));
-  return data;
+  try {
+    return await fetchEvaluationTemplateById(templateId);
+  } catch (error) {
+    throw new Error(mapDbError(error));
+  }
 }
 
 export function resolveEvaluationTemplateId(title, templates = [], uiTemplateId = "") {
   const normalized = String(title ?? "").trim();
   if (!normalized) return null;
 
-  const withQuestions = templates.filter(
-    (row) =>
-      (row.questions_jsonb?.categories?.length ?? 0) > 0 ||
-      (row.questions_jsonb?.questions?.length ?? 0) > 0,
-  );
+  const withQuestions = templates.filter((row) => {
+    const payload = resolveTemplateContentPayload(row);
+    return (
+      (payload?.categories?.length ?? 0) > 0 ||
+      (payload?.questions?.length ?? 0) > 0
+    );
+  });
 
   const pool = withQuestions.length ? withQuestions : templates;
 
@@ -388,7 +387,7 @@ export async function listPendingEvaluationsForEmployee(employeeId) {
         name,
         end_date,
         template_id,
-        evaluation_templates:template_id ( id, title, questions_jsonb )
+        evaluation_templates:template_id ( ${getEvaluationTemplateEmbedSelect()} )
       )
     `,
     )
@@ -417,7 +416,7 @@ async function listPendingLegacyEvaluationsForEmployee(employeeId) {
       status,
       created_at,
       evaluation_cycles ( id, name, end_date ),
-      evaluation_templates ( id, title, questions_jsonb )
+      evaluation_templates ( ${getEvaluationTemplateEmbedSelect()} )
     `,
     )
     .eq("company_id", companyId)
@@ -446,7 +445,7 @@ export async function submitEmployeeEvaluation(
     throw new Error(validationError);
   }
 
-  const hasDynamicQuestions = parseTemplateQuestions(template?.questions_jsonb).length > 0;
+  const hasDynamicQuestions = parseTemplateQuestions(template).length > 0;
 
   const answers = hasDynamicQuestions
     ? normalizeAnswersPayload(questions, rawAnswers)

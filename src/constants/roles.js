@@ -19,9 +19,10 @@ export const DASHBOARD_ROLES = new Set([
   "Executive",
   "HR_Manager",
   "HR_Assistant",
+  "Direct_Manager",
 ]);
 
-export const PORTAL_ROLES = new Set(["Direct_Manager", "Employee"]);
+export const PORTAL_ROLES = new Set(["Employee"]);
 
 export const ROLE_LABELS = {
   owner: "مالك المنشأة",

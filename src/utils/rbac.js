@@ -3,6 +3,23 @@ import {
   isOwnerRole,
   normalizeAppRole,
 } from "../constants/roles.js";
+
+export function isDirectManager(role = getCurrentUserRole()) {
+  const normalized = normalizeAppRole(role);
+  return normalized === "Direct_Manager" || normalized === "manager";
+}
+
+/** فريق العمل: مدير مباشر + HR + المالك */
+export function canAccessMyTeam(role = getCurrentUserRole()) {
+  const normalized = normalizeAppRole(role);
+  return (
+    isOwnerRole(normalized) ||
+    normalized === "Executive" ||
+    normalized === "HR_Manager" ||
+    normalized === "HR_Assistant" ||
+    isDirectManager(normalized)
+  );
+}
 import { ADMINISTRATIVE_MASTER_LOG_ROLES } from "../constants/administrativeActions.js";
 
 export function getCurrentUserRole() {
@@ -55,14 +72,17 @@ export function canCreateEvents() {
 }
 
 export function canAccessSettings() {
-  return hasPermission("can_edit_employees") || isOwner();
+  return (
+    hasPermission("can_edit_employees") || isOwner() || isDirectManager()
+  );
 }
 
 export function canAccessPerformance() {
   return (
     isOwner() ||
     hasPermission("can_edit_employees") ||
-    hasPermission("can_view_payroll")
+    hasPermission("can_view_payroll") ||
+    isDirectManager()
   );
 }
 

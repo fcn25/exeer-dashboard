@@ -13,6 +13,7 @@ import PerformancePage from "./pages/PerformancePage.jsx";
 import PayrollPage from "./PayrollPage.jsx";
 import AttendancePage from "./pages/AttendancePage.jsx";
 import AdministrativeActionsPage from "./pages/AdministrativeActionsPage.jsx";
+import MyTeamDashboard from "./pages/MyTeamDashboard.jsx";
 import MobileAdministrativeActionsPage from "./pages/mobile/MobileAdministrativeActionsPage.jsx";
 import MobilePerformancePage from "./pages/mobile/MobilePerformancePage.jsx";
 import { AdministrativeActionsGate } from "./components/administrative/AdministrativeActionsGate.jsx";
@@ -113,6 +114,23 @@ function DashboardRoutes() {
             }
           />
           <Route path="performance" element={<PerformancePage />} />
+          <Route
+            path="my-team"
+            element={
+              <ProtectedRoute
+                allowDashboard
+                requiredRole={[
+                  "owner",
+                  "Executive",
+                  "HR_Manager",
+                  "HR_Assistant",
+                  "Direct_Manager",
+                ]}
+              >
+                <MyTeamDashboard />
+              </ProtectedRoute>
+            }
+          />
           <Route path="settings" element={<SettingsPage />} />
           <Route
             path="subscription"

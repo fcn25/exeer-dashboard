@@ -15,17 +15,20 @@ import {
   Target,
   UserPlus,
   Users,
+  UsersRound,
 } from "lucide-react";
 import { signOut } from "../utils/mobileAuth.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import ExeerLogo from "../components/brand/ExeerLogo.jsx";
 import {
+  canAccessMyTeam,
   canAccessPerformance,
   canAccessSettings,
   canEditEmployeeRecords,
   canManageEvents,
   canManageAdministrativeActions,
   canViewPayroll,
+  isDirectManager,
   isOwner,
 } from "../utils/rbac.js";
 
@@ -60,12 +63,13 @@ export default function ManagerLayout() {
   const lang = i18n.language?.startsWith("en") ? "en" : "ar";
 
   const navItems = useMemo(() => {
+    const managerOnly = isDirectManager(role);
     const items = [
       { to: "/dashboard", label: "الرئيسية", icon: Home, end: true },
       { to: "/dashboard/tasks", label: "المهام", icon: CheckSquare },
     ];
 
-    if (canManageEvents()) {
+    if (canManageEvents() || managerOnly) {
       items.push({
         to: "/dashboard/events",
         label: "الفعاليات",
@@ -73,32 +77,42 @@ export default function ManagerLayout() {
       });
     }
 
-    if (canEditEmployeeRecords()) {
-      items.push({
-        to: "/dashboard/employees",
-        label: "الموظفين",
-        icon: Users,
-      });
+    if (!managerOnly) {
+      if (canEditEmployeeRecords()) {
+        items.push({
+          to: "/dashboard/employees",
+          label: "الموظفين",
+          icon: Users,
+        });
+      }
+
+      if (canManageAdministrativeActions()) {
+        items.push({
+          to: "/dashboard/administrative-actions",
+          label: "الإجراءات الإدارية",
+          icon: Gavel,
+        });
+      }
+
+      if (canViewPayroll()) {
+        items.push({
+          to: "/dashboard/payroll",
+          label: "مسير الرواتب",
+          icon: Banknote,
+        });
+        items.push({
+          to: "/dashboard/attendance",
+          label: "سجل الحضور",
+          icon: Fingerprint,
+        });
+      }
     }
 
-    if (canManageAdministrativeActions()) {
+    if (canAccessMyTeam(role)) {
       items.push({
-        to: "/dashboard/administrative-actions",
-        label: "الإجراءات الإدارية",
-        icon: Gavel,
-      });
-    }
-
-    if (canViewPayroll()) {
-      items.push({
-        to: "/dashboard/payroll",
-        label: "مسير الرواتب",
-        icon: Banknote,
-      });
-      items.push({
-        to: "/dashboard/attendance",
-        label: "سجل الحضور",
-        icon: Fingerprint,
+        to: "/dashboard/my-team",
+        label: "فريق العمل",
+        icon: UsersRound,
       });
     }
 
@@ -118,7 +132,7 @@ export default function ManagerLayout() {
       });
     }
 
-    if (isOwner()) {
+    if (!managerOnly && isOwner()) {
       items.push({
         to: "/dashboard/permissions",
         label: "الصلاحيات",
@@ -185,7 +199,7 @@ export default function ManagerLayout() {
           </button>
         ) : null}
 
-        {canEditEmployeeRecords() && !isSidebarCollapsed ? (
+        {canEditEmployeeRecords() && !isDirectManager(role) && !isSidebarCollapsed ? (
           <button
             type="button"
             onClick={() => navigate("/dashboard/employees?add=1")}
@@ -196,7 +210,7 @@ export default function ManagerLayout() {
           </button>
         ) : null}
 
-        {canEditEmployeeRecords() && isSidebarCollapsed ? (
+        {canEditEmployeeRecords() && !isDirectManager(role) && isSidebarCollapsed ? (
           <button
             type="button"
             onClick={() => navigate("/dashboard/employees?add=1")}

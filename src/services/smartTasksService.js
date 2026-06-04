@@ -1,3 +1,4 @@
+import { assertGeminiConfigured } from "../utils/geminiConfig.js";
 import { expandTaskBriefWithGemini } from "./geminiService.js";
 import { assertSmartTasksRateLimit } from "./aiRateLimitService.js";
 import { createTask } from "./tasksService.js";
@@ -18,6 +19,7 @@ export async function generateAndAssignSmartTask({
     throw new Error("يرجى اختيار الموظف المكلف.");
   }
 
+  assertGeminiConfigured();
   await assertSmartTasksRateLimit();
 
   const description = await expandTaskBriefWithGemini(brief);

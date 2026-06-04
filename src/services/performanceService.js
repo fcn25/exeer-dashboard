@@ -1,5 +1,14 @@
 import { supabase } from "../utils/supabaseClient.js";
+import { TEMPLATE_UI_SEED_TITLE_AR } from "../constants/performanceTemplates.js";
+import {
+  fetchEvaluationTemplateById,
+  fetchEvaluationTemplateRows,
+  getEvaluationTemplateEmbedSelect,
+  normalizeEmbeddedTemplate,
+  resolveTemplateContentPayload,
+} from "../utils/evaluationTemplateDb.js";
 import { getCompanyId } from "../utils/mobileAuth.js";
+import { requireCompanyId, scopeQueryByCompany } from "../utils/tenantScope.js";
 import { listDepartments } from "./catalogService.js";
 import {
   buildEvaluationAnswersPayload,
@@ -61,76 +70,93 @@ function mapPendingResponseRow(row) {
       end_date: cycle.end_date,
     },
     evaluation_templates: template
-      ? {
-          id: template.id,
-          title: template.title,
-          questions_jsonb: template.questions_jsonb ?? null,
-        }
+      ? normalizeEmbeddedTemplate(template)
       : { id: null, title: "نموذج تقييم", questions_jsonb: null },
   };
 }
 
+function resolveCompanyId(context) {
+  try {
+    return requireCompanyId(context);
+  } catch {
+    return getCompanyId();
+  }
+}
+
 export async function listEvaluationCycles() {
-  const companyId = getCompanyId();
-  const { data, error } = await supabase
-    .from("evaluation_cycles")
-    .select(
-      "id, name, start_date, end_date, status, ai_summary, template_id, target_department, created_at",
-    )
-    .eq("company_id", companyId)
-    .order("created_at", { ascending: false });
+  const companyId = resolveCompanyId("دورات التقييم");
+  const { data, error } = await scopeQueryByCompany(
+    supabase
+      .from("evaluation_cycles")
+      .select(
+        "id, name, start_date, end_date, status, ai_summary, template_id, target_department, created_at",
+      )
+      .order("created_at", { ascending: false }),
+    companyId,
+  );
 
   if (error) throw new Error(mapDbError(error));
   return data ?? [];
 }
 
 export async function getEvaluationCycleById(cycleId) {
-  const companyId = getCompanyId();
-  const { data, error } = await supabase
-    .from("evaluation_cycles")
-    .select(
-      "id, name, start_date, end_date, status, ai_summary, template_id, target_department, created_at",
-    )
-    .eq("company_id", companyId)
-    .eq("id", Number(cycleId))
-    .maybeSingle();
+  const companyId = resolveCompanyId("تفاصيل دورة التقييم");
+  const { data, error } = await scopeQueryByCompany(
+    supabase
+      .from("evaluation_cycles")
+      .select(
+        "id, name, start_date, end_date, status, ai_summary, template_id, target_department, created_at",
+      )
+      .eq("id", Number(cycleId)),
+    companyId,
+  ).maybeSingle();
 
   if (error) throw new Error(mapDbError(error));
   return data;
 }
 
 export async function listEvaluationTemplates() {
-  const { data, error } = await supabase
-    .from("evaluation_templates")
-    .select("id, category, title, questions_jsonb")
-    .order("category", { ascending: true })
-    .order("title", { ascending: true });
-
-  if (error) throw new Error(mapDbError(error));
-  return data ?? [];
+  try {
+    return await fetchEvaluationTemplateRows();
+  } catch (error) {
+    throw new Error(mapDbError(error));
+  }
 }
 
 export async function getEvaluationTemplateById(templateId) {
   if (!templateId) return null;
 
-  const { data, error } = await supabase
-    .from("evaluation_templates")
-    .select("id, category, title, questions_jsonb")
-    .eq("id", Number(templateId))
-    .maybeSingle();
-
-  if (error) throw new Error(mapDbError(error));
-  return data;
+  try {
+    return await fetchEvaluationTemplateById(templateId);
+  } catch (error) {
+    throw new Error(mapDbError(error));
+  }
 }
 
-export function resolveEvaluationTemplateId(title, templates = []) {
+export function resolveEvaluationTemplateId(title, templates = [], uiTemplateId = "") {
   const normalized = String(title ?? "").trim();
   if (!normalized) return null;
 
-  const exact = templates.find((row) => row.title === normalized);
+  const withQuestions = templates.filter((row) => {
+    const payload = resolveTemplateContentPayload(row);
+    return (
+      (payload?.categories?.length ?? 0) > 0 ||
+      (payload?.questions?.length ?? 0) > 0
+    );
+  });
+
+  const pool = withQuestions.length ? withQuestions : templates;
+
+  const seedTitle = uiTemplateId ? TEMPLATE_UI_SEED_TITLE_AR[uiTemplateId] : "";
+  if (seedTitle) {
+    const bySeed = pool.find((row) => row.title === seedTitle);
+    if (bySeed) return bySeed.id;
+  }
+
+  const exact = pool.find((row) => row.title === normalized);
   if (exact) return exact.id;
 
-  const partial = templates.find(
+  const partial = pool.find(
     (row) =>
       normalized.includes(row.title) || row.title.includes(normalized),
   );
@@ -138,7 +164,19 @@ export function resolveEvaluationTemplateId(title, templates = []) {
 }
 
 export async function listCompanyDepartments() {
-  return listDepartments();
+  resolveCompanyId("أقسام التقييم");
+  const employees = await listActiveEmployees();
+  const fromEmployees = new Set(
+    employees
+      .map((row) => String(row.department ?? "").trim())
+      .filter(Boolean),
+  );
+
+  const catalog = await listDepartments();
+  const matched = catalog.filter((name) => fromEmployees.has(name));
+  if (matched.length) return matched;
+
+  return [...fromEmployees].sort((a, b) => a.localeCompare(b, "ar"));
 }
 
 export async function listEmployeesByDepartment(department) {
@@ -152,12 +190,14 @@ export async function listEmployeesByDepartment(department) {
 }
 
 export async function getCycleResponseProgress(cycleId) {
-  const companyId = getCompanyId();
-  const { data, error } = await supabase
-    .from("evaluation_responses")
-    .select("status")
-    .eq("company_id", companyId)
-    .eq("cycle_id", Number(cycleId));
+  const companyId = resolveCompanyId("تقدّم دورة التقييم");
+  const { data, error } = await scopeQueryByCompany(
+    supabase
+      .from("evaluation_responses")
+      .select("status")
+      .eq("cycle_id", Number(cycleId)),
+    companyId,
+  );
 
   if (error) throw new Error(mapDbError(error));
 
@@ -177,7 +217,7 @@ export async function launchEvaluationCycleForDepartment({
   templateId,
   department,
 }) {
-  const companyId = getCompanyId();
+  const companyId = requireCompanyId("إطلاق دورة التقييم");
   const trimmedName = String(name ?? "").trim();
   const trimmedDepartment = String(department ?? "").trim();
 
@@ -225,7 +265,10 @@ export async function launchEvaluationCycleForDepartment({
     .insert(responseRows);
 
   if (responsesError) {
-    await supabase.from("evaluation_cycles").delete().eq("id", cycle.id);
+    await scopeQueryByCompany(
+      supabase.from("evaluation_cycles").delete(),
+      companyId,
+    ).eq("id", cycle.id);
     throw new Error(mapDbError(responsesError));
   }
 
@@ -344,7 +387,7 @@ export async function listPendingEvaluationsForEmployee(employeeId) {
         name,
         end_date,
         template_id,
-        evaluation_templates:template_id ( id, title, questions_jsonb )
+        evaluation_templates:template_id ( ${getEvaluationTemplateEmbedSelect()} )
       )
     `,
     )
@@ -373,7 +416,7 @@ async function listPendingLegacyEvaluationsForEmployee(employeeId) {
       status,
       created_at,
       evaluation_cycles ( id, name, end_date ),
-      evaluation_templates ( id, title, questions_jsonb )
+      evaluation_templates ( ${getEvaluationTemplateEmbedSelect()} )
     `,
     )
     .eq("company_id", companyId)
@@ -402,7 +445,7 @@ export async function submitEmployeeEvaluation(
     throw new Error(validationError);
   }
 
-  const hasDynamicQuestions = parseTemplateQuestions(template?.questions_jsonb).length > 0;
+  const hasDynamicQuestions = parseTemplateQuestions(template).length > 0;
 
   const answers = hasDynamicQuestions
     ? normalizeAnswersPayload(questions, rawAnswers)

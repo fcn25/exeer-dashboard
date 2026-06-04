@@ -14,10 +14,17 @@ import PayrollPage from "./PayrollPage.jsx";
 import AttendancePage from "./pages/AttendancePage.jsx";
 import AdministrativeActionsPage from "./pages/AdministrativeActionsPage.jsx";
 import MobileAdministrativeActionsPage from "./pages/mobile/MobileAdministrativeActionsPage.jsx";
+import MobilePerformancePage from "./pages/mobile/MobilePerformancePage.jsx";
 import { AdministrativeActionsGate } from "./components/administrative/AdministrativeActionsGate.jsx";
+import { PerformanceGate } from "./components/performance/PerformanceGate.jsx";
 import MobileSubscriptionPage from "./pages/MobileSubscriptionPage.jsx";
 import { ProtectedRoute } from "./components/ProtectedRoute.jsx";
+import ErrorBoundary from "./components/ErrorBoundary.jsx";
 import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
+
+function MobileRoute({ children }) {
+  return <ErrorBoundary>{children}</ErrorBoundary>;
+}
 
 function LoginPage() {
   const { isAuthenticated, isBootstrapping, homePath } = useAuth();
@@ -185,7 +192,9 @@ function AppRoutes() {
         element={
           <ProtectedRoute allowPortal>
             <ProtectedRoute requiredRole="owner">
-              <MobileSubscriptionPage />
+              <MobileRoute>
+                <MobileSubscriptionPage />
+              </MobileRoute>
             </ProtectedRoute>
           </ProtectedRoute>
         }
@@ -194,7 +203,9 @@ function AppRoutes() {
         path="/mobile"
         element={
           <ProtectedRoute allowPortal>
-            <EmployeePortalPage />
+            <MobileRoute>
+              <EmployeePortalPage />
+            </MobileRoute>
           </ProtectedRoute>
         }
       />
@@ -203,8 +214,22 @@ function AppRoutes() {
         element={
           <ProtectedRoute allowPortal>
             <AdministrativeActionsGate>
-              <MobileAdministrativeActionsPage />
+              <MobileRoute>
+                <MobileAdministrativeActionsPage />
+              </MobileRoute>
             </AdministrativeActionsGate>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/mobile/performance"
+        element={
+          <ProtectedRoute allowPortal>
+            <PerformanceGate>
+              <MobileRoute>
+                <MobilePerformancePage />
+              </MobileRoute>
+            </PerformanceGate>
           </ProtectedRoute>
         }
       />
@@ -225,7 +250,9 @@ function AppRoutes() {
 export default function App() {
   return (
     <AuthProvider>
-      <AppRoutes />
+      <ErrorBoundary>
+        <AppRoutes />
+      </ErrorBoundary>
     </AuthProvider>
   );
 }

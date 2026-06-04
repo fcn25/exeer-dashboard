@@ -114,7 +114,7 @@ function MobileNavbar({ user, menuOpen, onToggleMenu, onCloseMenu }) {
             className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/10 text-sm font-bold"
             aria-hidden
           >
-            {user.initials}
+            {user?.initials ?? "م"}
           </span>
         </div>
 
@@ -180,14 +180,14 @@ function PendingRequestCard({ request, onUpdateStatus, isUpdating }) {
         onClick={() => setExpanded((prev) => !prev)}
         className="w-full text-start"
       >
-        <p className="text-sm font-bold text-[#0F172A]">{request.employeeName}</p>
-        <p className="mt-1 text-xs text-slate-500">{request.requestType}</p>
+        <p className="text-sm font-bold text-[#0F172A]">{request?.employeeName ?? "—"}</p>
+        <p className="mt-1 text-xs text-slate-500">{request?.requestType ?? "—"}</p>
       </button>
 
       {expanded ? (
         <div className="mt-3 space-y-2 rounded-lg border border-exeer-border bg-white p-3 text-xs text-slate-600">
-          {request.detailFields.length > 0 ? (
-            request.detailFields.map(([label, value]) => (
+          {(request?.detailFields ?? []).length > 0 ? (
+            (request?.detailFields ?? []).map(([label, value]) => (
               <p key={label}>
                 <span className="font-semibold text-[#0F172A]">{label}: </span>
                 {String(value)}

@@ -2,6 +2,41 @@ import {
   EVALUATION_CRITERIA,
   EMPTY_RATINGS,
 } from "../constants/evaluationCriteria.js";
+import { resolveTemplateContentPayload } from "./evaluationTemplateDb.js";
+
+/** Flatten v3 categories or legacy `questions[]` for forms and scoring. */
+export function flattenTemplateQuestionRecords(questionsJsonb) {
+  const source =
+    questionsJsonb && typeof questionsJsonb === "object" ? questionsJsonb : {};
+
+  if (Array.isArray(source.categories) && source.categories.length > 0) {
+    const rows = [];
+    for (const category of source.categories) {
+      const categoryTitle = String(
+        category.title_ar ?? category.title ?? "",
+      ).trim();
+
+      for (const criterion of category.criteria ?? []) {
+        const criterionTitle = String(
+          criterion.title_ar ?? criterion.title ?? "",
+        ).trim();
+
+        for (const question of criterion.questions ?? []) {
+          if (!question?.id || !question?.type) continue;
+          rows.push({
+            ...question,
+            category_ar: categoryTitle,
+            section_ar: categoryTitle,
+            criterion_ar: criterionTitle,
+          });
+        }
+      }
+    }
+    return rows;
+  }
+
+  return Array.isArray(source.questions) ? source.questions : [];
+}
 
 export const QUESTION_TYPES = {
   RATING: "rating",
@@ -73,17 +108,23 @@ export function normalizeQuestion(question, lang = "ar") {
   };
 }
 
-export function parseTemplateQuestions(questionsJsonb, lang = "ar") {
+export function getTemplatePayload(template) {
+  return resolveTemplateContentPayload(template) ?? template?.questions_jsonb ?? null;
+}
+
+export function parseTemplateQuestions(templateOrPayload, lang = "ar") {
   const source =
-    questionsJsonb && typeof questionsJsonb === "object" ? questionsJsonb : {};
-  const list = Array.isArray(source.questions) ? source.questions : [];
-  return list
+    templateOrPayload?.title != null
+      ? getTemplatePayload(templateOrPayload)
+      : templateOrPayload;
+
+  return flattenTemplateQuestionRecords(source)
     .filter((item) => item?.id && item?.type)
     .map((item) => normalizeQuestion(item, lang));
 }
 
 export function getTemplateDisplayTitle(template, lang = "ar") {
-  const payload = template?.questions_jsonb;
+  const payload = getTemplatePayload(template);
   if (payload && typeof payload === "object") {
     if (lang === "en" && payload.title_en) return payload.title_en;
     if (payload.title_ar) return payload.title_ar;
@@ -92,11 +133,78 @@ export function getTemplateDisplayTitle(template, lang = "ar") {
 }
 
 export function getTemplateQuestionCount(template) {
-  return parseTemplateQuestions(template?.questions_jsonb).length;
+  return parseTemplateQuestions(getTemplatePayload(template), "ar").length;
 }
 
 export function templateHasQuestions(template) {
   return getTemplateQuestionCount(template) > 0;
+}
+
+const TEMPLATE_CATEGORY_LABELS_AR = {
+  HR: "الموارد البشرية",
+  General: "عام",
+  Compliance: "الامتثال",
+  Management: "الإدارة",
+  Strategy: "الاستراتيجية",
+  Culture: "الثقافة",
+  Technology: "التقنية",
+  Sales: "المبيعات",
+  Finance: "المالية",
+  Operations: "التشغيل",
+};
+
+export function getTemplateCategoryLabelAr(category) {
+  const key = String(category ?? "").trim();
+  return TEMPLATE_CATEGORY_LABELS_AR[key] ?? (key || "معايير التقييم");
+}
+
+export function getTemplateDescription(template, lang = "ar") {
+  const payload = getTemplatePayload(template);
+  if (payload && typeof payload === "object") {
+    if (lang === "en" && payload.description_en) return payload.description_en;
+    if (payload.description_ar) return payload.description_ar;
+  }
+  return "";
+}
+
+export function getQuestionRatingHintAr(question) {
+  if (!question?.type) return "طريقة التقييم: نصي";
+
+  switch (question.type) {
+    case QUESTION_TYPES.RATING_1_5:
+    case QUESTION_TYPES.RATING: {
+      const bounds = getRatingBounds(question);
+      return `طريقة التقييم: مقياس من ${bounds.min} إلى ${bounds.max}`;
+    }
+    case QUESTION_TYPES.RATING_0_10:
+      return "طريقة التقييم: مقياس من 0 إلى 10";
+    case QUESTION_TYPES.RATING_0_100:
+      return "طريقة التقييم: مقياس من 0 إلى 100";
+    case QUESTION_TYPES.TEXT:
+      return "طريقة التقييم: إجابة نصية";
+    case QUESTION_TYPES.BOOLEAN:
+      return "طريقة التقييم: نعم / لا";
+    case QUESTION_TYPES.CHOICE:
+      return "طريقة التقييم: اختيار من قائمة";
+    case QUESTION_TYPES.FILE:
+      return "طريقة التقييم: مرفق";
+    default:
+      return "طريقة التقييم: حسب النموذج";
+  }
+}
+
+export function mapQuestionToPreviewDetail(question, index = 0) {
+  const bounds = getRatingBounds(question);
+  const questionText = getQuestionLabel(question, "ar");
+
+  return {
+    id: String(question.id ?? `preview-detail-${index}`),
+    text: questionText,
+    type: question.type,
+    min: bounds.min,
+    max: bounds.max,
+    ratingHint: getQuestionRatingHintAr(question),
+  };
 }
 
 export function getLegacyDefaultQuestions(lang = "ar") {
@@ -127,7 +235,7 @@ export function getLegacyDefaultQuestions(lang = "ar") {
 }
 
 export function resolveEvaluationQuestions(template, lang = "ar") {
-  const parsed = parseTemplateQuestions(template?.questions_jsonb, lang);
+  const parsed = parseTemplateQuestions(getTemplatePayload(template), lang);
   return parsed.length > 0 ? parsed : getLegacyDefaultQuestions(lang);
 }
 

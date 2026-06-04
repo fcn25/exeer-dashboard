@@ -9,6 +9,8 @@ import {
   fetchAdministrativeActionsMasterLog,
 } from "../../services/administrativeActionsService.js";
 import { listEmployees } from "../../services/employeesService.js";
+import { ensureArray } from "../../utils/ensureArray.js";
+import MobileLoadingState from "../../components/mobile/MobileLoadingState.jsx";
 
 export default function MobileAdministrativeActionsPage() {
   const [employees, setEmployees] = useState([]);
@@ -28,8 +30,8 @@ export default function MobileAdministrativeActionsPage() {
         listEmployees(),
         fetchAdministrativeActionsMasterLog(),
       ]);
-      setEmployees(employeeList);
-      setRows(log);
+      setEmployees(ensureArray(employeeList));
+      setRows(ensureArray(log));
     } catch (err) {
       setError(err.message || "تعذّر تحميل البيانات.");
       setRows([]);
@@ -84,20 +86,22 @@ export default function MobileAdministrativeActionsPage() {
         ) : null}
 
         {isLoading ? (
-          <p className="py-12 text-center text-sm text-slate-500">جاري التحميل...</p>
+          <MobileLoadingState />
         ) : rows.length === 0 ? (
           <p className="rounded-md border border-gray-200 bg-gray-50 px-4 py-10 text-center text-sm text-slate-500">
             لا توجد إجراءات مسجّلة
           </p>
         ) : (
           <div className="space-y-3">
-            {rows.map((action) => (
-              <AdministrativeActionCard
-                key={action.id}
-                action={action}
-                showEmployee
-              />
-            ))}
+            {rows.map((action) =>
+              action?.id != null ? (
+                <AdministrativeActionCard
+                  key={action.id}
+                  action={action}
+                  showEmployee
+                />
+              ) : null,
+            )}
           </div>
         )}
       </main>
@@ -131,7 +135,7 @@ export default function MobileAdministrativeActionsPage() {
               </button>
             </div>
             <CreateAdministrativeActionForm
-              employees={employees}
+              employees={ensureArray(employees)}
               onSubmit={handleCreate}
               isSubmitting={isSubmitting}
             />

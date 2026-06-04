@@ -16,6 +16,7 @@ import {
   markAllNotificationsRead,
   markNotificationRead,
 } from "../../services/notificationsService.js";
+import { ensureArray } from "../../utils/ensureArray.js";
 
 const TYPE_ICONS = {
   request_approved: CheckCircle2,
@@ -32,11 +33,13 @@ const TYPE_ACCENTS = {
 };
 
 function NotificationItem({ item, locale, onMarkRead }) {
-  const Icon = TYPE_ICONS[item.type] ?? Bell;
-  const accent = TYPE_ACCENTS[item.type] ?? "text-exeer-muted bg-exeer-surface";
+  if (!item?.id) return null;
+
+  const Icon = TYPE_ICONS[item?.type] ?? Bell;
+  const accent = TYPE_ACCENTS[item?.type] ?? "text-exeer-muted bg-exeer-surface";
 
   const handleClick = async () => {
-    if (item.is_read) return;
+    if (item?.is_read) return;
     try {
       await markNotificationRead(item.id);
       onMarkRead(item.id);
@@ -47,7 +50,7 @@ function NotificationItem({ item, locale, onMarkRead }) {
 
   let relativeTime = "";
   try {
-    relativeTime = formatDistanceToNow(new Date(item.created_at), {
+    relativeTime = formatDistanceToNow(new Date(item?.created_at), {
       addSuffix: true,
       locale,
     });
@@ -60,7 +63,7 @@ function NotificationItem({ item, locale, onMarkRead }) {
       type="button"
       onClick={handleClick}
       className={`flex w-full gap-3 rounded-md px-4 py-3 text-right transition-colors hover:bg-exeer-hover ${
-        item.is_read ? "opacity-80" : "bg-md-primary-container/20 dark:bg-[#1e3a5f]/20"
+        item?.is_read ? "opacity-80" : "bg-md-primary-container/20 dark:bg-[#1e3a5f]/20"
       }`}
     >
       <span
@@ -70,12 +73,16 @@ function NotificationItem({ item, locale, onMarkRead }) {
       </span>
       <span className="min-w-0 flex-1 space-y-1">
         <span className="flex items-start justify-between gap-2">
-          <span className="text-sm font-semibold text-exeer-primary">{item.title}</span>
-          {!item.is_read ? (
+          <span className="text-sm font-semibold text-exeer-primary">
+            {item?.title ?? "—"}
+          </span>
+          {!item?.is_read ? (
             <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-md-primary" aria-hidden />
           ) : null}
         </span>
-        <span className="block text-xs leading-relaxed text-exeer-muted">{item.message}</span>
+        <span className="block text-xs leading-relaxed text-exeer-muted">
+          {item?.message ?? ""}
+        </span>
         {relativeTime ? (
           <span className="block text-[11px] text-exeer-muted">{relativeTime}</span>
         ) : null}
@@ -95,7 +102,7 @@ export default function NotificationsDrawer({ isOpen, onClose, userId, onUnreadC
 
   const syncUnreadCount = useCallback(
     (items) => {
-      const unread = items.filter((item) => !item.is_read).length;
+      const unread = ensureArray(items).filter((item) => !item?.is_read).length;
       onUnreadChange?.(unread);
     },
     [onUnreadChange],
@@ -108,7 +115,7 @@ export default function NotificationsDrawer({ isOpen, onClose, userId, onUnreadC
     setError("");
 
     try {
-      const items = await listUserNotifications(userId);
+      const items = ensureArray(await listUserNotifications(userId));
       setNotifications(items);
       syncUnreadCount(items);
     } catch (err) {
@@ -148,7 +155,8 @@ export default function NotificationsDrawer({ isOpen, onClose, userId, onUnreadC
 
   if (!isOpen) return null;
 
-  const unreadCount = notifications.filter((item) => !item.is_read).length;
+  const safeNotifications = ensureArray(notifications);
+  const unreadCount = safeNotifications.filter((item) => !item?.is_read).length;
 
   return (
     <div className="fixed inset-0 z-[60] flex justify-end bg-black/35 backdrop-blur-[2px]">
@@ -208,10 +216,10 @@ export default function NotificationsDrawer({ isOpen, onClose, userId, onUnreadC
             <p className="mx-2 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
               {error}
             </p>
-          ) : notifications.length ? (
+          ) : safeNotifications.length ? (
             <ul className="space-y-1">
-              {notifications.map((item) => (
-                <li key={item.id}>
+              {safeNotifications.map((item) => (
+                <li key={item?.id ?? item?.title}>
                   <NotificationItem
                     item={item}
                     locale={locale}

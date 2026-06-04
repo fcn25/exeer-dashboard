@@ -19,7 +19,7 @@ function emitChange(onChange, value) {
   }
 }
 
-const pickerClass = "md-input exeer-datepicker-input w-full";
+const pickerClass = "md-input exeer-datepicker-input w-full text-base md:text-sm";
 
 export function DateInput({
   id,

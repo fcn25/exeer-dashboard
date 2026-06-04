@@ -12,6 +12,7 @@ import {
   Trophy,
   Gavel,
   ChevronLeft,
+  BarChart3,
 } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -33,10 +34,15 @@ import { updateTaskStatus } from "../services/tasksService.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import EmployeeProfileSummary from "../components/employees/EmployeeProfileSummary.jsx";
 import EmployeeAdministrativeInbox from "../components/administrative/EmployeeAdministrativeInbox.jsx";
-import { canManageAdministrativeActions } from "../utils/rbac.js";
+import {
+  canAccessPerformance,
+  canManageAdministrativeActions,
+} from "../utils/rbac.js";
 import { formatDisplayValue } from "../utils/displayValue.js";
 import { formatPortalDate, getTimeBasedGreeting } from "../utils/portalGreeting.js";
 import { signOut } from "../utils/mobileAuth.js";
+import { ensureArray } from "../utils/ensureArray.js";
+import MobileLoadingState from "../components/mobile/MobileLoadingState.jsx";
 
 function StatCard({ icon: Icon, value, label, accent = "text-exeer-primary" }) {
   return (
@@ -181,8 +187,8 @@ export default function EmployeePortalPage() {
         fetchPortalSnapshot(employeeId),
         listEmployeeRequests(employeeId),
       ]);
-      setSnapshot(nextSnapshot);
-      setRequests(nextRequests);
+      setSnapshot(nextSnapshot ?? null);
+      setRequests(ensureArray(nextRequests));
     } catch (err) {
       setError(err.message || "تعذّر تحميل بوابة الموظف.");
     } finally {
@@ -227,6 +233,8 @@ export default function EmployeePortalPage() {
         suffix: "يوم",
       });
   const greeting = getTimeBasedGreeting();
+  const showMobileBootstrapLoader =
+    isMobileSelfService && isLoading && snapshot == null && !error;
 
   return (
     <div
@@ -270,6 +278,10 @@ export default function EmployeePortalPage() {
           isMobileSelfService ? "max-w-[480px]" : "max-w-7xl lg:px-8"
         }`}
       >
+        {showMobileBootstrapLoader ? (
+          <MobileLoadingState label="جاري تحميل بوابة الموظف..." />
+        ) : (
+        <>
         <section className="md-surface flex flex-col gap-4 p-6 md:flex-row md:items-center md:justify-between md:p-7">
           <div className="flex items-start gap-4">
             <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-md bg-exeer-surface text-exeer-primary">
@@ -330,6 +342,24 @@ export default function EmployeePortalPage() {
           </Link>
         ) : null}
 
+        {isMobileSelfService && canAccessPerformance() ? (
+          <Link
+            to="/mobile/performance"
+            className="flex min-h-[56px] items-center gap-3 rounded-md border border-gray-200 bg-white px-4 py-3.5 text-slate-900 shadow-none transition-colors hover:bg-gray-50"
+          >
+            <span className="flex h-10 w-10 items-center justify-center rounded-md bg-gray-100 text-slate-700">
+              <BarChart3 className="h-5 w-5" aria-hidden />
+            </span>
+            <span className="flex-1">
+              <span className="block text-sm font-bold">قياس الأداء</span>
+              <span className="block text-xs text-slate-500">
+                الملخص التنفيذي، الدورات، وإطلاق التقييم
+              </span>
+            </span>
+            <ChevronLeft className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
+          </Link>
+        ) : null}
+
         {isMobileSelfService ? (
           <SectionShell title="ملفي الشخصي" subtitle="بياناتك من سجل الموارد البشرية">
             <EmployeeProfileSummary
@@ -362,19 +392,21 @@ export default function EmployeePortalPage() {
                 <div className="md-surface-muted px-4 py-8 text-center text-sm text-exeer-muted">
                   جاري التحميل...
                 </div>
-              ) : snapshot?.tasks?.length ? (
+              ) : ensureArray(snapshot?.tasks).length ? (
                 <div className="grid gap-4">
-                  {snapshot.tasks.map((task) => (
+                  {ensureArray(snapshot?.tasks).map((task) =>
+                    task?.id != null ? (
                     <PortalTaskCard
                       key={task.id}
                       task={{
                         ...task,
-                        title: task.title || task.description?.slice(0, 80),
+                        title: task?.title || task?.description?.slice(0, 80),
                       }}
                       onStatusChange={handleTaskStatusChange}
                       isUpdating={updatingTaskId === task.id}
                     />
-                  ))}
+                    ) : null,
+                  )}
                 </div>
               ) : (
                 <div className="md-surface-muted rounded-md px-4 py-10 text-center">
@@ -401,11 +433,13 @@ export default function EmployeePortalPage() {
                 <div className="md-surface-muted px-4 py-8 text-center text-sm text-exeer-muted">
                   جاري التحميل...
                 </div>
-              ) : snapshot?.achievements?.length ? (
+              ) : ensureArray(snapshot?.achievements).length ? (
                 <ol className="md-surface px-5 py-5">
-                  {snapshot.achievements.map((item) => (
-                    <AchievementTimelineItem key={item.id} item={item} />
-                  ))}
+                  {ensureArray(snapshot?.achievements).map((item) =>
+                    item?.id != null ? (
+                      <AchievementTimelineItem key={item.id} item={item} />
+                    ) : null,
+                  )}
                 </ol>
               ) : (
                 <div className="md-surface-muted rounded-md px-4 py-10 text-center">
@@ -493,6 +527,8 @@ export default function EmployeePortalPage() {
             <PersonalMentorCard employeeId={employeeId} />
           </div>
         </div>
+        </>
+        )}
       </main>
 
       <NewRequestSlideover

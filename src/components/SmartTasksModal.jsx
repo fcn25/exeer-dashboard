@@ -3,6 +3,10 @@ import { CheckCircle2, Sparkles, X } from "lucide-react";
 import { listEmployeesForTasks } from "../services/employeesService.js";
 import { generateAndAssignSmartTask } from "../services/smartTasksService.js";
 import { isRateLimitError } from "../utils/aiRateLimit.js";
+import {
+  GEMINI_MISSING_KEY_MESSAGE,
+  getGeminiConfigurationError,
+} from "../utils/geminiConfig.js";
 import RateLimitToast from "./ui/RateLimitToast.jsx";
 
 function SuccessToast({ message, onDismiss }) {
@@ -36,18 +40,22 @@ export default function SmartTasksModal({ isOpen, onClose, onTaskCreated }) {
   const [employeeId, setEmployeeId] = useState("");
   const [brief, setBrief] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState("");
+  const [employeesLoadError, setEmployeesLoadError] = useState("");
+  const [submitError, setSubmitError] = useState("");
+  const [geminiConfigError, setGeminiConfigError] = useState("");
   const [rateLimitToast, setRateLimitToast] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
     if (!isOpen) return undefined;
 
+    setGeminiConfigError(getGeminiConfigurationError() ?? "");
+
     let cancelled = false;
 
     async function loadEmployees() {
       setIsLoadingEmployees(true);
-      setError("");
+      setEmployeesLoadError("");
 
       try {
         const rows = await listEmployeesForTasks();
@@ -55,7 +63,8 @@ export default function SmartTasksModal({ isOpen, onClose, onTaskCreated }) {
         setEmployees(rows);
       } catch (err) {
         if (!cancelled) {
-          setError(err.message || "تعذّر تحميل قائمة الموظفين.");
+          setEmployeesLoadError(err.message || "تعذّر تحميل قائمة الموظفين.");
+          setEmployees([]);
         }
       } finally {
         if (!cancelled) setIsLoadingEmployees(false);
@@ -71,7 +80,7 @@ export default function SmartTasksModal({ isOpen, onClose, onTaskCreated }) {
   const resetForm = () => {
     setEmployeeId("");
     setBrief("");
-    setError("");
+    setSubmitError("");
   };
 
   const handleClose = () => {
@@ -88,8 +97,16 @@ export default function SmartTasksModal({ isOpen, onClose, onTaskCreated }) {
       (employee) => String(employee.id) === String(employeeId),
     );
 
+    const configError = getGeminiConfigurationError();
+    if (configError) {
+      setGeminiConfigError(configError);
+      setSubmitError(configError);
+      return;
+    }
+
     setIsSubmitting(true);
-    setError("");
+    setSubmitError("");
+    setGeminiConfigError("");
 
     try {
       await generateAndAssignSmartTask({
@@ -105,8 +122,11 @@ export default function SmartTasksModal({ isOpen, onClose, onTaskCreated }) {
     } catch (err) {
       if (isRateLimitError(err)) {
         setRateLimitToast(err.message);
+      } else if (err?.message === GEMINI_MISSING_KEY_MESSAGE) {
+        setGeminiConfigError(GEMINI_MISSING_KEY_MESSAGE);
+        setSubmitError(GEMINI_MISSING_KEY_MESSAGE);
       } else {
-        setError(err.message || "تعذّر إنشاء المهمة.");
+        setSubmitError(err.message || "تعذّر إنشاء المهمة.");
       }
     } finally {
       setIsSubmitting(false);
@@ -192,6 +212,11 @@ export default function SmartTasksModal({ isOpen, onClose, onTaskCreated }) {
                     </option>
                   ))}
                 </select>
+                {employeesLoadError ? (
+                  <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
+                    {employeesLoadError}
+                  </p>
+                ) : null}
               </div>
 
               <div className="space-y-2">
@@ -214,9 +239,15 @@ export default function SmartTasksModal({ isOpen, onClose, onTaskCreated }) {
                 </p>
               </div>
 
-              {error ? (
+              {geminiConfigError ? (
+                <p className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+                  {geminiConfigError}
+                </p>
+              ) : null}
+
+              {submitError && submitError !== geminiConfigError ? (
                 <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
-                  {error}
+                  {submitError}
                 </p>
               ) : null}
 
@@ -234,6 +265,7 @@ export default function SmartTasksModal({ isOpen, onClose, onTaskCreated }) {
                   disabled={
                     isSubmitting ||
                     isLoadingEmployees ||
+                    Boolean(geminiConfigError) ||
                     !employeeId ||
                     !brief.trim()
                   }

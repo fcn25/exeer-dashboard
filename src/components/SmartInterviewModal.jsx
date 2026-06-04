@@ -9,6 +9,10 @@ import {
 } from "../services/interviewService.js";
 import { listJobTitles } from "../services/catalogService.js";
 import { isRateLimitError } from "../utils/aiRateLimit.js";
+import {
+  GEMINI_MISSING_KEY_MESSAGE,
+  getGeminiConfigurationError,
+} from "../utils/geminiConfig.js";
 import RateLimitToast from "./ui/RateLimitToast.jsx";
 
 function normalizeResultMarkdown(text) {
@@ -85,6 +89,7 @@ export default function SmartInterviewModal({ isOpen, onClose }) {
   const [isLoading, setIsLoading] = useState(false);
   const [interviewResult, setInterviewResult] = useState("");
   const [generateError, setGenerateError] = useState("");
+  const [geminiConfigError, setGeminiConfigError] = useState("");
   const [rateLimitToast, setRateLimitToast] = useState("");
   const [viewMode, setViewMode] = useState("generate");
   const [archiveJobs, setArchiveJobs] = useState([]);
@@ -94,6 +99,9 @@ export default function SmartInterviewModal({ isOpen, onClose }) {
 
   useEffect(() => {
     if (!isOpen) return undefined;
+
+    setGeminiConfigError(getGeminiConfigurationError() ?? "");
+    setGenerateError("");
 
     let cancelled = false;
 
@@ -145,6 +153,7 @@ export default function SmartInterviewModal({ isOpen, onClose }) {
     setIsLoading(false);
     setArchiveError("");
     setGenerateError("");
+    setGeminiConfigError("");
     setRateLimitToast("");
     onClose();
   };
@@ -153,9 +162,17 @@ export default function SmartInterviewModal({ isOpen, onClose }) {
     const trimmedTitle = jobTitle.trim();
     if (!trimmedTitle || isLoading) return;
 
+    const configError = getGeminiConfigurationError();
+    if (configError) {
+      setGeminiConfigError(configError);
+      setGenerateError(configError);
+      return;
+    }
+
     setIsLoading(true);
     setInterviewResult("");
     setGenerateError("");
+    setGeminiConfigError("");
 
     try {
       const { questionsText } =
@@ -164,6 +181,9 @@ export default function SmartInterviewModal({ isOpen, onClose }) {
     } catch (err) {
       if (isRateLimitError(err)) {
         setRateLimitToast(err.message);
+      } else if (err?.message === GEMINI_MISSING_KEY_MESSAGE) {
+        setGeminiConfigError(GEMINI_MISSING_KEY_MESSAGE);
+        setGenerateError(GEMINI_MISSING_KEY_MESSAGE);
       } else {
         setGenerateError(err.message || "تعذّر توليد الأسئلة.");
       }
@@ -327,16 +347,24 @@ export default function SmartInterviewModal({ isOpen, onClose }) {
                   ))}
                 </datalist>
               ) : null}
+              {geminiConfigError ? (
+                <p className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-center text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+                  {geminiConfigError}
+                </p>
+              ) : null}
+
               <button
                 type="button"
                 onClick={handleGenerate}
-                disabled={isLoading || !jobTitle.trim()}
+                disabled={
+                  isLoading || !jobTitle.trim() || Boolean(geminiConfigError)
+                }
                 className="md-btn-primary w-full"
               >
                 {isLoading ? "جاري التوليد..." : "توليد الأسئلة"}
               </button>
               {isLoading ? <GeneratingState /> : null}
-              {generateError ? (
+              {generateError && generateError !== geminiConfigError ? (
                 <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-center text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
                   {generateError}
                 </p>

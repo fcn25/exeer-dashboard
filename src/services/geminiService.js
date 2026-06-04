@@ -1,6 +1,10 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const FLASH_MODEL = "gemini-2.0-flash";
+/** Low-latency, cost-optimized Flash model only — never use Pro or legacy models. */
+const GEMINI_FLASH_MODEL = "gemini-1.5-flash";
+
+const PLACEHOLDER_KEY_PATTERN =
+  /^(your[-_]?gemini|replace[-_]?me|xxx+|test|demo|sample)/i;
 
 const TASK_SYSTEM_PROMPT =
   "You are an expert HR assistant. Take the following brief task idea and expand it into a highly professional, detailed task description with clear actionable bullet points. The output MUST be in formal Arabic.";
@@ -11,6 +15,27 @@ const INTERVIEW_SYSTEM_PROMPT =
 const SMART_GOAL_SYSTEM_PROMPT =
   "You are an expert HR and Performance Management Consultant. The user will provide a rough, general goal. Transform this into a highly professional SMART goal (Specific, Measurable, Achievable, Relevant, Time-bound). Provide a clear, actionable execution plan with a suggested timeframe. The output MUST be in formal, professional Arabic, beautifully formatted with bold headers and bullet points.";
 
+function assertFlashModel(modelId) {
+  const normalized = String(modelId ?? "").trim().toLowerCase();
+  if (!normalized.includes("flash")) {
+    throw new Error(
+      "إعداد نموذج Gemini غير صالح: يجب استخدام إصدار Flash فقط (مثل gemini-1.5-flash).",
+    );
+  }
+  if (normalized.includes("pro") || normalized.includes("ultra")) {
+    throw new Error(
+      "إعداد نموذج Gemini غير مسموح: نماذج Pro/Ultra معطّلة لأسباب التكلفة والأداء.",
+    );
+  }
+}
+
+function resolveFlashModel() {
+  const fromEnv = import.meta.env.VITE_GEMINI_MODEL?.trim();
+  const modelId = fromEnv || GEMINI_FLASH_MODEL;
+  assertFlashModel(modelId);
+  return modelId;
+}
+
 function getApiKey() {
   const key = import.meta.env.VITE_GEMINI_API_KEY?.trim();
   if (!key) {
@@ -18,13 +43,19 @@ function getApiKey() {
       "مفتاح Gemini غير مُعدّ. أضف VITE_GEMINI_API_KEY إلى ملف .env",
     );
   }
+  if (PLACEHOLDER_KEY_PATTERN.test(key)) {
+    throw new Error(
+      "مفتاح Gemini غير صالح. عيّن VITE_GEMINI_API_KEY في بيئة الإنتاج (لا تستخدم القيمة النموذجية).",
+    );
+  }
   return key;
 }
 
 async function generateWithGemini(systemInstruction, userContent) {
+  const modelId = resolveFlashModel();
   const genAI = new GoogleGenerativeAI(getApiKey());
   const model = genAI.getGenerativeModel({
-    model: FLASH_MODEL,
+    model: modelId,
     systemInstruction,
   });
 

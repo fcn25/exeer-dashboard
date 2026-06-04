@@ -11,10 +11,11 @@ import {
   resolveEvaluationQuestions,
   QUESTION_TYPES,
 } from "../../utils/evaluationTemplateQuestions.js";
+import { ensureArray } from "../../utils/ensureArray.js";
 
 async function prepareAnswersForSubmit(questions, rawAnswers) {
   const prepared = { ...rawAnswers };
-  for (const question of questions) {
+  for (const question of ensureArray(questions)) {
     if (question.type !== QUESTION_TYPES.FILE) continue;
     const file = rawAnswers?.[question.id];
     if (file instanceof File) {
@@ -32,7 +33,7 @@ export default function TakeEvaluationModal({
 }) {
   const template = evaluation?.evaluation_templates ?? null;
   const questions = useMemo(
-    () => resolveEvaluationQuestions(template),
+    () => ensureArray(resolveEvaluationQuestions(template)),
     [template],
   );
 

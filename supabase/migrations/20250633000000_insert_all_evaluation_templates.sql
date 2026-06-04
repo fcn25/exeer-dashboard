@@ -4,11 +4,11 @@
 alter table public.evaluation_templates
   add column if not exists questions_jsonb jsonb not null default '{"questions":[]}'::jsonb;
 
-create unique index if not exists evaluation_templates_title_unique
-  on public.evaluation_templates (title);
-
 delete from public.employee_evaluations;
 delete from public.evaluation_templates;
+
+create unique index if not exists evaluation_templates_title_unique
+  on public.evaluation_templates (title);
 
 insert into public.evaluation_templates (category, title, questions_jsonb) values
 ('HR', 'تقييم جودة خدمات الموارد البشرية', $$ {"title_en": "HR Service Quality Evaluation", "title_ar": "تقييم جودة خدمات الموارد البشرية", "questions": [{"id": "q1", "type": "rating_1_5", "text_en": "How easy and fast is your communication with the HR department when you have an inquiry or issue?", "text_ar": "ما مدى سهولة وسرعة تواصلك مع قسم الموارد البشرية عند وجود استفسار أو مشكلة؟"}, {"id": "q2", "type": "rating_1_5", "text_en": "How would you rate the clarity of the procedures for 'promotions' and 'annual raises' within the organization?", "text_ar": "كيف تقيم وضوح إجراءات 'الترقيات' و'الزيادات السنوية' داخل المنشأة؟"}, {"id": "q3", "type": "text", "text_en": "Please mention one initiative taken by the HR department that improved team spirit or your productivity.", "text_ar": "يرجى ذكر مبادرة واحدة قام بها قسم الموارد البشرية أدت إلى تحسين روح الفريق أو إنتاجيتك."}, {"id": "q4", "type": "text", "text_en": "What is one thing you feel is missing in the current 'incentives and rewards' system that you would like to see added?", "text_ar": "ما هو الشيء الذي تشعر أنه مفقود في نظام 'الحوافز والمكافآت' الحالي وتود إضافته؟"}, {"id": "q5", "type": "choice", "options_en": ["Yes", "No", "Need More"], "options_ar": ["نعم", "لا", "أحتاج المزيد"], "text_en": "Do you feel the training courses provided by the organization align with your actual career path?", "text_ar": "هل تشعر أن الدورات التدريبية المقدمة من المنشأة تتوافق مع مسارك المهني الفعلي؟"}, {"id": "q6", "type": "boolean", "text_en": "Are you regularly informed about your performance evaluation and discussed your strengths and weaknesses?", "text_ar": "هل يتم إطلاعك بانتظام على تقييم أدائك ومناقشة نقاط القوة والضعف لديك؟"}, {"id": "q7", "type": "rating_0_10", "text_en": "If asked to rate the 'fairness of treatment' within the organization from 0 to 10, what number would you choose?", "text_ar": "إذا طُلب منك تقييم 'عدالة التعامل' داخل المنشأة من 0 إلى 10، فما الرقم الذي ستختاره؟"}]} $$::jsonb),

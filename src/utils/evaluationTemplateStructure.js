@@ -203,22 +203,24 @@ export function buildTemplatePreviewSections({ questionsJsonb, uiTemplate }) {
   }
 
   const flatRecords = flattenTemplateQuestionRecords(source);
-  const previewSections = getTemplatePreviewSections(uiTemplate);
+  const uiPreviewSections = getTemplatePreviewSections(uiTemplate);
 
-  if (flatRecords.length && previewSections.length) {
-    const categories = buildTemplateCategoriesPayload({
-      previewSections,
-      flatQuestions: flatRecords,
-    });
-    return mapCategoriesToPreviewSections(categories);
+  if (flatRecords.length > 0) {
+    return mapCategoriesToPreviewSections(
+      buildTemplateCategoriesPayload({
+        previewSections: uiPreviewSections,
+        flatQuestions: flatRecords,
+      }),
+    );
   }
 
-  if (previewSections.length) {
-    const categories = buildTemplateCategoriesPayload({
-      previewSections,
-      flatQuestions: [],
-    });
-    return mapCategoriesToPreviewSections(categories);
+  if (uiPreviewSections.length > 0) {
+    return mapCategoriesToPreviewSections(
+      buildTemplateCategoriesPayload({
+        previewSections: uiPreviewSections,
+        flatQuestions: [],
+      }),
+    );
   }
 
   return [];

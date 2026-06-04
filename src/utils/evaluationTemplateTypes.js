@@ -27,18 +27,18 @@ export const TEMPLATE_CATEGORY_LABELS_AR = {
 };
 
 export const TEMPLATE_SELECT_ATTEMPTS = [
-  "id, category, title, criteria",
+  "id, category, title, questions_jsonb",
   "id, category, title, questions",
   "id, category, title, content",
-  "id, category, title, questions_jsonb",
+  "id, category, title, criteria",
   "id, category, title",
 ];
 
 export const TEMPLATE_EMBED_SELECT_ATTEMPTS = [
-  "id, title, criteria",
+  "id, title, questions_jsonb",
   "id, title, questions",
   "id, title, content",
-  "id, title, questions_jsonb",
+  "id, title, criteria",
   "id, title",
 ];
 

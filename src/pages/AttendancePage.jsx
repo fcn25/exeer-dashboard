@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowDownToLine,
   CalendarRange,
@@ -15,6 +15,11 @@ import {
 } from "../services/attendanceService.js";
 import { downloadAttendanceTemplateCsv } from "../utils/attendance/csvTemplate.js";
 import { parseAttendanceCsvFile } from "../utils/attendance/parseAttendanceCsv.js";
+import {
+  computeAttendanceSummary,
+  formatGridCell,
+  formatSummaryStat,
+} from "../utils/attendance/stats.js";
 
 const SUBTITLE =
   "سجل الحضور والانصراف — عرض للقراءة فقط. تُحدَّث البيانات عبر استيراد ملف البصمة CSV فقط.";
@@ -77,7 +82,7 @@ export default function AttendancePage() {
         dateTo,
         search,
       });
-      setRows(data);
+      setRows(Array.isArray(data) ? data : []);
     } catch (err) {
       setError(err.message || "تعذّر تحميل سجل الحضور.");
       setRows([]);
@@ -145,8 +150,9 @@ export default function AttendancePage() {
     }
   };
 
-  const totalDelay = rows.reduce((sum, row) => sum + row.delayMinutes, 0);
-  const absenceCount = rows.filter((row) => row.status === "غياب").length;
+  const summary = useMemo(() => computeAttendanceSummary(rows), [rows]);
+  const summaryEmpty = !isLoading && summary.isEmpty;
+  const summaryOpts = { isLoading, isEmpty: summaryEmpty };
 
   return (
     <div className="md-page attendance-page">
@@ -219,7 +225,7 @@ export default function AttendancePage() {
           <button
             type="button"
             onClick={handleExportToPayroll}
-            disabled={isExporting || rows.length === 0}
+            disabled={isExporting || isLoading || summaryEmpty}
             className="md-btn-primary inline-flex items-center gap-2 bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
           >
             <ClipboardList className="h-4 w-4" aria-hidden />
@@ -240,13 +246,13 @@ export default function AttendancePage() {
       >
         <article className={CARD_CLASS}>
           <p className="text-3xl font-bold tabular-nums text-slate-900">
-            {isLoading ? "—" : rows.length}
+            {formatSummaryStat(summary.recordCount, summaryOpts)}
           </p>
           <p className="mt-2 text-sm font-medium text-slate-500">عدد السجلات</p>
         </article>
         <article className={CARD_CLASS}>
           <p className="text-3xl font-bold tabular-nums text-slate-900">
-            {isLoading ? "—" : totalDelay}
+            {formatSummaryStat(summary.totalDelay, summaryOpts)}
           </p>
           <p className="mt-2 text-sm font-medium text-slate-500">
             إجمالي دقائق التأخير
@@ -254,7 +260,7 @@ export default function AttendancePage() {
         </article>
         <article className={CARD_CLASS}>
           <p className="text-3xl font-bold tabular-nums text-slate-900">
-            {isLoading ? "—" : absenceCount}
+            {formatSummaryStat(summary.absenceCount, summaryOpts)}
           </p>
           <p className="mt-2 text-sm font-medium text-slate-500">أيام غياب</p>
         </article>
@@ -286,44 +292,45 @@ export default function AttendancePage() {
                     جاري التحميل...
                   </td>
                 </tr>
-              ) : rows.length === 0 ? (
+              ) : summaryEmpty ? (
                 <tr>
-                  <td colSpan={TABLE_COLUMNS.length} className="p-0">
-                    <ExeerEmptyState
-                      title="لا توجد سجلات حضور"
-                      description="حمّل القالب، املأ بيانات البصمة، ثم استورد الملف CSV."
-                      className="border-0"
-                    />
+                  <td
+                    colSpan={TABLE_COLUMNS.length}
+                    className="px-4 py-12 text-center text-sm text-slate-500"
+                  >
+                    لا توجد بيانات
                   </td>
                 </tr>
               ) : (
-                rows.map((row) => (
+                rows.map((row, index) => (
                   <tr
-                    key={row.id}
+                    key={row?.id ?? `attendance-${index}`}
                     className="border-b border-gray-100 last:border-b-0"
                   >
                     <td className="px-4 py-3 font-medium text-slate-900 tabular-nums">
-                      {row.employeeNumber}
+                      {formatGridCell(row?.employeeNumber)}
                     </td>
-                    <td className="px-4 py-3 text-slate-900">{row.employeeName}</td>
-                    <td className="px-4 py-3 text-slate-600 tabular-nums">
-                      {formatDisplayDate(row.recordDate)}
-                    </td>
-                    <td className="px-4 py-3 text-slate-600 tabular-nums">
-                      {row.shift1}
+                    <td className="px-4 py-3 text-slate-900">
+                      {formatGridCell(row?.employeeName)}
                     </td>
                     <td className="px-4 py-3 text-slate-600 tabular-nums">
-                      {row.shift2}
+                      {formatDisplayDate(row?.recordDate)}
+                    </td>
+                    <td className="px-4 py-3 text-slate-600 tabular-nums">
+                      {formatGridCell(row?.shift1)}
+                    </td>
+                    <td className="px-4 py-3 text-slate-600 tabular-nums">
+                      {formatGridCell(row?.shift2)}
                     </td>
                     <td className="px-4 py-3">
                       <span
-                        className={`inline-flex rounded-md px-2 py-0.5 text-xs font-medium ${STATUS_CLASS[row.status] ?? "bg-gray-50 text-slate-700"}`}
+                        className={`inline-flex rounded-md px-2 py-0.5 text-xs font-medium ${STATUS_CLASS[row?.status] ?? "bg-gray-50 text-slate-700"}`}
                       >
-                        {row.status}
+                        {formatGridCell(row?.status)}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-slate-900 tabular-nums">
-                      {row.delayMinutes}
+                      {formatGridCell(row?.delayMinutes, "0")}
                     </td>
                   </tr>
                 ))

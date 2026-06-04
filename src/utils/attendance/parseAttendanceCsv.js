@@ -135,6 +135,9 @@ export function parseAttendanceCsvFile(file) {
             const employeeNumber = String(
               cell(row, columnMap["الرقم الوظيفي"]),
             ).trim();
+            const employeeName = String(
+              cell(row, columnMap["اسم الموظف"]),
+            ).trim();
 
             if (!employeeNumber) {
               errors.push(`السطر ${lineNo}: الرقم الوظيفي فارغ.`);
@@ -165,6 +168,7 @@ export function parseAttendanceCsvFile(file) {
 
             parsedRows.push({
               employee_number: employeeNumber,
+              employee_name: employeeName || null,
               record_date: recordDate,
               check_in_1: parseTimeValue(cell(row, columnMap["دخول 1"])),
               check_out_1: parseTimeValue(cell(row, columnMap["خروج 1"])),

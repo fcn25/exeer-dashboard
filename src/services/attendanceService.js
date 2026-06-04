@@ -30,6 +30,12 @@ function isMissingAttendanceTable(error) {
   );
 }
 
+function isMissingEmployeeRelationship(error) {
+  if (!error) return false;
+  if (error.code === "PGRST200") return true;
+  return /relationship.*employees/i.test(error.message ?? "");
+}
+
 export function formatShiftRange(checkIn, checkOut) {
   const format = (value) => {
     if (!value) return "—";
@@ -68,18 +74,25 @@ export function resolvePayrollMonthFromDateRange(dateFrom, dateTo) {
   return formatPayrollMonthFromPicker(`${from.getFullYear()}-${month}`);
 }
 
+function safeAmount(value) {
+  const num = Number(value);
+  return Number.isFinite(num) ? num : 0;
+}
+
 function mapAttendanceRow(row) {
+  if (!row) return null;
+
   const employee = row.employees ?? {};
   return {
-    id: row.id,
-    employeeId: row.employee_id,
+    id: row.id ?? `${row.employee_id}-${row.record_date}`,
+    employeeId: row.employee_id ?? null,
     employeeNumber: employee.employee_number ?? "—",
     employeeName: employee.full_name ?? "—",
-    recordDate: row.record_date,
+    recordDate: row.record_date ?? null,
     shift1: formatShiftRange(row.check_in_1, row.check_out_1),
     shift2: formatShiftRange(row.check_in_2, row.check_out_2),
-    status: row.status,
-    delayMinutes: Number(row.delay_minutes) || 0,
+    status: row.status ?? "—",
+    delayMinutes: safeAmount(row.delay_minutes),
   };
 }
 
@@ -118,7 +131,36 @@ export async function fetchAttendanceRecords({
   if (dateFrom) query = query.gte("record_date", dateFrom);
   if (dateTo) query = query.lte("record_date", dateTo);
 
-  const { data, error } = await query;
+  let { data, error } = await query;
+
+  if (error && isMissingEmployeeRelationship(error)) {
+    let plainQuery = supabase
+      .from("attendance_records")
+      .select(
+        "id, employee_id, record_date, check_in_1, check_out_1, check_in_2, check_out_2, status, delay_minutes",
+      )
+      .eq("company_id", companyId)
+      .order("record_date", { ascending: false })
+      .order("employee_id", { ascending: true });
+
+    if (dateFrom) plainQuery = plainQuery.gte("record_date", dateFrom);
+    if (dateTo) plainQuery = plainQuery.lte("record_date", dateTo);
+
+    const fallback = await plainQuery;
+    data = fallback.data;
+    error = fallback.error;
+
+    if (!error && (data ?? []).length > 0) {
+      const employeeMap = await loadEmployeeNumberMap(companyId);
+      const employeesById = new Map(
+        [...employeeMap.values()].map((employee) => [employee.id, employee]),
+      );
+      data = (data ?? []).map((row) => ({
+        ...row,
+        employees: employeesById.get(row.employee_id) ?? null,
+      }));
+    }
+  }
 
   if (error) {
     if (isMissingAttendanceTable(error)) {
@@ -128,7 +170,7 @@ export async function fetchAttendanceRecords({
   }
 
   const needle = String(search ?? "").trim().toLowerCase();
-  let rows = (data ?? []).map(mapAttendanceRow);
+  let rows = (data ?? []).map(mapAttendanceRow).filter(Boolean);
 
   if (needle) {
     rows = rows.filter((row) => {

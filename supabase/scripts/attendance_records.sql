@@ -1,0 +1,3 @@
+-- Run in Supabase SQL Editor: copy contents from
+-- supabase/migrations/20250626000000_attendance_records.sql
+-- Then reload API schema cache (Settings → API → Reload).

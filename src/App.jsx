@@ -11,6 +11,7 @@ import EmployeesPage from "./EmployeesPage.jsx";
 import EventsPage from "./EventsPage.jsx";
 import PerformancePage from "./pages/PerformancePage.jsx";
 import PayrollPage from "./PayrollPage.jsx";
+import AttendancePage from "./pages/AttendancePage.jsx";
 import MobileSubscriptionPage from "./pages/MobileSubscriptionPage.jsx";
 import { ProtectedRoute } from "./components/ProtectedRoute.jsx";
 import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
@@ -74,8 +75,22 @@ function DashboardRoutes() {
           <Route
             path="payroll"
             element={
-              <ProtectedRoute allowDashboard requiredRole="owner">
+              <ProtectedRoute
+                allowDashboard
+                requiredPermission="can_view_payroll"
+              >
                 <PayrollPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="attendance"
+            element={
+              <ProtectedRoute
+                allowDashboard
+                requiredPermission="can_view_payroll"
+              >
+                <AttendancePage />
               </ProtectedRoute>
             }
           />

@@ -39,7 +39,7 @@ export function canAccessEmployeeProfile() {
 }
 
 export function canViewPayroll() {
-  return isOwner();
+  return isOwner() || hasPermission("can_view_payroll");
 }
 
 export function canManageEvents() {

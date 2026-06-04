@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import {
   Banknote,
   Calendar,
+  Clock,
   CheckSquare,
   Home,
   Lock,
@@ -22,7 +23,7 @@ import {
   canAccessSettings,
   canEditEmployeeRecords,
   canManageEvents,
-  isOwner,
+  canViewPayroll,
 } from "../utils/rbac.js";
 
 function SidebarLink({ to, label, icon: Icon, end, collapsed }) {
@@ -77,11 +78,16 @@ export default function ManagerLayout() {
       });
     }
 
-    if (isOwner()) {
+    if (canViewPayroll()) {
       items.push({
         to: "/dashboard/payroll",
         label: "مسير الرواتب",
         icon: Banknote,
+      });
+      items.push({
+        to: "/dashboard/attendance",
+        label: "الحضور والانصراف",
+        icon: Clock,
       });
     }
 

@@ -16,6 +16,7 @@
     "date-fns": "^4.4.0",
     "i18next": "^26.3.0",
     "lucide-react": "^0.511.0",
+    "papaparse": "^5.5.3",
     "react": "^19.1.0",
     "react-datepicker": "^9.1.0",
     "react-dom": "^19.1.0",
@@ -25,10 +26,10 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
-    "pg": "^8.16.0",
     "@cloudflare/vite-plugin": "^1.39.2",
     "@tailwindcss/vite": "^4.1.8",
     "@vitejs/plugin-react": "^4.5.2",
+    "pg": "^8.16.0",
     "tailwindcss": "^4.1.8",
     "vite": "^6.3.5",
     "wrangler": "^4.97.0"

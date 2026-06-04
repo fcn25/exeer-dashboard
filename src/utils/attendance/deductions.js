@@ -7,29 +7,20 @@ function roundMoney(value) {
 }
 
 /**
- * Monetary deductions from attendance aggregates (based on basic salary).
+ * Saudi labor standard: delay deduction from basic salary per minute late.
+ * delay_deductions = (base_salary / 30 / 8 / 60) * total_delay_minutes
  */
-export function calculateAttendanceDeductions({
-  basicSalary,
-  totalDelayMinutes = 0,
-  absenceDays = 0,
-}) {
-  const basic = Number(basicSalary) || 0;
-  const dailyRate = basic / WORK_DAYS_PER_MONTH;
-  const minuteRate = dailyRate / WORK_MINUTES_PER_DAY;
+export function calculateDelayDeduction({ baseSalary, totalDelayMinutes = 0 }) {
+  const basic = Number(baseSalary) || 0;
+  const minutes = Math.max(0, Number(totalDelayMinutes) || 0);
+  const perMinuteRate = basic / WORK_DAYS_PER_MONTH / WORK_HOURS_PER_DAY / 60;
+  return roundMoney(perMinuteRate * minutes);
+}
 
-  const latenessDeduction = roundMoney(
-    minuteRate * Math.max(0, Number(totalDelayMinutes) || 0),
+export function resolveEmployeeBaseSalary(employee) {
+  return (
+    Number(employee?.base_salary ?? employee?.basic_salary) || 0
   );
-  const absencePenalty = roundMoney(
-    dailyRate * Math.max(0, Number(absenceDays) || 0),
-  );
-
-  return {
-    latenessDeduction,
-    absencePenalty,
-    totalDeduction: roundMoney(latenessDeduction + absencePenalty),
-  };
 }
 
 export function recalculatePayrollNet({
@@ -38,8 +29,12 @@ export function recalculatePayrollNet({
   otherAllowances = 0,
   commissions = 0,
   additional = 0,
-  penalties = 0,
+  penaltyDeduction = 0,
+  delayDeduction = 0,
   gosiDeduction = 0,
+  /** @deprecated use penaltyDeduction */
+  penalties = 0,
+  /** @deprecated use delayDeduction */
   latenessDeduction = 0,
 }) {
   const gross =
@@ -48,7 +43,8 @@ export function recalculatePayrollNet({
     Number(otherAllowances) +
     Number(commissions) +
     Number(additional);
-  const deductions =
-    Number(penalties) + Number(gosiDeduction) + Number(latenessDeduction);
+  const penalty = Number(penaltyDeduction) || Number(penalties) || 0;
+  const delay = Number(delayDeduction) || Number(latenessDeduction) || 0;
+  const deductions = penalty + delay + Number(gosiDeduction);
   return roundMoney(gross - deductions);
 }

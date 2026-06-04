@@ -6,11 +6,10 @@ import {
   formatPayrollMonthFromPicker,
 } from "../utils/payroll/calculations.js";
 import {
-  calculateAttendanceDeductions,
+  calculateDelayDeduction,
   recalculatePayrollNet,
+  resolveEmployeeBaseSalary,
 } from "../utils/attendance/deductions.js";
-
-const ABSENCE_STATUS = "غياب";
 
 function mapDbError(error) {
   if (!error) return "حدث خطأ غير متوقع.";
@@ -289,24 +288,19 @@ export async function upsertAttendanceFromCsv(parsedRows) {
   return { upserted, skipped: parsedRows.length - payloads.length };
 }
 
-function aggregateAttendanceByEmployee(rows) {
+/** Groups visible attendance rows by employee for delay-minute totals. */
+export function aggregateDelayMinutesByEmployee(rows) {
   const map = new Map();
 
   for (const row of rows) {
-    const key = row.employeeId;
+    const key = row?.employeeId;
     if (!key) continue;
 
     const current = map.get(key) ?? {
       employeeId: key,
       totalDelayMinutes: 0,
-      absenceDays: 0,
     };
-
-    current.totalDelayMinutes += Number(row.delayMinutes) || 0;
-    if (row.status === ABSENCE_STATUS) {
-      current.absenceDays += 1;
-    }
-
+    current.totalDelayMinutes += safeAmount(row?.delayMinutes);
     map.set(key, current);
   }
 
@@ -334,11 +328,13 @@ function buildPayrollRecordPayload(companyId, draft, period, includePayrollMonth
     allowances: draft.other_allowances,
     commissions: draft.commissions,
     additional: draft.additional,
-    penalties: draft.penalties,
+    penalty_deductions: draft.penalty_deductions ?? draft.penalties ?? 0,
+    delay_deductions: draft.delay_deductions ?? draft.lateness_deduction ?? 0,
+    penalties: draft.penalty_deductions ?? draft.penalties ?? 0,
     gosi_deduction: draft.gosi_deduction,
     gosi: draft.gosi_deduction,
-    lateness_deduction: draft.lateness_deduction,
-    delays: draft.lateness_deduction,
+    lateness_deduction: draft.delay_deductions ?? draft.lateness_deduction ?? 0,
+    delays: draft.delay_deductions ?? draft.lateness_deduction ?? 0,
     net_salary: draft.net_salary,
     net: draft.net_salary,
     status: "Draft",
@@ -351,33 +347,58 @@ function buildPayrollRecordPayload(companyId, draft, period, includePayrollMonth
   return payload;
 }
 
-async function findPayrollRecord(companyId, period, employeeId) {
-  const { data } = await scopeQueryByCompany(
-    supabase
-      .from("payroll_records")
-      .select(
-        "id, status, employee_id, basic_salary, housing_allowance, other_allowances, commissions, additional, penalties, gosi_deduction, lateness_deduction",
-      )
-      .eq("payroll_month", period.payrollMonth)
-      .eq("employee_id", employeeId),
-    companyId,
-  ).maybeSingle();
+const PAYROLL_RECORD_SELECT =
+  "id, status, employee_id, employee_name, basic_salary, housing_allowance, other_allowances, allowances, commissions, additional, penalty_deductions, delay_deductions, penalties, gosi_deduction, gosi, lateness_deduction, delays, net_salary, net";
 
+async function findPayrollRecord(companyId, period, employeeId) {
+  const legacySelect =
+    "id, status, employee_id, employee_name, basic_salary, housing_allowance, other_allowances, allowances, commissions, additional, penalties, gosi_deduction, gosi, lateness_deduction, delays, net_salary, net";
+
+  async function queryByMonth(selectColumns) {
+    return scopeQueryByCompany(
+      supabase
+        .from("payroll_records")
+        .select(selectColumns)
+        .eq("payroll_month", period.payrollMonth)
+        .eq("employee_id", employeeId),
+      companyId,
+    ).maybeSingle();
+  }
+
+  let { data, error } = await queryByMonth(PAYROLL_RECORD_SELECT);
+  if (error && isMissingColumnError(error)) {
+    ({ data, error } = await queryByMonth(legacySelect));
+  }
+  if (error) throw new Error(mapDbError(error));
   if (data) return data;
 
-  const { data: legacy } = await scopeQueryByCompany(
+  const { data: legacy, error: legacyError } = await scopeQueryByCompany(
     supabase
       .from("payroll_records")
-      .select(
-        "id, status, employee_id, basic_salary, housing_allowance, allowances, commissions, additional, penalties, gosi, delays",
-      )
+      .select(legacySelect)
       .eq("month", period.month)
       .eq("year", period.year)
       .eq("employee_id", employeeId),
     companyId,
   ).maybeSingle();
 
+  if (legacyError) throw new Error(mapDbError(legacyError));
   return legacy;
+}
+
+function readPenaltyDeduction(record) {
+  return safeAmount(
+    record?.penalty_deductions ?? record?.penalties ?? 0,
+  );
+}
+
+function readDelayDeduction(record) {
+  return safeAmount(
+    record?.delay_deductions ??
+      record?.lateness_deduction ??
+      record?.delays ??
+      0,
+  );
 }
 
 export async function exportAttendanceDeductionsToPayroll({
@@ -390,10 +411,13 @@ export async function exportAttendanceDeductionsToPayroll({
   if (!period) throw new Error("تعذّر تحديد شهر المسير.");
 
   const attendanceRows = await fetchAttendanceRecords({ dateFrom, dateTo });
-  const aggregates = aggregateAttendanceByEmployee(attendanceRows);
+  if (!attendanceRows?.length) {
+    throw new Error("لا توجد سجلات حضور للترحيل.");
+  }
 
+  const aggregates = aggregateDelayMinutesByEmployee(attendanceRows);
   if (aggregates.size === 0) {
-    throw new Error("لا توجد سجلات حضور في النطاق المحدد للترحيل.");
+    throw new Error("لا توجد سجلات حضور صالحة للترحيل.");
   }
 
   const employeeMap = await loadEmployeeNumberMap(companyId);
@@ -409,13 +433,11 @@ export async function exportAttendanceDeductionsToPayroll({
     const employee = employeesById.get(aggregate.employeeId);
     if (!employee) continue;
 
-    const { latenessDeduction, absencePenalty } = calculateAttendanceDeductions({
-      basicSalary: employee.basic_salary,
+    const baseSalary = resolveEmployeeBaseSalary(employee);
+    const delayDeductions = calculateDelayDeduction({
+      baseSalary,
       totalDelayMinutes: aggregate.totalDelayMinutes,
-      absenceDays: aggregate.absenceDays,
     });
-
-    if (latenessDeduction <= 0 && absencePenalty <= 0) continue;
 
     const existing = await findPayrollRecord(
       companyId,
@@ -428,11 +450,8 @@ export async function exportAttendanceDeductionsToPayroll({
       continue;
     }
 
-    let payload;
-
     if (existing?.id) {
-      const lateness = latenessDeduction;
-      const penalties = absencePenalty;
+      const penaltyDeduction = readPenaltyDeduction(existing);
       const net = recalculatePayrollNet({
         basicSalary: existing.basic_salary,
         housingAllowance: existing.housing_allowance,
@@ -440,24 +459,19 @@ export async function exportAttendanceDeductionsToPayroll({
           existing.other_allowances ?? existing.allowances ?? 0,
         commissions: existing.commissions ?? 0,
         additional: existing.additional ?? 0,
-        penalties,
+        penaltyDeduction,
+        delayDeduction: delayDeductions,
         gosiDeduction: existing.gosi_deduction ?? existing.gosi ?? 0,
-        latenessDeduction: lateness,
       });
 
-      payload = {
-        penalties,
-        lateness_deduction: lateness,
-        delays: lateness,
-        gosi_deduction: existing.gosi_deduction ?? existing.gosi ?? 0,
-        gosi: existing.gosi_deduction ?? existing.gosi ?? 0,
-        net_salary: net,
-        net,
-        status: "Draft",
-      };
-
       const { error } = await scopeQueryByCompany(
-        supabase.from("payroll_records").update(payload),
+        supabase.from("payroll_records").update({
+          delay_deductions: delayDeductions,
+          lateness_deduction: delayDeductions,
+          delays: delayDeductions,
+          net_salary: net,
+          net,
+        }),
         companyId,
       ).eq("id", existing.id);
 
@@ -467,36 +481,46 @@ export async function exportAttendanceDeductionsToPayroll({
     }
 
     const draft = buildPayrollDraftFromEmployee(employee, period.payrollMonth);
-    draft.lateness_deduction = latenessDeduction;
-    draft.penalties = absencePenalty;
+    draft.delay_deductions = delayDeductions;
+    draft.penalty_deductions = 0;
+    draft.lateness_deduction = delayDeductions;
+    draft.penalties = 0;
     draft.net_salary = recalculatePayrollNet({
       basicSalary: draft.basic_salary,
       housingAllowance: draft.housing_allowance,
       otherAllowances: draft.other_allowances,
       commissions: draft.commissions,
       additional: draft.additional,
-      penalties: draft.penalties,
+      penaltyDeduction: 0,
+      delayDeduction: delayDeductions,
       gosiDeduction: draft.gosi_deduction,
-      latenessDeduction: draft.lateness_deduction,
     });
 
-    payload = buildPayrollRecordPayload(
+    let payload = buildPayrollRecordPayload(
       companyId,
       draft,
       period,
       includePayrollMonth,
     );
+    payload.delay_deductions = delayDeductions;
+    payload.penalty_deductions = 0;
 
     let { error } = await supabase.from("payroll_records").insert(payload);
 
     if (error && isMissingColumnError(error)) {
       includePayrollMonth = false;
       payload = buildPayrollRecordPayload(companyId, draft, period, false);
+      payload.delay_deductions = delayDeductions;
+      payload.penalty_deductions = 0;
       ({ error } = await supabase.from("payroll_records").insert(payload));
     }
 
     if (error) throw new Error(mapDbError(error));
     updatedCount += 1;
+  }
+
+  if (updatedCount === 0 && lockedSkipped === 0) {
+    throw new Error("لم يتم ترحيل أي سجل. تأكد من وجود مسير غير مُصدَّر للشهر.");
   }
 
   return {

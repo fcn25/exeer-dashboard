@@ -138,11 +138,7 @@ export default function AttendancePage() {
         dateTo,
       });
 
-      let message = `تم ترحيل خصومات الحضور إلى مسير ${result.payrollMonth} — ${result.updatedCount} سجل مسير.`;
-      if (result.lockedSkipped > 0) {
-        message += ` (تخطّي ${result.lockedSkipped} موظفاً لمسير مُصدَّر ومقفل).`;
-      }
-      setSuccessToast(message);
+      setSuccessToast("تم ترحيل خصومات التأخير إلى مسير الرواتب بنجاح");
     } catch (err) {
       setError(err.message || "تعذّر الترحيل إلى المسير.");
     } finally {
@@ -225,7 +221,7 @@ export default function AttendancePage() {
           <button
             type="button"
             onClick={handleExportToPayroll}
-            disabled={isExporting || isLoading || summaryEmpty}
+            disabled={isExporting || isLoading || rows.length === 0}
             className="md-btn-primary inline-flex items-center gap-2 bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
           >
             <ClipboardList className="h-4 w-4" aria-hidden />

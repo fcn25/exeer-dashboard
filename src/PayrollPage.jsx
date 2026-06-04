@@ -39,11 +39,20 @@ const DEDUCTION_KEYS = new Set(["penalties", "gosi", "lateness"]);
 const CARD_CLASS =
   "rounded-md border border-gray-200 bg-white p-6 shadow-none";
 
+function safeAmount(value) {
+  const num = Number(value);
+  return Number.isFinite(num) ? num : 0;
+}
+
 function formatCurrency(value) {
   return new Intl.NumberFormat("ar-SA", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(Number(value) || 0);
+  }).format(safeAmount(value));
+}
+
+function formatStatCount(value) {
+  return safeAmount(value);
 }
 
 function getCurrentMonthValue() {
@@ -230,7 +239,7 @@ export default function PayrollPage() {
         >
           <StatCard
             label="عدد الموظفين"
-            value={statsReady ? stats.employeeCount : "—"}
+            value={statsReady ? formatStatCount(stats.employeeCount) : "—"}
           />
           <StatCard
             label="إجمالي الخصومات"

@@ -77,13 +77,29 @@ export function mapPayrollRecordRow(row) {
   };
 }
 
-export function computePayrollStats(rows) {
-  const employeeCount = rows.length;
-  const totalNet = rows.reduce((sum, row) => sum + row.net, 0);
-  const totalDeductions = rows.reduce(
-    (sum, row) => sum + row.penalties + row.gosi + row.lateness,
-    0,
-  );
+function safeAmount(value) {
+  const num = Number(value);
+  return Number.isFinite(num) ? num : 0;
+}
 
-  return { employeeCount, totalNet, totalDeductions };
+export function computePayrollStats(rows) {
+  const list = Array.isArray(rows) ? rows : [];
+
+  const totalNet =
+    list.reduce((sum, row) => sum + safeAmount(row?.net), 0) || 0;
+  const totalDeductions =
+    list.reduce(
+      (sum, row) =>
+        sum +
+        safeAmount(row?.penalties) +
+        safeAmount(row?.gosi) +
+        safeAmount(row?.lateness),
+      0,
+    ) || 0;
+
+  return {
+    employeeCount: list.length || 0,
+    totalNet: safeAmount(totalNet),
+    totalDeductions: safeAmount(totalDeductions),
+  };
 }

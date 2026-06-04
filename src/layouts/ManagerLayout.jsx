@@ -4,8 +4,8 @@ import { useMemo, useState } from "react";
 import {
   Banknote,
   Calendar,
-  Clock,
   CheckSquare,
+  Fingerprint,
   Home,
   Lock,
   PanelLeftClose,
@@ -24,6 +24,7 @@ import {
   canEditEmployeeRecords,
   canManageEvents,
   canViewPayroll,
+  isOwner,
 } from "../utils/rbac.js";
 
 function SidebarLink({ to, label, icon: Icon, end, collapsed }) {
@@ -86,8 +87,8 @@ export default function ManagerLayout() {
       });
       items.push({
         to: "/dashboard/attendance",
-        label: "الحضور والانصراف",
-        icon: Clock,
+        label: "سجل الحضور",
+        icon: Fingerprint,
       });
     }
 

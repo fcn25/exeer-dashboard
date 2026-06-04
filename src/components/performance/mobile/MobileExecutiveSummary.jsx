@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { Sparkles } from "lucide-react";
+import MobileLoadingState from "../../mobile/MobileLoadingState.jsx";
 import {
   AI_SUMMARY_MIN_COMPLETION_PERCENT,
   getCycleResponseProgress,
   listEvaluationCycles,
 } from "../../../services/performanceService.js";
+import { ensureArray } from "../../../utils/ensureArray.js";
 
 function normalizeMarkdown(text) {
   if (!text) return "";
@@ -51,21 +53,29 @@ export default function MobileExecutiveSummary() {
     setIsLoading(true);
     setError("");
     try {
-      const rows = await listEvaluationCycles();
+      const rows = ensureArray(await listEvaluationCycles());
       setCycles(rows);
       const progressEntries = await Promise.all(
         rows.map(async (cycle) => {
+          const cycleId = cycle?.id;
+          if (cycleId == null) return [cycleId, 0];
           try {
-            const stats = await getCycleResponseProgress(cycle.id);
-            return [cycle.id, stats.percentage];
+            const stats = await getCycleResponseProgress(cycleId);
+            return [cycleId, stats?.percentage ?? 0];
           } catch {
-            return [cycle.id, 0];
+            return [cycleId, 0];
           }
         }),
       );
-      const map = Object.fromEntries(progressEntries);
+      const map = Object.fromEntries(
+        progressEntries.filter(([id]) => id != null),
+      );
       setProgressMap(map);
-      setSelectedCycleId((current) => current || (rows[0] ? String(rows[0].id) : ""));
+      setSelectedCycleId((current) => {
+        if (current) return current;
+        const firstId = rows[0]?.id;
+        return firstId != null ? String(firstId) : "";
+      });
     } catch (err) {
       setError(err.message || "تعذّر تحميل الملخص.");
       setCycles([]);
@@ -79,23 +89,31 @@ export default function MobileExecutiveSummary() {
     loadData();
   }, [loadData]);
 
+  const safeCycles = ensureArray(cycles);
+
   const selectedCycle = useMemo(
-    () => cycles.find((c) => String(c.id) === String(selectedCycleId)),
-    [cycles, selectedCycleId],
+    () => safeCycles.find((c) => String(c?.id) === String(selectedCycleId)),
+    [safeCycles, selectedCycleId],
   );
 
   const avgCompletion = useMemo(() => {
-    const values = Object.values(progressMap);
+    const values = Object.values(progressMap ?? {});
     if (!values.length) return 0;
     return Math.round(
-      values.reduce((sum, value) => sum + value, 0) / values.length,
+      values.reduce((sum, value) => sum + (Number(value) || 0), 0) / values.length,
     );
   }, [progressMap]);
 
-  const activeCycles = cycles.filter((c) => c.status === "Active").length;
-  const summariesReady = cycles.filter((c) => String(c.ai_summary ?? "").trim()).length;
-  const selectedProgress = progressMap[selectedCycleId] ?? 0;
+  const activeCycles = safeCycles.filter((c) => c?.status === "Active").length;
+  const summariesReady = safeCycles.filter((c) =>
+    String(c?.ai_summary ?? "").trim(),
+  ).length;
+  const selectedProgress = progressMap?.[selectedCycleId] ?? 0;
   const aiSummary = normalizeMarkdown(selectedCycle?.ai_summary ?? "");
+
+  if (isLoading) {
+    return <MobileLoadingState label="جاري تحميل الملخص التنفيذي..." />;
+  }
 
   return (
     <div className="space-y-4">
@@ -108,25 +126,19 @@ export default function MobileExecutiveSummary() {
       <div className="grid grid-cols-2 gap-3">
         <ScoreCard
           label="متوسط الإنجاز"
-          value={isLoading ? "—" : `${avgCompletion}%`}
+          value={`${avgCompletion}%`}
           hint="عبر دورات الشركة"
         />
-        <ScoreCard
-          label="دورات نشطة"
-          value={isLoading ? "—" : activeCycles}
-        />
+        <ScoreCard label="دورات نشطة" value={activeCycles} />
         <ScoreCard
           label="ملخصات جاهزة"
-          value={isLoading ? "—" : summariesReady}
+          value={summariesReady}
           hint="للعرض التنفيذي"
         />
-        <ScoreCard
-          label="إجمالي الدورات"
-          value={isLoading ? "—" : cycles.length}
-        />
+        <ScoreCard label="إجمالي الدورات" value={safeCycles.length} />
       </div>
 
-      {cycles.length ? (
+      {safeCycles.length ? (
         <div className="space-y-3 rounded-md border border-gray-200 bg-white p-4">
           <label htmlFor="mobile-summary-cycle" className="text-sm font-bold text-slate-900">
             دورة للعرض
@@ -135,12 +147,11 @@ export default function MobileExecutiveSummary() {
             id="mobile-summary-cycle"
             value={selectedCycleId}
             onChange={(e) => setSelectedCycleId(e.target.value)}
-            disabled={isLoading}
             className="md-input min-h-[44px] w-full"
           >
-            {cycles.map((cycle) => (
-              <option key={cycle.id} value={cycle.id}>
-                {cycle.name}
+            {safeCycles.map((cycle) => (
+              <option key={cycle?.id ?? cycle?.name} value={cycle?.id ?? ""}>
+                {cycle?.name ?? "دورة تقييم"}
               </option>
             ))}
           </select>

@@ -6,18 +6,25 @@ import {
   listEvaluationCycles,
 } from "../../../services/performanceService.js";
 import { formatPortalDate } from "../../../utils/portalGreeting.js";
+import { ensureArray } from "../../../utils/ensureArray.js";
+import MobileLoadingState from "../../mobile/MobileLoadingState.jsx";
 
 function CycleCard({ cycle, progress }) {
-  const statusLabel = CYCLE_STATUS_LABELS[cycle.status] ?? cycle.status ?? "—";
+  const statusLabel =
+    CYCLE_STATUS_LABELS[cycle?.status] ?? cycle?.status ?? "—";
   const safeProgress = Math.min(100, Math.max(0, Number(progress) || 0));
 
   return (
     <article className="rounded-md border border-gray-200 bg-white p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 space-y-1">
-          <h3 className="text-base font-bold text-slate-900">{cycle.name}</h3>
+          <h3 className="text-base font-bold text-slate-900">
+            {cycle?.name ?? "دورة تقييم"}
+          </h3>
           <p className="text-xs text-slate-500">
-            {cycle.target_department ? `الإدارة: ${cycle.target_department}` : "—"}
+            {cycle?.target_department
+              ? `الإدارة: ${cycle.target_department}`
+              : "—"}
           </p>
         </div>
         <span className="shrink-0 rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-medium text-slate-700">
@@ -29,13 +36,13 @@ function CycleCard({ cycle, progress }) {
         <div>
           <dt>البداية</dt>
           <dd className="font-medium text-slate-800">
-            {formatPortalDate(cycle.start_date)}
+            {formatPortalDate(cycle?.start_date)}
           </dd>
         </div>
         <div>
           <dt>النهاية</dt>
           <dd className="font-medium text-slate-800">
-            {formatPortalDate(cycle.end_date)}
+            {formatPortalDate(cycle?.end_date)}
           </dd>
         </div>
       </dl>
@@ -68,19 +75,23 @@ export default function MobileCyclesList() {
     setIsLoading(true);
     setError("");
     try {
-      const rows = await listEvaluationCycles();
+      const rows = ensureArray(await listEvaluationCycles());
       setCycles(rows);
       const progressEntries = await Promise.all(
         rows.map(async (cycle) => {
+          const cycleId = cycle?.id;
+          if (cycleId == null) return [cycleId, 0];
           try {
-            const stats = await getCycleResponseProgress(cycle.id);
-            return [cycle.id, stats.percentage];
+            const stats = await getCycleResponseProgress(cycleId);
+            return [cycleId, stats?.percentage ?? 0];
           } catch {
-            return [cycle.id, 0];
+            return [cycleId, 0];
           }
         }),
       );
-      setProgressMap(Object.fromEntries(progressEntries));
+      setProgressMap(
+        Object.fromEntries(progressEntries.filter(([id]) => id != null)),
+      );
     } catch (err) {
       setError(err.message || "تعذّر تحميل الدورات.");
       setCycles([]);
@@ -95,10 +106,10 @@ export default function MobileCyclesList() {
   }, [loadCycles]);
 
   if (isLoading) {
-    return (
-      <p className="py-12 text-center text-sm text-slate-500">جاري التحميل...</p>
-    );
+    return <MobileLoadingState label="جاري تحميل الدورات..." />;
   }
+
+  const safeCycles = ensureArray(cycles);
 
   if (error) {
     return (
@@ -108,7 +119,7 @@ export default function MobileCyclesList() {
     );
   }
 
-  if (!cycles.length) {
+  if (!safeCycles.length) {
     return (
       <div className="flex flex-col items-center gap-3 rounded-md border border-gray-200 bg-white px-6 py-14 text-center">
         <span className="flex h-12 w-12 items-center justify-center rounded-md bg-gray-50 text-slate-700">
@@ -121,11 +132,11 @@ export default function MobileCyclesList() {
 
   return (
     <div className="space-y-3">
-      {cycles.map((cycle) => (
+      {safeCycles.map((cycle) => (
         <CycleCard
-          key={cycle.id}
+          key={cycle?.id ?? cycle?.name}
           cycle={cycle}
-          progress={progressMap[cycle.id] ?? 0}
+          progress={progressMap?.[cycle?.id] ?? 0}
         />
       ))}
     </div>

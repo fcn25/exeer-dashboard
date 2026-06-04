@@ -19,7 +19,12 @@ import { AdministrativeActionsGate } from "./components/administrative/Administr
 import { PerformanceGate } from "./components/performance/PerformanceGate.jsx";
 import MobileSubscriptionPage from "./pages/MobileSubscriptionPage.jsx";
 import { ProtectedRoute } from "./components/ProtectedRoute.jsx";
+import ErrorBoundary from "./components/ErrorBoundary.jsx";
 import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
+
+function MobileRoute({ children }) {
+  return <ErrorBoundary>{children}</ErrorBoundary>;
+}
 
 function LoginPage() {
   const { isAuthenticated, isBootstrapping, homePath } = useAuth();
@@ -187,7 +192,9 @@ function AppRoutes() {
         element={
           <ProtectedRoute allowPortal>
             <ProtectedRoute requiredRole="owner">
-              <MobileSubscriptionPage />
+              <MobileRoute>
+                <MobileSubscriptionPage />
+              </MobileRoute>
             </ProtectedRoute>
           </ProtectedRoute>
         }
@@ -196,7 +203,9 @@ function AppRoutes() {
         path="/mobile"
         element={
           <ProtectedRoute allowPortal>
-            <EmployeePortalPage />
+            <MobileRoute>
+              <EmployeePortalPage />
+            </MobileRoute>
           </ProtectedRoute>
         }
       />
@@ -205,7 +214,9 @@ function AppRoutes() {
         element={
           <ProtectedRoute allowPortal>
             <AdministrativeActionsGate>
-              <MobileAdministrativeActionsPage />
+              <MobileRoute>
+                <MobileAdministrativeActionsPage />
+              </MobileRoute>
             </AdministrativeActionsGate>
           </ProtectedRoute>
         }
@@ -215,7 +226,9 @@ function AppRoutes() {
         element={
           <ProtectedRoute allowPortal>
             <PerformanceGate>
-              <MobilePerformancePage />
+              <MobileRoute>
+                <MobilePerformancePage />
+              </MobileRoute>
             </PerformanceGate>
           </ProtectedRoute>
         }
@@ -237,7 +250,9 @@ function AppRoutes() {
 export default function App() {
   return (
     <AuthProvider>
-      <AppRoutes />
+      <ErrorBoundary>
+        <AppRoutes />
+      </ErrorBoundary>
     </AuthProvider>
   );
 }

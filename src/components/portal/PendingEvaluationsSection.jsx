@@ -3,11 +3,14 @@ import { CalendarDays, ChevronLeft, ClipboardCheck } from "lucide-react";
 import TakeEvaluationModal from "./TakeEvaluationModal.jsx";
 import { listPendingEvaluationsForEmployee } from "../../services/performanceService.js";
 import { formatPortalDate } from "../../utils/portalGreeting.js";
+import { ensureArray } from "../../utils/ensureArray.js";
 
 function PendingEvaluationCard({ evaluation, onSelect }) {
-  const cycleName = evaluation.evaluation_cycles?.name ?? "دورة تقييم";
-  const endDate = evaluation.evaluation_cycles?.end_date;
-  const templateTitle = evaluation.evaluation_templates?.title ?? "نموذج تقييم";
+  if (!evaluation?.id) return null;
+
+  const cycleName = evaluation?.evaluation_cycles?.name ?? "دورة تقييم";
+  const endDate = evaluation?.evaluation_cycles?.end_date;
+  const templateTitle = evaluation?.evaluation_templates?.title ?? "نموذج تقييم";
 
   return (
     <button
@@ -60,7 +63,7 @@ export default function PendingEvaluationsSection({
     setIsLoading(true);
     setError("");
     try {
-      const rows = await listPendingEvaluationsForEmployee(employeeId);
+      const rows = ensureArray(await listPendingEvaluationsForEmployee(employeeId));
       setEvaluations(rows);
     } catch (err) {
       setError(err.message || "تعذّر تحميل التقييمات.");

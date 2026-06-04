@@ -10,6 +10,8 @@ import {
   getTemplateDisplayTitle,
   templateHasQuestions,
 } from "../../../utils/evaluationTemplateQuestions.js";
+import { ensureArray } from "../../../utils/ensureArray.js";
+import MobileLoadingState from "../../mobile/MobileLoadingState.jsx";
 
 function getTodayIsoDate() {
   const now = new Date();
@@ -41,8 +43,10 @@ export default function MobileLaunchCycleForm({ onSuccess }) {
           listCompanyDepartments(),
         ]);
         if (cancelled) return;
-        setTemplates(templateRows.filter((row) => templateHasQuestions(row)));
-        setDepartments(departmentRows);
+        setTemplates(
+          ensureArray(templateRows).filter((row) => row && templateHasQuestions(row)),
+        );
+        setDepartments(ensureArray(departmentRows));
       } catch (err) {
         if (!cancelled) setError(err.message || "تعذّر تحميل البيانات.");
       } finally {
@@ -66,7 +70,7 @@ export default function MobileLaunchCycleForm({ onSuccess }) {
 
     async function loadCount() {
       try {
-        const rows = await listEmployeesByDepartment(department);
+        const rows = ensureArray(await listEmployeesByDepartment(department));
         if (!cancelled) setTargetCount(rows.length);
       } catch {
         if (!cancelled) setTargetCount(0);
@@ -79,8 +83,11 @@ export default function MobileLaunchCycleForm({ onSuccess }) {
     };
   }, [department]);
 
-  const selectedTemplate = templates.find(
-    (row) => String(row.id) === String(templateId),
+  const safeTemplates = ensureArray(templates);
+  const safeDepartments = ensureArray(departments);
+
+  const selectedTemplate = safeTemplates.find(
+    (row) => String(row?.id) === String(templateId),
   );
 
   const handleSubmit = async (event) => {
@@ -131,6 +138,10 @@ export default function MobileLaunchCycleForm({ onSuccess }) {
     }
   };
 
+  if (isLoading) {
+    return <MobileLoadingState label="جاري تحميل خيارات الإطلاق..." />;
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       <div className="space-y-2">
@@ -149,15 +160,15 @@ export default function MobileLaunchCycleForm({ onSuccess }) {
           <option value="">
             {isLoading ? "جاري التحميل..." : "اختر النموذج"}
           </option>
-          {templates.map((row) => (
-            <option key={row.id} value={row.id}>
+          {safeTemplates.map((row) => (
+            <option key={row?.id ?? row?.title} value={row?.id ?? ""}>
               {getTemplateDisplayTitle(row, "ar")}
             </option>
           ))}
         </select>
         {selectedTemplate ? (
           <p className="text-xs text-slate-500">
-            {selectedTemplate.category
+            {selectedTemplate?.category
               ? `التصنيف: ${selectedTemplate.category}`
               : null}
           </p>
@@ -178,7 +189,7 @@ export default function MobileLaunchCycleForm({ onSuccess }) {
           className="md-input min-h-[44px] w-full"
         >
           <option value="">اختر الإدارة</option>
-          {departments.map((name) => (
+          {safeDepartments.map((name) => (
             <option key={name} value={name}>
               {name}
             </option>
@@ -211,7 +222,7 @@ export default function MobileLaunchCycleForm({ onSuccess }) {
 
       <button
         type="submit"
-        disabled={isSaving || isLoading}
+        disabled={isSaving}
         className="md-btn-primary min-h-[48px] w-full"
       >
         {isSaving ? "جاري الإطلاق..." : "إطلاق دورة التقييم"}

@@ -152,17 +152,13 @@ export function getQuestionRatingHintAr(question) {
   }
 }
 
-export function mapQuestionToPreviewCriterion(question, index = 0) {
+export function mapQuestionToPreviewDetail(question, index = 0) {
   const bounds = getRatingBounds(question);
   const questionText = getQuestionLabel(question, "ar");
-  const criterionTitle =
-    String(question.criterion_ar ?? question.criterionAr ?? "").trim() ||
-    questionText;
 
   return {
-    id: String(question.id ?? `preview-q-${index}`),
-    title: criterionTitle,
-    questionText,
+    id: String(question.id ?? `preview-detail-${index}`),
+    text: questionText,
     type: question.type,
     min: bounds.min,
     max: bounds.max,
@@ -170,16 +166,80 @@ export function mapQuestionToPreviewCriterion(question, index = 0) {
   };
 }
 
+function buildStaticCriterionQuestions(label, idPrefix) {
+  const topic = String(label ?? "").trim();
+  return [
+    {
+      id: `${idPrefix}-q1`,
+      text: `ما مدى تحقيق «${topic}» وفق المعايير المعتمدة في المنشأة؟`,
+      ratingHint: "طريقة التقييم: مقياس من 1 إلى 5",
+      type: QUESTION_TYPES.RATING_1_5,
+    },
+    {
+      id: `${idPrefix}-q2`,
+      text: `اذكر مثالاً عملياً يوضح الوضع الحالي لـ «${topic}».`,
+      ratingHint: "طريقة التقييم: إجابة نصية",
+      type: QUESTION_TYPES.TEXT,
+    },
+    {
+      id: `${idPrefix}-q3`,
+      text: `ما أهم إجراء تحسيني مقترح لرفع مستوى «${topic}»؟`,
+      ratingHint: "طريقة التقييم: إجابة نصية",
+      type: QUESTION_TYPES.TEXT,
+    },
+  ];
+}
+
 export function buildStaticPreviewCriterion(text, id) {
   const label = String(text ?? "").trim();
   return {
     id,
     title: label,
-    questionText: label,
-    type: QUESTION_TYPES.RATING_1_5,
-    min: 1,
-    max: 5,
-    ratingHint: "طريقة التقييم: مقياس من 1 إلى 5",
+    questions: buildStaticCriterionQuestions(label, id),
+  };
+}
+
+function normalizePreviewCriterionItem(item, id) {
+  if (!item || typeof item !== "object") {
+    return buildStaticPreviewCriterion(item, id);
+  }
+
+  const title = String(item.title ?? "").trim();
+  const rawQuestions = item.questions ?? [];
+
+  const questions = rawQuestions.map((entry, index) => {
+    if (entry && typeof entry === "object" && (entry.text || entry.text_ar)) {
+      return {
+        id: String(entry.id ?? `${id}-q-${index}`),
+        text: String(entry.text ?? entry.text_ar ?? "").trim(),
+        ratingHint: entry.ratingHint ?? getQuestionRatingHintAr(entry),
+        type: entry.type,
+      };
+    }
+    const text = String(entry ?? "").trim();
+    return {
+      id: `${id}-q-${index}`,
+      text,
+      ratingHint: "طريقة التقييم: مقياس من 1 إلى 5",
+      type: QUESTION_TYPES.RATING_1_5,
+    };
+  });
+
+  if (!questions.length && item.questionText) {
+    questions.push({
+      id: `${id}-q-0`,
+      text: String(item.questionText).trim(),
+      ratingHint: item.ratingHint ?? "طريقة التقييم: حسب النموذج",
+      type: item.type,
+    });
+  }
+
+  return {
+    id: String(item.id ?? id),
+    title,
+    questions: questions.length
+      ? questions
+      : buildStaticCriterionQuestions(title, id),
   };
 }
 
@@ -188,18 +248,16 @@ export function normalizeStaticPreviewSections(sections, templateId = "template"
   return (sections ?? []).map((section, sectionIndex) => ({
     title: section.title,
     criteria: (section.questions ?? section.criteria ?? []).map((item, itemIndex) => {
+      const criterionId = `${templateId}-${sectionIndex}-${itemIndex}`;
       if (item && typeof item === "object" && item.title) {
-        return item;
+        return normalizePreviewCriterionItem(item, criterionId);
       }
-      return buildStaticPreviewCriterion(
-        item,
-        `${templateId}-${sectionIndex}-${itemIndex}`,
-      );
+      return buildStaticPreviewCriterion(item, criterionId);
     }),
   }));
 }
 
-/** Group DB questions into preview sections with expandable criterion payloads. */
+/** Group DB questions into sections → criteria → questions[]. */
 export function groupQuestionsForPreview(questions, options = {}) {
   const {
     fallbackSection = "معايير التقييم",
@@ -208,10 +266,10 @@ export function groupQuestionsForPreview(questions, options = {}) {
 
   if (!questions?.length) return [];
 
-  const groups = new Map();
+  const sectionGroups = new Map();
 
   questions.forEach((question, index) => {
-    const section =
+    const sectionTitle =
       String(
         question.section_ar ??
           question.sectionAr ??
@@ -222,13 +280,33 @@ export function groupQuestionsForPreview(questions, options = {}) {
       getTemplateCategoryLabelAr(templateCategory) ||
       fallbackSection;
 
-    if (!groups.has(section)) groups.set(section, []);
-    groups.get(section).push(mapQuestionToPreviewCriterion(question, index));
+    const questionText = getQuestionLabel(question, "ar");
+    const criterionTitle =
+      String(question.criterion_ar ?? question.criterionAr ?? "").trim() ||
+      questionText;
+    const criterionKey = `${sectionTitle}::${criterionTitle}`;
+
+    if (!sectionGroups.has(sectionTitle)) {
+      sectionGroups.set(sectionTitle, new Map());
+    }
+
+    const criteriaMap = sectionGroups.get(sectionTitle);
+    if (!criteriaMap.has(criterionKey)) {
+      criteriaMap.set(criterionKey, {
+        id: criterionKey,
+        title: criterionTitle,
+        questions: [],
+      });
+    }
+
+    criteriaMap.get(criterionKey).questions.push(
+      mapQuestionToPreviewDetail(question, index),
+    );
   });
 
-  return Array.from(groups.entries()).map(([title, criteria]) => ({
+  return Array.from(sectionGroups.entries()).map(([title, criteriaMap]) => ({
     title,
-    criteria,
+    criteria: Array.from(criteriaMap.values()),
   }));
 }
 

@@ -1,61 +1,39 @@
 import { useState } from "react";
-import { ChevronDown, Star } from "lucide-react";
-import { QUESTION_TYPES } from "../../utils/evaluationTemplateQuestions.js";
+import { ChevronDown } from "lucide-react";
 
-function DisabledStarRow({ min = 1, max = 5 }) {
-  const count = Math.max(1, max - min + 1);
+function ExpandedQuestionsList({ questions }) {
+  if (!questions?.length) {
+    return (
+      <p className="text-sm text-gray-500">لا توجد أسئلة تفصيلية لهذا المعيار.</p>
+    );
+  }
+
   return (
-    <div
-      className="flex flex-row-reverse items-center justify-end gap-0.5"
-      aria-hidden
-    >
-      {Array.from({ length: count }, (_, index) => (
-        <Star
-          key={index}
-          className="h-5 w-5 fill-gray-100 text-gray-200"
-        />
-      ))}
-    </div>
-  );
-}
-
-function RatingScalePreview({ criterion }) {
-  if (
-    criterion.type === QUESTION_TYPES.RATING_1_5 ||
-    criterion.type === QUESTION_TYPES.RATING
-  ) {
-    return (
-      <div className="space-y-1.5">
-        <p className="text-xs text-slate-500">{criterion.ratingHint}</p>
-        <DisabledStarRow min={criterion.min} max={criterion.max} />
-      </div>
-    );
-  }
-
-  if (
-    criterion.type === QUESTION_TYPES.RATING_0_10 ||
-    criterion.type === QUESTION_TYPES.RATING_0_100
-  ) {
-    const max = criterion.max ?? (criterion.type === QUESTION_TYPES.RATING_0_10 ? 10 : 100);
-    return (
-      <div className="space-y-2">
-        <p className="text-xs text-slate-500">{criterion.ratingHint}</p>
-        <div className="flex items-center gap-2">
-          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-gray-100">
-            <div className="h-full w-2/3 rounded-full bg-slate-300" />
+    <ul className="space-y-2 rounded-md bg-gray-50/80 px-3 py-2.5">
+      {questions.map((question, index) => (
+        <li
+          key={question.id ?? `question-${index}`}
+          className="flex items-start gap-2 text-sm leading-relaxed text-gray-600"
+        >
+          <span className="mt-0.5 shrink-0 text-gray-400" aria-hidden>
+            -
+          </span>
+          <div className="min-w-0 space-y-1">
+            <span>{question.text}</span>
+            {question.ratingHint ? (
+              <p className="text-[11px] text-gray-400">{question.ratingHint}</p>
+            ) : null}
           </div>
-          <span className="text-[11px] tabular-nums text-slate-400">0–{max}</span>
-        </div>
-      </div>
-    );
-  }
-
-  return <p className="text-xs text-slate-500">{criterion.ratingHint}</p>;
+        </li>
+      ))}
+    </ul>
+  );
 }
 
 function CriterionAccordionItem({ criterion, isOpen, onToggle }) {
   const panelId = `criterion-panel-${criterion.id}`;
   const buttonId = `criterion-trigger-${criterion.id}`;
+  const questions = criterion.questions ?? [];
 
   return (
     <div className="overflow-hidden rounded-md border border-gray-100 bg-white">
@@ -65,17 +43,17 @@ function CriterionAccordionItem({ criterion, isOpen, onToggle }) {
         onClick={onToggle}
         aria-expanded={isOpen}
         aria-controls={panelId}
-        className="flex min-h-[44px] w-full items-center gap-2 px-3 py-2.5 text-right transition-colors hover:bg-gray-50/80"
+        className="flex min-h-[44px] w-full cursor-pointer items-center gap-2 px-3 py-2.5 text-right transition-colors duration-150 hover:bg-gray-50/80"
       >
-        <span className="min-w-0 flex-1 text-sm font-medium leading-snug text-slate-900">
-          {criterion.title}
-        </span>
         <ChevronDown
           className={`h-4 w-4 shrink-0 text-slate-400 transition-transform duration-200 ease-out ${
             isOpen ? "rotate-180" : ""
           }`}
           aria-hidden
         />
+        <span className="min-w-0 flex-1 text-sm font-medium leading-snug text-slate-900">
+          {criterion.title}
+        </span>
       </button>
 
       <div
@@ -87,11 +65,8 @@ function CriterionAccordionItem({ criterion, isOpen, onToggle }) {
         }`}
       >
         <div className="min-h-0 overflow-hidden">
-          <div className="space-y-3 border-t border-gray-100 bg-white px-3 py-3">
-            <p className="text-sm leading-relaxed text-slate-600">
-              {criterion.questionText}
-            </p>
-            <RatingScalePreview criterion={criterion} />
+          <div className="border-t border-gray-100 bg-white px-3 py-3 ps-5">
+            <ExpandedQuestionsList questions={questions} />
           </div>
         </div>
       </div>
@@ -99,7 +74,7 @@ function CriterionAccordionItem({ criterion, isOpen, onToggle }) {
   );
 }
 
-export default function TemplatePreviewCriterionAccordion({ criteria }) {
+export default function TemplatePreviewCriterionAccordion({ criteria = [] }) {
   const [openIds, setOpenIds] = useState(() => new Set());
 
   const toggle = (id) => {
@@ -110,6 +85,14 @@ export default function TemplatePreviewCriterionAccordion({ criteria }) {
       return next;
     });
   };
+
+  if (!criteria.length) {
+    return (
+      <p className="px-2 py-3 text-center text-sm text-gray-500">
+        لا توجد معايير للعرض.
+      </p>
+    );
+  }
 
   return (
     <div className="space-y-2">

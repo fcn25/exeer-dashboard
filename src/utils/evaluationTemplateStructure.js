@@ -206,9 +206,10 @@ export function buildTemplatePreviewSections({ questionsJsonb, uiTemplate }) {
   const uiPreviewSections = getTemplatePreviewSections(uiTemplate);
 
   if (flatRecords.length > 0) {
-    const questions = flatRecords
-      .filter((question) => question?.id && question?.type)
-      .map((question, index) => storedQuestionToPreviewDetail(question, index));
+    console.log("buildTemplatePreviewSections flatRecords", flatRecords);
+    const questions = flatRecords.map((question, index) =>
+      storedQuestionToPreviewDetail(question, index),
+    );
 
     return [
       {

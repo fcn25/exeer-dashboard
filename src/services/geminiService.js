@@ -1,4 +1,8 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import {
+  GEMINI_MISSING_KEY_MESSAGE,
+  getGeminiApiKeyFromEnv,
+} from "../utils/geminiConfig.js";
 
 /** Low-latency, cost-optimized Flash model only — never use Pro or legacy models. */
 const GEMINI_FLASH_MODEL = "gemini-1.5-flash";
@@ -37,11 +41,9 @@ function resolveFlashModel() {
 }
 
 function getApiKey() {
-  const key = import.meta.env.VITE_GEMINI_API_KEY?.trim();
+  const key = getGeminiApiKeyFromEnv();
   if (!key) {
-    throw new Error(
-      "مفتاح Gemini غير مُعدّ. أضف VITE_GEMINI_API_KEY إلى ملف .env",
-    );
+    throw new Error(GEMINI_MISSING_KEY_MESSAGE);
   }
   if (PLACEHOLDER_KEY_PATTERN.test(key)) {
     throw new Error(

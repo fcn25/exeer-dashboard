@@ -1,5 +1,6 @@
 import { supabase } from "../utils/supabaseClient.js";
 import { getCompanyId } from "../utils/mobileAuth.js";
+import { assertGeminiConfigured } from "../utils/geminiConfig.js";
 import { generateInterviewQuestionsWithGemini } from "./geminiService.js";
 import { assertSmartInterviewsRateLimit } from "./aiRateLimitService.js";
 
@@ -45,6 +46,7 @@ export async function generateAndSaveInterviewArchive(jobTitle) {
     throw new Error("يرجى إدخال المسمى الوظيفي.");
   }
 
+  assertGeminiConfigured();
   await assertSmartInterviewsRateLimit();
 
   const questionsText = await generateInterviewQuestionsWithGemini(trimmedTitle);

@@ -1,5 +1,5 @@
 import { supabase } from "../utils/supabaseClient.js";
-import { getCompanyId } from "../utils/mobileAuth.js";
+import { requireCompanyId, scopeQueryByCompany } from "../utils/tenantScope.js";
 import { isMissingColumnError } from "../utils/supabaseErrors.js";
 import {
   buildPayrollDraftFromEmployee,
@@ -101,10 +101,10 @@ export async function fetchAttendanceRecords({
   dateTo,
   search = "",
 }) {
-  const companyId = getCompanyId();
-  if (!companyId) throw new Error("لم يتم تحديد الشركة.");
+  const companyId = requireCompanyId("تحميل سجل الحضور");
 
-  let query = supabase
+  let query = scopeQueryByCompany(
+    supabase
     .from("attendance_records")
     .select(
       `
@@ -123,8 +123,9 @@ export async function fetchAttendanceRecords({
         employee_number
       )
     `,
-    )
-    .eq("company_id", companyId)
+    ),
+    companyId,
+  )
     .order("record_date", { ascending: false })
     .order("employee_id", { ascending: true });
 
@@ -134,12 +135,14 @@ export async function fetchAttendanceRecords({
   let { data, error } = await query;
 
   if (error && isMissingEmployeeRelationship(error)) {
-    let plainQuery = supabase
-      .from("attendance_records")
-      .select(
-        "id, employee_id, record_date, check_in_1, check_out_1, check_in_2, check_out_2, status, delay_minutes",
-      )
-      .eq("company_id", companyId)
+    let plainQuery = scopeQueryByCompany(
+      supabase
+        .from("attendance_records")
+        .select(
+          "id, employee_id, record_date, check_in_1, check_out_1, check_in_2, check_out_2, status, delay_minutes",
+        ),
+      companyId,
+    )
       .order("record_date", { ascending: false })
       .order("employee_id", { ascending: true });
 
@@ -191,7 +194,9 @@ export async function fetchAttendanceRecords({
 async function loadEmployeeNumberMap(companyId) {
   const { data, error } = await supabase
     .from("employees")
-    .select("id, employee_number, full_name, basic_salary, housing_allowance, other_allowance, nationality, is_saudi, employment_status")
+    .select(
+      "id, company_id, employee_number, full_name, basic_salary, housing_allowance, other_allowance, nationality, is_saudi, employment_status",
+    )
     .eq("company_id", companyId);
 
   if (error) throw new Error(mapDbError(error));
@@ -206,8 +211,7 @@ async function loadEmployeeNumberMap(companyId) {
 }
 
 export async function upsertAttendanceFromCsv(parsedRows) {
-  const companyId = getCompanyId();
-  if (!companyId) throw new Error("لم يتم تحديد الشركة.");
+  const companyId = requireCompanyId("استيراد سجل الحضور");
   if (!parsedRows?.length) {
     throw new Error("لا توجد صفوف صالحة للاستيراد.");
   }
@@ -220,6 +224,11 @@ export async function upsertAttendanceFromCsv(parsedRows) {
     const employee =
       employeeMap.get(String(row.employee_number).trim()) ?? null;
     if (!employee) {
+      unmatched.push(row.employee_number);
+      continue;
+    }
+
+    if (employee.company_id != null && Number(employee.company_id) !== companyId) {
       unmatched.push(row.employee_number);
       continue;
     }
@@ -253,13 +262,24 @@ export async function upsertAttendanceFromCsv(parsedRows) {
 
   for (let i = 0; i < payloads.length; i += chunkSize) {
     const chunk = payloads.slice(i, i + chunkSize);
-    const { error } = await supabase
-      .from("attendance_records")
-      .upsert(chunk, { onConflict: "employee_id,record_date" });
+    let { error } = await supabase.from("attendance_records").upsert(chunk, {
+      onConflict: "company_id,employee_id,record_date",
+    });
+
+    if (error?.code === "42P10") {
+      ({ error } = await supabase.from("attendance_records").upsert(chunk, {
+        onConflict: "employee_id,record_date",
+      }));
+    }
 
     if (error) {
       if (isMissingAttendanceTable(error)) {
         throw new Error(mapDbError(error));
+      }
+      if (isMissingColumnError(error)) {
+        throw new Error(
+          `${mapDbError(error)} تأكد من وجود عمود company_id وتشغيل migration 20250627000000_attendance_company_unique.sql`,
+        );
       }
       throw new Error(mapDbError(error));
     }
@@ -332,28 +352,30 @@ function buildPayrollRecordPayload(companyId, draft, period, includePayrollMonth
 }
 
 async function findPayrollRecord(companyId, period, employeeId) {
-  const { data } = await supabase
-    .from("payroll_records")
-    .select(
-      "id, status, employee_id, basic_salary, housing_allowance, other_allowances, commissions, additional, penalties, gosi_deduction, lateness_deduction",
-    )
-    .eq("company_id", companyId)
-    .eq("payroll_month", period.payrollMonth)
-    .eq("employee_id", employeeId)
-    .maybeSingle();
+  const { data } = await scopeQueryByCompany(
+    supabase
+      .from("payroll_records")
+      .select(
+        "id, status, employee_id, basic_salary, housing_allowance, other_allowances, commissions, additional, penalties, gosi_deduction, lateness_deduction",
+      )
+      .eq("payroll_month", period.payrollMonth)
+      .eq("employee_id", employeeId),
+    companyId,
+  ).maybeSingle();
 
   if (data) return data;
 
-  const { data: legacy } = await supabase
-    .from("payroll_records")
-    .select(
-      "id, status, employee_id, basic_salary, housing_allowance, allowances, commissions, additional, penalties, gosi, delays",
-    )
-    .eq("company_id", companyId)
-    .eq("month", period.month)
-    .eq("year", period.year)
-    .eq("employee_id", employeeId)
-    .maybeSingle();
+  const { data: legacy } = await scopeQueryByCompany(
+    supabase
+      .from("payroll_records")
+      .select(
+        "id, status, employee_id, basic_salary, housing_allowance, allowances, commissions, additional, penalties, gosi, delays",
+      )
+      .eq("month", period.month)
+      .eq("year", period.year)
+      .eq("employee_id", employeeId),
+    companyId,
+  ).maybeSingle();
 
   return legacy;
 }
@@ -362,7 +384,7 @@ export async function exportAttendanceDeductionsToPayroll({
   dateFrom,
   dateTo,
 }) {
-  const companyId = getCompanyId();
+  const companyId = requireCompanyId("ترحيل الحضور للمسير");
   const payrollMonth = resolvePayrollMonthFromDateRange(dateFrom, dateTo);
   const period = parsePayrollPeriod(payrollMonth);
   if (!period) throw new Error("تعذّر تحديد شهر المسير.");
@@ -434,10 +456,10 @@ export async function exportAttendanceDeductionsToPayroll({
         status: "Draft",
       };
 
-      const { error } = await supabase
-        .from("payroll_records")
-        .update(payload)
-        .eq("id", existing.id);
+      const { error } = await scopeQueryByCompany(
+        supabase.from("payroll_records").update(payload),
+        companyId,
+      ).eq("id", existing.id);
 
       if (error) throw new Error(mapDbError(error));
       updatedCount += 1;

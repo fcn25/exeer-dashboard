@@ -1,5 +1,5 @@
 import { supabase } from "../utils/supabaseClient.js";
-import { getCompanyId } from "../utils/mobileAuth.js";
+import { requireCompanyId, scopeQueryByCompany } from "../utils/tenantScope.js";
 import { isMissingColumnError } from "../utils/supabaseErrors.js";
 import {
   buildPayrollDraftFromEmployee,
@@ -105,12 +105,13 @@ function buildPayrollRecordPayload(companyId, draft, period, includePayrollMonth
 }
 
 async function queryPayrollByPayrollMonth(companyId, payrollMonth) {
-  const { data, error } = await supabase
-    .from("payroll_records")
-    .select("*, employees ( id, full_name )")
-    .eq("company_id", companyId)
-    .eq("payroll_month", payrollMonth)
-    .order("employee_name", { ascending: true });
+  const { data, error } = await scopeQueryByCompany(
+    supabase
+      .from("payroll_records")
+      .select("*, employees ( id, full_name )")
+      .eq("payroll_month", payrollMonth),
+    companyId,
+  ).order("employee_name", { ascending: true });
 
   if (!error) return { data: data ?? [], usedFallback: false, mode: "payroll_month" };
 
@@ -119,12 +120,10 @@ async function queryPayrollByPayrollMonth(companyId, payrollMonth) {
   }
 
   if (isMissingPayrollEmployeeRelationship(error)) {
-    const plain = await supabase
-      .from("payroll_records")
-      .select("*")
-      .eq("company_id", companyId)
-      .eq("payroll_month", payrollMonth)
-      .order("employee_name", { ascending: true });
+    const plain = await scopeQueryByCompany(
+      supabase.from("payroll_records").select("*").eq("payroll_month", payrollMonth),
+      companyId,
+    ).order("employee_name", { ascending: true });
     if (plain.error && !isMissingPayrollMonthColumn(plain.error)) {
       throw new Error(mapDbError(plain.error));
     }
@@ -137,13 +136,10 @@ async function queryPayrollByPayrollMonth(companyId, payrollMonth) {
 }
 
 async function queryPayrollByLegacyMonthYear(companyId, month, year) {
-  const { data, error } = await supabase
-    .from("payroll_records")
-    .select("*")
-    .eq("company_id", companyId)
-    .eq("month", month)
-    .eq("year", year)
-    .order("employee_name", { ascending: true });
+  const { data, error } = await scopeQueryByCompany(
+    supabase.from("payroll_records").select("*").eq("month", month).eq("year", year),
+    companyId,
+  ).order("employee_name", { ascending: true });
 
   if (error) throw new Error(mapDbError(error));
   return { data: data ?? [], usedFallback: true, mode: "month_year" };
@@ -161,37 +157,40 @@ async function queryPayrollRecordsForMonth(companyId, period) {
 
 async function findExistingRecord(companyId, period, employeeId, includePayrollMonth) {
   if (includePayrollMonth) {
-    const { data } = await supabase
-      .from("payroll_records")
-      .select("id, status, employee_id")
-      .eq("company_id", companyId)
-      .eq("payroll_month", period.payrollMonth)
-      .eq("employee_id", employeeId)
-      .maybeSingle();
+    const { data } = await scopeQueryByCompany(
+      supabase
+        .from("payroll_records")
+        .select("id, status, employee_id")
+        .eq("payroll_month", period.payrollMonth)
+        .eq("employee_id", employeeId),
+      companyId,
+    ).maybeSingle();
     if (data) return data;
   }
 
-  const { data: legacy } = await supabase
-    .from("payroll_records")
-    .select("id, status, employee_id")
-    .eq("company_id", companyId)
-    .eq("month", period.month)
-    .eq("year", period.year)
-    .eq("employee_id", employeeId)
-    .maybeSingle();
+  const { data: legacy } = await scopeQueryByCompany(
+    supabase
+      .from("payroll_records")
+      .select("id, status, employee_id")
+      .eq("month", period.month)
+      .eq("year", period.year)
+      .eq("employee_id", employeeId),
+    companyId,
+  ).maybeSingle();
 
   return legacy;
 }
 
 export async function listActiveEmployees() {
-  const companyId = getCompanyId();
-  const { data, error } = await supabase
-    .from("employees")
-    .select(
-      "id, full_name, email, department, basic_salary, housing_allowance, other_allowance, nationality, is_saudi, employment_status",
-    )
-    .eq("company_id", companyId)
-    .order("full_name", { ascending: true });
+  const companyId = requireCompanyId("توليد المسير");
+  const { data, error } = await scopeQueryByCompany(
+    supabase
+      .from("employees")
+      .select(
+        "id, full_name, email, department, basic_salary, housing_allowance, other_allowance, nationality, is_saudi, employment_status",
+      ),
+    companyId,
+  ).order("full_name", { ascending: true });
 
   if (error) throw new Error(mapDbError(error));
 
@@ -204,7 +203,7 @@ export async function fetchPayrollForMonth(pickerValue) {
     return { rows: [], payrollMonth: "", isLocked: false, schemaWarning: null };
   }
 
-  const companyId = getCompanyId();
+  const companyId = requireCompanyId("تحميل المسير");
   const { data, usedFallback, mode } = await queryPayrollRecordsForMonth(
     companyId,
     period,
@@ -235,7 +234,7 @@ export async function generatePayrollForMonth(pickerValue) {
     throw new Error("يرجى اختيار شهر صالح.");
   }
 
-  const companyId = getCompanyId();
+  const companyId = requireCompanyId("إنشاء المسير الشهري");
   const existing = await fetchPayrollForMonth(pickerValue);
 
   if (existing.isLocked) {
@@ -273,10 +272,10 @@ export async function generatePayrollForMonth(pickerValue) {
     if (existingRow?.status === "Exported") continue;
 
     if (existingRow?.id) {
-      const { error } = await supabase
-        .from("payroll_records")
-        .update(payload)
-        .eq("id", existingRow.id);
+      const { error } = await scopeQueryByCompany(
+        supabase.from("payroll_records").update(payload),
+        companyId,
+      ).eq("id", existingRow.id);
       if (error) upsertError = error;
       continue;
     }
@@ -293,10 +292,10 @@ export async function generatePayrollForMonth(pickerValue) {
       existingRow = await findExistingRecord(companyId, period, employee.id, false);
       if (existingRow?.status === "Exported") continue;
       if (existingRow?.id) {
-        ({ error } = await supabase
-          .from("payroll_records")
-          .update(payload)
-          .eq("id", existingRow.id));
+        ({ error } = await scopeQueryByCompany(
+          supabase.from("payroll_records").update(payload),
+          companyId,
+        ).eq("id", existingRow.id));
       } else {
         ({ error } = await supabase.from("payroll_records").insert(payload));
       }
@@ -316,7 +315,7 @@ export async function exportPayrollMonth(pickerValue) {
     throw new Error("يرجى اختيار شهر صالح.");
   }
 
-  const companyId = getCompanyId();
+  const companyId = requireCompanyId("تصدير المسير");
   const { rows, isLocked } = await fetchPayrollForMonth(pickerValue);
 
   if (rows.length === 0) {
@@ -327,20 +326,23 @@ export async function exportPayrollMonth(pickerValue) {
     return { rows, payrollMonth: period.payrollMonth, alreadyExported: true };
   }
 
-  let updateQuery = supabase
-    .from("payroll_records")
-    .update({ status: "Exported" })
-    .eq("company_id", companyId);
-
   if (period.payrollMonth) {
-    const byMonth = await updateQuery.eq("payroll_month", period.payrollMonth);
-    if (byMonth.error && isMissingPayrollMonthColumn(byMonth.error)) {
-      const legacy = await supabase
+    const byMonth = await scopeQueryByCompany(
+      supabase
         .from("payroll_records")
         .update({ status: "Exported" })
-        .eq("company_id", companyId)
-        .eq("month", period.month)
-        .eq("year", period.year);
+        .eq("payroll_month", period.payrollMonth),
+      companyId,
+    );
+    if (byMonth.error && isMissingPayrollMonthColumn(byMonth.error)) {
+      const legacy = await scopeQueryByCompany(
+        supabase
+          .from("payroll_records")
+          .update({ status: "Exported" })
+          .eq("month", period.month)
+          .eq("year", period.year),
+        companyId,
+      );
       if (legacy.error) throw new Error(mapDbError(legacy.error));
     } else if (byMonth.error) {
       throw new Error(mapDbError(byMonth.error));

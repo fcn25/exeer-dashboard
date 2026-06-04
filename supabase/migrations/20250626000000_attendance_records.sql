@@ -14,7 +14,8 @@ create table if not exists public.attendance_records (
   delay_minutes integer not null default 0 check (delay_minutes >= 0),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  constraint attendance_records_employee_date_unique unique (employee_id, record_date)
+  constraint attendance_records_company_employee_date_unique
+    unique (company_id, employee_id, record_date)
 );
 
 create index if not exists attendance_records_company_date_idx

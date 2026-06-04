@@ -12,6 +12,7 @@ import {
   Trophy,
   Gavel,
   ChevronLeft,
+  BarChart3,
 } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -33,7 +34,10 @@ import { updateTaskStatus } from "../services/tasksService.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import EmployeeProfileSummary from "../components/employees/EmployeeProfileSummary.jsx";
 import EmployeeAdministrativeInbox from "../components/administrative/EmployeeAdministrativeInbox.jsx";
-import { canManageAdministrativeActions } from "../utils/rbac.js";
+import {
+  canAccessPerformance,
+  canManageAdministrativeActions,
+} from "../utils/rbac.js";
 import { formatDisplayValue } from "../utils/displayValue.js";
 import { formatPortalDate, getTimeBasedGreeting } from "../utils/portalGreeting.js";
 import { signOut } from "../utils/mobileAuth.js";
@@ -324,6 +328,24 @@ export default function EmployeePortalPage() {
               <span className="block text-sm font-bold">الإجراءات الإدارية</span>
               <span className="block text-xs text-slate-500">
                 إصدار إجراء أو مراجعة السجل
+              </span>
+            </span>
+            <ChevronLeft className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
+          </Link>
+        ) : null}
+
+        {isMobileSelfService && canAccessPerformance() ? (
+          <Link
+            to="/mobile/performance"
+            className="flex min-h-[56px] items-center gap-3 rounded-md border border-gray-200 bg-white px-4 py-3.5 text-slate-900 shadow-none transition-colors hover:bg-gray-50"
+          >
+            <span className="flex h-10 w-10 items-center justify-center rounded-md bg-gray-100 text-slate-700">
+              <BarChart3 className="h-5 w-5" aria-hidden />
+            </span>
+            <span className="flex-1">
+              <span className="block text-sm font-bold">قياس الأداء</span>
+              <span className="block text-xs text-slate-500">
+                الملخص التنفيذي، الدورات، وإطلاق التقييم
               </span>
             </span>
             <ChevronLeft className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />

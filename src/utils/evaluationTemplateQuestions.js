@@ -99,6 +99,66 @@ export function templateHasQuestions(template) {
   return getTemplateQuestionCount(template) > 0;
 }
 
+const TEMPLATE_CATEGORY_LABELS_AR = {
+  HR: "الموارد البشرية",
+  General: "عام",
+  Compliance: "الامتثال",
+  Management: "الإدارة",
+  Strategy: "الاستراتيجية",
+  Culture: "الثقافة",
+  Technology: "التقنية",
+  Sales: "المبيعات",
+  Finance: "المالية",
+  Operations: "التشغيل",
+};
+
+export function getTemplateCategoryLabelAr(category) {
+  const key = String(category ?? "").trim();
+  return TEMPLATE_CATEGORY_LABELS_AR[key] ?? (key || "معايير التقييم");
+}
+
+export function getTemplateDescription(template, lang = "ar") {
+  const payload = template?.questions_jsonb;
+  if (payload && typeof payload === "object") {
+    if (lang === "en" && payload.description_en) return payload.description_en;
+    if (payload.description_ar) return payload.description_ar;
+  }
+  return "";
+}
+
+/** Group DB questions into preview sections (category / section fields or single block). */
+export function groupQuestionsForPreview(questions, options = {}) {
+  const {
+    fallbackSection = "معايير التقييم",
+    templateCategory = "",
+  } = options;
+
+  if (!questions?.length) return [];
+
+  const groups = new Map();
+
+  for (const question of questions) {
+    const section =
+      String(
+        question.section_ar ??
+          question.sectionAr ??
+          question.category_ar ??
+          question.categoryAr ??
+          "",
+      ).trim() ||
+      getTemplateCategoryLabelAr(templateCategory) ||
+      fallbackSection;
+
+    if (!groups.has(section)) groups.set(section, []);
+    groups.get(section).push(getQuestionLabel(question, "ar"));
+  }
+
+  return Array.from(groups.entries()).map(([title, sectionQuestions]) => ({
+    title,
+    questions: sectionQuestions,
+  }));
+}
+
 export function getLegacyDefaultQuestions(lang = "ar") {
   return [
     ...EVALUATION_CRITERIA.map((criterion) =>

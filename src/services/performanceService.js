@@ -1,5 +1,6 @@
 import { supabase } from "../utils/supabaseClient.js";
 import { getCompanyId } from "../utils/mobileAuth.js";
+import { requireCompanyId, scopeQueryByCompany } from "../utils/tenantScope.js";
 import { listDepartments } from "./catalogService.js";
 import {
   buildEvaluationAnswersPayload,
@@ -70,30 +71,41 @@ function mapPendingResponseRow(row) {
   };
 }
 
+function resolveCompanyId(context) {
+  try {
+    return requireCompanyId(context);
+  } catch {
+    return getCompanyId();
+  }
+}
+
 export async function listEvaluationCycles() {
-  const companyId = getCompanyId();
-  const { data, error } = await supabase
-    .from("evaluation_cycles")
-    .select(
-      "id, name, start_date, end_date, status, ai_summary, template_id, target_department, created_at",
-    )
-    .eq("company_id", companyId)
-    .order("created_at", { ascending: false });
+  const companyId = resolveCompanyId("دورات التقييم");
+  const { data, error } = await scopeQueryByCompany(
+    supabase
+      .from("evaluation_cycles")
+      .select(
+        "id, name, start_date, end_date, status, ai_summary, template_id, target_department, created_at",
+      )
+      .order("created_at", { ascending: false }),
+    companyId,
+  );
 
   if (error) throw new Error(mapDbError(error));
   return data ?? [];
 }
 
 export async function getEvaluationCycleById(cycleId) {
-  const companyId = getCompanyId();
-  const { data, error } = await supabase
-    .from("evaluation_cycles")
-    .select(
-      "id, name, start_date, end_date, status, ai_summary, template_id, target_department, created_at",
-    )
-    .eq("company_id", companyId)
-    .eq("id", Number(cycleId))
-    .maybeSingle();
+  const companyId = resolveCompanyId("تفاصيل دورة التقييم");
+  const { data, error } = await scopeQueryByCompany(
+    supabase
+      .from("evaluation_cycles")
+      .select(
+        "id, name, start_date, end_date, status, ai_summary, template_id, target_department, created_at",
+      )
+      .eq("id", Number(cycleId)),
+    companyId,
+  ).maybeSingle();
 
   if (error) throw new Error(mapDbError(error));
   return data;
@@ -138,7 +150,19 @@ export function resolveEvaluationTemplateId(title, templates = []) {
 }
 
 export async function listCompanyDepartments() {
-  return listDepartments();
+  resolveCompanyId("أقسام التقييم");
+  const employees = await listActiveEmployees();
+  const fromEmployees = new Set(
+    employees
+      .map((row) => String(row.department ?? "").trim())
+      .filter(Boolean),
+  );
+
+  const catalog = await listDepartments();
+  const matched = catalog.filter((name) => fromEmployees.has(name));
+  if (matched.length) return matched;
+
+  return [...fromEmployees].sort((a, b) => a.localeCompare(b, "ar"));
 }
 
 export async function listEmployeesByDepartment(department) {
@@ -152,12 +176,14 @@ export async function listEmployeesByDepartment(department) {
 }
 
 export async function getCycleResponseProgress(cycleId) {
-  const companyId = getCompanyId();
-  const { data, error } = await supabase
-    .from("evaluation_responses")
-    .select("status")
-    .eq("company_id", companyId)
-    .eq("cycle_id", Number(cycleId));
+  const companyId = resolveCompanyId("تقدّم دورة التقييم");
+  const { data, error } = await scopeQueryByCompany(
+    supabase
+      .from("evaluation_responses")
+      .select("status")
+      .eq("cycle_id", Number(cycleId)),
+    companyId,
+  );
 
   if (error) throw new Error(mapDbError(error));
 
@@ -177,7 +203,7 @@ export async function launchEvaluationCycleForDepartment({
   templateId,
   department,
 }) {
-  const companyId = getCompanyId();
+  const companyId = requireCompanyId("إطلاق دورة التقييم");
   const trimmedName = String(name ?? "").trim();
   const trimmedDepartment = String(department ?? "").trim();
 
@@ -225,7 +251,10 @@ export async function launchEvaluationCycleForDepartment({
     .insert(responseRows);
 
   if (responsesError) {
-    await supabase.from("evaluation_cycles").delete().eq("id", cycle.id);
+    await scopeQueryByCompany(
+      supabase.from("evaluation_cycles").delete(),
+      companyId,
+    ).eq("id", cycle.id);
     throw new Error(mapDbError(responsesError));
   }
 

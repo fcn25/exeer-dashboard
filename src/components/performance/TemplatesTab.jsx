@@ -1,24 +1,35 @@
 import { useState } from "react";
+import { Eye } from "lucide-react";
 import { TEMPLATE_PILLARS } from "../../constants/performanceTemplates.js";
 import SuccessToast from "../ui/SuccessToast.jsx";
-import TemplatePreviewDrawer from "./TemplatePreviewDrawer.jsx";
+import TemplatePreviewModal from "./TemplatePreviewModal.jsx";
 
 function TemplateCard({ template, onSelect }) {
   const Icon = template.icon;
 
   return (
-    <button
-      type="button"
-      onClick={() => onSelect(template)}
-      className="group flex flex-col gap-2 rounded-md border border-exeer-border bg-md-surface p-3 text-right transition-colors hover:border-md-primary/35 hover:bg-exeer-hover"
-    >
-      <span className="flex h-9 w-9 items-center justify-center rounded-md border border-gray-200 bg-gray-50 text-slate-900 transition-colors group-hover:border-slate-900 group-hover:bg-slate-900 group-hover:text-white">
-        <Icon className="h-4 w-4 stroke-[1.75]" aria-hidden />
-      </span>
-      <h4 className="line-clamp-2 text-sm font-semibold leading-snug text-exeer-primary">
-        {template.title}
-      </h4>
-    </button>
+    <article className="group flex flex-col gap-2 rounded-md border border-exeer-border bg-md-surface p-3 text-right transition-colors hover:border-md-primary/35 hover:bg-exeer-hover">
+      <button
+        type="button"
+        onClick={() => onSelect(template)}
+        className="flex flex-col gap-2 text-right"
+      >
+        <span className="flex h-9 w-9 items-center justify-center rounded-md border border-gray-200 bg-gray-50 text-slate-900 transition-colors group-hover:border-slate-900 group-hover:bg-slate-900 group-hover:text-white">
+          <Icon className="h-4 w-4 stroke-[1.75]" aria-hidden />
+        </span>
+        <h4 className="line-clamp-2 text-sm font-semibold leading-snug text-exeer-primary">
+          {template.title}
+        </h4>
+      </button>
+      <button
+        type="button"
+        onClick={() => onSelect(template)}
+        className="inline-flex min-h-[36px] items-center justify-center gap-1.5 self-end rounded-md border border-gray-200 px-3 text-xs font-medium text-slate-700 hover:bg-gray-50"
+      >
+        <Eye className="h-3.5 w-3.5" aria-hidden />
+        عرض
+      </button>
+    </article>
   );
 }
 
@@ -76,7 +87,7 @@ export default function TemplatesTab() {
         </div>
       </div>
 
-      <TemplatePreviewDrawer
+      <TemplatePreviewModal
         template={selectedTemplate}
         onClose={() => setSelectedTemplate(null)}
         onCycleLaunched={handleCycleLaunched}

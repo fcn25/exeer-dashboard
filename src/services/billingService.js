@@ -1,3 +1,4 @@
+import { normalizeSubscriptionTier } from "../constants/subscriptionPlans.js";
 import { supabase } from "../utils/supabaseClient.js";
 import { getCompanyId } from "../utils/mobileAuth.js";
 import {
@@ -31,6 +32,7 @@ function normalizeBillingRow(data, companyId) {
     name: data?.name ?? "Exeer",
     plan_status: planStatus,
     trial_ends_at: trialEndsAt,
+    subscription_tier: normalizeSubscriptionTier(data?.subscription_tier),
   };
 }
 
@@ -57,7 +59,7 @@ export async function fetchCompanyBilling() {
 
   const { data, error } = await supabase
     .from("companies")
-    .select("id, name, plan_status, trial_ends_at")
+    .select("id, name, plan_status, trial_ends_at, subscription_tier")
     .eq("id", companyId)
     .maybeSingle();
 

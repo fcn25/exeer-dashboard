@@ -11,6 +11,8 @@ import {
 import SlideOver, { BulkImportButton } from "./components/employees/SlideOver.jsx";
 import ExeerEmptyState from "./components/brand/ExeerEmptyState.jsx";
 import EmployeeBulkImportWizard from "./components/employees/EmployeeBulkImportWizard.jsx";
+import SuccessToast from "./components/ui/SuccessToast.jsx";
+import { fetchCompanyBilling } from "./services/billingService.js";
 import {
   createEmployee,
   getEmployeeById,
@@ -18,6 +20,10 @@ import {
   updateEmployee,
 } from "./services/employeesService.js";
 import { listDepartments, listJobTitles } from "./services/catalogService.js";
+import {
+  canAddEmployeeCount,
+  EMPLOYEE_LIMIT_ERROR_AR,
+} from "./utils/employeeLimitGuard.js";
 import {
   canEditEmployeeRecords,
   getCurrentUserRole,
@@ -71,17 +77,21 @@ function AddEmployeeSlideOver({
   onOpenBulkImport,
   departmentOptions,
   jobTitleOptions,
+  employeeCount = 0,
+  subscriptionTier = "trial",
 }) {
   const [form, setForm] = useState({ ...EMPTY_EMPLOYEE_FORM });
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [limitToast, setLimitToast] = useState("");
 
   useEffect(() => {
     if (isOpen) {
       setForm({ ...EMPTY_EMPLOYEE_FORM });
       setError("");
       setSuccessMessage("");
+      setLimitToast("");
       setIsSaving(false);
     }
   }, [isOpen]);
@@ -94,6 +104,12 @@ function AddEmployeeSlideOver({
     }
     if (!form.email?.trim()) {
       setError("البريد الإلكتروني مطلوب لإرسال دعوة الدخول للموظف.");
+      return;
+    }
+
+    const limitCheck = canAddEmployeeCount(employeeCount, 1, subscriptionTier);
+    if (!limitCheck.allowed) {
+      setLimitToast(EMPLOYEE_LIMIT_ERROR_AR);
       return;
     }
 
@@ -137,6 +153,7 @@ function AddEmployeeSlideOver({
         </button>
       }
     >
+      <SuccessToast message={limitToast} onDismiss={() => setLimitToast("")} />
       {error ? (
         <p className="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
           {error}
@@ -375,6 +392,7 @@ export default function EmployeesPage() {
   const [successMessage, setSuccessMessage] = useState("");
   const [departmentOptions, setDepartmentOptions] = useState([]);
   const [jobTitleOptions, setJobTitleOptions] = useState([]);
+  const [subscriptionTier, setSubscriptionTier] = useState("trial");
 
   const userRole = getCurrentUserRole();
   const canEdit = canEditEmployeeRecords();
@@ -397,6 +415,24 @@ export default function EmployeesPage() {
   useEffect(() => {
     loadEmployees();
   }, [loadEmployees]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadBillingTier() {
+      try {
+        const billing = await fetchCompanyBilling();
+        if (!cancelled) setSubscriptionTier(billing.subscription_tier);
+      } catch {
+        if (!cancelled) setSubscriptionTier("trial");
+      }
+    }
+
+    loadBillingTier();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -650,6 +686,8 @@ export default function EmployeesPage() {
         }}
         departmentOptions={departmentOptions}
         jobTitleOptions={jobTitleOptions}
+        employeeCount={employees.length}
+        subscriptionTier={subscriptionTier}
         onCreated={() => handleMutationSuccess("تم إضافة الموظف بنجاح")}
       />
 

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { Clock, Crown, Sparkles, Tag } from "lucide-react";
+import { ArrowUpRight, Check, Clock, Crown, Sparkles, Tag } from "lucide-react";
+import { PAID_PLANS } from "../../constants/subscriptionPlans.js";
 import { useTranslation } from "react-i18next";
 import SuccessToast from "../ui/SuccessToast.jsx";
 import {
@@ -76,6 +77,10 @@ export default function SubscriptionPanel({
     } finally {
       setIsApplying(false);
     }
+  };
+
+  const handleUpgrade = () => {
+    setSuccessToast("سيتم تفعيل بوابة الدفع قريباً");
   };
 
   const handlePayNow = async () => {
@@ -200,6 +205,50 @@ export default function SubscriptionPanel({
           </div>
         </div>
       </article>
+
+      <section className="space-y-4">
+        <div className="space-y-1">
+          <h3 className="text-base font-bold text-exeer-primary">الباقات المتاحة</h3>
+          <p className="text-xs text-exeer-muted">
+            اختر الباقة المناسبة لفريقك — الدفع الإلكتروني قريباً
+          </p>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          {PAID_PLANS.map((plan) => (
+            <article
+              key={plan.id}
+              className="md-surface flex flex-col gap-4 p-5 transition-shadow hover:shadow-sm"
+            >
+              <div className="space-y-1">
+                <p className="text-lg font-bold text-exeer-primary">{plan.nameAr}</p>
+                <p className="text-2xl font-extrabold text-md-primary">{plan.priceLabel}</p>
+              </div>
+
+              <ul className="space-y-2 text-sm text-exeer-muted">
+                {plan.features.map((feature) => (
+                  <li key={feature} className="flex items-start gap-2">
+                    <Check
+                      className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600"
+                      aria-hidden
+                    />
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <button
+                type="button"
+                onClick={handleUpgrade}
+                className="md-btn-primary mt-auto inline-flex w-full items-center justify-center gap-2"
+              >
+                <ArrowUpRight className="h-4 w-4" aria-hidden />
+                ترقية الآن
+              </button>
+            </article>
+          ))}
+        </div>
+      </section>
 
       <section className="md-surface space-y-4 p-5">
         <div className="flex items-start gap-3">

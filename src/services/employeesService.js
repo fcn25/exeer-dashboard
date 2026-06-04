@@ -1,6 +1,12 @@
+import {
+  buildBulkImportLimitMessage,
+  canAddEmployeeCount,
+  EMPLOYEE_LIMIT_ERROR_AR,
+} from "../utils/employeeLimitGuard.js";
 import { supabase } from "../utils/supabaseClient.js";
 import { getCompanyId } from "../utils/mobileAuth.js";
 import { isActiveEmployee } from "../utils/employeeStatus.js";
+import { fetchCompanyBilling } from "./billingService.js";
 import { inviteEmployeeByEmail } from "./employeeInviteService.js";
 
 function mapDbError(error) {
@@ -39,6 +45,36 @@ export function employeeFormToRow(form) {
     iban: form.iban?.trim() || null,
     transport_allowance: Number(form.transport_allowance) || 0,
   };
+}
+
+export async function countCompanyEmployees() {
+  const companyId = getCompanyId();
+  const { count, error } = await supabase
+    .from("employees")
+    .select("id", { count: "exact", head: true })
+    .eq("company_id", companyId);
+
+  if (error) throw new Error(mapDbError(error));
+  return count ?? 0;
+}
+
+async function assertCanAddEmployees(toAdd) {
+  const [billing, employeeCount] = await Promise.all([
+    fetchCompanyBilling(),
+    countCompanyEmployees(),
+  ]);
+  const check = canAddEmployeeCount(employeeCount, toAdd, billing.subscription_tier);
+  if (!check.allowed) {
+    throw new Error(
+      toAdd === 1
+        ? EMPLOYEE_LIMIT_ERROR_AR
+        : buildBulkImportLimitMessage({
+            currentCount: employeeCount,
+            importCount: toAdd,
+            tier: billing.subscription_tier,
+          }),
+    );
+  }
 }
 
 export async function listEmployees() {
@@ -84,6 +120,8 @@ export async function getEmployeeById(employeeId) {
 }
 
 export async function createEmployee(form) {
+  await assertCanAddEmployees(1);
+
   const companyId = getCompanyId();
   const email = String(form.email ?? "").trim();
 
@@ -127,6 +165,8 @@ export async function bulkCreateEmployees(rows, { sendInvites = false } = {}) {
   if (!Array.isArray(rows) || rows.length === 0) {
     throw new Error("لا توجد سجلات للاستيراد.");
   }
+
+  await assertCanAddEmployees(rows.length);
 
   const payload = rows.map((row) => ({
     company_id: companyId,

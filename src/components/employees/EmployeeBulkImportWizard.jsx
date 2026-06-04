@@ -1,7 +1,12 @@
-import { useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { FileSpreadsheet, Loader2, Upload, X } from "lucide-react";
 import SlideOver from "./SlideOver.jsx";
 import { parseEmployeeSpreadsheet } from "../../utils/employeeBulkImport.js";
+import {
+  buildBulkImportLimitMessage,
+  canAddEmployeeCount,
+} from "../../utils/employeeLimitGuard.js";
+import { fetchEmployeeLimitContext } from "../../services/employeeLimitService.js";
 import { bulkCreateEmployees } from "../../services/employeesService.js";
 
 export default function EmployeeBulkImportWizard({ isOpen, onClose, onSuccess }) {
@@ -10,15 +15,21 @@ export default function EmployeeBulkImportWizard({ isOpen, onClose, onSuccess })
   const [previewCount, setPreviewCount] = useState(0);
   const [parsedRows, setParsedRows] = useState([]);
   const [error, setError] = useState("");
+  const [limitError, setLimitError] = useState("");
   const [isParsing, setIsParsing] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [sendInvites, setSendInvites] = useState(false);
+  const [limitContext, setLimitContext] = useState({
+    tier: "trial",
+    employeeCount: 0,
+  });
 
   const reset = () => {
     setFile(null);
     setPreviewCount(0);
     setParsedRows([]);
     setError("");
+    setLimitError("");
     setIsParsing(false);
     setIsImporting(false);
     setSendInvites(false);
@@ -30,10 +41,39 @@ export default function EmployeeBulkImportWizard({ isOpen, onClose, onSuccess })
     onClose();
   };
 
+  useEffect(() => {
+    if (!isOpen) return undefined;
+
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const ctx = await fetchEmployeeLimitContext();
+        if (!cancelled) setLimitContext(ctx);
+      } catch {
+        if (!cancelled) setLimitContext({ tier: "trial", employeeCount: 0 });
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen]);
+
+  const importBlocked = useMemo(() => {
+    if (!parsedRows.length) return false;
+    return !canAddEmployeeCount(
+      limitContext.employeeCount,
+      parsedRows.length,
+      limitContext.tier,
+    ).allowed;
+  }, [limitContext.employeeCount, limitContext.tier, parsedRows.length]);
+
   const handleFileChange = async (event) => {
     const selected = event.target.files?.[0] ?? null;
     setFile(selected);
     setError("");
+    setLimitError("");
     setPreviewCount(0);
     setParsedRows([]);
 
@@ -44,6 +84,13 @@ export default function EmployeeBulkImportWizard({ isOpen, onClose, onSuccess })
       const rows = await parseEmployeeSpreadsheet(selected);
       setParsedRows(rows);
       setPreviewCount(rows.length);
+      setLimitError(
+        buildBulkImportLimitMessage({
+          currentCount: limitContext.employeeCount,
+          importCount: rows.length,
+          tier: limitContext.tier,
+        }) ?? "",
+      );
     } catch (err) {
       setError(err.message || "تعذّر قراءة الملف.");
       setFile(null);
@@ -53,8 +100,22 @@ export default function EmployeeBulkImportWizard({ isOpen, onClose, onSuccess })
     }
   };
 
+  useEffect(() => {
+    if (!parsedRows.length) {
+      setLimitError("");
+      return;
+    }
+    setLimitError(
+      buildBulkImportLimitMessage({
+        currentCount: limitContext.employeeCount,
+        importCount: parsedRows.length,
+        tier: limitContext.tier,
+      }) ?? "",
+    );
+  }, [limitContext.employeeCount, limitContext.tier, parsedRows.length]);
+
   const handleImport = async () => {
-    if (!parsedRows.length || isImporting) return;
+    if (!parsedRows.length || isImporting || importBlocked) return;
 
     setIsImporting(true);
     setError("");
@@ -80,7 +141,9 @@ export default function EmployeeBulkImportWizard({ isOpen, onClose, onSuccess })
         <button
           type="button"
           onClick={handleImport}
-          disabled={!parsedRows.length || isImporting || isParsing}
+          disabled={
+            !parsedRows.length || isImporting || isParsing || importBlocked
+          }
           className="md-btn-primary w-full"
         >
           {isImporting ? "جاري الاستيراد..." : `استيراد ${previewCount || ""} موظف`}
@@ -137,6 +200,12 @@ export default function EmployeeBulkImportWizard({ isOpen, onClose, onSuccess })
               إرسال دعوات الدخول للبريد الإلكتروني (إن وُجد)
             </label>
           </div>
+        ) : null}
+
+        {limitError ? (
+          <p className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            {limitError}
+          </p>
         ) : null}
 
         {error ? (

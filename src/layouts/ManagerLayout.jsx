@@ -6,6 +6,7 @@ import {
   Calendar,
   CheckSquare,
   Fingerprint,
+  Gavel,
   Home,
   Lock,
   PanelLeftClose,
@@ -23,6 +24,7 @@ import {
   canAccessSettings,
   canEditEmployeeRecords,
   canManageEvents,
+  canManageAdministrativeActions,
   canViewPayroll,
   isOwner,
 } from "../utils/rbac.js";
@@ -76,6 +78,14 @@ export default function ManagerLayout() {
         to: "/dashboard/employees",
         label: "الموظفين",
         icon: Users,
+      });
+    }
+
+    if (canManageAdministrativeActions()) {
+      items.push({
+        to: "/dashboard/administrative-actions",
+        label: "الإجراءات الإدارية",
+        icon: Gavel,
       });
     }
 

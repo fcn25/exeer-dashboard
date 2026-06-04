@@ -12,6 +12,9 @@ import EventsPage from "./EventsPage.jsx";
 import PerformancePage from "./pages/PerformancePage.jsx";
 import PayrollPage from "./PayrollPage.jsx";
 import AttendancePage from "./pages/AttendancePage.jsx";
+import AdministrativeActionsPage from "./pages/AdministrativeActionsPage.jsx";
+import MobileAdministrativeActionsPage from "./pages/mobile/MobileAdministrativeActionsPage.jsx";
+import { AdministrativeActionsGate } from "./components/administrative/AdministrativeActionsGate.jsx";
 import MobileSubscriptionPage from "./pages/MobileSubscriptionPage.jsx";
 import { ProtectedRoute } from "./components/ProtectedRoute.jsx";
 import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
@@ -92,6 +95,14 @@ function DashboardRoutes() {
               >
                 <AttendancePage />
               </ProtectedRoute>
+            }
+          />
+          <Route
+            path="administrative-actions"
+            element={
+              <AdministrativeActionsGate>
+                <AdministrativeActionsPage />
+              </AdministrativeActionsGate>
             }
           />
           <Route path="performance" element={<PerformancePage />} />
@@ -184,6 +195,16 @@ function AppRoutes() {
         element={
           <ProtectedRoute allowPortal>
             <EmployeePortalPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/mobile/administrative-actions"
+        element={
+          <ProtectedRoute allowPortal>
+            <AdministrativeActionsGate>
+              <MobileAdministrativeActionsPage />
+            </AdministrativeActionsGate>
           </ProtectedRoute>
         }
       />

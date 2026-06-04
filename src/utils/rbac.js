@@ -3,6 +3,7 @@ import {
   isOwnerRole,
   normalizeAppRole,
 } from "../constants/roles.js";
+import { ADMINISTRATIVE_MASTER_LOG_ROLES } from "../constants/administrativeActions.js";
 
 export function getCurrentUserRole() {
   const user = getAuthUser();
@@ -63,6 +64,15 @@ export function canAccessPerformance() {
     hasPermission("can_edit_employees") ||
     hasPermission("can_view_payroll")
   );
+}
+
+/** Master log + issue actions: owner, Executive, HR — not Direct Manager */
+export function canManageAdministrativeActions() {
+  return ADMINISTRATIVE_MASTER_LOG_ROLES.has(getCurrentUserRole());
+}
+
+export function canViewAdministrativeActionsMasterLog() {
+  return canManageAdministrativeActions();
 }
 
 /** @deprecated Use isOwner */

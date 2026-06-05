@@ -7,6 +7,13 @@ export const STANDARD_ROLES = [
   "Employee",
 ];
 
+/**
+ * Role written to employees.role at company signup (employees_role_check).
+ * - Legacy DB: "Admin" (20250608000000_rbac_roles_permissions.sql)
+ * - After 20250619000000_owner_role.sql: use "owner" instead
+ */
+export const SIGNUP_OWNER_DB_ROLE = "Admin";
+
 export const CONFIGURABLE_ROLES = [
   "Executive",
   "HR_Manager",

@@ -1,11 +1,19 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const corsHeaders = {
+const corsHeaders: Record<string, string> = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-client-info, apikey, content-type, x-requested-with",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
+
+function jsonResponse(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
 
 const MANAGEMENT_ROLES = new Set([
   "owner",
@@ -180,7 +188,11 @@ async function resolveCallerContext(
     matchedRows[0];
 
   if (!caller || !MANAGEMENT_ROLES.has(String(caller.role ?? ""))) {
-    throw new Error("Forbidden: insufficient permissions for bulk import.");
+    const forbidden = new Error(
+      "Forbidden: insufficient permissions for bulk import.",
+    );
+    (forbidden as Error & { status?: number }).status = 403;
+    throw forbidden;
   }
 
   return { companyId, caller };
@@ -188,7 +200,11 @@ async function resolveCallerContext(
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { status: 200, headers: corsHeaders });
+  }
+
+  if (req.method !== "POST") {
+    return jsonResponse({ error: "Method not allowed" }, 405);
   }
 
   try {
@@ -197,15 +213,18 @@ Deno.serve(async (req) => {
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
 
     if (!supabaseUrl || !serviceRoleKey || !anonKey) {
-      throw new Error("Supabase environment is not configured.");
+      return jsonResponse(
+        {
+          error:
+            "Supabase environment is not configured. Deploy the function to Supabase or set SUPABASE_URL, SUPABASE_ANON_KEY, and SUPABASE_SERVICE_ROLE_KEY.",
+        },
+        500,
+      );
     }
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonResponse({ error: "Unauthorized" }, 401);
     }
 
     const userClient = createClient(supabaseUrl, anonKey, {
@@ -218,18 +237,20 @@ Deno.serve(async (req) => {
     } = await userClient.auth.getUser();
 
     if (userError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonResponse({ error: "Unauthorized" }, 401);
     }
 
-    const body = await req.json();
+    let body: Record<string, unknown> = {};
+    try {
+      body = (await req.json()) as Record<string, unknown>;
+    } catch {
+      return jsonResponse({ error: "Invalid JSON body" }, 400);
+    }
     const rows = Array.isArray(body.rows) ? body.rows : [];
     const sendInvites = Boolean(body.send_invites);
 
     if (rows.length === 0) {
-      throw new Error("No employee rows provided.");
+      return jsonResponse({ error: "No employee rows provided." }, 400);
     }
 
     const adminClient = createClient(supabaseUrl, serviceRoleKey, {
@@ -305,24 +326,21 @@ Deno.serve(async (req) => {
       }
     }
 
-    return new Response(
-      JSON.stringify({
-        imported: imported.length,
-        invitesSent,
-        invitesSkippedNoEmail,
-        rows: imported,
-        inviteErrors,
-      }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      },
-    );
+    return jsonResponse({
+      imported: imported.length,
+      invitesSent,
+      invitesSkippedNoEmail,
+      rows: imported,
+      inviteErrors,
+    });
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Bulk import failed.";
-    return new Response(JSON.stringify({ error: message }), {
-      status: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    const status =
+      error instanceof Error && "status" in error
+        ? Number((error as Error & { status?: number }).status) || 500
+        : 500;
+    console.error("bulk-import-employees error:", message, error);
+    return jsonResponse({ error: message }, status >= 400 && status < 600 ? status : 500);
   }
 });

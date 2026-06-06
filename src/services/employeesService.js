@@ -206,6 +206,23 @@ export async function createEmployee(form) {
   };
 }
 
+function mapBulkImportError(error, data) {
+  if (data?.error) return String(data.error);
+  if (error?.context?.body) {
+    try {
+      const parsed =
+        typeof error.context.body === "string"
+          ? JSON.parse(error.context.body)
+          : error.context.body;
+      if (parsed?.error) return String(parsed.error);
+    } catch {
+      // fall through
+    }
+  }
+  if (error?.message) return error.message;
+  return "تعذّر استيراد الموظفين. تأكد من نشر Edge Function: bulk-import-employees.";
+}
+
 export async function bulkCreateEmployees(rows, { sendInvites = false } = {}) {
   if (!Array.isArray(rows) || rows.length === 0) {
     throw new Error("لا توجد سجلات للاستيراد.");
@@ -224,15 +241,8 @@ export async function bulkCreateEmployees(rows, { sendInvites = false } = {}) {
     },
   );
 
-  if (error) {
-    throw new Error(
-      error.message ||
-        "تعذّر استيراد الموظفين. تأكد من نشر Edge Function: bulk-import-employees.",
-    );
-  }
-
-  if (data?.error) {
-    throw new Error(String(data.error));
+  if (error || data?.error) {
+    throw new Error(mapBulkImportError(error, data));
   }
 
   return {

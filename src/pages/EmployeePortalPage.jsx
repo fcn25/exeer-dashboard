@@ -10,14 +10,9 @@ import {
   Plus,
   Star,
   Trophy,
-  Gavel,
-  ChevronLeft,
-  BarChart3,
 } from "lucide-react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
-import { useTranslation } from "react-i18next";
+import { useNavigate, useLocation } from "react-router-dom";
 import LogAchievementModal from "../components/achievements/LogAchievementModal.jsx";
-import MobileHeader from "../components/mobile/MobileHeader.jsx";
 import NewRequestSlideover from "../components/portal/NewRequestSlideover.jsx";
 import PendingEvaluationsSection from "../components/portal/PendingEvaluationsSection.jsx";
 import PersonalMentorCard from "../components/portal/PersonalMentorCard.jsx";
@@ -32,18 +27,13 @@ import {
 } from "../services/requestsService.js";
 import { updateTaskStatus } from "../services/tasksService.js";
 import { useAuth } from "../context/AuthContext.jsx";
-import EmployeeProfileSummary from "../components/employees/EmployeeProfileSummary.jsx";
 import EmployeeAdministrativeInbox from "../components/administrative/EmployeeAdministrativeInbox.jsx";
-import {
-  canAccessPerformance,
-  canManageAdministrativeActions,
-} from "../utils/rbac.js";
 import { formatDisplayValue } from "../utils/displayValue.js";
 import { formatPortalDate, getTimeBasedGreeting } from "../utils/portalGreeting.js";
 import { signOut } from "../utils/mobileAuth.js";
 import { ensureArray } from "../utils/ensureArray.js";
-import MobileLoadingState from "../components/mobile/MobileLoadingState.jsx";
-import AttendanceDashboardWidget from "../components/attendance/mobile/AttendanceDashboardWidget.jsx";
+import AdminMobileDashboard from "../components/mobile/dashboard/AdminMobileDashboard.jsx";
+import EmployeeMobileDashboard from "../components/mobile/dashboard/EmployeeMobileDashboard.jsx";
 
 function StatCard({ icon: Icon, value, label, accent = "text-exeer-primary" }) {
   return (
@@ -157,11 +147,12 @@ function AchievementTimelineItem({ item }) {
 export default function EmployeePortalPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { i18n } = useTranslation();
+  const { user, isDashboardUser, isMobile, role } = useAuth();
   const isMobileSelfService = location.pathname === "/mobile";
-  const pageDir = i18n.language?.startsWith("en") ? "ltr" : "rtl";
-  const pageLang = i18n.language?.startsWith("en") ? "en" : "ar";
-  const { user } = useAuth();
+  const isMobileEmployeePortal =
+    isMobile && location.pathname === "/employee-portal";
+  const useCompactMobileDashboard =
+    isMobileSelfService || isMobileEmployeePortal;
   const employeeId = user?.employee_id;
 
   const [isLoading, setIsLoading] = useState(true);
@@ -198,8 +189,10 @@ export default function EmployeePortalPage() {
   }, [employeeId]);
 
   useEffect(() => {
-    loadPortal();
-  }, [loadPortal]);
+    if (!useCompactMobileDashboard) {
+      loadPortal();
+    }
+  }, [loadPortal, useCompactMobileDashboard]);
 
   const handleTaskStatusChange = async (taskId, status) => {
     setUpdatingTaskId(taskId);
@@ -234,55 +227,77 @@ export default function EmployeePortalPage() {
         suffix: "يوم",
       });
   const greeting = getTimeBasedGreeting();
-  const showMobileBootstrapLoader =
-    isMobileSelfService && isLoading && snapshot == null && !error;
+
+  if (useCompactMobileDashboard) {
+    const dashboardProps = {
+      employeeName: user?.name ?? employeeName,
+      profileImageUrl,
+      role,
+    };
+
+    return (
+      <>
+        {isDashboardUser ? (
+          <AdminMobileDashboard {...dashboardProps} />
+        ) : (
+          <EmployeeMobileDashboard
+            {...dashboardProps}
+            onNewRequest={() => setIsRequestOpen(true)}
+            onAddAchievement={() => setIsAchievementOpen(true)}
+          />
+        )}
+
+        <NewRequestSlideover
+          isOpen={isRequestOpen}
+          onClose={() => setIsRequestOpen(false)}
+          employeeId={employeeId}
+          onSuccess={() => setSuccessToast("تم إرسال الطلب بنجاح (تجريبي)")}
+        />
+
+        <LogAchievementModal
+          isOpen={isAchievementOpen}
+          onClose={() => setIsAchievementOpen(false)}
+          employeeId={employeeId}
+          employeeName={dashboardProps.employeeName}
+          onSuccess={() => setSuccessToast("تم تسجيل الإنجاز بنجاح (تجريبي)")}
+        />
+
+        <SuccessToast
+          message={successToast}
+          onDismiss={() => setSuccessToast("")}
+        />
+      </>
+    );
+  }
 
   return (
     <div
-      dir={isMobileSelfService ? pageDir : "rtl"}
-      lang={isMobileSelfService ? pageLang : "ar"}
-      className={`min-h-screen bg-md-surface-dim font-sans text-exeer-primary ${
-        isMobileSelfService ? "mx-auto w-full max-w-[480px]" : ""
-      }`}
+      dir="rtl"
+      lang="ar"
+      className="min-h-screen bg-md-surface-dim font-sans text-exeer-primary"
     >
-      {isMobileSelfService ? (
-        <MobileHeader
-          userId={user?.id}
-          employeeName={employeeName}
-          profileImageUrl={profileImageUrl}
-        />
-      ) : (
-        <header className="border-b border-exeer-border bg-md-surface/90 backdrop-blur-sm">
-          <div className="mx-auto flex flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-6 max-w-7xl lg:px-8">
-            <div className="space-y-1">
-              <p className="text-xs font-medium uppercase tracking-wide text-exeer-muted">
-                الخدمة الذاتية
-              </p>
-              <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-                {greeting}، {employeeName}
-              </h1>
-            </div>
-            <button
-              type="button"
-              onClick={handleSignOut}
-              className="md-btn-tonal inline-flex items-center gap-2"
-            >
-              <LogOut className="h-4 w-4" aria-hidden />
-              تسجيل الخروج
-            </button>
+      <header className="border-b border-exeer-border bg-md-surface/90 backdrop-blur-sm">
+        <div className="mx-auto flex flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-6 max-w-7xl lg:px-8">
+          <div className="space-y-1">
+            <p className="text-xs font-medium uppercase tracking-wide text-exeer-muted">
+              الخدمة الذاتية
+            </p>
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+              {greeting}، {employeeName}
+            </h1>
           </div>
-        </header>
-      )}
+          <button
+            type="button"
+            onClick={handleSignOut}
+            className="md-btn-tonal inline-flex items-center gap-2"
+          >
+            <LogOut className="h-4 w-4" aria-hidden />
+            تسجيل الخروج
+          </button>
+        </div>
+      </header>
 
-      <main
-        className={`mx-auto space-y-8 px-4 py-8 sm:px-6 ${
-          isMobileSelfService ? "max-w-[480px]" : "max-w-7xl lg:px-8"
-        }`}
-      >
-        {showMobileBootstrapLoader ? (
-          <MobileLoadingState label="جاري تحميل بوابة الموظف..." />
-        ) : (
-        <>
+      <main className="mx-auto max-w-7xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
         <section className="md-surface flex flex-col gap-4 p-6 md:flex-row md:items-center md:justify-between md:p-7">
           <div className="flex items-start gap-4">
             <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-md bg-exeer-surface text-exeer-primary">
@@ -325,57 +340,6 @@ export default function EmployeePortalPage() {
           />
         </section>
 
-        {isMobileSelfService ? (
-          <section aria-label="الحضور والبصمة">
-            <AttendanceDashboardWidget />
-          </section>
-        ) : null}
-
-        {isMobileSelfService && canManageAdministrativeActions() ? (
-          <Link
-            to="/mobile/administrative-actions"
-            className="flex items-center gap-3 rounded-md border border-gray-200 bg-white px-4 py-3.5 text-slate-900 shadow-none transition-colors hover:bg-gray-50"
-          >
-            <span className="flex h-10 w-10 items-center justify-center rounded-md bg-gray-100 text-slate-700">
-              <Gavel className="h-5 w-5" aria-hidden />
-            </span>
-            <span className="flex-1">
-              <span className="block text-sm font-bold">الإجراءات الإدارية</span>
-              <span className="block text-xs text-slate-500">
-                إصدار إجراء أو مراجعة السجل
-              </span>
-            </span>
-            <ChevronLeft className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
-          </Link>
-        ) : null}
-
-        {isMobileSelfService && canAccessPerformance() ? (
-          <Link
-            to="/mobile/performance"
-            className="flex min-h-[56px] items-center gap-3 rounded-md border border-gray-200 bg-white px-4 py-3.5 text-slate-900 shadow-none transition-colors hover:bg-gray-50"
-          >
-            <span className="flex h-10 w-10 items-center justify-center rounded-md bg-gray-100 text-slate-700">
-              <BarChart3 className="h-5 w-5" aria-hidden />
-            </span>
-            <span className="flex-1">
-              <span className="block text-sm font-bold">قياس الأداء</span>
-              <span className="block text-xs text-slate-500">
-                الملخص التنفيذي، الدورات، وإطلاق التقييم
-              </span>
-            </span>
-            <ChevronLeft className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
-          </Link>
-        ) : null}
-
-        {isMobileSelfService ? (
-          <SectionShell title="ملفي الشخصي" subtitle="بياناتك من سجل الموارد البشرية">
-            <EmployeeProfileSummary
-              employee={snapshot?.employee}
-              isLoading={isLoading}
-            />
-          </SectionShell>
-        ) : null}
-
         {employeeId ? (
           <SectionShell
             title="سجلاتي الإدارية"
@@ -385,16 +349,9 @@ export default function EmployeePortalPage() {
           </SectionShell>
         ) : null}
 
-        <div
-          className={`grid grid-cols-1 gap-8 ${
-            isMobileSelfService ? "" : "xl:grid-cols-12"
-          }`}
-        >
-          <div className={`space-y-8 ${isMobileSelfService ? "" : "xl:col-span-7"}`}>
-            <SectionShell
-              title="مهامي"
-              subtitle="المهام المُسندة إليك"
-            >
+        <div className="grid grid-cols-1 gap-8 xl:grid-cols-12">
+          <div className="space-y-8 xl:col-span-7">
+            <SectionShell title="مهامي" subtitle="المهام المُسندة إليك">
               {isLoading ? (
                 <div className="md-surface-muted px-4 py-8 text-center text-sm text-exeer-muted">
                   جاري التحميل...
@@ -403,15 +360,15 @@ export default function EmployeePortalPage() {
                 <div className="grid gap-4">
                   {ensureArray(snapshot?.tasks).map((task) =>
                     task?.id != null ? (
-                    <PortalTaskCard
-                      key={task.id}
-                      task={{
-                        ...task,
-                        title: task?.title || task?.description?.slice(0, 80),
-                      }}
-                      onStatusChange={handleTaskStatusChange}
-                      isUpdating={updatingTaskId === task.id}
-                    />
+                      <PortalTaskCard
+                        key={task.id}
+                        task={{
+                          ...task,
+                          title: task?.title || task?.description?.slice(0, 80),
+                        }}
+                        onStatusChange={handleTaskStatusChange}
+                        isUpdating={updatingTaskId === task.id}
+                      />
                     ) : null,
                   )}
                 </div>
@@ -465,7 +422,7 @@ export default function EmployeePortalPage() {
             </SectionShell>
           </div>
 
-          <div className={`space-y-8 ${isMobileSelfService ? "" : "xl:col-span-5"}`}>
+          <div className="space-y-8 xl:col-span-5">
             <SectionShell
               title="الطلبات"
               subtitle="تقديم ومتابعة طلباتك"
@@ -534,8 +491,6 @@ export default function EmployeePortalPage() {
             <PersonalMentorCard employeeId={employeeId} />
           </div>
         </div>
-        </>
-        )}
       </main>
 
       <NewRequestSlideover

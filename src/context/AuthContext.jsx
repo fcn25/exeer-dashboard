@@ -129,13 +129,21 @@ export function AuthProvider({ children, onSignedOut }) {
         if (session) {
           if (!bootstrapCompleteRef.current) return;
 
-          setIsBootstrapping(true);
+          const silentHydrate =
+            event === "SIGNED_IN" || event === "TOKEN_REFRESHED";
+
+          if (!silentHydrate) {
+            setIsBootstrapping(true);
+          }
+
           try {
             await hydrateSession(session);
           } catch (error) {
             console.error("Auth state hydration failed:", error);
           } finally {
-            if (!cancelled) setIsBootstrapping(false);
+            if (!cancelled && !silentHydrate) {
+              setIsBootstrapping(false);
+            }
           }
           return;
         }

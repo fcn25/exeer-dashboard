@@ -75,21 +75,44 @@ export const PERMISSION_DEFINITIONS = [
   { key: "can_access_employee_profile", label: "الوصول لملف الموظف" },
 ];
 
+const ROLE_ALIASES = {
+  admin: "owner",
+  owner: "owner",
+  executive: "Executive",
+  executive_manager: "Executive",
+  hr_manager: "HR_Manager",
+  hr_assistant: "HR_Assistant",
+  direct_manager: "Direct_Manager",
+  employee: "Employee",
+};
+
+export function isManagementRole(role) {
+  return DASHBOARD_ROLES.has(normalizeAppRole(role));
+}
+
 export function isDashboardRole(role) {
-  return DASHBOARD_ROLES.has(String(role ?? "").trim());
+  return isManagementRole(role);
 }
 
 export function isPortalRole(role) {
-  return PORTAL_ROLES.has(String(role ?? "").trim());
+  return PORTAL_ROLES.has(normalizeAppRole(role));
 }
 
 export function getHomePathForRole(role) {
-  return isDashboardRole(role) ? "/dashboard" : "/employee-portal";
+  return isManagementRole(role) ? "/dashboard" : "/employee-portal";
 }
 
+/**
+ * Post-login redirect (Rule A: management → /dashboard or /mobile; Rule B: employee → /employee-portal).
+ */
 export function getAuthenticatedHomePath(role, isMobile = false) {
-  if (isMobile) return "/mobile";
-  return getHomePathForRole(role);
+  const normalizedRole = normalizeAppRole(role);
+
+  if (isManagementRole(normalizedRole)) {
+    return isMobile ? "/mobile" : "/dashboard";
+  }
+
+  return "/employee-portal";
 }
 
 export function normalizePermissions(value) {
@@ -122,8 +145,18 @@ export function normalizeAssignedEmployeeIds(value) {
 
 export function normalizeAppRole(role) {
   const trimmed = String(role ?? "").trim();
-  if (trimmed === "Admin" || trimmed === "admin") return "owner";
-  return trimmed || "Employee";
+  if (!trimmed) return "Employee";
+
+  if (trimmed === "Admin") return "owner";
+
+  const alias = ROLE_ALIASES[trimmed.toLowerCase()];
+  if (alias) return alias;
+
+  if (DASHBOARD_ROLES.has(trimmed) || PORTAL_ROLES.has(trimmed)) {
+    return trimmed;
+  }
+
+  return trimmed;
 }
 
 export function isOwnerRole(role) {

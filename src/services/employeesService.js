@@ -214,8 +214,22 @@ export async function bulkCreateEmployees(rows, { sendInvites = false } = {}) {
   await assertCanAddEmployees(rows.length);
   const companyId = getCompanyId();
 
+  const { data: lastEmp } = await supabase
+    .from("employees")
+    .select("employee_number")
+    .eq("company_id", companyId)
+    .not("employee_number", "is", null)
+    .order("employee_number", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const lastNum = parseInt(
+    lastEmp?.employee_number?.replace(/\D/g, "") || "0",
+    10,
+  );
+
   const payload = rows
-    .map((row) => ({
+    .map((row, index) => ({
       company_id: companyId,
       full_name: String(row.full_name ?? "").trim(),
       email: String(row.email ?? "").trim().toLowerCase() || null,
@@ -225,7 +239,9 @@ export async function bulkCreateEmployees(rows, { sendInvites = false } = {}) {
       nationality: String(row.nationality ?? "").trim() || null,
       id_number: row.id_number ? Number(row.id_number) : null,
       national_address: String(row.national_address ?? "").trim() || null,
-      employee_number: String(row.employee_number ?? "").trim() || null,
+      employee_number:
+        String(row.employee_number ?? "").trim() ||
+        `EMP-${String(lastNum + index + 1).padStart(3, "0")}`,
       hire_date: row.hire_date || null,
       contract_type: row.contract_type || "دوام كامل",
       employment_status: row.employment_status || "نشط",

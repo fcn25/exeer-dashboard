@@ -1,7 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Download, Loader2, Upload, UploadCloud, X } from "lucide-react";
 import SlideOver from "./SlideOver.jsx";
-import { parseEmployeeSpreadsheet } from "../../utils/employeeBulkImport.js";
+import {
+  EMPLOYEE_IMPORT_TEMPLATE_COLUMNS_AR,
+  EMPLOYEE_IMPORT_TEMPLATE_FILE,
+  parseEmployeeSpreadsheet,
+} from "../../utils/employeeBulkImport.js";
 import {
   buildBulkImportLimitMessage,
   canAddEmployeeCount,
@@ -161,12 +165,12 @@ export default function BulkImportModal({ isOpen, onClose, onSuccess }) {
               اسحب الملف أو اختر من جهازك
             </p>
             <p className="text-xs text-exeer-muted">
-              .xlsx · .xls · .csv — يتطلب عمود الاسم الكامل
+              .xlsx · .xls · .csv — استخدم نموذج {EMPLOYEE_IMPORT_TEMPLATE_FILE}
             </p>
           </div>
           <a
-            href="/ListEmployeeExeer.csv"
-            download="ListEmployeeExeer.csv"
+            href={`/${EMPLOYEE_IMPORT_TEMPLATE_FILE}`}
+            download={EMPLOYEE_IMPORT_TEMPLATE_FILE}
             className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-600 transition-colors hover:text-blue-700 hover:underline"
           >
             <Download className="h-4 w-4 shrink-0" aria-hidden />
@@ -226,10 +230,16 @@ export default function BulkImportModal({ isOpen, onClose, onSuccess }) {
         ) : null}
 
         <div className="text-xs leading-relaxed text-exeer-muted">
-          <p className="font-semibold text-exeer-primary">الأعمدة المدعومة:</p>
-          <p className="mt-1">
-            الاسم الكامل، البريد الإلكتروني، الجوال، القسم، المسمى الوظيفي، رقم
-            الموظف
+          <p className="font-semibold text-exeer-primary">
+            أعمدة نموذج {EMPLOYEE_IMPORT_TEMPLATE_FILE}:
+          </p>
+          <ul className="mt-2 list-inside list-disc space-y-0.5">
+            {EMPLOYEE_IMPORT_TEMPLATE_COLUMNS_AR.map((column) => (
+              <li key={column}>{column}</li>
+            ))}
+          </ul>
+          <p className="mt-2">
+            يُربط موقع العمل تلقائياً باسم الفرع إن وُجد في إعدادات البصمة.
           </p>
         </div>
       </div>

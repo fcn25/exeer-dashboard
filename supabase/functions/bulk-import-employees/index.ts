@@ -16,6 +16,15 @@ const MANAGEMENT_ROLES = new Set([
   "Direct_Manager",
 ]);
 
+const ALLOWED_EMPLOYEE_ROLES = new Set([
+  "owner",
+  "Executive",
+  "HR_Manager",
+  "HR_Assistant",
+  "Direct_Manager",
+  "Employee",
+]);
+
 type ImportRow = {
   full_name?: string;
   email?: string | null;
@@ -27,14 +36,71 @@ type ImportRow = {
   employment_status?: string | null;
   contract_type?: string | null;
   gender?: string | null;
+  date_of_birth?: string | null;
+  nationality?: string | null;
+  id_number?: number | null;
+  national_address?: string | null;
+  hire_date?: string | null;
+  iban?: string | null;
+  leave_balance?: number | null;
+  work_location_name?: string | null;
+  direct_manager_name?: string | null;
   basic_salary?: number | null;
   housing_allowance?: number | null;
   other_allowance?: number | null;
 };
 
-function mapRowToEmployeePayload(companyId: number, row: ImportRow) {
+function normalizeImportRole(role: unknown) {
+  const raw = String(role ?? "").trim();
+  if (!raw) return "Employee";
+
+  const lower = raw.toLowerCase();
+  if (lower === "manager" || lower === "department head") {
+    return "Direct_Manager";
+  }
+  if (lower === "admin") return "owner";
+
+  if (ALLOWED_EMPLOYEE_ROLES.has(raw)) return raw;
+
+  return "Employee";
+}
+
+async function resolveWorkLocationId(
+  adminClient: ReturnType<typeof createClient>,
+  companyId: number,
+  workLocationName: unknown,
+) {
+  const name = String(workLocationName ?? "").trim();
+  if (!name) return null;
+
+  const { data, error } = await adminClient
+    .from("company_branches")
+    .select("id, name")
+    .eq("company_id", companyId);
+
+  if (error) return null;
+
+  const match = (data ?? []).find(
+    (branch) => String(branch.name ?? "").trim().toLowerCase() === name.toLowerCase(),
+  );
+
+  return match?.id ?? null;
+}
+
+async function mapRowToEmployeePayload(
+  adminClient: ReturnType<typeof createClient>,
+  companyId: number,
+  row: ImportRow,
+) {
   const fullName = String(row.full_name ?? "").trim();
   if (!fullName) return null;
+
+  const role = normalizeImportRole(row.role);
+  const workLocationId = await resolveWorkLocationId(
+    adminClient,
+    companyId,
+    row.work_location_name,
+  );
 
   return {
     company_id: companyId,
@@ -44,10 +110,19 @@ function mapRowToEmployeePayload(companyId: number, row: ImportRow) {
     department: String(row.department ?? "").trim() || null,
     job_title_name: String(row.job_title_name ?? "").trim() || null,
     employee_number: String(row.employee_number ?? "").trim() || null,
-    role: String(row.role ?? "Employee").trim() || "Employee",
+    role,
     employment_status: String(row.employment_status ?? "نشط").trim() || "نشط",
     contract_type: String(row.contract_type ?? "دوام كامل").trim() || "دوام كامل",
     gender: String(row.gender ?? "ذكر").trim() || "ذكر",
+    date_of_birth: row.date_of_birth || null,
+    nationality: String(row.nationality ?? "").trim() || null,
+    id_number: Number.isFinite(Number(row.id_number)) ? Number(row.id_number) : null,
+    national_address: String(row.national_address ?? "").trim() || null,
+    hire_date: row.hire_date || null,
+    iban: String(row.iban ?? "").trim() || null,
+    leave_balance: Number(row.leave_balance) || 0,
+    direct_manager_name: String(row.direct_manager_name ?? "").trim() || null,
+    work_location_id: workLocationId,
     basic_salary: Number(row.basic_salary) || 0,
     housing_allowance: Number(row.housing_allowance) || 0,
     other_allowance: Number(row.other_allowance) || 0,
@@ -163,7 +238,7 @@ Deno.serve(async (req) => {
     const inviteErrors: string[] = [];
 
     for (const row of rows) {
-      const payload = mapRowToEmployeePayload(companyId, row);
+      const payload = await mapRowToEmployeePayload(adminClient, companyId, row);
       if (!payload) continue;
 
       const email = payload.email;
@@ -175,7 +250,7 @@ Deno.serve(async (req) => {
             data: {
               full_name: payload.full_name,
               company_id: companyId,
-              role: "Employee",
+              role: payload.role,
             },
             redirectTo,
           });
@@ -205,7 +280,7 @@ Deno.serve(async (req) => {
           user_metadata: {
             full_name: employee.full_name,
             company_id: companyId,
-            role: "Employee",
+            role: payload.role,
             employee_id: employee.id,
           },
         });

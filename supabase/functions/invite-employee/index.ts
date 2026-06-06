@@ -21,21 +21,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return jsonResponse({ error: "Unauthorized" }, 401);
-    }
-
-    const userClient = createClient(supabaseUrl, anonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
-
-    const {
-      data: { user },
-      error: userError,
-    } = await userClient.auth.getUser();
-
-    if (userError || !user) {
+    const apiKey = req.headers.get("apikey") ?? "";
+    if (!apiKey || apiKey !== anonKey) {
       return jsonResponse({ error: "Unauthorized" }, 401);
     }
 

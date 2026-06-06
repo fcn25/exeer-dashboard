@@ -6,6 +6,9 @@ import "./index.css";
 import App from "./App.jsx";
 import i18n from "./i18n/index.js";
 import { ThemeProvider } from "./providers/ThemeProvider.jsx";
+import { bootstrapNativeAppShell } from "./utils/nativeAppShell.js";
+
+bootstrapNativeAppShell();
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>

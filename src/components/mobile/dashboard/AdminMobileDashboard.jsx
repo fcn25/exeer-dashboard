@@ -66,7 +66,7 @@ export default function AdminMobileDashboard({
     <div
       dir={pageDir}
       lang={pageLang}
-      className="mx-auto min-h-screen w-full max-w-[480px] bg-gray-50/80 pb-28 font-sans text-exeer-primary"
+      className="native-mobile-shell native-mobile-shell--tabbed mx-auto min-h-screen w-full max-w-[480px] bg-gray-50/80 font-sans text-exeer-primary"
     >
       <CompactMobileAppBar
         employeeName={displayName}

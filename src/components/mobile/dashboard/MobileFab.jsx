@@ -12,7 +12,7 @@ export default function MobileFab({ isOpen, onToggle, actions, onAction }) {
         />
       ) : null}
 
-      <div className="fixed bottom-6 start-6 z-50 flex flex-col items-start gap-3">
+      <div className="native-safe-fixed-bottom fixed start-6 z-50 flex flex-col items-start gap-3">
         {isOpen ? (
           <div
             className="w-[min(280px,calc(100vw-3rem))] overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-md"

@@ -300,6 +300,9 @@ export async function bulkCreateEmployees(rows, { sendInvites = false } = {}) {
 export async function listEmployeesWithoutAuthAccount() {
   const { data, error } = await supabase.rpc(
     "list_employees_without_auth_account",
+    {
+      p_company_id: getCompanyId(),
+    },
   );
 
   if (error) throw new Error(mapDbError(error));

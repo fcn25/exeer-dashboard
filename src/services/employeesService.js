@@ -238,6 +238,7 @@ export async function bulkCreateEmployees(rows, { sendInvites = false } = {}) {
   return {
     imported: Number(data?.imported) || 0,
     invitesSent: Number(data?.invitesSent) || 0,
+    invitesSkippedNoEmail: Number(data?.invitesSkippedNoEmail) || 0,
     rows: data?.rows ?? [],
     inviteErrors: data?.inviteErrors ?? [],
   };

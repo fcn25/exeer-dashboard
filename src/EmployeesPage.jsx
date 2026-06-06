@@ -787,6 +787,10 @@ export default function EmployeesPage() {
               result.invitesSent
                 ? ` · أُرسلت ${result.invitesSent} دعوة`
                 : ""
+            }${
+              result.invitesSkippedNoEmail
+                ? ` · تُركت ${result.invitesSkippedNoEmail} بدون دعوة (بريد غير متوفر)`
+                : ""
             }`,
           )
         }

@@ -16,6 +16,17 @@ const MANAGEMENT_ROLES = new Set([
   "Direct_Manager",
 ]);
 
+function isValidInviteEmail(email: unknown): email is string {
+  const normalized = String(email ?? "").trim().toLowerCase();
+  if (!normalized) return false;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized);
+}
+
+function normalizeInviteEmail(email: unknown) {
+  const normalized = String(email ?? "").trim().toLowerCase();
+  return isValidInviteEmail(normalized) ? normalized : null;
+}
+
 const ALLOWED_EMPLOYEE_ROLES = new Set([
   "owner",
   "Executive",
@@ -105,7 +116,7 @@ async function mapRowToEmployeePayload(
   return {
     company_id: companyId,
     full_name: fullName,
-    email: String(row.email ?? "").trim().toLowerCase() || null,
+    email: normalizeInviteEmail(row.email),
     phone_number: String(row.phone_number ?? "").trim() || null,
     department: String(row.department ?? "").trim() || null,
     job_title_name: String(row.job_title_name ?? "").trim() || null,
@@ -235,6 +246,7 @@ Deno.serve(async (req) => {
     const imported: Array<{ id: number; full_name: string; email: string | null }> =
       [];
     let invitesSent = 0;
+    let invitesSkippedNoEmail = 0;
     const inviteErrors: string[] = [];
 
     for (const row of rows) {
@@ -244,22 +256,28 @@ Deno.serve(async (req) => {
       const email = payload.email;
       let authUserId: string | null = null;
 
-      if (sendInvites && email) {
-        const { data: inviteData, error: inviteError } =
-          await adminClient.auth.admin.inviteUserByEmail(email, {
-            data: {
-              full_name: payload.full_name,
-              company_id: companyId,
-              role: payload.role,
-            },
-            redirectTo,
-          });
-
-        if (inviteError) {
-          inviteErrors.push(`${email}: ${inviteError.message}`);
+      if (sendInvites) {
+        if (!isValidInviteEmail(email)) {
+          invitesSkippedNoEmail += 1;
         } else {
-          authUserId = inviteData.user?.id ?? null;
-          invitesSent += 1;
+          const { data: inviteData, error: inviteError } =
+            await adminClient.auth.admin.inviteUserByEmail(email, {
+              data: {
+                full_name: payload.full_name,
+                company_id: companyId,
+                role: payload.role,
+              },
+              redirectTo,
+            });
+
+          if (inviteError) {
+            inviteErrors.push(
+              `${payload.full_name} (${email}): ${inviteError.message}`,
+            );
+          } else {
+            authUserId = inviteData.user?.id ?? null;
+            invitesSent += 1;
+          }
         }
       }
 
@@ -291,6 +309,7 @@ Deno.serve(async (req) => {
       JSON.stringify({
         imported: imported.length,
         invitesSent,
+        invitesSkippedNoEmail,
         rows: imported,
         inviteErrors,
       }),

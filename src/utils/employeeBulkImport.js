@@ -35,7 +35,15 @@ const HEADER_ALIASES = {
     "الاسم الكامل",
     "اسم الموظف",
   ],
-  email: ["email", "e-mail", "البريد", "البريد الإلكتروني"],
+  email: [
+    "email",
+    "e-mail",
+    "e mail",
+    "البريد",
+    "البريد الإلكتروني",
+    "البريد الالكتروني",
+    "البريد الالكترونى",
+  ],
   phone_number: ["phone", "phone_number", "mobile", "الجوال", "رقم الجوال"],
   gender: ["gender", "الجنس"],
   date_of_birth: ["date_of_birth", "dob", "تاريخ الميلاد"],
@@ -96,7 +104,27 @@ function normalizeHeader(value) {
   return String(value ?? "")
     .trim()
     .toLowerCase()
-    .replace(/\s+/g, " ");
+    .replace(/\s+/g, " ")
+    .replace(/[إأآا]/g, "ا")
+    .replace(/ى/g, "ي")
+    .replace(/ة/g, "ه");
+}
+
+function isRowEmpty(row) {
+  if (!Array.isArray(row)) return true;
+  return !row.some((cell) => String(cell ?? "").trim() !== "");
+}
+
+export function isValidEmployeeEmail(value) {
+  const email = String(value ?? "").trim().toLowerCase();
+  if (!email) return false;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function normalizeEmployeeEmail(value) {
+  const email = String(value ?? "").trim().toLowerCase();
+  if (!isValidEmployeeEmail(email)) return null;
+  return email;
 }
 
 function resolveColumnKey(header) {
@@ -171,7 +199,7 @@ function rowToEmployee(row, columnMap) {
 
   return {
     full_name: record.full_name,
-    email: record.email || null,
+    email: normalizeEmployeeEmail(record.email),
     phone_number: record.phone_number || null,
     gender: record.gender || "ذكر",
     date_of_birth: parseSpreadsheetDate(record.date_of_birth),
@@ -224,6 +252,7 @@ export async function parseEmployeeSpreadsheet(file) {
 
   const employees = [];
   for (let i = 1; i < rows.length; i += 1) {
+    if (isRowEmpty(rows[i])) continue;
     const mapped = rowToEmployee(rows[i], columnMap);
     if (mapped) employees.push(mapped);
   }

@@ -4,6 +4,7 @@ import SlideOver from "./SlideOver.jsx";
 import {
   EMPLOYEE_IMPORT_TEMPLATE_COLUMNS_AR,
   EMPLOYEE_IMPORT_TEMPLATE_FILE,
+  isValidEmployeeEmail,
   parseEmployeeSpreadsheet,
 } from "../../utils/employeeBulkImport.js";
 import {
@@ -72,6 +73,11 @@ export default function BulkImportModal({ isOpen, onClose, onSuccess }) {
       limitContext.tier,
     ).allowed;
   }, [limitContext.employeeCount, limitContext.tier, parsedRows.length]);
+
+  const rowsMissingEmail = useMemo(
+    () => parsedRows.filter((row) => !isValidEmployeeEmail(row.email)).length,
+    [parsedRows],
+  );
 
   const handleFileChange = async (event) => {
     const selected = event.target.files?.[0] ?? null;
@@ -213,6 +219,12 @@ export default function BulkImportModal({ isOpen, onClose, onSuccess }) {
               />
               إرسال دعوات الدخول للبريد الإلكتروني (إن وُجد)
             </label>
+            {sendInvites && rowsMissingEmail > 0 ? (
+              <p className="text-xs text-amber-800">
+                {rowsMissingEmail} موظف بدون بريد صالح — سيُستوردون دون دعوة
+                دخول.
+              </p>
+            ) : null}
           </div>
         ) : null}
 

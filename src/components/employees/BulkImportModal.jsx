@@ -250,9 +250,6 @@ export default function BulkImportModal({ isOpen, onClose, onSuccess }) {
               <li key={column}>{column}</li>
             ))}
           </ul>
-          <p className="mt-2">
-            يُربط موقع العمل تلقائياً باسم الفرع إن وُجد في إعدادات البصمة.
-          </p>
         </div>
       </div>
     </SlideOver>

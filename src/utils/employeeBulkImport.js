@@ -1,29 +1,15 @@
 import * as XLSX from "xlsx";
 import { normalizeAppRole } from "../constants/roles.js";
 
-/** Matches public/ListEmployeeExeer.csv */
+/** Canonical template: public/ListEmployeeExeer.csv */
 export const EMPLOYEE_IMPORT_TEMPLATE_FILE = "ListEmployeeExeer.csv";
 
 export const EMPLOYEE_IMPORT_TEMPLATE_COLUMNS_AR = [
   "الاسم الكامل (full_name)",
   "البريد الإلكتروني (email)",
   "الجوال (phone_number)",
-  "الجنس (gender)",
-  "تاريخ الميلاد (date_of_birth)",
-  "الجنسية (nationality)",
-  "رقم الهوية (id_number)",
-  "العنوان الوطني (national_address)",
-  "تاريخ التعيين (hire_date)",
-  "نوع العقد (contract_type)",
-  "الراتب الأساسي (basic_salary)",
-  "بدل السكن (housing_allowance)",
-  "الآيبان (iban)",
-  "رصيد الإجازات (leave_balance)",
-  "القسم (department_name)",
   "المسمى الوظيفي (job_title_name)",
-  "موقع العمل (work_location_name)",
-  "المدير المباشر (direct_manager_name)",
-  "الدور (role)",
+  "رقم الموظف (employee_number / employee_id)",
 ];
 
 const HEADER_ALIASES = {
@@ -31,6 +17,7 @@ const HEADER_ALIASES = {
     "full_name",
     "fullname",
     "name",
+    "full name",
     "الاسم",
     "الاسم الكامل",
     "اسم الموظف",
@@ -44,51 +31,30 @@ const HEADER_ALIASES = {
     "البريد الالكتروني",
     "البريد الالكترونى",
   ],
-  phone_number: ["phone", "phone_number", "mobile", "الجوال", "رقم الجوال"],
-  gender: ["gender", "الجنس"],
-  date_of_birth: ["date_of_birth", "dob", "تاريخ الميلاد"],
-  nationality: ["nationality", "الجنسية"],
-  id_number: ["id_number", "national_id", "رقم الهوية", "الهوية"],
-  national_address: [
-    "national_address",
-    "العنوان الوطني",
-    "national address",
-  ],
-  hire_date: ["hire_date", "تاريخ التعيين", "تاريخ التوظيف"],
-  contract_type: ["contract_type", "نوع العقد"],
-  basic_salary: ["basic_salary", "الراتب الأساسي", "الراتب"],
-  housing_allowance: ["housing_allowance", "بدل السكن"],
-  iban: ["iban", "الآيبان", "رقم الآيبان"],
-  leave_balance: ["leave_balance", "رصيد الإجازات", "الإجازات"],
-  department: [
-    "department",
-    "department_name",
-    "dept",
-    "القسم",
-    "الإدارة",
+  phone_number: [
+    "phone",
+    "phone_number",
+    "mobile",
+    "الجوال",
+    "رقم الجوال",
   ],
   job_title_name: [
     "job_title",
     "job_title_name",
+    "job title",
     "title",
     "المسمى",
     "المسمى الوظيفي",
   ],
-  work_location_name: [
-    "work_location_name",
-    "work_location",
-    "branch",
-    "موقع العمل",
-    "الفرع",
-  ],
-  direct_manager_name: [
-    "direct_manager_name",
-    "direct_manager",
-    "المدير المباشر",
-    "مدير مباشر",
+  employee_number: [
+    "employee_number",
+    "employee_id",
+    "emp_no",
+    "emp id",
+    "رقم الموظف",
+    "معرف الموظف",
   ],
   role: ["role", "الدور", "الدور الوظيفي"],
-  employee_number: ["employee_number", "emp_no", "رقم الموظف"],
 };
 
 const ALLOWED_IMPORT_ROLES = new Set([
@@ -110,6 +76,16 @@ function normalizeHeader(value) {
     .replace(/ة/g, "ه");
 }
 
+function resolveColumnKey(header) {
+  const normalized = normalizeHeader(header);
+  for (const [key, aliases] of Object.entries(HEADER_ALIASES)) {
+    if (aliases.some((alias) => normalizeHeader(alias) === normalized)) {
+      return key;
+    }
+  }
+  return null;
+}
+
 function isRowEmpty(row) {
   if (!Array.isArray(row)) return true;
   return !row.some((cell) => String(cell ?? "").trim() !== "");
@@ -127,55 +103,9 @@ function normalizeEmployeeEmail(value) {
   return email;
 }
 
-function resolveColumnKey(header) {
-  const normalized = normalizeHeader(header);
-  for (const [key, aliases] of Object.entries(HEADER_ALIASES)) {
-    if (aliases.some((alias) => normalizeHeader(alias) === normalized)) {
-      return key;
-    }
-  }
-  return null;
-}
-
-function parseSpreadsheetDate(value) {
-  if (value == null || value === "") return null;
-
-  if (typeof value === "number" && Number.isFinite(value)) {
-    const parsed = XLSX.SSF.parse_date_code(value);
-    if (parsed?.y && parsed?.m && parsed?.d) {
-      return `${parsed.y}-${String(parsed.m).padStart(2, "0")}-${String(parsed.d).padStart(2, "0")}`;
-    }
-  }
-
-  const str = String(value).trim();
-  if (/^\d{4}-\d{2}-\d{2}/.test(str)) return str.slice(0, 10);
-
-  const parts = str.split(/[/-]/).map((part) => part.trim());
-  if (parts.length === 3) {
-    let day = Number(parts[0]);
-    let month = Number(parts[1]);
-    let year = Number(parts[2]);
-    if (year < 100) year += year > 50 ? 1900 : 2000;
-    if (day && month && year) {
-      return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-    }
-  }
-
-  return null;
-}
-
-function parseNumber(value, fallback = 0) {
-  const normalized = String(value ?? "")
-    .trim()
-    .replace(/,/g, "");
-  if (!normalized) return fallback;
-  const parsed = Number(normalized);
-  return Number.isFinite(parsed) ? parsed : fallback;
-}
-
 function normalizeImportRole(value) {
   const raw = String(value ?? "").trim();
-  if (!raw) return "Employee";
+  if (!raw) return null;
 
   const lower = raw.toLowerCase();
   if (lower === "manager" || lower === "department head") {
@@ -197,30 +127,18 @@ function rowToEmployee(row, columnMap) {
 
   if (!record.full_name) return null;
 
-  return {
+  const parsed = {
     full_name: record.full_name,
     email: normalizeEmployeeEmail(record.email),
     phone_number: record.phone_number || null,
-    gender: record.gender || "ذكر",
-    date_of_birth: parseSpreadsheetDate(record.date_of_birth),
-    nationality: record.nationality || null,
-    id_number: record.id_number ? Number(record.id_number) : null,
-    national_address: record.national_address || null,
-    hire_date: parseSpreadsheetDate(record.hire_date),
-    contract_type: record.contract_type || "دوام كامل",
-    basic_salary: parseNumber(record.basic_salary),
-    housing_allowance: parseNumber(record.housing_allowance),
-    iban: record.iban || null,
-    leave_balance: parseNumber(record.leave_balance, 0),
-    department: record.department || null,
     job_title_name: record.job_title_name || null,
-    work_location_name: record.work_location_name || null,
-    direct_manager_name: record.direct_manager_name || null,
     employee_number: record.employee_number || null,
-    role: normalizeImportRole(record.role),
-    employment_status: "نشط",
-    other_allowance: 0,
   };
+
+  const role = normalizeImportRole(record.role);
+  if (role) parsed.role = role;
+
+  return parsed;
 }
 
 export async function parseEmployeeSpreadsheet(file) {

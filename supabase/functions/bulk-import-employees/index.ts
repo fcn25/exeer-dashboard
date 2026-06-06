@@ -34,29 +34,14 @@ const ALLOWED_EMPLOYEE_ROLES = new Set([
   "Employee",
 ]);
 
+/** Parsed from CSV template only — no extra HR/financial fields. */
 type ImportRow = {
   full_name?: string;
   email?: string | null;
   phone_number?: string | null;
-  department?: string | null;
   job_title_name?: string | null;
   employee_number?: string | null;
   role?: string | null;
-  employment_status?: string | null;
-  contract_type?: string | null;
-  gender?: string | null;
-  date_of_birth?: string | null;
-  nationality?: string | null;
-  id_number?: number | null;
-  national_address?: string | null;
-  hire_date?: string | null;
-  iban?: string | null;
-  leave_balance?: number | null;
-  work_location_name?: string | null;
-  direct_manager_name?: string | null;
-  basic_salary?: number | null;
-  housing_allowance?: number | null;
-  other_allowance?: number | null;
 };
 
 function normalizeImportRole(role: unknown) {
@@ -74,69 +59,32 @@ function normalizeImportRole(role: unknown) {
   return "Employee";
 }
 
-async function resolveWorkLocationId(
-  adminClient: ReturnType<typeof createClient>,
-  companyId: number,
-  workLocationName: unknown,
-) {
-  const name = String(workLocationName ?? "").trim();
-  if (!name) return null;
-
-  const { data, error } = await adminClient
-    .from("company_branches")
-    .select("id, name")
-    .eq("company_id", companyId);
-
-  if (error) return null;
-
-  const match = (data ?? []).find(
-    (branch) => String(branch.name ?? "").trim().toLowerCase() === name.toLowerCase(),
-  );
-
-  return match?.id ?? null;
-}
-
-async function mapRowToEmployeePayload(
-  adminClient: ReturnType<typeof createClient>,
-  companyId: number,
-  row: ImportRow,
-) {
+function mapRowToEmployeePayload(companyId: number, row: ImportRow) {
   const fullName = String(row.full_name ?? "").trim();
   if (!fullName) return null;
 
-  const role = normalizeImportRole(row.role);
-  const workLocationId = await resolveWorkLocationId(
-    adminClient,
-    companyId,
-    row.work_location_name,
-  );
-
-  return {
+  const payload: {
+    company_id: number;
+    full_name: string;
+    email: string | null;
+    phone_number: string | null;
+    job_title_name: string | null;
+    employee_number: string | null;
+    role?: string;
+  } = {
     company_id: companyId,
     full_name: fullName,
     email: normalizeInviteEmail(row.email),
     phone_number: String(row.phone_number ?? "").trim() || null,
-    department: String(row.department ?? "").trim() || null,
     job_title_name: String(row.job_title_name ?? "").trim() || null,
     employee_number: String(row.employee_number ?? "").trim() || null,
-    role,
-    employment_status: String(row.employment_status ?? "نشط").trim() || "نشط",
-    contract_type: String(row.contract_type ?? "دوام كامل").trim() || "دوام كامل",
-    gender: String(row.gender ?? "ذكر").trim() || "ذكر",
-    date_of_birth: row.date_of_birth || null,
-    nationality: String(row.nationality ?? "").trim() || null,
-    id_number: Number.isFinite(Number(row.id_number)) ? Number(row.id_number) : null,
-    national_address: String(row.national_address ?? "").trim() || null,
-    hire_date: row.hire_date || null,
-    iban: String(row.iban ?? "").trim() || null,
-    leave_balance: Number(row.leave_balance) || 0,
-    direct_manager_name: String(row.direct_manager_name ?? "").trim() || null,
-    work_location_id: workLocationId,
-    basic_salary: Number(row.basic_salary) || 0,
-    housing_allowance: Number(row.housing_allowance) || 0,
-    other_allowance: Number(row.other_allowance) || 0,
-    transport_allowance: 0,
   };
+
+  if (row.role != null && String(row.role).trim() !== "") {
+    payload.role = normalizeImportRole(row.role);
+  }
+
+  return payload;
 }
 
 async function resolveCallerContext(
@@ -260,9 +208,10 @@ Deno.serve(async (req) => {
     const inviteErrors: string[] = [];
 
     for (const row of rows) {
-      const payload = await mapRowToEmployeePayload(adminClient, companyId, row);
+      const payload = mapRowToEmployeePayload(companyId, row as ImportRow);
       if (!payload) continue;
 
+      const inviteRole = payload.role ?? "Employee";
       const email = payload.email;
       let authUserId: string | null = null;
 
@@ -275,7 +224,7 @@ Deno.serve(async (req) => {
               data: {
                 full_name: payload.full_name,
                 company_id: companyId,
-                role: payload.role,
+                role: inviteRole,
               },
               redirectTo,
             });
@@ -308,7 +257,7 @@ Deno.serve(async (req) => {
           user_metadata: {
             full_name: employee.full_name,
             company_id: companyId,
-            role: payload.role,
+            role: inviteRole,
             employee_id: employee.id,
           },
         });

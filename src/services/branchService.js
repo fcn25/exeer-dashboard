@@ -97,3 +97,16 @@ export async function saveCompanyBranch({
   if (error) throw new Error(mapDbError(error));
   return mapBranchRow(data);
 }
+
+export async function deleteCompanyBranch(branchId) {
+  const companyId = requireCompanyId("حذف موقع الفرع");
+  const resolvedId = String(branchId ?? "").trim();
+  if (!resolvedId) throw new Error("معرّف الفرع غير صالح.");
+
+  const { error } = await scopeQueryByCompany(
+    supabase.from("company_branches").delete().eq("id", resolvedId),
+    companyId,
+  );
+
+  if (error) throw new Error(mapDbError(error));
+}

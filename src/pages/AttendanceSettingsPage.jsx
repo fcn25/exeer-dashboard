@@ -1,52 +1,12 @@
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Fingerprint } from "lucide-react";
-import BranchLocationsTable from "../components/attendance/BranchLocationsTable.jsx";
-import BranchLocationSetup from "../components/attendance/BranchLocationSetup.jsx";
+import BranchGeofenceManager from "../components/attendance/BranchGeofenceManager.jsx";
 import EmployeeBranchAssignments from "../components/attendance/EmployeeBranchAssignments.jsx";
-import SlideOver from "../components/employees/SlideOver.jsx";
 import SuccessToast from "../components/ui/SuccessToast.jsx";
-import { listCompanyBranches } from "../services/branchService.js";
 
 export default function AttendanceSettingsPage() {
-  const [branches, setBranches] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isMapOpen, setIsMapOpen] = useState(false);
-  const [editingBranchId, setEditingBranchId] = useState(null);
   const [successToast, setSuccessToast] = useState("");
-
-  const loadBranches = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const rows = await listCompanyBranches();
-      setBranches(rows);
-    } catch {
-      setBranches([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadBranches();
-  }, [loadBranches]);
-
-  const openCreate = () => {
-    setEditingBranchId(null);
-    setIsMapOpen(true);
-  };
-
-  const openEdit = (branchId) => {
-    setEditingBranchId(branchId);
-    setIsMapOpen(true);
-  };
-
-  const handleBranchSaved = async (_saved, message) => {
-    await loadBranches();
-    setSuccessToast(message);
-    setIsMapOpen(false);
-    setEditingBranchId(null);
-  };
 
   return (
     <div className="md-page">
@@ -71,33 +31,9 @@ export default function AttendanceSettingsPage() {
         </div>
       </header>
 
-      <BranchLocationsTable
-        branches={branches}
-        isLoading={isLoading}
-        onAdd={openCreate}
-        onEdit={openEdit}
-      />
+      <BranchGeofenceManager onToast={setSuccessToast} />
 
-      <EmployeeBranchAssignments
-        onToast={(message) => setSuccessToast(message)}
-      />
-
-      <SlideOver
-        isOpen={isMapOpen}
-        onClose={() => {
-          setIsMapOpen(false);
-          setEditingBranchId(null);
-        }}
-        title={editingBranchId ? "تعديل موقع الفرع" : "إضافة موقع فرع جديد"}
-        subtitle="حدد الموقع على الخريطة ونصف القطر المسموح للحضور"
-      >
-        <BranchLocationSetup
-          showBranchList={false}
-          initialBranchId={editingBranchId}
-          showInlineToast={false}
-          onSaved={handleBranchSaved}
-        />
-      </SlideOver>
+      <EmployeeBranchAssignments onToast={setSuccessToast} />
 
       <SuccessToast
         message={successToast}

@@ -65,7 +65,7 @@ export default function BranchLocationMap({
         center={[center.lat, center.lng]}
         zoom={hasPin ? 16 : 11}
         scrollWheelZoom
-        className="z-0 h-[360px] w-full"
+        className="z-0 h-[min(360px,50vh)] min-h-[240px] w-full"
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'

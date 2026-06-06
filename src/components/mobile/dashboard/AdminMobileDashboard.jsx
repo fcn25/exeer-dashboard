@@ -95,7 +95,7 @@ export default function AdminMobileDashboard({
           <div className="grid grid-cols-2 gap-3">
             {canManageAttendanceSettings() ? (
               <Link
-                to="/dashboard/attendance/settings"
+                to="/mobile/attendance/settings"
                 className="col-span-2 flex items-center gap-2.5 rounded-2xl border border-gray-100 bg-white p-3.5 shadow-sm transition-colors hover:bg-gray-50"
               >
                 <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 text-exeer-primary">

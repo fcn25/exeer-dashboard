@@ -297,6 +297,38 @@ export async function bulkCreateEmployees(rows, { sendInvites = false } = {}) {
   };
 }
 
+export async function listEmployeesWithoutAuthAccount() {
+  const { data, error } = await supabase.rpc(
+    "list_employees_without_auth_account",
+  );
+
+  if (error) throw new Error(mapDbError(error));
+  return data ?? [];
+}
+
+export async function inviteEmployeesWithoutAccounts() {
+  const companyId = getCompanyId();
+  const employees = await listEmployeesWithoutAuthAccount();
+  let invitesSent = 0;
+
+  for (const emp of employees) {
+    try {
+      await inviteEmployeeByEmail({
+        email: emp.email,
+        fullName: emp.full_name,
+        role: "Employee",
+        companyId,
+        employeeId: emp.id,
+      });
+      invitesSent += 1;
+    } catch (err) {
+      console.error(`فشل إرسال دعوة لـ ${emp.email}:`, err.message);
+    }
+  }
+
+  return { invitesSent, total: employees.length };
+}
+
 export async function updateEmployee(employeeId, form) {
   const companyId = getCompanyId();
   const { data, error } = await supabase

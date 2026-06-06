@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Eye, Pencil, Plus, Search, Trophy } from "lucide-react";
+import { Eye, Mail, Pencil, Plus, Search, Trophy } from "lucide-react";
 import EmployeeFormSections from "./components/employees/EmployeeFormSections.jsx";
 import LogAchievementModal from "./components/achievements/LogAchievementModal.jsx";
 import {
@@ -16,6 +16,7 @@ import { fetchCompanyBilling } from "./services/billingService.js";
 import {
   createEmployee,
   getEmployeeById,
+  inviteEmployeesWithoutAccounts,
   listEmployees,
   updateEmployee,
   updateEmployeeWorkLocation,
@@ -454,6 +455,7 @@ export default function EmployeesPage() {
   const [jobTitleOptions, setJobTitleOptions] = useState([]);
   const [branchOptions, setBranchOptions] = useState([]);
   const [subscriptionTier, setSubscriptionTier] = useState("trial");
+  const [isInvitingEmployees, setIsInvitingEmployees] = useState(false);
 
   const userRole = getCurrentUserRole();
   const canEdit = canEditEmployeeRecords();
@@ -581,6 +583,20 @@ export default function EmployeesPage() {
     setSuccessMessage("تم تحديث موقع العمل.");
   };
 
+  const handleInviteEmployees = async () => {
+    setIsInvitingEmployees(true);
+    setListError("");
+
+    try {
+      const { invitesSent } = await inviteEmployeesWithoutAccounts();
+      setSuccessMessage(`تم إرسال ${invitesSent} دعوة بنجاح`);
+    } catch (err) {
+      setListError(err.message || "تعذّر إرسال الدعوات.");
+    } finally {
+      setIsInvitingEmployees(false);
+    }
+  };
+
   return (
     <div className="md-page">
       <header className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
@@ -592,14 +608,27 @@ export default function EmployeesPage() {
             {!canEdit ? " (عرض فقط)" : null}
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setIsAddOpen(true)}
-          className="md-btn-primary inline-flex items-center justify-center gap-2 self-start"
-        >
-          <Plus className="h-5 w-5" aria-hidden />
-          إضافة موظف جديد
-        </button>
+        {canEdit ? (
+          <div className="flex flex-col gap-3 self-start sm:flex-row">
+            <button
+              type="button"
+              onClick={handleInviteEmployees}
+              disabled={isInvitingEmployees || isListLoading}
+              className="md-btn-tonal inline-flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              <Mail className="h-5 w-5" aria-hidden />
+              {isInvitingEmployees ? "جاري إرسال الدعوات..." : "دعوة الموظفين"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsAddOpen(true)}
+              className="md-btn-primary inline-flex items-center justify-center gap-2"
+            >
+              <Plus className="h-5 w-5" aria-hidden />
+              إضافة موظف جديد
+            </button>
+          </div>
+        ) : null}
       </header>
 
       {successMessage ? (

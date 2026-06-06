@@ -1,4 +1,2 @@
-direct_manager_name,full_name,email,phone_number,gender,date_of_birth,nationality,id_number,id_expiry_date,address,national_address,iqama_profession,hire_date,contract_type,basic_salary,housing_allowance,iban,leave_balance,department_name,job_title_name,work_location_name,role
-,سعود محمد,abusaudbox@gmail.com,524352345,ذكر,11/11/2000,Saudi,3245345345,11/12/2026,Abha,Dfsa4234,,,,,,,,,Senior Developer,Riyadh Office,Employee
-,محمد سعود,abusamerm@gmail.com,523453,ذكر,1/12/01,Saudi,345634566,,Abha,Sdfs42687,,,,,,,,,Specialist,Jeddah Office,Employee
-,,,,,,,,,,,,,,,,,,,Department Head,Dammam Office,Manager
+full_name,email,phone_number,gender,date_of_birth,nationality,id_number,id_expiry_date,address,national_address,iqama_profession,hire_date,contract_type,basic_salary,housing_allowance,iban,leave_balance,department_name,job_title_name,work_location_name,role
+,,,,,,,,,,,,,,,,,,,,

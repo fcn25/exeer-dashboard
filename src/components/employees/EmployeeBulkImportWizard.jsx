@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { FileSpreadsheet, Loader2, Upload, X } from "lucide-react";
+import { Download, FileSpreadsheet, Loader2, Upload, X } from "lucide-react";
 import SlideOver from "./SlideOver.jsx";
 import { parseEmployeeSpreadsheet } from "../../utils/employeeBulkImport.js";
 import {
@@ -162,6 +162,14 @@ export default function EmployeeBulkImportWizard({ isOpen, onClose, onSuccess })
           <p className="mt-1 text-xs text-exeer-muted">
             .xlsx · .xls · .csv — يتطلب عمود الاسم الكامل
           </p>
+          <a
+            href="/ListEmployeeExeer.csv"
+            download="ListEmployeeExeer.csv"
+            className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-blue-600 transition-colors hover:text-blue-700 hover:underline"
+          >
+            <Download className="h-4 w-4 shrink-0" aria-hidden />
+            تحميل نموذج البيانات الافتراضي
+          </a>
           <label className="mt-4 inline-flex cursor-pointer items-center gap-2 rounded-md bg-md-primary px-4 py-2.5 text-sm font-semibold text-white dark:bg-slate-700">
             <Upload className="h-4 w-4" aria-hidden />
             اختيار ملف

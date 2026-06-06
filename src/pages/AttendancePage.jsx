@@ -4,9 +4,10 @@ import {
   ArrowDownToLine,
   CalendarRange,
   ClipboardList,
-  MapPinned,
+  Settings2,
   Upload,
 } from "lucide-react";
+import { canManageAttendanceSettings } from "../utils/rbac.js";
 import { DateInput } from "../components/ui/DateInput.jsx";
 import SuccessToast from "../components/ui/SuccessToast.jsx";
 import ExeerEmptyState from "../components/brand/ExeerEmptyState.jsx";
@@ -154,13 +155,15 @@ export default function AttendancePage() {
           <h1 className="md-page-title">سجل الحضور والانصراف</h1>
           <p className="md-page-subtitle max-w-3xl">{SUBTITLE}</p>
         </div>
-        <Link
-          to="/dashboard/attendance/branches"
-          className="md-btn-tonal inline-flex shrink-0 items-center gap-2"
-        >
-          <MapPinned className="h-4 w-4" aria-hidden />
-          مواقع الفروع
-        </Link>
+        {canManageAttendanceSettings() ? (
+          <Link
+            to="/dashboard/attendance/settings"
+            className="md-btn-tonal inline-flex shrink-0 items-center gap-2"
+          >
+            <Settings2 className="h-4 w-4" aria-hidden />
+            إعدادات البصمة والمواقع
+          </Link>
+        ) : null}
       </header>
 
       <section

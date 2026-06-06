@@ -52,6 +52,7 @@ export default function EmployeeFormSections({
   disabled = false,
   departmentOptions = [],
   jobTitleOptions = [],
+  branchOptions = [],
   showAvatar = false,
 }) {
   const update = (key, value) => {
@@ -255,13 +256,38 @@ export default function EmployeeFormSections({
             )}
           </Field>
           <Field label="موقع العمل">
-            <input
-              type="text"
-              value={form.work_location_name}
-              onChange={(e) => update("work_location_name", e.target.value)}
-              disabled={disabled}
-              className={inputClass}
-            />
+            {branchOptions.length > 0 ? (
+              <select
+                value={form.work_location_id ?? ""}
+                onChange={(e) => {
+                  const nextId = e.target.value;
+                  const branch = branchOptions.find((item) => item.id === nextId);
+                  onChange((prev) => ({
+                    ...prev,
+                    work_location_id: nextId,
+                    work_location_name: branch?.name ?? "",
+                  }));
+                }}
+                disabled={disabled}
+                className={inputClass}
+              >
+                <option value="">غير محدد</option>
+                {branchOptions.map((branch) => (
+                  <option key={branch.id} value={branch.id}>
+                    {branch.name}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input
+                type="text"
+                value={form.work_location_name}
+                onChange={(e) => update("work_location_name", e.target.value)}
+                disabled={disabled}
+                placeholder="غير محدد — عرّف الفروع من إعدادات البصمة"
+                className={inputClass}
+              />
+            )}
           </Field>
           <Field label="الإدارة">
             {departmentOptions.length > 0 ? (

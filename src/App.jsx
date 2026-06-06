@@ -12,7 +12,8 @@ import EventsPage from "./EventsPage.jsx";
 import PerformancePage from "./pages/PerformancePage.jsx";
 import PayrollPage from "./PayrollPage.jsx";
 import AttendancePage from "./pages/AttendancePage.jsx";
-import BranchGeofencingPage from "./pages/BranchGeofencingPage.jsx";
+import AttendanceSettingsPage from "./pages/AttendanceSettingsPage.jsx";
+import { AttendanceSettingsGate } from "./components/attendance/AttendanceSettingsGate.jsx";
 import AdministrativeActionsPage from "./pages/AdministrativeActionsPage.jsx";
 import MyTeamDashboard from "./pages/MyTeamDashboard.jsx";
 import MobileAdministrativeActionsPage from "./pages/mobile/MobileAdministrativeActionsPage.jsx";
@@ -97,14 +98,19 @@ function DashboardRoutes() {
             }
           />
           <Route
+            path="attendance/settings"
+            element={
+              <ProtectedRoute allowDashboard>
+                <AttendanceSettingsGate>
+                  <AttendanceSettingsPage />
+                </AttendanceSettingsGate>
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="attendance/branches"
             element={
-              <ProtectedRoute
-                allowDashboard
-                requiredPermission="can_view_payroll"
-              >
-                <BranchGeofencingPage />
-              </ProtectedRoute>
+              <Navigate to="/dashboard/attendance/settings" replace />
             }
           />
           <Route

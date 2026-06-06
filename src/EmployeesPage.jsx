@@ -18,7 +18,12 @@ import {
   getEmployeeById,
   listEmployees,
   updateEmployee,
+  updateEmployeeWorkLocation,
 } from "./services/employeesService.js";
+import { listCompanyBranches } from "./services/branchService.js";
+import WorkLocationSelect, {
+  resolveWorkLocationLabel,
+} from "./components/attendance/WorkLocationSelect.jsx";
 import { listDepartments, listJobTitles } from "./services/catalogService.js";
 import {
   canAddEmployeeCount,
@@ -49,6 +54,9 @@ function mapDirectoryRow(item, index) {
     job_title_name: job_title_name || "—",
     employment_status,
     email: String(item.email ?? ""),
+    work_location_id: item.work_location_id ?? null,
+    company_branches: item.company_branches ?? null,
+    work_location_name: resolveWorkLocationLabel(item),
   };
 }
 
@@ -77,6 +85,7 @@ function AddEmployeeSlideOver({
   onOpenBulkImport,
   departmentOptions,
   jobTitleOptions,
+  branchOptions = [],
   employeeCount = 0,
   subscriptionTier = "trial",
 }) {
@@ -171,6 +180,7 @@ function AddEmployeeSlideOver({
           onChange={setForm}
           departmentOptions={departmentOptions}
           jobTitleOptions={jobTitleOptions}
+          branchOptions={branchOptions}
         />
       </form>
     </SlideOver>
@@ -184,6 +194,7 @@ function EmployeeDetailsSlideOver({
   onSave,
   departmentOptions,
   jobTitleOptions,
+  branchOptions = [],
   canEdit,
   userRole,
 }) {
@@ -360,6 +371,7 @@ function EmployeeDetailsSlideOver({
             disabled={fieldsDisabled}
             departmentOptions={departmentOptions}
             jobTitleOptions={jobTitleOptions}
+            branchOptions={branchOptions}
             showAvatar
           />
         </form>
@@ -392,6 +404,7 @@ export default function EmployeesPage() {
   const [successMessage, setSuccessMessage] = useState("");
   const [departmentOptions, setDepartmentOptions] = useState([]);
   const [jobTitleOptions, setJobTitleOptions] = useState([]);
+  const [branchOptions, setBranchOptions] = useState([]);
   const [subscriptionTier, setSubscriptionTier] = useState("trial");
 
   const userRole = getCurrentUserRole();
@@ -439,18 +452,21 @@ export default function EmployeesPage() {
 
     async function loadCatalog() {
       try {
-        const [departments, jobTitles] = await Promise.all([
+        const [departments, jobTitles, branches] = await Promise.all([
           listDepartments(),
           listJobTitles(),
+          listCompanyBranches().catch(() => []),
         ]);
         if (!cancelled) {
           setDepartmentOptions(departments);
           setJobTitleOptions(jobTitles);
+          setBranchOptions(branches);
         }
       } catch {
         if (!cancelled) {
           setDepartmentOptions([]);
           setJobTitleOptions([]);
+          setBranchOptions([]);
         }
       }
     }
@@ -509,6 +525,12 @@ export default function EmployeesPage() {
   const handleMutationSuccess = async (message) => {
     await loadEmployees();
     setSuccessMessage(message);
+  };
+
+  const handleInlineWorkLocationChange = async (employeeId, workLocationId) => {
+    await updateEmployeeWorkLocation(employeeId, workLocationId);
+    await loadEmployees();
+    setSuccessMessage("تم تحديث موقع العمل.");
   };
 
   return (
@@ -578,7 +600,7 @@ export default function EmployeesPage() {
 
       <div className="md-surface overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[880px] border-collapse text-sm">
+          <table className="w-full min-w-[1020px] border-collapse text-sm">
             <thead>
               <tr className="border-b border-exeer-border bg-exeer-surface">
                 <th className="px-5 py-4 text-start font-semibold text-exeer-primary">
@@ -594,6 +616,9 @@ export default function EmployeesPage() {
                   الإدارة
                 </th>
                 <th className="px-5 py-4 text-start font-semibold text-exeer-primary">
+                  موقع العمل
+                </th>
+                <th className="px-5 py-4 text-start font-semibold text-exeer-primary">
                   الحالة
                 </th>
                 <th className="px-5 py-4 text-start font-semibold text-exeer-primary">
@@ -605,7 +630,7 @@ export default function EmployeesPage() {
               {isListLoading ? (
                 <tr>
                   <td
-                    colSpan={6}
+                    colSpan={7}
                     className="px-5 py-16 text-center text-exeer-muted"
                   >
                     جاري التحميل...
@@ -614,7 +639,7 @@ export default function EmployeesPage() {
               ) : listError ? (
                 <tr>
                   <td
-                    colSpan={6}
+                    colSpan={7}
                     className="px-5 py-16 text-center text-exeer-muted"
                   >
                     {listError}
@@ -622,7 +647,7 @@ export default function EmployeesPage() {
                 </tr>
               ) : filteredEmployees.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-0">
+                  <td colSpan={7} className="p-0">
                     <ExeerEmptyState message="لا يوجد موظفون مطابقون للبحث" />
                   </td>
                 </tr>
@@ -657,6 +682,20 @@ export default function EmployeesPage() {
                     </td>
                     <td className="px-5 py-4">{employee.department}</td>
                     <td className="px-5 py-4">
+                      {canEdit && branchOptions.length ? (
+                        <WorkLocationSelect
+                          employeeId={employee.id}
+                          value={employee.work_location_id ?? ""}
+                          branches={branchOptions}
+                          onUpdated={handleInlineWorkLocationChange}
+                        />
+                      ) : (
+                        <span className="text-exeer-muted">
+                          {employee.work_location_name}
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-5 py-4">
                       <StatusBadge status={employee.employment_status} />
                     </td>
                     <td className="px-5 py-4">
@@ -686,6 +725,7 @@ export default function EmployeesPage() {
         }}
         departmentOptions={departmentOptions}
         jobTitleOptions={jobTitleOptions}
+        branchOptions={branchOptions}
         employeeCount={employees.length}
         subscriptionTier={subscriptionTier}
         onCreated={() => handleMutationSuccess("تم إضافة الموظف بنجاح")}
@@ -714,6 +754,7 @@ export default function EmployeesPage() {
           userRole={userRole}
           departmentOptions={departmentOptions}
           jobTitleOptions={jobTitleOptions}
+          branchOptions={branchOptions}
           onClose={() => {
             setIsDetailsOpen(false);
             setSelectedEmployeeId(null);

@@ -99,3 +99,8 @@ export function canViewAdministrativeActionsMasterLog() {
 export function isAdmin() {
   return isOwner();
 }
+
+/** Biometric & geofencing settings — owner / legacy Admin only */
+export function canManageAttendanceSettings() {
+  return isOwner();
+}

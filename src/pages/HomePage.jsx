@@ -1,12 +1,15 @@
 import { lazy, Suspense, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   FileText,
+  Fingerprint,
   Lightbulb,
   MessageSquare,
   Sparkles,
   Target,
   Trophy,
 } from "lucide-react";
+import { canManageAttendanceSettings } from "../utils/rbac.js";
 import {
   fetchDashboardStats,
   fetchPendingRequestsPreview,
@@ -139,6 +142,25 @@ export default function HomePage() {
       ) : null}
 
       <PlgOnboardingBanner employeeCount={stats.employeeCount} />
+
+      {canManageAttendanceSettings() ? (
+        <Link
+          to="/dashboard/attendance/settings"
+          className="flex items-center gap-4 rounded-md border border-gray-200 bg-white p-5 transition-colors hover:bg-gray-50"
+        >
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-gray-200 bg-gray-50 text-slate-900">
+            <Fingerprint className="h-5 w-5 stroke-[1.75]" aria-hidden />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold text-slate-900">
+              إعدادات البصمة والمواقع
+            </span>
+            <span className="mt-0.5 block text-xs text-slate-500">
+              تعريف فروع العمل، نطاقات الحضور، وربط الموظفين
+            </span>
+          </span>
+        </Link>
+      ) : null}
 
       <section
         className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4"

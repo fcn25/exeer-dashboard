@@ -37,6 +37,7 @@ export function employeeFormToRow(form) {
     direct_manager_name: form.direct_manager_name?.trim() || null,
     job_title_name: form.job_title_name?.trim() || null,
     work_location_name: form.work_location_name?.trim() || null,
+    work_location_id: form.work_location_id ? form.work_location_id : null,
     department: form.department?.trim() || null,
     basic_salary: Number(form.basic_salary) || 0,
     housing_allowance: Number(form.housing_allowance) || 0,
@@ -77,18 +78,55 @@ async function assertCanAddEmployees(toAdd) {
   }
 }
 
+const EMPLOYEE_DIRECTORY_SELECT =
+  "id, full_name, employee_number, department, email, phone_number, employment_status, job_title_name, work_location_id, company_branches ( id, name )";
+
 export async function listEmployees() {
   const companyId = getCompanyId();
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from("employees")
-    .select(
-      "id, full_name, employee_number, department, email, phone_number, employment_status, job_title_name",
-    )
+    .select(EMPLOYEE_DIRECTORY_SELECT)
     .eq("company_id", companyId)
     .order("full_name", { ascending: true });
 
+  if (error && /company_branches|relationship/i.test(error.message ?? "")) {
+    const fallback = await supabase
+      .from("employees")
+      .select(
+        "id, full_name, employee_number, department, email, phone_number, employment_status, job_title_name, work_location_id",
+      )
+      .eq("company_id", companyId)
+      .order("full_name", { ascending: true });
+    data = fallback.data;
+    error = fallback.error;
+  }
+
   if (error) throw new Error(mapDbError(error));
   return data ?? [];
+}
+
+export async function updateEmployeeWorkLocation(employeeId, workLocationId) {
+  const companyId = getCompanyId();
+  const id = Number(employeeId);
+  if (!Number.isFinite(id) || id <= 0) {
+    throw new Error("معرّف الموظف غير صالح.");
+  }
+
+  const payload = {
+    work_location_id: workLocationId || null,
+    updated_at: new Date().toISOString(),
+  };
+
+  const { data, error } = await supabase
+    .from("employees")
+    .update(payload)
+    .eq("company_id", companyId)
+    .eq("id", id)
+    .select(EMPLOYEE_DIRECTORY_SELECT)
+    .single();
+
+  if (error) throw new Error(mapDbError(error));
+  return data;
 }
 
 /** Active employees for assignments, performance, and payroll (no payroll module dependency). */
@@ -108,12 +146,23 @@ export async function listActiveEmployees() {
 
 export async function getEmployeeById(employeeId) {
   const companyId = getCompanyId();
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from("employees")
-    .select("*")
+    .select("*, company_branches ( id, name )")
     .eq("company_id", companyId)
     .eq("id", employeeId)
     .maybeSingle();
+
+  if (error && /company_branches|relationship/i.test(error.message ?? "")) {
+    const fallback = await supabase
+      .from("employees")
+      .select("*")
+      .eq("company_id", companyId)
+      .eq("id", employeeId)
+      .maybeSingle();
+    data = fallback.data;
+    error = fallback.error;
+  }
 
   if (error) throw new Error(mapDbError(error));
   return data;

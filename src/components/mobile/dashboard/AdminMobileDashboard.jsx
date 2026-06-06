@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { BarChart3, ChevronLeft, Gavel } from "lucide-react";
+import { BarChart3, ChevronLeft, Fingerprint, Gavel } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { ROLE_LABELS } from "../../../constants/roles.js";
 import { useAuth } from "../../../context/AuthContext.jsx";
 import {
   canAccessPerformance,
   canManageAdministrativeActions,
+  canManageAttendanceSettings,
 } from "../../../utils/rbac.js";
 import SuccessToast from "../../ui/SuccessToast.jsx";
 import CompactMobileAppBar from "./CompactMobileAppBar.jsx";
@@ -84,8 +85,27 @@ export default function AdminMobileDashboard({
         />
         <BentoStatGrid stats={dashboardData?.bentoStats} isLoading={isLoading} />
 
-        {(canManageAdministrativeActions() || canAccessPerformance()) ? (
+        {(canManageAttendanceSettings() ||
+          canManageAdministrativeActions() ||
+          canAccessPerformance()) ? (
           <div className="grid grid-cols-2 gap-3">
+            {canManageAttendanceSettings() ? (
+              <Link
+                to="/dashboard/attendance/settings"
+                className="col-span-2 flex items-center gap-2.5 rounded-2xl border border-gray-100 bg-white p-3.5 shadow-sm transition-colors hover:bg-gray-50"
+              >
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 text-exeer-primary">
+                  <Fingerprint className="h-4 w-4" aria-hidden />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-xs font-bold">إعدادات البصمة والمواقع</span>
+                  <span className="block text-[11px] text-exeer-muted">
+                    الفروع، النطاقات، وربط الموظفين
+                  </span>
+                </span>
+                <ChevronLeft className="h-3.5 w-3.5 shrink-0 text-exeer-muted" aria-hidden />
+              </Link>
+            ) : null}
             {canManageAdministrativeActions() ? (
               <Link
                 to="/mobile/administrative-actions"

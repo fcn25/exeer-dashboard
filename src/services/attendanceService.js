@@ -40,6 +40,75 @@ function isMissingEmployeeRelationship(error) {
   return /relationship.*employees/i.test(error.message ?? "");
 }
 
+function isMissingAttendanceLogsTable(error) {
+  if (!error) return false;
+  const message = String(error.message ?? "").toLowerCase();
+  return (
+    error.code === "PGRST205" ||
+    (message.includes("attendance_logs") &&
+      (message.includes("does not exist") || message.includes("schema cache")))
+  );
+}
+
+function isMissingBranchRelationship(error) {
+  if (!error) return false;
+  if (error.code === "PGRST200") return true;
+  return /relationship.*company_branches/i.test(error.message ?? "");
+}
+
+function formatPunchTypeLabel(punchType) {
+  if (punchType === "In") return "حضور";
+  if (punchType === "Out") return "انصراف";
+  return punchType ?? "—";
+}
+
+function formatPunchedAt(value) {
+  if (!value) return "—";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return new Intl.DateTimeFormat("ar-SA", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(date);
+}
+
+function formatGpsCoordinates(latitude, longitude) {
+  const lat = Number(latitude);
+  const lng = Number(longitude);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return "—";
+  return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+}
+
+function punchedAtRangeBounds(dateFrom, dateTo) {
+  const from = dateFrom ? new Date(`${dateFrom}T00:00:00`) : null;
+  const to = dateTo ? new Date(`${dateTo}T23:59:59.999`) : null;
+  return {
+    fromIso: from && !Number.isNaN(from.getTime()) ? from.toISOString() : null,
+    toIso: to && !Number.isNaN(to.getTime()) ? to.toISOString() : null,
+  };
+}
+
+function mapAttendanceLogRow(row) {
+  if (!row) return null;
+
+  const employee = row.employees ?? {};
+  const branch = row.company_branches ?? null;
+
+  return {
+    id: row.id,
+    employeeId: row.employee_id ?? null,
+    employeeNumber: employee.employee_number ?? "—",
+    employeeName: employee.full_name ?? "—",
+    punchType: row.punch_type ?? null,
+    punchTypeLabel: formatPunchTypeLabel(row.punch_type),
+    punchedAt: row.punched_at ?? null,
+    punchedAtLabel: formatPunchedAt(row.punched_at),
+    branchId: row.branch_id ?? null,
+    branchName: branch?.name ?? "—",
+    gpsCoordinates: formatGpsCoordinates(row.latitude, row.longitude),
+  };
+}
+
 export function formatShiftRange(checkIn, checkOut) {
   const format = (value) => {
     if (!value) return "—";
@@ -274,6 +343,127 @@ export async function fetchAttendanceRecords({
 
   const needle = String(search ?? "").trim().toLowerCase();
   let rows = (data ?? []).map(mapAttendanceRow).filter(Boolean);
+
+  if (needle) {
+    rows = rows.filter((row) => {
+      const number = String(row.employeeNumber ?? "").toLowerCase();
+      const name = String(row.employeeName ?? "").toLowerCase();
+      const id = String(row.employeeId ?? "");
+      return (
+        number.includes(needle) ||
+        name.includes(needle) ||
+        id.includes(needle)
+      );
+    });
+  }
+
+  return rows;
+}
+
+export async function fetchAttendanceLogs({
+  dateFrom,
+  dateTo,
+  search = "",
+}) {
+  const companyId = requireCompanyId("تحميل سجل البصمات");
+  const { fromIso, toIso } = punchedAtRangeBounds(dateFrom, dateTo);
+
+  let query = scopeQueryByCompany(
+    supabase
+      .from("attendance_logs")
+      .select(
+        `
+        id,
+        employee_id,
+        branch_id,
+        punch_type,
+        punched_at,
+        latitude,
+        longitude,
+        employees!inner (
+          id,
+          full_name,
+          employee_number
+        ),
+        company_branches (
+          id,
+          name
+        )
+      `,
+      )
+      .order("punched_at", { ascending: false }),
+    companyId,
+  );
+
+  if (fromIso) query = query.gte("punched_at", fromIso);
+  if (toIso) query = query.lte("punched_at", toIso);
+
+  let { data, error } = await query;
+
+  if (error && (isMissingEmployeeRelationship(error) || isMissingBranchRelationship(error))) {
+    let plainQuery = scopeQueryByCompany(
+      supabase
+        .from("attendance_logs")
+        .select(
+          "id, employee_id, branch_id, punch_type, punched_at, latitude, longitude",
+        )
+        .order("punched_at", { ascending: false }),
+      companyId,
+    );
+
+    if (fromIso) plainQuery = plainQuery.gte("punched_at", fromIso);
+    if (toIso) plainQuery = plainQuery.lte("punched_at", toIso);
+
+    const fallback = await plainQuery;
+    data = fallback.data;
+    error = fallback.error;
+
+    if (!error && (data ?? []).length > 0) {
+      const employeeMap = await loadEmployeeNumberMap(companyId);
+      const employeesById = new Map(
+        [...employeeMap.values()].map((employee) => [employee.id, employee]),
+      );
+
+      const branchIds = [
+        ...new Set(
+          (data ?? [])
+            .map((row) => row.branch_id)
+            .filter((id) => id != null && id !== ""),
+        ),
+      ];
+
+      const branchesById = new Map();
+      if (branchIds.length > 0) {
+        const { data: branches, error: branchError } = await scopeQueryByCompany(
+          supabase.from("company_branches").select("id, name").in("id", branchIds),
+          companyId,
+        );
+        if (!branchError) {
+          for (const branch of branches ?? []) {
+            branchesById.set(branch.id, branch);
+          }
+        }
+      }
+
+      data = (data ?? []).map((row) => ({
+        ...row,
+        employees: employeesById.get(row.employee_id) ?? null,
+        company_branches: row.branch_id
+          ? (branchesById.get(row.branch_id) ?? null)
+          : null,
+      }));
+    }
+  }
+
+  if (error) {
+    if (isMissingAttendanceLogsTable(error)) {
+      return [];
+    }
+    throw new Error(mapDbError(error));
+  }
+
+  const needle = String(search ?? "").trim().toLowerCase();
+  let rows = (data ?? []).map(mapAttendanceLogRow).filter(Boolean);
 
   if (needle) {
     rows = rows.filter((row) => {

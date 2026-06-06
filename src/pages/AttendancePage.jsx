@@ -13,6 +13,7 @@ import SuccessToast from "../components/ui/SuccessToast.jsx";
 import ExeerEmptyState from "../components/brand/ExeerEmptyState.jsx";
 import {
   exportAttendanceDeductionsToPayroll,
+  fetchAttendanceLogs,
   fetchAttendanceRecords,
   upsertAttendanceFromCsv,
 } from "../services/attendanceService.js";
@@ -35,6 +36,14 @@ const TABLE_COLUMNS = [
   { key: "shift2", label: "الوردية 2" },
   { key: "status", label: "الحالة" },
   { key: "delayMinutes", label: "دقائق التأخير" },
+];
+
+const PUNCH_LOG_COLUMNS = [
+  { key: "employeeName", label: "اسم الموظف" },
+  { key: "punchTypeLabel", label: "نوع البصمة" },
+  { key: "punchedAtLabel", label: "وقت البصمة" },
+  { key: "branchName", label: "الفرع" },
+  { key: "gpsCoordinates", label: "إحداثيات GPS" },
 ];
 
 const STATUS_CLASS = {
@@ -68,8 +77,11 @@ export default function AttendancePage() {
   const [dateTo, setDateTo] = useState(defaults.dateTo);
   const [search, setSearch] = useState("");
   const [rows, setRows] = useState([]);
+  const [punchLogRows, setPunchLogRows] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isPunchLogsLoading, setIsPunchLogsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [punchLogsError, setPunchLogsError] = useState("");
   const [successToast, setSuccessToast] = useState("");
   const [isImporting, setIsImporting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -94,9 +106,33 @@ export default function AttendancePage() {
     }
   }, [dateFrom, dateTo, search]);
 
+  const loadPunchLogs = useCallback(async () => {
+    setIsPunchLogsLoading(true);
+    setPunchLogsError("");
+
+    try {
+      const data = await fetchAttendanceLogs({
+        dateFrom,
+        dateTo,
+        search,
+      });
+      setPunchLogRows(Array.isArray(data) ? data : []);
+    } catch (err) {
+      setPunchLogsError(err.message || "تعذّر تحميل سجل البصمات التفصيلي.");
+      setPunchLogRows([]);
+    } finally {
+      setIsPunchLogsLoading(false);
+    }
+  }, [dateFrom, dateTo, search]);
+
+  const reloadAttendanceData = useCallback(async () => {
+    await Promise.all([loadRecords(), loadPunchLogs()]);
+  }, [loadRecords, loadPunchLogs]);
+
   useEffect(() => {
     loadRecords();
-  }, [loadRecords]);
+    loadPunchLogs();
+  }, [loadRecords, loadPunchLogs]);
 
   const handleImportClick = () => {
     fileInputRef.current?.click();
@@ -120,7 +156,7 @@ export default function AttendancePage() {
       }
 
       const result = await upsertAttendanceFromCsv(parsedRows);
-      await loadRecords();
+      await reloadAttendanceData();
       setSuccessToast(
         `تم استيراد ${result.upserted} سجل حضور بنجاح${errors.length ? ` (مع ${errors.length} تحذير)` : ""}.`,
       );
@@ -147,6 +183,7 @@ export default function AttendancePage() {
   const summary = useMemo(() => computeAttendanceSummary(rows), [rows]);
   const summaryEmpty = !isLoading && summary.isEmpty;
   const summaryOpts = { isLoading, isEmpty: summaryEmpty };
+  const punchLogsEmpty = !isPunchLogsLoading && punchLogRows.length === 0;
 
   return (
     <div className="md-page attendance-page">
@@ -242,6 +279,12 @@ export default function AttendancePage() {
       {error ? (
         <p className="whitespace-pre-line rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
           {error}
+        </p>
+      ) : null}
+
+      {punchLogsError ? (
+        <p className="whitespace-pre-line rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          {punchLogsError}
         </p>
       ) : null}
 
@@ -350,6 +393,86 @@ export default function AttendancePage() {
           />
           للقراءة فقط — لا يمكن تعديل أو حذف السجلات من الواجهة.
         </p>
+      </section>
+
+      <section className="overflow-hidden rounded-md border border-gray-200 bg-white shadow-none">
+        <div className="border-b border-gray-100 px-4 py-4">
+          <h2 className="text-base font-bold text-slate-900">
+            سجل البصمات التفصيلي
+          </h2>
+          <p className="mt-1 text-xs text-slate-500">
+            بيانات لحظية من جدول البصمات البيومترية — تُحدَّث عند تغيير الفلاتر
+          </p>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="min-w-full border-collapse text-sm">
+            <thead>
+              <tr className="border-b border-gray-200 bg-gray-50">
+                {PUNCH_LOG_COLUMNS.map((column) => (
+                  <th
+                    key={column.key}
+                    scope="col"
+                    className="whitespace-nowrap px-4 py-3 text-start text-xs font-semibold text-slate-900"
+                  >
+                    {column.label}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {isPunchLogsLoading ? (
+                <tr>
+                  <td
+                    colSpan={PUNCH_LOG_COLUMNS.length}
+                    className="px-4 py-12 text-center text-slate-500"
+                  >
+                    جاري التحميل...
+                  </td>
+                </tr>
+              ) : punchLogsEmpty ? (
+                <tr>
+                  <td
+                    colSpan={PUNCH_LOG_COLUMNS.length}
+                    className="px-4 py-12 text-center text-sm text-slate-500"
+                  >
+                    لا توجد بصمات في هذه الفترة
+                  </td>
+                </tr>
+              ) : (
+                punchLogRows.map((row, index) => (
+                  <tr
+                    key={row?.id ?? `punch-log-${index}`}
+                    className="border-b border-gray-100 last:border-b-0"
+                  >
+                    <td className="px-4 py-3 text-slate-900">
+                      {formatGridCell(row?.employeeName)}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-flex rounded-md px-2 py-0.5 text-xs font-medium ${
+                          row?.punchType === "In"
+                            ? "bg-emerald-50 text-emerald-800"
+                            : "bg-slate-100 text-slate-700"
+                        }`}
+                      >
+                        {formatGridCell(row?.punchTypeLabel)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-slate-600 tabular-nums">
+                      {formatGridCell(row?.punchedAtLabel)}
+                    </td>
+                    <td className="px-4 py-3 text-slate-600">
+                      {formatGridCell(row?.branchName)}
+                    </td>
+                    <td className="px-4 py-3 font-mono text-xs text-slate-600 tabular-nums">
+                      {formatGridCell(row?.gpsCoordinates)}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </section>
 
       <SuccessToast

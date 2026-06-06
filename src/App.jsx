@@ -12,6 +12,7 @@ import EventsPage from "./EventsPage.jsx";
 import PerformancePage from "./pages/PerformancePage.jsx";
 import PayrollPage from "./PayrollPage.jsx";
 import AttendancePage from "./pages/AttendancePage.jsx";
+import BranchGeofencingPage from "./pages/BranchGeofencingPage.jsx";
 import AdministrativeActionsPage from "./pages/AdministrativeActionsPage.jsx";
 import MyTeamDashboard from "./pages/MyTeamDashboard.jsx";
 import MobileAdministrativeActionsPage from "./pages/mobile/MobileAdministrativeActionsPage.jsx";
@@ -92,6 +93,17 @@ function DashboardRoutes() {
                 requiredPermission="can_view_payroll"
               >
                 <PayrollPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="attendance/branches"
+            element={
+              <ProtectedRoute
+                allowDashboard
+                requiredPermission="can_view_payroll"
+              >
+                <BranchGeofencingPage />
               </ProtectedRoute>
             }
           />

@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   ArrowDownToLine,
   CalendarRange,
   ClipboardList,
+  MapPinned,
   Upload,
 } from "lucide-react";
 import { DateInput } from "../components/ui/DateInput.jsx";
@@ -147,9 +149,18 @@ export default function AttendancePage() {
 
   return (
     <div className="md-page attendance-page">
-      <header className="space-y-2">
-        <h1 className="md-page-title">سجل الحضور والانصراف</h1>
-        <p className="md-page-subtitle max-w-3xl">{SUBTITLE}</p>
+      <header className="flex flex-wrap items-start justify-between gap-4">
+        <div className="space-y-2">
+          <h1 className="md-page-title">سجل الحضور والانصراف</h1>
+          <p className="md-page-subtitle max-w-3xl">{SUBTITLE}</p>
+        </div>
+        <Link
+          to="/dashboard/attendance/branches"
+          className="md-btn-tonal inline-flex shrink-0 items-center gap-2"
+        >
+          <MapPinned className="h-4 w-4" aria-hidden />
+          مواقع الفروع
+        </Link>
       </header>
 
       <section

@@ -27,8 +27,6 @@ export function employeeFormToRow(form) {
     nationality: form.nationality?.trim() || null,
     id_number: form.id_number ? Number(form.id_number) : null,
     national_address: form.national_address?.trim() || null,
-    address: form.national_address?.trim() || form.address?.trim() || null,
-    image: form.image?.trim() || null,
     employee_number: form.employee_number?.trim() || null,
     hire_date: form.hire_date || null,
     contract_type: form.contract_type || "دوام كامل",
@@ -36,7 +34,6 @@ export function employeeFormToRow(form) {
     role: form.role || "Employee",
     direct_manager_name: form.direct_manager_name?.trim() || null,
     job_title_name: form.job_title_name?.trim() || null,
-    work_location_name: form.work_location_name?.trim() || null,
     work_location_id: form.work_location_id ? form.work_location_id : null,
     department: form.department?.trim() || null,
     basic_salary: Number(form.basic_salary) || 0,
@@ -135,7 +132,7 @@ export async function listActiveEmployees() {
   const { data, error } = await supabase
     .from("employees")
     .select(
-      "id, full_name, email, department, basic_salary, housing_allowance, transport_allowance, other_allowance, nationality, is_saudi, employment_status, job_title_name",
+      "id, full_name, email, department, basic_salary, housing_allowance, transport_allowance, other_allowance, nationality, employment_status, job_title_name",
     )
     .eq("company_id", companyId)
     .order("full_name", { ascending: true });

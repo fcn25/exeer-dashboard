@@ -34,7 +34,7 @@ export default function MobileDashboard() {
   return (
     <AdminMobileDashboard
       employeeName={user?.name ?? "مدير"}
-      profileImageUrl={user?.image ?? null}
+      profileImageUrl={null}
       role={user?.role}
       dashboardData={dashboardData}
       isLoading={isLoading}

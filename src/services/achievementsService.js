@@ -47,7 +47,7 @@ export async function listEmployeeAchievementsWithEmployees() {
   const { data, error } = await supabase
     .from("employee_achievements")
     .select(
-      "id, title, description, achievement_date, created_at, employee_id, employees ( id, full_name, image )",
+      "id, title, description, achievement_date, created_at, employee_id, employees ( id, full_name )",
     )
     .eq("company_id", companyId)
     .order("achievement_date", { ascending: false });

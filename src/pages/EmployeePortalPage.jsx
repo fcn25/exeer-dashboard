@@ -239,7 +239,7 @@ export default function EmployeePortalPage() {
 
   const employeeName =
     snapshot?.employee?.full_name ?? user?.name ?? "موظف";
-  const profileImageUrl = snapshot?.employee?.image ?? user?.image ?? null;
+  const profileImageUrl = null;
   const jobTitle = formatDisplayValue(
     snapshot?.employee?.job_title_name ?? user?.job_title,
   );
@@ -258,8 +258,7 @@ export default function EmployeePortalPage() {
     const dashboardProps = {
       employeeName:
         mobileDashboardData?.employee?.full_name ?? user?.name ?? "مستخدم",
-      profileImageUrl:
-        mobileDashboardData?.employee?.image ?? user?.image ?? profileImageUrl,
+      profileImageUrl,
       role: mobileDashboardData?.employee?.role ?? role,
       dashboardData: mobileDashboardData,
       isLoading: isMobileDashboardLoading,

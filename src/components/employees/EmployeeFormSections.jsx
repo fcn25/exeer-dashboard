@@ -2,8 +2,6 @@ import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { ROLE_LABELS, STANDARD_ROLES } from "../../constants/roles.js";
 import { DateInput } from "../ui/DateInput.jsx";
-import { getInitials } from "./employeeFormShared.js";
-
 function Field({ label, children, required }) {
   return (
     <div>
@@ -54,7 +52,6 @@ export default function EmployeeFormSections({
   jobTitleOptions = [],
   branchOptions = [],
   branchesLoading = false,
-  showAvatar = false,
 }) {
   const update = (key, value) => {
     onChange((prev) => ({ ...prev, [key]: value }));
@@ -64,18 +61,6 @@ export default function EmployeeFormSections({
 
   return (
     <div className="space-y-5">
-      {showAvatar ? (
-        <div className="flex justify-center pb-2">
-          <span className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-md border border-exeer-border bg-white text-xl font-bold text-exeer-primary">
-            {form.image ? (
-              <img src={form.image} alt="" className="h-full w-full object-cover" />
-            ) : (
-              getInitials(form.full_name)
-            )}
-          </span>
-        </div>
-      ) : null}
-
       <Section title="البيانات الشخصية" description="معلومات الهوية والتواصل">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="الاسم الكامل" required>
@@ -150,16 +135,6 @@ export default function EmployeeFormSections({
               onChange={(e) => update("national_address", e.target.value)}
               disabled={disabled}
               className={inputClass}
-            />
-          </Field>
-          <Field label="رابط الصورة">
-            <input
-              type="url"
-              value={form.image}
-              onChange={(e) => update("image", e.target.value)}
-              disabled={disabled}
-              placeholder="https://"
-              className={`${inputClass} sm:col-span-2`}
             />
           </Field>
         </div>
@@ -259,17 +234,7 @@ export default function EmployeeFormSections({
           <Field label="موقع العمل">
             <select
               value={form.work_location_id ?? ""}
-              onChange={(e) => {
-                const nextId = e.target.value;
-                const branch = branchOptions.find(
-                  (item) => String(item.id) === nextId,
-                );
-                onChange((prev) => ({
-                  ...prev,
-                  work_location_id: nextId,
-                  work_location_name: branch?.name ?? "",
-                }));
-              }}
+              onChange={(e) => update("work_location_id", e.target.value)}
               disabled={disabled || branchesLoading}
               className={inputClass}
             >

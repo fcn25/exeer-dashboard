@@ -24,21 +24,10 @@ function mapAchievementRow(row) {
     achievementDate: row.achievement_date,
     achievementDateLabel: formatAchievementDate(row.achievement_date),
     employeeName: String(employee.full_name ?? "—").trim() || "—",
-    employeeImage: employee.image ?? null,
   };
 }
 
-function EmployeeAvatar({ name, image }) {
-  if (image) {
-    return (
-      <img
-        src={image}
-        alt={name}
-        className="h-11 w-11 shrink-0 rounded-md border border-exeer-border object-cover"
-      />
-    );
-  }
-
+function EmployeeAvatar({ name }) {
   return (
     <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-exeer-border bg-white text-sm font-bold text-exeer-primary dark:bg-[#334155]">
       {getInitials(name)}
@@ -57,7 +46,7 @@ function AchievementTimelineItem({ item, isLast }) {
       ) : null}
 
       <div className="relative z-[1] shrink-0">
-        <EmployeeAvatar name={item.employeeName} image={item.employeeImage} />
+        <EmployeeAvatar name={item.employeeName} />
       </div>
 
       <article className="md-surface-muted min-w-0 flex-1 p-4 sm:p-5">

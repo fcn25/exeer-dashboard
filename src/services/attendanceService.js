@@ -485,7 +485,7 @@ async function loadEmployeeNumberMap(companyId) {
   const { data, error } = await supabase
     .from("employees")
     .select(
-      "id, company_id, employee_number, full_name, basic_salary, housing_allowance, other_allowance, nationality, is_saudi, employment_status",
+      "id, company_id, employee_number, full_name, basic_salary, housing_allowance, other_allowance, nationality, employment_status",
     )
     .eq("company_id", companyId);
 

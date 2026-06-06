@@ -13,7 +13,6 @@ const GOSI_SCHEDULE = [
 
 export function isSaudiNational(employee) {
   if (!employee || typeof employee !== "object") return false;
-  if (employee.is_saudi === true) return true;
 
   const nationality = String(employee.nationality ?? "")
     .trim()

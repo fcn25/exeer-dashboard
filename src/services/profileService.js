@@ -20,7 +20,7 @@ export async function fetchEmployeeProfileByEmail(email) {
   const { data, error } = await supabase
     .from("employees")
     .select(
-      "id, company_id, full_name, email, role, department, job_title_name, image",
+      "id, company_id, full_name, email, role, department, job_title_name",
     )
     .ilike("email", normalizedEmail)
     .limit(1)
@@ -70,7 +70,6 @@ export async function resolveAuthProfile(sessionUser) {
     employee_id: employee?.id ?? null,
     department: employee?.department ?? null,
     job_title: employee?.job_title_name ?? null,
-    image: employee?.image ?? null,
     permissions: normalizePermissions(permissions),
   };
 }

@@ -68,7 +68,6 @@ export function AuthProvider({ children, onSignedOut }) {
           employee_id: null,
           department: null,
           job_title: null,
-          image: null,
           permissions: normalizePermissions(null),
         };
         persistAuthSession(session, fallbackProfile);

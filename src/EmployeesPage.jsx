@@ -56,7 +56,6 @@ function mapDirectoryRow(item, index) {
     email: String(item.email ?? ""),
     work_location_id: item.work_location_id ?? null,
     company_branches: item.company_branches ?? null,
-    work_location_name: resolveWorkLocationLabel(item),
   };
 }
 
@@ -422,7 +421,6 @@ function EmployeeDetailsSlideOver({
             jobTitleOptions={jobTitleOptions}
             branchOptions={branchOptions}
             branchesLoading={branchesLoading}
-            showAvatar
           />
         </form>
       )}
@@ -741,7 +739,7 @@ export default function EmployeesPage() {
                         />
                       ) : (
                         <span className="text-exeer-muted">
-                          {employee.work_location_name}
+                          {resolveWorkLocationLabel(employee)}
                         </span>
                       )}
                     </td>

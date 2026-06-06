@@ -101,7 +101,7 @@ export default function EmployeeMobileDashboard({
       <CompactMobileAppBar
         employeeName={displayName}
         roleLabel={roleLabel}
-        profileImageUrl={profileImageUrl ?? dashboardData?.employee?.image}
+        profileImageUrl={profileImageUrl}
       />
 
       <main className="space-y-4 px-4 py-4">

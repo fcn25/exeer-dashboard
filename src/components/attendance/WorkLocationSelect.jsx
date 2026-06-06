@@ -3,11 +3,7 @@ import { useState } from "react";
 const UNASSIGNED_LABEL = "غير محدد";
 
 export function resolveWorkLocationLabel(employee) {
-  return (
-    employee?.company_branches?.name ??
-    employee?.work_location_name ??
-    UNASSIGNED_LABEL
-  );
+  return employee?.company_branches?.name ?? UNASSIGNED_LABEL;
 }
 
 export default function WorkLocationSelect({

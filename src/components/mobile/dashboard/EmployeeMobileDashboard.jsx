@@ -10,19 +10,17 @@ import MobileTabBar from "./MobileTabBar.jsx";
 import MobileTabPanels from "./MobileTabPanels.jsx";
 import MobileFab from "./MobileFab.jsx";
 import {
-  EMPLOYEE_BENTO_STATS,
   EMPLOYEE_FAB_ACTIONS,
   EMPLOYEE_TABS,
-  MOCK_ACHIEVEMENTS,
-  MOCK_EMPLOYEE_REQUESTS,
-  MOCK_EMPLOYEE_TASKS,
-  MOCK_EVALUATIONS,
-} from "./mobileDashboardMockData.js";
+} from "./mobileDashboardConfig.js";
 
 export default function EmployeeMobileDashboard({
   employeeName,
   profileImageUrl,
   role,
+  dashboardData,
+  isLoading,
+  error,
   onNewRequest,
   onAddAchievement,
 }) {
@@ -35,15 +33,11 @@ export default function EmployeeMobileDashboard({
   const [isFabOpen, setIsFabOpen] = useState(false);
   const [successToast, setSuccessToast] = useState("");
 
+  const resolvedRole = dashboardData?.employee?.role ?? role ?? user?.role;
   const roleLabel =
-    ROLE_LABELS[role] ?? ROLE_LABELS[user?.role] ?? ROLE_LABELS.Employee;
-
-  const tabData = {
-    requests: MOCK_EMPLOYEE_REQUESTS,
-    tasks: MOCK_EMPLOYEE_TASKS,
-    evaluations: MOCK_EVALUATIONS,
-    achievements: MOCK_ACHIEVEMENTS,
-  };
+    ROLE_LABELS[resolvedRole] ?? ROLE_LABELS.Employee;
+  const displayName =
+    dashboardData?.employee?.full_name ?? employeeName ?? user?.name ?? "موظف";
 
   const handleFabAction = (actionId) => {
     if (actionId === "new-request") {
@@ -55,7 +49,7 @@ export default function EmployeeMobileDashboard({
       return;
     }
     if (actionId === "permission") {
-      setSuccessToast("سيتم فتح نموذج الاستئذان قريباً (تجريبي)");
+      setSuccessToast("سيتم فتح نموذج الاستئذان قريباً");
     }
   };
 
@@ -66,14 +60,23 @@ export default function EmployeeMobileDashboard({
       className="mx-auto min-h-screen w-full max-w-[480px] bg-gray-50/80 pb-28 font-sans text-exeer-primary"
     >
       <CompactMobileAppBar
-        employeeName={employeeName}
+        employeeName={displayName}
         roleLabel={roleLabel}
-        profileImageUrl={profileImageUrl}
+        profileImageUrl={profileImageUrl ?? dashboardData?.employee?.image}
       />
 
       <main className="space-y-4 px-4 py-4">
-        <AttendanceHorizontalWidget />
-        <BentoStatGrid stats={EMPLOYEE_BENTO_STATS} />
+        {error ? (
+          <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+            {error}
+          </p>
+        ) : null}
+
+        <AttendanceHorizontalWidget
+          attendance={dashboardData?.attendance}
+          isLoading={isLoading}
+        />
+        <BentoStatGrid stats={dashboardData?.bentoStats} isLoading={isLoading} />
 
         <MobileTabBar
           tabs={EMPLOYEE_TABS}
@@ -81,7 +84,11 @@ export default function EmployeeMobileDashboard({
           onChange={setActiveTab}
         />
 
-        <MobileTabPanels activeTab={activeTab} data={tabData} />
+        <MobileTabPanels
+          activeTab={activeTab}
+          data={dashboardData?.tabData}
+          isLoading={isLoading}
+        />
       </main>
 
       <MobileFab

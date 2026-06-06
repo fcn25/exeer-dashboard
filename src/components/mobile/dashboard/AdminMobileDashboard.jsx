@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { BarChart3, ChevronLeft, Gavel } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { ROLE_LABELS } from "../../../constants/roles.js";
@@ -16,20 +16,19 @@ import MobileTabBar from "./MobileTabBar.jsx";
 import MobileTabPanels from "./MobileTabPanels.jsx";
 import MobileFab from "./MobileFab.jsx";
 import {
-  ADMIN_BENTO_STATS,
   ADMIN_FAB_ACTIONS,
   ADMIN_TABS,
-  MOCK_ADMIN_LOGS,
-  MOCK_ADMIN_REQUESTS,
-  MOCK_ADMIN_TASKS,
-  MOCK_EVALUATIONS,
-} from "./mobileDashboardMockData.js";
+} from "./mobileDashboardConfig.js";
 
 export default function AdminMobileDashboard({
   employeeName,
   profileImageUrl,
   role,
+  dashboardData,
+  isLoading,
+  error,
 }) {
+  const navigate = useNavigate();
   const { i18n } = useTranslation();
   const { user } = useAuth();
   const pageDir = i18n.language?.startsWith("en") ? "ltr" : "rtl";
@@ -39,23 +38,25 @@ export default function AdminMobileDashboard({
   const [isFabOpen, setIsFabOpen] = useState(false);
   const [successToast, setSuccessToast] = useState("");
 
-  const roleLabel = ROLE_LABELS[role] ?? ROLE_LABELS[user?.role] ?? "مدير النظام";
-
-  const tabData = {
-    requests: MOCK_ADMIN_REQUESTS,
-    tasks: MOCK_ADMIN_TASKS,
-    evaluations: MOCK_EVALUATIONS,
-    logs: MOCK_ADMIN_LOGS,
-  };
+  const resolvedRole = dashboardData?.employee?.role ?? role ?? user?.role;
+  const roleLabel = ROLE_LABELS[resolvedRole] ?? resolvedRole ?? "مدير النظام";
+  const displayName =
+    dashboardData?.employee?.full_name ?? employeeName ?? user?.name ?? "مدير";
 
   const handleFabAction = (actionId) => {
+    if (actionId === "admin-action") {
+      navigate("/mobile/administrative-actions");
+      return;
+    }
+    if (actionId === "launch-eval") {
+      navigate("/mobile/performance");
+      return;
+    }
     const labels = {
-      "new-request": "فتح نموذج طلب جديد (تجريبي)",
-      "add-task": "فتح نموذج إضافة مهمة (تجريبي)",
-      "launch-eval": "فتح إطلاق تقييم (تجريبي)",
-      "admin-action": "فتح إجراء إداري (تجريبي)",
+      "new-request": "فتح نموذج طلب جديد",
+      "add-task": "فتح نموذج إضافة مهمة",
     };
-    setSuccessToast(labels[actionId] ?? "تم اختيار الإجراء (تجريبي)");
+    setSuccessToast(labels[actionId] ?? "تم اختيار الإجراء");
   };
 
   return (
@@ -65,14 +66,23 @@ export default function AdminMobileDashboard({
       className="mx-auto min-h-screen w-full max-w-[480px] bg-gray-50/80 pb-28 font-sans text-exeer-primary"
     >
       <CompactMobileAppBar
-        employeeName={employeeName}
+        employeeName={displayName}
         roleLabel={roleLabel}
-        profileImageUrl={profileImageUrl}
+        profileImageUrl={profileImageUrl ?? dashboardData?.employee?.image}
       />
 
       <main className="space-y-4 px-4 py-4">
-        <AttendanceHorizontalWidget />
-        <BentoStatGrid stats={ADMIN_BENTO_STATS} />
+        {error ? (
+          <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+            {error}
+          </p>
+        ) : null}
+
+        <AttendanceHorizontalWidget
+          attendance={dashboardData?.attendance}
+          isLoading={isLoading}
+        />
+        <BentoStatGrid stats={dashboardData?.bentoStats} isLoading={isLoading} />
 
         {(canManageAdministrativeActions() || canAccessPerformance()) ? (
           <div className="grid grid-cols-2 gap-3">
@@ -113,7 +123,11 @@ export default function AdminMobileDashboard({
           onChange={setActiveTab}
         />
 
-        <MobileTabPanels activeTab={activeTab} data={tabData} />
+        <MobileTabPanels
+          activeTab={activeTab}
+          data={dashboardData?.tabData}
+          isLoading={isLoading}
+        />
       </main>
 
       <MobileFab

@@ -1,4 +1,5 @@
 import { CalendarDays, ClipboardCheck, ClipboardList, Star } from "lucide-react";
+import { TabListSkeleton } from "./MobileDashboardSkeleton.jsx";
 
 function EmptyState({ message }) {
   return (
@@ -58,7 +59,9 @@ function EvaluationRow({ item }) {
         </span>
         <div className="min-w-0 flex-1">
           <p className="text-sm font-bold text-exeer-primary">{item.title}</p>
-          <p className="mt-0.5 text-xs text-exeer-muted">{item.cycle}</p>
+          <p className="mt-0.5 text-xs text-exeer-muted">
+            {item.employee ? `${item.employee} · ${item.cycle}` : item.cycle}
+          </p>
           <p className="mt-1.5 text-[11px] font-medium text-amber-800">
             ينتهي {item.due}
           </p>
@@ -94,19 +97,31 @@ function LogRow({ item }) {
   );
 }
 
-export default function MobileTabPanels({ activeTab, data }) {
+const EMPTY_MESSAGES = {
+  requests: "لا توجد طلبات لعرضها حالياً.",
+  tasks: "لا توجد مهام معلقة حالياً.",
+  evaluations: "لا توجد تقييمات مطلوبة حالياً.",
+  achievements: "لم تُسجّل إنجازات بعد.",
+  logs: "لا توجد سجلات إدارية لعرضها.",
+};
+
+export default function MobileTabPanels({ activeTab, data, isLoading }) {
+  if (isLoading) {
+    return <TabListSkeleton />;
+  }
+
   const lists = {
-    requests: data.requests,
-    tasks: data.tasks,
-    evaluations: data.evaluations,
-    achievements: data.achievements,
-    logs: data.logs,
+    requests: data?.requests,
+    tasks: data?.tasks,
+    evaluations: data?.evaluations,
+    achievements: data?.achievements,
+    logs: data?.logs,
   };
 
   const items = lists[activeTab] ?? [];
 
   if (!items.length) {
-    return <EmptyState message="لا توجد عناصر لعرضها حالياً." />;
+    return <EmptyState message={EMPTY_MESSAGES[activeTab] ?? "لا توجد عناصر لعرضها حالياً."} />;
   }
 
   return (

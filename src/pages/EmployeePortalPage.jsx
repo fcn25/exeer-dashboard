@@ -34,6 +34,10 @@ import { signOut } from "../utils/mobileAuth.js";
 import { ensureArray } from "../utils/ensureArray.js";
 import AdminMobileDashboard from "../components/mobile/dashboard/AdminMobileDashboard.jsx";
 import EmployeeMobileDashboard from "../components/mobile/dashboard/EmployeeMobileDashboard.jsx";
+import {
+  fetchAdminMobileDashboard,
+  fetchEmployeeMobileDashboard,
+} from "../services/mobileDashboardService.js";
 
 function StatCard({ icon: Icon, value, label, accent = "text-exeer-primary" }) {
   return (
@@ -163,6 +167,9 @@ export default function EmployeePortalPage() {
   const [isRequestOpen, setIsRequestOpen] = useState(false);
   const [isAchievementOpen, setIsAchievementOpen] = useState(false);
   const [successToast, setSuccessToast] = useState("");
+  const [mobileDashboardData, setMobileDashboardData] = useState(null);
+  const [isMobileDashboardLoading, setIsMobileDashboardLoading] = useState(false);
+  const [mobileDashboardError, setMobileDashboardError] = useState("");
 
   const loadPortal = useCallback(async () => {
     if (!employeeId) {
@@ -188,11 +195,30 @@ export default function EmployeePortalPage() {
     }
   }, [employeeId]);
 
-  useEffect(() => {
-    if (!useCompactMobileDashboard) {
-      loadPortal();
+  const loadMobileDashboard = useCallback(async () => {
+    setIsMobileDashboardLoading(true);
+    setMobileDashboardError("");
+
+    try {
+      const data = isDashboardUser
+        ? await fetchAdminMobileDashboard(employeeId)
+        : await fetchEmployeeMobileDashboard(employeeId);
+      setMobileDashboardData(data);
+    } catch (err) {
+      setMobileDashboardError(err.message || "تعذّر تحميل لوحة الجوال.");
+      setMobileDashboardData(null);
+    } finally {
+      setIsMobileDashboardLoading(false);
     }
-  }, [loadPortal, useCompactMobileDashboard]);
+  }, [employeeId, isDashboardUser]);
+
+  useEffect(() => {
+    if (useCompactMobileDashboard) {
+      loadMobileDashboard();
+      return;
+    }
+    loadPortal();
+  }, [loadPortal, loadMobileDashboard, useCompactMobileDashboard]);
 
   const handleTaskStatusChange = async (taskId, status) => {
     setUpdatingTaskId(taskId);
@@ -230,9 +256,14 @@ export default function EmployeePortalPage() {
 
   if (useCompactMobileDashboard) {
     const dashboardProps = {
-      employeeName: user?.name ?? employeeName,
-      profileImageUrl,
-      role,
+      employeeName:
+        mobileDashboardData?.employee?.full_name ?? user?.name ?? "مستخدم",
+      profileImageUrl:
+        mobileDashboardData?.employee?.image ?? user?.image ?? profileImageUrl,
+      role: mobileDashboardData?.employee?.role ?? role,
+      dashboardData: mobileDashboardData,
+      isLoading: isMobileDashboardLoading,
+      error: mobileDashboardError,
     };
 
     return (
@@ -251,7 +282,10 @@ export default function EmployeePortalPage() {
           isOpen={isRequestOpen}
           onClose={() => setIsRequestOpen(false)}
           employeeId={employeeId}
-          onSuccess={() => setSuccessToast("تم إرسال الطلب بنجاح (تجريبي)")}
+          onSuccess={() => {
+            setSuccessToast("تم إرسال الطلب بنجاح.");
+            loadMobileDashboard();
+          }}
         />
 
         <LogAchievementModal
@@ -259,7 +293,10 @@ export default function EmployeePortalPage() {
           onClose={() => setIsAchievementOpen(false)}
           employeeId={employeeId}
           employeeName={dashboardProps.employeeName}
-          onSuccess={() => setSuccessToast("تم تسجيل الإنجاز بنجاح (تجريبي)")}
+          onSuccess={() => {
+            setSuccessToast("تم تسجيل الإنجاز بنجاح.");
+            loadMobileDashboard();
+          }}
         />
 
         <SuccessToast

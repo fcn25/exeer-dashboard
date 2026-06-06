@@ -93,11 +93,4 @@ export const MOCK_MONTHLY_RECORDS = [
   },
 ];
 
-export function formatWorkingDuration(totalMinutes) {
-  if (!totalMinutes || totalMinutes <= 0) return "0د";
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-  if (hours === 0) return `${minutes}د`;
-  if (minutes === 0) return `${hours}س`;
-  return `${hours}س ${minutes}د`;
-}
+export { formatWorkingDuration } from "../../../utils/attendance/summary.js";

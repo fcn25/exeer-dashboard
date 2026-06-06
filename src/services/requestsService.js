@@ -120,6 +120,57 @@ export async function createEmployeeRequest({
   return data;
 }
 
+const PENDING_REQUEST_STATUSES = ["Pending", "In_Review"];
+
+export async function listCompanyRequests({
+  limit = 50,
+  statuses = PENDING_REQUEST_STATUSES,
+} = {}) {
+  const companyId = getCompanyId();
+
+  let query = supabase
+    .from("requests")
+    .select(
+      "id, request_type, status, created_at, employee_id, employees ( full_name )",
+    )
+    .eq("company_id", companyId)
+    .order("created_at", { ascending: false });
+
+  if (statuses?.length) {
+    query = query.in("status", statuses);
+  }
+  if (limit) {
+    query = query.limit(limit);
+  }
+
+  const { data, error } = await query;
+  if (error) throw new Error(mapDbError(error));
+  return data ?? [];
+}
+
+export async function countCompanyRequests({
+  statuses = PENDING_REQUEST_STATUSES,
+  requestType = null,
+} = {}) {
+  const companyId = getCompanyId();
+
+  let query = supabase
+    .from("requests")
+    .select("id", { count: "exact", head: true })
+    .eq("company_id", companyId);
+
+  if (statuses?.length) {
+    query = query.in("status", statuses);
+  }
+  if (requestType) {
+    query = query.eq("request_type", requestType);
+  }
+
+  const { count, error } = await query;
+  if (error) throw new Error(mapDbError(error));
+  return count ?? 0;
+}
+
 export async function listEmployeeRequests(employeeId) {
   const companyId = getCompanyId();
   const resolvedEmployeeId = employeeId ?? getEmployeeId();

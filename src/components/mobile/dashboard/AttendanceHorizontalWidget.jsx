@@ -1,12 +1,16 @@
 import { Link } from "react-router-dom";
 import { ChevronLeft, Fingerprint } from "lucide-react";
-import {
-  MOCK_TODAY_ATTENDANCE,
-  formatWorkingDuration,
-} from "../../attendance/mobile/attendanceMockData.js";
+import { formatWorkingDuration } from "../../../utils/attendance/summary.js";
+import { AttendanceWidgetSkeleton } from "./MobileDashboardSkeleton.jsx";
 
-export default function AttendanceHorizontalWidget() {
-  const { lastPunch, workingMinutes } = MOCK_TODAY_ATTENDANCE;
+export default function AttendanceHorizontalWidget({ attendance, isLoading }) {
+  if (isLoading) {
+    return <AttendanceWidgetSkeleton />;
+  }
+
+  const lastPunch = attendance?.lastPunch;
+  const workingMinutes = attendance?.workingMinutes ?? 0;
+  const hasPunch = Boolean(lastPunch?.time && lastPunch.time !== "—");
 
   return (
     <div className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
@@ -17,9 +21,15 @@ export default function AttendanceHorizontalWidget() {
       <div className="min-w-0 flex-1">
         <p className="text-[11px] font-medium text-exeer-muted">آخر تسجيل</p>
         <p className="truncate text-sm font-bold text-exeer-primary">
-          {lastPunch.time}
-          <span className="mx-1.5 font-normal text-exeer-muted">·</span>
-          {lastPunch.typeLabel}
+          {hasPunch ? (
+            <>
+              {lastPunch.time}
+              <span className="mx-1.5 font-normal text-exeer-muted">·</span>
+              {lastPunch.typeLabel}
+            </>
+          ) : (
+            "لم يُسجّل حضور اليوم"
+          )}
         </p>
         <p className="text-[11px] text-exeer-muted">
           اليوم: {formatWorkingDuration(workingMinutes)}

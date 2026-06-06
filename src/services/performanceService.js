@@ -371,6 +371,43 @@ export async function createEvaluationCycleWithAssignments({
   return cycle;
 }
 
+export async function listCompanyPendingEvaluations({ limit = 50 } = {}) {
+  const companyId = getCompanyId();
+
+  const { data, error } = await supabase
+    .from("evaluation_responses")
+    .select(
+      `
+      id,
+      status,
+      created_at,
+      employee_id,
+      employees ( full_name ),
+      evaluation_cycles (
+        id,
+        name,
+        end_date,
+        template_id,
+        evaluation_templates:template_id ( ${getEvaluationTemplateEmbedSelect()} )
+      )
+    `,
+    )
+    .eq("company_id", companyId)
+    .eq("status", "pending")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error) throw new Error(mapDbError(error));
+
+  return (data ?? []).map((row) => {
+    const mapped = mapPendingResponseRow(row);
+    return {
+      ...mapped,
+      employeeName: row.employees?.full_name ?? "—",
+    };
+  });
+}
+
 export async function listPendingEvaluationsForEmployee(employeeId) {
   const companyId = getCompanyId();
   if (!employeeId) return [];

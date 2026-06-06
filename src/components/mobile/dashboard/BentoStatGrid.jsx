@@ -1,4 +1,14 @@
-export default function BentoStatGrid({ stats }) {
+import { BentoGridSkeleton } from "./MobileDashboardSkeleton.jsx";
+
+export default function BentoStatGrid({ stats, isLoading }) {
+  if (isLoading) {
+    return <BentoGridSkeleton />;
+  }
+
+  if (!stats?.length) {
+    return null;
+  }
+
   return (
     <section
       className="grid grid-cols-2 gap-4"

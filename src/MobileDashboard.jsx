@@ -1,17 +1,44 @@
+import { useCallback, useEffect, useState } from "react";
 import AdminMobileDashboard from "./components/mobile/dashboard/AdminMobileDashboard.jsx";
 import { getUserDisplay } from "./utils/mobileAuth.js";
+import { fetchAdminMobileDashboard } from "./services/mobileDashboardService.js";
 
 /**
  * Legacy entry — delegates to the refactored admin mobile dashboard.
  */
 export default function MobileDashboard() {
   const user = getUserDisplay();
+  const [dashboardData, setDashboardData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const loadDashboard = useCallback(async () => {
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const data = await fetchAdminMobileDashboard(user?.employee_id);
+      setDashboardData(data);
+    } catch (err) {
+      setError(err.message || "تعذّر تحميل لوحة الجوال.");
+      setDashboardData(null);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user?.employee_id]);
+
+  useEffect(() => {
+    loadDashboard();
+  }, [loadDashboard]);
 
   return (
     <AdminMobileDashboard
       employeeName={user?.name ?? "مدير"}
       profileImageUrl={user?.image ?? null}
       role={user?.role}
+      dashboardData={dashboardData}
+      isLoading={isLoading}
+      error={error}
     />
   );
 }

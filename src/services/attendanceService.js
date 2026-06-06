@@ -10,6 +10,7 @@ import {
   recalculatePayrollNet,
   resolveEmployeeBaseSalary,
 } from "../utils/attendance/deductions.js";
+import { buildTodayAttendanceSummary } from "../utils/attendance/summary.js";
 
 function mapDbError(error) {
   if (!error) return "حدث خطأ غير متوقع.";
@@ -93,6 +94,35 @@ function mapAttendanceRow(row) {
     status: row.status ?? "—",
     delayMinutes: safeAmount(row.delay_minutes),
   };
+}
+
+function todayIsoDate() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+export async function fetchTodayAttendanceForEmployee(employeeId) {
+  const companyId = requireCompanyId("تحميل حضور اليوم");
+  const resolvedEmployeeId = Number(employeeId);
+  if (!Number.isFinite(resolvedEmployeeId) || resolvedEmployeeId <= 0) {
+    return buildTodayAttendanceSummary(null);
+  }
+
+  const { data, error } = await scopeQueryByCompany(
+    supabase
+      .from("attendance_records")
+      .select(
+        "check_in_1, check_out_1, check_in_2, check_out_2, status, delay_minutes",
+      )
+      .eq("employee_id", resolvedEmployeeId)
+      .eq("record_date", todayIsoDate()),
+    companyId,
+  ).maybeSingle();
+
+  if (error && !isMissingAttendanceTable(error)) {
+    throw new Error(mapDbError(error));
+  }
+
+  return buildTodayAttendanceSummary(data ?? null);
 }
 
 export async function fetchAttendanceRecords({

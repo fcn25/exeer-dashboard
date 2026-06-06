@@ -49,7 +49,7 @@ function HistoryDayRow({ record, isExpanded }) {
   );
 }
 
-export default function AttendanceHistorySection({ records }) {
+export default function AttendanceHistorySection({ records = [], isLoading = false }) {
   const [isOpen, setIsOpen] = useState(false);
   const [expandedId, setExpandedId] = useState(null);
 
@@ -81,6 +81,13 @@ export default function AttendanceHistorySection({ records }) {
 
       {isOpen ? (
         <div className="space-y-2.5 border-t border-exeer-border px-4 py-4">
+          {isLoading ? (
+            <p className="py-6 text-center text-sm text-exeer-muted">جاري التحميل...</p>
+          ) : records.length === 0 ? (
+            <p className="py-6 text-center text-sm text-exeer-muted">
+              لا توجد سجلات حضور سابقة.
+            </p>
+          ) : null}
           {records.map((record) => (
             <button
               key={record.id}

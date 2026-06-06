@@ -1,15 +1,22 @@
 import { useState } from "react";
 import { Fingerprint, Loader2 } from "lucide-react";
 
-export default function AttendancePunchButton({ label, onPunch }) {
+export default function AttendancePunchButton({
+  label,
+  onPunch,
+  disabled = false,
+}) {
   const [isPunching, setIsPunching] = useState(false);
 
   const handleClick = async () => {
-    if (isPunching) return;
+    if (isPunching || disabled) return;
     setIsPunching(true);
-    await new Promise((resolve) => setTimeout(resolve, 1400));
-    onPunch?.();
-    setIsPunching(false);
+
+    try {
+      await onPunch?.();
+    } finally {
+      setIsPunching(false);
+    }
   };
 
   return (
@@ -17,14 +24,16 @@ export default function AttendancePunchButton({ label, onPunch }) {
       <button
         type="button"
         onClick={handleClick}
-        disabled={isPunching}
+        disabled={isPunching || disabled}
         aria-label={label}
-        className="group relative flex h-36 w-36 items-center justify-center rounded-full bg-exeer-primary text-white shadow-md transition-transform hover:scale-[1.02] active:scale-[0.97] disabled:opacity-90"
+        className="group relative flex h-36 w-36 items-center justify-center rounded-full bg-exeer-primary text-white shadow-md transition-transform hover:scale-[1.02] active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60"
       >
-        <span
-          className="absolute inset-0 rounded-full bg-exeer-primary/30 animate-ping"
-          aria-hidden
-        />
+        {!isPunching && !disabled ? (
+          <span
+            className="absolute inset-0 rounded-full bg-exeer-primary/30 animate-ping"
+            aria-hidden
+          />
+        ) : null}
         <span
           className="absolute -inset-3 rounded-full bg-blue-100/50 opacity-70 blur-md transition-opacity group-hover:opacity-100 dark:bg-blue-900/30"
           aria-hidden
@@ -40,7 +49,11 @@ export default function AttendancePunchButton({ label, onPunch }) {
 
       <div className="space-y-1 text-center">
         <p className="text-sm font-bold text-exeer-primary">
-          {isPunching ? "جاري التحقق..." : "المصادقة / التسجيل"}
+          {isPunching
+            ? "جاري التحقق البيومتري والموقع..."
+            : disabled
+              ? "التسجيل غير متاح"
+              : "المصادقة / التسجيل"}
         </p>
         <p className="text-xs text-exeer-muted">{label}</p>
       </div>

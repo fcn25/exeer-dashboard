@@ -10,7 +10,11 @@ import {
   recalculatePayrollNet,
   resolveEmployeeBaseSalary,
 } from "../utils/attendance/deductions.js";
-import { buildTodayAttendanceSummary } from "../utils/attendance/summary.js";
+import {
+  buildTodayAttendanceSummary,
+  formatAttendanceClockTime,
+  formatWorkingDuration,
+} from "../utils/attendance/summary.js";
 
 function mapDbError(error) {
   if (!error) return "حدث خطأ غير متوقع.";
@@ -98,6 +102,73 @@ function mapAttendanceRow(row) {
 
 function todayIsoDate() {
   return new Date().toISOString().slice(0, 10);
+}
+
+function mapHistoryRow(row) {
+  const summary = buildTodayAttendanceSummary(row);
+  const recordDate = row.record_date;
+  let dateLabel = recordDate ?? "—";
+  let dayLabel = "—";
+
+  if (recordDate) {
+    try {
+      const date = new Date(`${recordDate}T12:00:00`);
+      dateLabel = new Intl.DateTimeFormat("ar-SA", {
+        day: "numeric",
+        month: "long",
+      }).format(date);
+      dayLabel = new Intl.DateTimeFormat("ar-SA", { weekday: "long" }).format(
+        date,
+      );
+    } catch {
+      // keep defaults
+    }
+  }
+
+  const isLeave = row.status === "إجازة";
+
+  return {
+    id: row.id ?? recordDate,
+    date: recordDate,
+    dayLabel,
+    dateLabel,
+    checkIn: row.check_in_1
+      ? formatAttendanceClockTime(row.check_in_1)
+      : null,
+    checkOut: row.check_out_1
+      ? formatAttendanceClockTime(row.check_out_1)
+      : null,
+    workingHours: formatWorkingDuration(summary.workingMinutes),
+    delayMinutes: summary.delayMinutes,
+    status: isLeave ? "leave" : row.status === "غياب" ? "absent" : "present",
+    statusLabel: isLeave ? "إجازة" : row.status === "غياب" ? "غياب" : undefined,
+  };
+}
+
+export async function fetchRecentAttendanceHistory(employeeId, limit = 14) {
+  const companyId = requireCompanyId("تحميل سجل الحضور");
+  const resolvedEmployeeId = Number(employeeId);
+  if (!Number.isFinite(resolvedEmployeeId) || resolvedEmployeeId <= 0) {
+    return [];
+  }
+
+  const { data, error } = await scopeQueryByCompany(
+    supabase
+      .from("attendance_records")
+      .select(
+        "id, record_date, check_in_1, check_out_1, check_in_2, check_out_2, status, delay_minutes",
+      )
+      .eq("employee_id", resolvedEmployeeId)
+      .order("record_date", { ascending: false })
+      .limit(limit),
+    companyId,
+  );
+
+  if (error && !isMissingAttendanceTable(error)) {
+    throw new Error(mapDbError(error));
+  }
+
+  return (data ?? []).map(mapHistoryRow);
 }
 
 export async function fetchTodayAttendanceForEmployee(employeeId) {

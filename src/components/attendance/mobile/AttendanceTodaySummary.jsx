@@ -1,5 +1,5 @@
 import { Clock, Timer, AlertCircle } from "lucide-react";
-import { formatWorkingDuration } from "./attendanceMockData.js";
+import { formatWorkingDuration } from "../../../utils/attendance/summary.js";
 
 function SummaryRow({ icon: Icon, label, value, accent }) {
   return (
@@ -27,7 +27,11 @@ export default function AttendanceTodaySummary({ data }) {
         <SummaryRow
           icon={Clock}
           label="آخر تسجيل"
-          value={`${lastPunch.time} — ${lastPunch.typeLabel}`}
+          value={
+            lastPunch?.time
+              ? `${lastPunch.time} — ${lastPunch.typeLabel}`
+              : "لم يُسجّل بعد"
+          }
         />
         <SummaryRow
           icon={Timer}

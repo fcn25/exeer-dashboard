@@ -44,31 +44,112 @@ const PUNCH_FIELDS = [
   { field: "check_out_2", type: "check_out", typeLabel: "تسجيل انصراف" },
 ];
 
+const PUNCH_SEQUENCE = [
+  {
+    field: "check_in_1",
+    punchType: "In",
+    nextPunchType: "check_in",
+    nextPunchLabel: "تسجيل حضور",
+  },
+  {
+    field: "check_out_1",
+    punchType: "Out",
+    nextPunchType: "check_out",
+    nextPunchLabel: "تسجيل انصراف",
+  },
+  {
+    field: "check_in_2",
+    punchType: "In",
+    nextPunchType: "check_in",
+    nextPunchLabel: "تسجيل حضور",
+  },
+  {
+    field: "check_out_2",
+    punchType: "Out",
+    nextPunchType: "check_out",
+    nextPunchLabel: "تسجيل انصراف",
+  },
+];
+
+export function resolveNextPunch(record) {
+  if (record?.status === "إجازة") {
+    return {
+      canPunch: false,
+      punchType: null,
+      punchField: null,
+      nextPunchType: "leave",
+      nextPunchLabel: "إجازة",
+    };
+  }
+
+  if (record?.status === "غياب") {
+    return {
+      canPunch: true,
+      punchType: "In",
+      punchField: "check_in_1",
+      nextPunchType: "check_in",
+      nextPunchLabel: "تسجيل حضور",
+    };
+  }
+
+  for (const step of PUNCH_SEQUENCE) {
+    if (!record?.[step.field]) {
+      return {
+        canPunch: true,
+        punchType: step.punchType,
+        punchField: step.field,
+        nextPunchType: step.nextPunchType,
+        nextPunchLabel: step.nextPunchLabel,
+      };
+    }
+  }
+
+  return {
+    canPunch: false,
+    punchType: null,
+    punchField: null,
+    nextPunchType: "complete",
+    nextPunchLabel: "اكتمل التسجيل اليوم",
+  };
+}
+
 export function buildTodayAttendanceSummary(record) {
   if (!record) {
+    const nextPunch = resolveNextPunch(null);
     return {
       lastPunch: null,
       workingMinutes: 0,
       delayMinutes: 0,
       hasRecord: false,
+      nextPunchType: nextPunch.nextPunchType,
+      nextPunchLabel: nextPunch.nextPunchLabel,
+      canPunch: nextPunch.canPunch,
     };
   }
 
   if (record.status === "إجازة") {
+    const nextPunch = resolveNextPunch(record);
     return {
       lastPunch: { time: "—", type: "leave", typeLabel: "إجازة" },
       workingMinutes: 0,
       delayMinutes: Number(record.delay_minutes) || 0,
       hasRecord: true,
+      nextPunchType: nextPunch.nextPunchType,
+      nextPunchLabel: nextPunch.nextPunchLabel,
+      canPunch: nextPunch.canPunch,
     };
   }
 
   if (record.status === "غياب") {
+    const nextPunch = resolveNextPunch(record);
     return {
       lastPunch: { time: "—", type: "absent", typeLabel: "غياب" },
       workingMinutes: 0,
       delayMinutes: Number(record.delay_minutes) || 0,
       hasRecord: true,
+      nextPunchType: nextPunch.nextPunchType,
+      nextPunchLabel: nextPunch.nextPunchLabel,
+      canPunch: nextPunch.canPunch,
     };
   }
 
@@ -88,10 +169,15 @@ export function buildTodayAttendanceSummary(record) {
     diffMinutes(record.check_in_1, record.check_out_1) +
     diffMinutes(record.check_in_2, record.check_out_2);
 
+  const nextPunch = resolveNextPunch(record);
+
   return {
     lastPunch,
     workingMinutes,
     delayMinutes: Number(record.delay_minutes) || 0,
     hasRecord: true,
+    nextPunchType: nextPunch.nextPunchType,
+    nextPunchLabel: nextPunch.nextPunchLabel,
+    canPunch: nextPunch.canPunch,
   };
 }

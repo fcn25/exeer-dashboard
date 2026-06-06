@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, CalendarClock } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -6,55 +6,83 @@ import AttendancePunchButton from "../../components/attendance/mobile/Attendance
 import AttendanceTodaySummary from "../../components/attendance/mobile/AttendanceTodaySummary.jsx";
 import AttendanceHistorySection from "../../components/attendance/mobile/AttendanceHistorySection.jsx";
 import SuccessToast from "../../components/ui/SuccessToast.jsx";
+import ErrorToast from "../../components/ui/ErrorToast.jsx";
+import { useAuth } from "../../context/AuthContext.jsx";
 import {
-  MOCK_TODAY_ATTENDANCE,
-  MOCK_MONTHLY_RECORDS,
-} from "../../components/attendance/mobile/attendanceMockData.js";
-
-function formatNowTime() {
-  return new Intl.DateTimeFormat("ar-SA", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  }).format(new Date());
-}
+  fetchRecentAttendanceHistory,
+  fetchTodayAttendanceForEmployee,
+} from "../../services/attendanceService.js";
+import { performAttendancePunch } from "../../services/attendancePunchService.js";
 
 export default function MobileAttendancePage() {
   const { i18n } = useTranslation();
+  const { user } = useAuth();
+  const employeeId = user?.employee_id;
   const pageDir = i18n.language?.startsWith("en") ? "ltr" : "rtl";
   const pageLang = i18n.language?.startsWith("en") ? "en" : "ar";
 
-  const [todayData, setTodayData] = useState(MOCK_TODAY_ATTENDANCE);
+  const [todayData, setTodayData] = useState(null);
+  const [historyRecords, setHistoryRecords] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [successToast, setSuccessToast] = useState("");
+  const [errorToast, setErrorToast] = useState("");
 
-  const handlePunch = () => {
-    const isCheckIn = todayData.nextPunchType === "check_in";
-    const nextType = isCheckIn ? "check_out" : "check_in";
+  const loadAttendance = useCallback(async () => {
+    if (!employeeId) {
+      setLoadError("لم يتم ربط حسابك بسجل موظف. تواصل مع الموارد البشرية.");
+      setTodayData(null);
+      setHistoryRecords([]);
+      setIsLoading(false);
+      return;
+    }
 
-    setTodayData((current) => ({
-      ...current,
-      lastPunch: {
-        time: formatNowTime(),
-        type: current.nextPunchType,
-        typeLabel: current.nextPunchLabel,
-      },
-      nextPunchType: nextType,
-      nextPunchLabel: nextType === "check_in" ? "تسجيل حضور" : "تسجيل انصراف",
-      workingMinutes: isCheckIn
-        ? current.workingMinutes
-        : current.workingMinutes + 15,
-    }));
+    setIsLoading(true);
+    setLoadError("");
 
-    setSuccessToast(
-      isCheckIn
-        ? "تم تسجيل الحضور بنجاح (بيانات تجريبية)"
-        : "تم تسجيل الانصراف بنجاح (بيانات تجريبية)",
-    );
+    try {
+      const [today, history] = await Promise.all([
+        fetchTodayAttendanceForEmployee(employeeId),
+        fetchRecentAttendanceHistory(employeeId),
+      ]);
+      setTodayData(today);
+      setHistoryRecords(history);
+    } catch (err) {
+      setLoadError(err.message || "تعذّر تحميل بيانات الحضور.");
+      setTodayData(null);
+      setHistoryRecords([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [employeeId]);
+
+  useEffect(() => {
+    loadAttendance();
+  }, [loadAttendance]);
+
+  const handlePunch = async () => {
+    setErrorToast("");
+
+    try {
+      const result = await performAttendancePunch(employeeId);
+      setTodayData(result.summary);
+      setSuccessToast(
+        result.punchType === "In"
+          ? `تم تسجيل الحضور بنجاح — ${result.branchName}`
+          : `تم تسجيل الانصراف بنجاح — ${result.branchName}`,
+      );
+      await loadAttendance();
+    } catch (err) {
+      setErrorToast(err.message || "تعذّر إتمام التسجيل.");
+    }
   };
 
   const handlePermissionRequest = () => {
-    setSuccessToast("سيتم فتح نموذج الاستئذان قريباً (واجهة تجريبية)");
+    setSuccessToast("سيتم فتح نموذج الاستئذان قريباً");
   };
+
+  const punchLabel = todayData?.nextPunchLabel ?? "تسجيل حضور";
+  const canPunch = todayData?.canPunch !== false && !isLoading && !loadError;
 
   return (
     <div
@@ -79,14 +107,28 @@ export default function MobileAttendancePage() {
       </header>
 
       <main className="space-y-5 px-4 py-6 pb-10">
+        {loadError ? (
+          <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+            {loadError}
+          </p>
+        ) : null}
+
         <section className="rounded-3xl border border-exeer-border bg-gradient-to-b from-white to-slate-50/80 px-5 py-8 shadow-sm dark:from-slate-900 dark:to-slate-800/60">
-          <AttendancePunchButton
-            label={todayData.nextPunchLabel}
-            onPunch={handlePunch}
-          />
+          {isLoading ? (
+            <div className="flex flex-col items-center gap-4 py-8">
+              <div className="h-36 w-36 animate-pulse rounded-full bg-slate-200 dark:bg-slate-700" />
+              <p className="text-sm text-exeer-muted">جاري التحميل...</p>
+            </div>
+          ) : (
+            <AttendancePunchButton
+              label={punchLabel}
+              onPunch={handlePunch}
+              disabled={!canPunch}
+            />
+          )}
         </section>
 
-        <AttendanceTodaySummary data={todayData} />
+        {todayData ? <AttendanceTodaySummary data={todayData} /> : null}
 
         <button
           type="button"
@@ -97,13 +139,17 @@ export default function MobileAttendancePage() {
           استئذان
         </button>
 
-        <AttendanceHistorySection records={MOCK_MONTHLY_RECORDS} />
+        <AttendanceHistorySection
+          records={historyRecords}
+          isLoading={isLoading}
+        />
       </main>
 
       <SuccessToast
         message={successToast}
         onDismiss={() => setSuccessToast("")}
       />
+      <ErrorToast message={errorToast} onDismiss={() => setErrorToast("")} />
     </div>
   );
 }

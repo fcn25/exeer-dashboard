@@ -4,10 +4,7 @@ import {
   authenticateWithBiometric,
   captureCurrentPosition,
 } from "./nativeBiometricService.js";
-import {
-  GEOFENCE_OUT_OF_RANGE_MESSAGE,
-  isWithinGeofence,
-} from "../utils/attendance/geofence.js";
+import { GEOFENCE_OUT_OF_RANGE_MESSAGE } from "../utils/attendance/geofence.js";
 import {
   buildTodayAttendanceSummary,
   resolveNextPunch,
@@ -31,6 +28,46 @@ function nowLocalTimeValue() {
   const minutes = String(now.getMinutes()).padStart(2, "0");
   const seconds = String(now.getSeconds()).padStart(2, "0");
   return `${hours}:${minutes}:${seconds}`;
+}
+
+async function verifyGeofenceViaRpc(latitude, longitude) {
+  const {
+    data: { session },
+    error: sessionError,
+  } = await supabase.auth.getSession();
+
+  if (sessionError) {
+    throw new Error(sessionError.message || "تعذّر التحقق من الجلسة.");
+  }
+
+  const userId = session?.user?.id;
+  if (!userId) {
+    throw new Error("تعذّر التحقق من الجلسة. أعد تسجيل الدخول.");
+  }
+
+  const { data, error } = await supabase.rpc("verify_attendance_geofence", {
+    emp_user_id: userId,
+    current_lat: latitude,
+    current_lng: longitude,
+  });
+
+  if (error) {
+    if (
+      error.code === "PGRST202" ||
+      String(error.message ?? "").includes("verify_attendance_geofence")
+    ) {
+      throw new Error(
+        "دالة التحقق الجغرافي غير متوفرة. نفّذ migration verify_attendance_geofence في Supabase.",
+      );
+    }
+    throw new Error(mapDbError(error));
+  }
+
+  const result = typeof data === "string" ? JSON.parse(data) : data;
+  return {
+    isWithinRadius: Boolean(result?.is_within_radius),
+    distanceMeters: Number(result?.distance_meters),
+  };
 }
 
 async function fetchEmployeeWorkBranch(employeeId) {
@@ -163,15 +200,12 @@ export async function performAttendancePunch(employeeId) {
 
   const { companyId, branch } = await fetchEmployeeWorkBranch(resolvedEmployeeId);
 
-  const inside = isWithinGeofence(
+  const geofence = await verifyGeofenceViaRpc(
     coordinates.latitude,
     coordinates.longitude,
-    branch.latitude,
-    branch.longitude,
-    branch.radiusMeters,
   );
 
-  if (!inside) {
+  if (!geofence.isWithinRadius) {
     throw new Error(GEOFENCE_OUT_OF_RANGE_MESSAGE);
   }
 

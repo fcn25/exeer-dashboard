@@ -5,7 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "node scripts/validate-vite-env.mjs && vite build",
+    "build:capacitor": "node scripts/validate-vite-env.mjs && vite build --mode production",
+    "cap:sync": "npm run build && npx cap sync",
+    "cap:sync:ios": "npm run build && npx cap sync ios",
+    "cap:android": "npx cap open android",
+    "cap:ios": "npx cap open ios",
     "preview": "npm run build && wrangler dev",
     "deploy": "npm run build && wrangler deploy",
     "seed": "node scripts/seed.js"
@@ -31,6 +36,9 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@capacitor/android": "^8.4.0",
+    "@capacitor/cli": "^8.4.0",
+    "@capacitor/ios": "^8.4.0",
     "@cloudflare/vite-plugin": "^1.39.2",
     "@tailwindcss/vite": "^4.1.8",
     "@vitejs/plugin-react": "^4.5.2",

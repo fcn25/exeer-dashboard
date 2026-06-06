@@ -3,6 +3,8 @@ import { useTranslation } from "react-i18next";
 import { ROLE_LABELS } from "../../../constants/roles.js";
 import { useAuth } from "../../../context/AuthContext.jsx";
 import SuccessToast from "../../ui/SuccessToast.jsx";
+import ErrorToast from "../../ui/ErrorToast.jsx";
+import { performAttendancePunch } from "../../../services/attendancePunchService.js";
 import CompactMobileAppBar from "./CompactMobileAppBar.jsx";
 import AttendanceHorizontalWidget from "./AttendanceHorizontalWidget.jsx";
 import BentoStatGrid from "./BentoStatGrid.jsx";
@@ -23,21 +25,58 @@ export default function EmployeeMobileDashboard({
   error,
   onNewRequest,
   onAddAchievement,
+  onDashboardRefresh,
 }) {
   const { i18n } = useTranslation();
   const { user } = useAuth();
+  const employeeId = user?.employee_id;
   const pageDir = i18n.language?.startsWith("en") ? "ltr" : "rtl";
   const pageLang = i18n.language?.startsWith("en") ? "en" : "ar";
 
   const [activeTab, setActiveTab] = useState("requests");
   const [isFabOpen, setIsFabOpen] = useState(false);
   const [successToast, setSuccessToast] = useState("");
+  const [errorToast, setErrorToast] = useState("");
+  const [isPunching, setIsPunching] = useState(false);
 
   const resolvedRole = dashboardData?.employee?.role ?? role ?? user?.role;
   const roleLabel =
     ROLE_LABELS[resolvedRole] ?? ROLE_LABELS.Employee;
   const displayName =
     dashboardData?.employee?.full_name ?? employeeName ?? user?.name ?? "موظف";
+
+  const attendance = dashboardData?.attendance;
+  const canPunch =
+    attendance?.canPunch !== false &&
+    !isLoading &&
+    !error &&
+    Boolean(employeeId) &&
+    !isPunching;
+  const punchLabel = attendance?.nextPunchLabel ?? "تسجيل حضور";
+
+  const handlePunch = async () => {
+    if (!employeeId) {
+      setErrorToast("لم يتم ربط حسابك بسجل موظف. تواصل مع الموارد البشرية.");
+      return;
+    }
+
+    setErrorToast("");
+    setIsPunching(true);
+
+    try {
+      const result = await performAttendancePunch(employeeId);
+      setSuccessToast(
+        result.punchType === "In"
+          ? `تم تسجيل الحضور بنجاح — ${result.branchName}`
+          : `تم تسجيل الانصراف بنجاح — ${result.branchName}`,
+      );
+      await onDashboardRefresh?.();
+    } catch (err) {
+      setErrorToast(err.message || "تعذّر إتمام التسجيل.");
+    } finally {
+      setIsPunching(false);
+    }
+  };
 
   const handleFabAction = (actionId) => {
     if (actionId === "new-request") {
@@ -73,8 +112,12 @@ export default function EmployeeMobileDashboard({
         ) : null}
 
         <AttendanceHorizontalWidget
-          attendance={dashboardData?.attendance}
+          attendance={attendance}
           isLoading={isLoading}
+          onPunch={handlePunch}
+          isPunching={isPunching}
+          canPunch={canPunch}
+          punchLabel={punchLabel}
         />
         <BentoStatGrid stats={dashboardData?.bentoStats} isLoading={isLoading} />
 
@@ -102,6 +145,7 @@ export default function EmployeeMobileDashboard({
         message={successToast}
         onDismiss={() => setSuccessToast("")}
       />
+      <ErrorToast message={errorToast} onDismiss={() => setErrorToast("")} />
     </div>
   );
 }

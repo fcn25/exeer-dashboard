@@ -275,6 +275,7 @@ export default function EmployeePortalPage() {
             {...dashboardProps}
             onNewRequest={() => setIsRequestOpen(true)}
             onAddAchievement={() => setIsAchievementOpen(true)}
+            onDashboardRefresh={loadMobileDashboard}
           />
         )}
 

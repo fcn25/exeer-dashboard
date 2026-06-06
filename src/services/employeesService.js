@@ -206,51 +206,54 @@ export async function createEmployee(form) {
   };
 }
 
-function mapBulkImportError(error, data) {
-  if (data?.error) return String(data.error);
-  if (error?.context?.body) {
-    try {
-      const parsed =
-        typeof error.context.body === "string"
-          ? JSON.parse(error.context.body)
-          : error.context.body;
-      if (parsed?.error) return String(parsed.error);
-    } catch {
-      // fall through
-    }
-  }
-  if (error?.message) return error.message;
-  return "تعذّر استيراد الموظفين. تأكد من نشر Edge Function: bulk-import-employees.";
-}
-
 export async function bulkCreateEmployees(rows, { sendInvites = false } = {}) {
   if (!Array.isArray(rows) || rows.length === 0) {
     throw new Error("لا توجد سجلات للاستيراد.");
   }
 
   await assertCanAddEmployees(rows.length);
+  const companyId = getCompanyId();
 
-  const { data, error } = await supabase.functions.invoke(
-    "bulk-import-employees",
-    {
-      body: {
-        rows,
-        send_invites: sendInvites,
-        redirect_to: `${window.location.origin}/update-password`,
-      },
-    },
-  );
+  const payload = rows
+    .map((row) => ({
+      company_id: companyId,
+      full_name: String(row.full_name ?? "").trim(),
+      email: String(row.email ?? "").trim().toLowerCase() || null,
+      phone_number: String(row.phone_number ?? "").trim() || null,
+      gender: row.gender || "ذكر",
+      date_of_birth: row.date_of_birth || null,
+      nationality: String(row.nationality ?? "").trim() || null,
+      id_number: row.id_number ? Number(row.id_number) : null,
+      national_address: String(row.national_address ?? "").trim() || null,
+      employee_number: String(row.employee_number ?? "").trim() || null,
+      hire_date: row.hire_date || null,
+      contract_type: row.contract_type || "دوام كامل",
+      employment_status: row.employment_status || "نشط",
+      role: "Employee",
+      direct_manager_name: String(row.direct_manager_name ?? "").trim() || null,
+      job_title_name: String(row.job_title_name ?? "").trim() || null,
+      department: String(row.department ?? "").trim() || null,
+      basic_salary: Number(row.basic_salary) || 0,
+      housing_allowance: Number(row.housing_allowance) || 0,
+      transport_allowance: Number(row.transport_allowance) || 0,
+      other_allowance: Number(row.other_allowance) || 0,
+      bank_name: String(row.bank_name ?? "").trim() || null,
+      iban: String(row.iban ?? "").trim() || null,
+    }))
+    .filter((row) => row.full_name);
 
-  if (error || data?.error) {
-    throw new Error(mapBulkImportError(error, data));
-  }
+  const { data, error } = await supabase
+    .from("employees")
+    .insert(payload)
+    .select("id, full_name, email");
+
+  if (error) throw new Error(mapDbError(error));
 
   return {
-    imported: Number(data?.imported) || 0,
-    invitesSent: Number(data?.invitesSent) || 0,
-    invitesSkippedNoEmail: Number(data?.invitesSkippedNoEmail) || 0,
-    rows: data?.rows ?? [],
-    inviteErrors: data?.inviteErrors ?? [],
+    imported: data.length,
+    invitesSent: 0,
+    rows: data,
+    inviteErrors: [],
   };
 }
 

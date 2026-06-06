@@ -1,4 +1,5 @@
 import { supabase } from "../utils/supabaseClient.js";
+import { getCompanyId } from "../utils/mobileAuth.js";
 
 export async function inviteEmployeeByEmail({
   email,
@@ -12,19 +13,20 @@ export async function inviteEmployeeByEmail({
     throw new Error("البريد الإلكتروني مطلوب لإرسال دعوة الدخول.");
   }
 
-  const { error } = await supabase.auth.resetPasswordForEmail(
-    normalizedEmail,
-    {
-      redirectTo: `${window.location.origin}/update-password`,
+  const { data, error } = await supabase.functions.invoke("invite-employee", {
+    body: {
+      email: normalizedEmail,
+      full_name: String(fullName ?? "").trim(),
+      company_id: companyId ?? getCompanyId(),
+      role: role ?? "Employee",
+      employee_id: employeeId ?? null,
+      redirect_to: `${window.location.origin}/update-password`,
     },
-  );
+  });
 
-  if (error) throw new Error(error.message);
-  return {
-    email: normalizedEmail,
-    fullName,
-    role,
-    companyId,
-    employeeId,
-  };
+  if (error || data?.error) {
+    throw new Error(data?.error || error?.message || "تعذّر إرسال الدعوة.");
+  }
+
+  return data;
 }

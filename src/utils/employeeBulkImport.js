@@ -1,3 +1,4 @@
+import Papa from "papaparse";
 import * as XLSX from "xlsx";
 import { normalizeAppRole } from "../constants/roles.js";
 
@@ -116,6 +117,99 @@ function normalizeImportRole(value) {
   return ALLOWED_IMPORT_ROLES.has(normalized) ? normalized : "Employee";
 }
 
+function isCsvFile(file) {
+  const name = String(file?.name ?? "").toLowerCase();
+  const type = String(file?.type ?? "").toLowerCase();
+  return (
+    name.endsWith(".csv") ||
+    type === "text/csv" ||
+    type === "application/csv" ||
+    type === "text/comma-separated-values"
+  );
+}
+
+function stripUtf8Bom(value) {
+  const text = String(value ?? "");
+  return text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
+}
+
+function normalizeSpreadsheetRows(rows) {
+  return (rows ?? []).map((row) => {
+    if (!Array.isArray(row)) return row;
+    return row.map((cell) => stripUtf8Bom(String(cell ?? "").trim()));
+  });
+}
+
+function parseCsvFileUtf8(file) {
+  return new Promise((resolve, reject) => {
+    Papa.parse(file, {
+      encoding: "UTF-8",
+      skipEmptyLines: false,
+      complete: (results) => {
+        if (results.errors?.length) {
+          const message = results.errors
+            .map((item) => item.message)
+            .filter(Boolean)
+            .join(" ");
+          if (message) {
+            reject(new Error(message));
+            return;
+          }
+        }
+        resolve(normalizeSpreadsheetRows(results.data));
+      },
+      error: (error) => {
+        reject(new Error(error?.message || "تعذّر قراءة ملف CSV."));
+      },
+    });
+  });
+}
+
+async function parseExcelFile(file) {
+  const buffer = await file.arrayBuffer();
+  const workbook = XLSX.read(buffer, { type: "array" });
+  const sheetName = workbook.SheetNames[0];
+  if (!sheetName) {
+    throw new Error("الملف لا يحتوي على أوراق عمل.");
+  }
+
+  return normalizeSpreadsheetRows(
+    XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], {
+      header: 1,
+      defval: "",
+      raw: false,
+    }),
+  );
+}
+
+function employeesFromRows(rows) {
+  if (rows.length < 2) {
+    throw new Error("يجب أن يحتوي الملف على صف عناوين وصف واحد على الأقل.");
+  }
+
+  const headerRow = rows[0];
+  const columnMap = headerRow.map((header) => resolveColumnKey(header));
+
+  if (!columnMap.some((key) => key === "full_name")) {
+    throw new Error(
+      "لم يتم العثور على عمود الاسم. استخدم نموذج ListEmployeeExeer.csv أو عمود full_name.",
+    );
+  }
+
+  const employees = [];
+  for (let i = 1; i < rows.length; i += 1) {
+    if (isRowEmpty(rows[i])) continue;
+    const mapped = rowToEmployee(rows[i], columnMap);
+    if (mapped) employees.push(mapped);
+  }
+
+  if (employees.length === 0) {
+    throw new Error("لم يتم العثور على موظفين صالحين في الملف.");
+  }
+
+  return employees;
+}
+
 function rowToEmployee(row, columnMap) {
   const record = {};
   row.forEach((cell, index) => {
@@ -142,42 +236,9 @@ function rowToEmployee(row, columnMap) {
 }
 
 export async function parseEmployeeSpreadsheet(file) {
-  const buffer = await file.arrayBuffer();
-  const workbook = XLSX.read(buffer, { type: "array" });
-  const sheetName = workbook.SheetNames[0];
-  if (!sheetName) {
-    throw new Error("الملف لا يحتوي على أوراق عمل.");
-  }
+  const rows = isCsvFile(file)
+    ? await parseCsvFileUtf8(file)
+    : await parseExcelFile(file);
 
-  const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], {
-    header: 1,
-    defval: "",
-    raw: true,
-  });
-
-  if (rows.length < 2) {
-    throw new Error("يجب أن يحتوي الملف على صف عناوين وصف واحد على الأقل.");
-  }
-
-  const headerRow = rows[0];
-  const columnMap = headerRow.map((header) => resolveColumnKey(header));
-
-  if (!columnMap.some((key) => key === "full_name")) {
-    throw new Error(
-      "لم يتم العثور على عمود الاسم. استخدم نموذج ListEmployeeExeer.csv أو عمود full_name.",
-    );
-  }
-
-  const employees = [];
-  for (let i = 1; i < rows.length; i += 1) {
-    if (isRowEmpty(rows[i])) continue;
-    const mapped = rowToEmployee(rows[i], columnMap);
-    if (mapped) employees.push(mapped);
-  }
-
-  if (employees.length === 0) {
-    throw new Error("لم يتم العثور على موظفين صالحين في الملف.");
-  }
-
-  return employees;
+  return employeesFromRows(rows);
 }

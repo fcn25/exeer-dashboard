@@ -1,16 +1,13 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
+import {
+  handleCorsPreflight,
+  jsonResponse,
+} from "../_shared/cors.ts";
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
+  const preflight = handleCorsPreflight(req);
+  if (preflight) return preflight;
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
@@ -18,15 +15,15 @@ Deno.serve(async (req) => {
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
 
     if (!supabaseUrl || !serviceRoleKey || !anonKey) {
-      throw new Error("Supabase environment is not configured for invite-employee.");
+      return jsonResponse(
+        { error: "Supabase environment is not configured for invite-employee." },
+        500,
+      );
     }
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonResponse({ error: "Unauthorized" }, 401);
     }
 
     const userClient = createClient(supabaseUrl, anonKey, {
@@ -39,17 +36,20 @@ Deno.serve(async (req) => {
     } = await userClient.auth.getUser();
 
     if (userError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonResponse({ error: "Unauthorized" }, 401);
     }
 
-    const body = await req.json();
+    let body: Record<string, unknown> = {};
+    try {
+      body = (await req.json()) as Record<string, unknown>;
+    } catch {
+      return jsonResponse({ error: "Invalid JSON body" }, 400);
+    }
+
     const email = String(body.email ?? "").trim().toLowerCase();
 
     if (!email) {
-      throw new Error("Employee email is required.");
+      return jsonResponse({ error: "Employee email is required." }, 400);
     }
 
     const adminClient = createClient(supabaseUrl, serviceRoleKey, {
@@ -75,15 +75,10 @@ Deno.serve(async (req) => {
 
     if (error) throw error;
 
-    return new Response(JSON.stringify({ user: data.user }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonResponse({ user: data.user });
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Failed to invite employee.";
-    return new Response(JSON.stringify({ error: message }), {
-      status: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonResponse({ error: message }, 400);
   }
 });

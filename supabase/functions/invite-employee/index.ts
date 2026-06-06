@@ -7,8 +7,11 @@ Deno.serve(async (req) => {
   if (preflight) return preflight;
 
   try {
+    console.log("1. Function started");
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+    console.log("2. URL:", supabaseUrl ? "exists" : "missing");
+    console.log("3. Service key:", serviceRoleKey ? "exists" : "missing");
 
     const adminClient = createClient(supabaseUrl, serviceRoleKey, {
       auth: { autoRefreshToken: false, persistSession: false },
@@ -22,6 +25,7 @@ Deno.serve(async (req) => {
     }
 
     const email = String(body.email ?? "").trim().toLowerCase();
+    console.log("4. Email:", email);
     if (!email) {
       return jsonResponse({ error: "Employee email is required." }, 400);
     }
@@ -30,6 +34,7 @@ Deno.serve(async (req) => {
       String(body.redirect_to ?? "").trim() ||
       `${req.headers.get("origin") ?? ""}/update-password`;
 
+    console.log("5. Calling inviteUserByEmail...");
     const { data, error } = await adminClient.auth.admin.inviteUserByEmail(
       email,
       {
@@ -43,7 +48,11 @@ Deno.serve(async (req) => {
       },
     );
 
-    if (error) throw error;
+    if (error) {
+      console.error("6. Error:", error.message, error.status);
+      throw error;
+    }
+    console.log("7. Success:", data.user?.id);
     return jsonResponse({ user: data.user });
   } catch (error) {
     const message =

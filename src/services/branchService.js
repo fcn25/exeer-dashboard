@@ -1,5 +1,38 @@
 import { supabase } from "../utils/supabaseClient.js";
+import { getAuthCompanyId } from "../utils/mobileAuth.js";
 import { requireCompanyId, scopeQueryByCompany } from "../utils/tenantScope.js";
+import { fetchEmployeeProfileByEmail } from "./profileService.js";
+
+async function resolveCompanyIdForWrite(context) {
+  const {
+    data: { session },
+    error: sessionError,
+  } = await supabase.auth.getSession();
+
+  if (sessionError) {
+    throw new Error(sessionError.message || "تعذّر التحقق من الجلسة.");
+  }
+
+  const employee = await fetchEmployeeProfileByEmail(session?.user?.email);
+  const fromEmployee = Number(employee?.company_id);
+  const fromMetadata = Number(session?.user?.user_metadata?.company_id);
+  const cached = getAuthCompanyId();
+
+  const companyId =
+    Number.isFinite(fromEmployee) && fromEmployee > 0
+      ? fromEmployee
+      : Number.isFinite(fromMetadata) && fromMetadata > 0
+        ? fromMetadata
+        : cached;
+
+  if (!Number.isFinite(companyId) || companyId <= 0) {
+    throw new Error(
+      `لم يتم تحديد الشركة الحالية. أعد تسجيل الدخول ثم حاول مرة أخرى (${context}).`,
+    );
+  }
+
+  return companyId;
+}
 
 function mapDbError(error) {
   if (!error) return "حدث خطأ غير متوقع.";
@@ -48,7 +81,7 @@ export async function saveCompanyBranch({
   longitude,
   radiusMeters,
 }) {
-  const companyId = requireCompanyId("حفظ موقع الفرع");
+  const companyId = await resolveCompanyIdForWrite("حفظ موقع الفرع");
   const trimmedName = String(name ?? "").trim();
   const lat = Number(latitude);
   const lng = Number(longitude);
@@ -66,12 +99,18 @@ export async function saveCompanyBranch({
   }
 
   const payload = {
-    company_id: companyId,
+    company_id: Number(companyId),
     name: trimmedName,
     latitude: lat,
     longitude: lng,
     radius_meters: Math.round(radius),
   };
+
+  if (!Number.isFinite(payload.company_id) || payload.company_id <= 0) {
+    throw new Error(
+      "لم يتم تحديد الشركة الحالية. أعد تسجيل الدخول ثم حاول مرة أخرى.",
+    );
+  }
 
   if (id) {
     const { data, error } = await scopeQueryByCompany(
@@ -91,7 +130,9 @@ export async function saveCompanyBranch({
   const { data, error } = await supabase
     .from("company_branches")
     .insert(payload)
-    .select("id, company_id, name, latitude, longitude, radius_meters, created_at, updated_at")
+    .select(
+      "id, company_id, name, latitude, longitude, radius_meters, created_at, updated_at",
+    )
     .single();
 
   if (error) throw new Error(mapDbError(error));

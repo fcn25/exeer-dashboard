@@ -10,7 +10,7 @@ import {
 } from "./components/employees/employeeFormShared.js";
 import SlideOver, { BulkImportButton } from "./components/employees/SlideOver.jsx";
 import ExeerEmptyState from "./components/brand/ExeerEmptyState.jsx";
-import EmployeeBulkImportWizard from "./components/employees/EmployeeBulkImportWizard.jsx";
+import BulkImportModal from "./components/employees/BulkImportModal.jsx";
 import SuccessToast from "./components/ui/SuccessToast.jsx";
 import { fetchCompanyBilling } from "./services/billingService.js";
 import {
@@ -780,7 +780,7 @@ export default function EmployeesPage() {
         onCreated={() => handleMutationSuccess("تم إضافة الموظف بنجاح")}
       />
 
-      <EmployeeBulkImportWizard
+      <BulkImportModal
         isOpen={isBulkImportOpen}
         onClose={() => setIsBulkImportOpen(false)}
         onSuccess={(result) =>

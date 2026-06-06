@@ -43,6 +43,7 @@ import { formatPortalDate, getTimeBasedGreeting } from "../utils/portalGreeting.
 import { signOut } from "../utils/mobileAuth.js";
 import { ensureArray } from "../utils/ensureArray.js";
 import MobileLoadingState from "../components/mobile/MobileLoadingState.jsx";
+import AttendanceDashboardWidget from "../components/attendance/mobile/AttendanceDashboardWidget.jsx";
 
 function StatCard({ icon: Icon, value, label, accent = "text-exeer-primary" }) {
   return (
@@ -323,6 +324,12 @@ export default function EmployeePortalPage() {
             accent="text-emerald-700 dark:text-emerald-300"
           />
         </section>
+
+        {isMobileSelfService ? (
+          <section aria-label="الحضور والبصمة">
+            <AttendanceDashboardWidget />
+          </section>
+        ) : null}
 
         {isMobileSelfService && canManageAdministrativeActions() ? (
           <Link

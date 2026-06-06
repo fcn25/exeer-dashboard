@@ -16,6 +16,7 @@ import AdministrativeActionsPage from "./pages/AdministrativeActionsPage.jsx";
 import MyTeamDashboard from "./pages/MyTeamDashboard.jsx";
 import MobileAdministrativeActionsPage from "./pages/mobile/MobileAdministrativeActionsPage.jsx";
 import MobilePerformancePage from "./pages/mobile/MobilePerformancePage.jsx";
+import MobileAttendancePage from "./pages/mobile/MobileAttendancePage.jsx";
 import { AdministrativeActionsGate } from "./components/administrative/AdministrativeActionsGate.jsx";
 import { PerformanceGate } from "./components/performance/PerformanceGate.jsx";
 import MobileSubscriptionPage from "./pages/MobileSubscriptionPage.jsx";
@@ -248,6 +249,16 @@ function AppRoutes() {
                 <MobilePerformancePage />
               </MobileRoute>
             </PerformanceGate>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/mobile/attendance"
+        element={
+          <ProtectedRoute allowPortal>
+            <MobileRoute>
+              <MobileAttendancePage />
+            </MobileRoute>
           </ProtectedRoute>
         }
       />

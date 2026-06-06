@@ -12,7 +12,7 @@ export async function inviteEmployeeByEmail({
     throw new Error("البريد الإلكتروني مطلوب لإرسال دعوة الدخول.");
   }
 
-  const { data, error } = await supabase.auth.resetPasswordForEmail(
+  const { error } = await supabase.auth.resetPasswordForEmail(
     normalizedEmail,
     {
       redirectTo: `${window.location.origin}/update-password`,
@@ -20,5 +20,11 @@ export async function inviteEmployeeByEmail({
   );
 
   if (error) throw new Error(error.message);
-  return data;
+  return {
+    email: normalizedEmail,
+    fullName,
+    role,
+    companyId,
+    employeeId,
+  };
 }

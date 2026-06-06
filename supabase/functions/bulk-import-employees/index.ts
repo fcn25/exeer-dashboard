@@ -25,14 +25,13 @@ function normalizeInviteEmail(email: unknown) {
   return isValidInviteEmail(normalized) ? normalized : null;
 }
 
-const ALLOWED_EMPLOYEE_ROLES = new Set([
-  "owner",
-  "Executive",
-  "HR_Manager",
-  "HR_Assistant",
-  "Direct_Manager",
-  "Employee",
-]);
+const ROLE_MAP: Record<string, string> = {
+  "موظف": "Employee",
+  "مدير مباشر": "Direct_Manager",
+  "مدير الموارد البشرية": "HR_Manager",
+  "مساعد الموارد البشرية": "HR_Assistant",
+  "تنفيذي": "Executive",
+};
 
 /** Parsed from CSV template only — no extra HR/financial fields. */
 type ImportRow = {
@@ -44,47 +43,24 @@ type ImportRow = {
   role?: string | null;
 };
 
-function normalizeImportRole(role: unknown) {
-  const raw = String(role ?? "").trim();
-  if (!raw) return "Employee";
-
-  const lower = raw.toLowerCase();
-  if (lower === "manager" || lower === "department head") {
-    return "Direct_Manager";
-  }
-  if (lower === "admin") return "owner";
-
-  if (ALLOWED_EMPLOYEE_ROLES.has(raw)) return raw;
-
-  return "Employee";
+function resolveImportRole(role: unknown) {
+  const rawRole = String(role ?? "").trim();
+  return ROLE_MAP[rawRole] ?? (rawRole || "Employee");
 }
 
 function mapRowToEmployeePayload(companyId: number, row: ImportRow) {
   const fullName = String(row.full_name ?? "").trim();
   if (!fullName) return null;
 
-  const payload: {
-    company_id: number;
-    full_name: string;
-    email: string | null;
-    phone_number: string | null;
-    job_title_name: string | null;
-    employee_number: string | null;
-    role?: string;
-  } = {
+  return {
     company_id: companyId,
     full_name: fullName,
     email: normalizeInviteEmail(row.email),
     phone_number: String(row.phone_number ?? "").trim() || null,
     job_title_name: String(row.job_title_name ?? "").trim() || null,
     employee_number: String(row.employee_number ?? "").trim() || null,
+    role: resolveImportRole(row.role),
   };
-
-  if (row.role != null && String(row.role).trim() !== "") {
-    payload.role = normalizeImportRole(row.role);
-  }
-
-  return payload;
 }
 
 async function resolveCallerContext(

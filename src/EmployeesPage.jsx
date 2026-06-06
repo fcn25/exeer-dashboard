@@ -20,7 +20,7 @@ import {
   updateEmployee,
   updateEmployeeWorkLocation,
 } from "./services/employeesService.js";
-import { listCompanyBranches } from "./services/branchService.js";
+import { listBranchSelectOptions } from "./services/branchService.js";
 import WorkLocationSelect, {
   resolveWorkLocationLabel,
 } from "./components/attendance/WorkLocationSelect.jsx";
@@ -85,11 +85,12 @@ function AddEmployeeSlideOver({
   onOpenBulkImport,
   departmentOptions,
   jobTitleOptions,
-  branchOptions = [],
   employeeCount = 0,
   subscriptionTier = "trial",
 }) {
   const [form, setForm] = useState({ ...EMPTY_EMPLOYEE_FORM });
+  const [branchOptions, setBranchOptions] = useState([]);
+  const [branchesLoading, setBranchesLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
@@ -103,6 +104,29 @@ function AddEmployeeSlideOver({
       setLimitToast("");
       setIsSaving(false);
     }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+
+    let cancelled = false;
+
+    async function loadBranches() {
+      setBranchesLoading(true);
+      try {
+        const branches = await listBranchSelectOptions();
+        if (!cancelled) setBranchOptions(branches);
+      } catch {
+        if (!cancelled) setBranchOptions([]);
+      } finally {
+        if (!cancelled) setBranchesLoading(false);
+      }
+    }
+
+    loadBranches();
+    return () => {
+      cancelled = true;
+    };
   }, [isOpen]);
 
   const handleSave = async (event) => {
@@ -181,6 +205,7 @@ function AddEmployeeSlideOver({
           departmentOptions={departmentOptions}
           jobTitleOptions={jobTitleOptions}
           branchOptions={branchOptions}
+          branchesLoading={branchesLoading}
         />
       </form>
     </SlideOver>
@@ -194,11 +219,12 @@ function EmployeeDetailsSlideOver({
   onSave,
   departmentOptions,
   jobTitleOptions,
-  branchOptions = [],
   canEdit,
   userRole,
 }) {
   const [form, setForm] = useState({ ...EMPTY_EMPLOYEE_FORM });
+  const [branchOptions, setBranchOptions] = useState([]);
+  const [branchesLoading, setBranchesLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState("");
   const [saveError, setSaveError] = useState("");
@@ -241,6 +267,29 @@ function EmployeeDetailsSlideOver({
       cancelled = true;
     };
   }, [isOpen, employeeId]);
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+
+    let cancelled = false;
+
+    async function loadBranches() {
+      setBranchesLoading(true);
+      try {
+        const branches = await listBranchSelectOptions();
+        if (!cancelled) setBranchOptions(branches);
+      } catch {
+        if (!cancelled) setBranchOptions([]);
+      } finally {
+        if (!cancelled) setBranchesLoading(false);
+      }
+    }
+
+    loadBranches();
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen]);
 
   useEffect(() => {
     if (!achievementSuccess) return undefined;
@@ -372,6 +421,7 @@ function EmployeeDetailsSlideOver({
             departmentOptions={departmentOptions}
             jobTitleOptions={jobTitleOptions}
             branchOptions={branchOptions}
+            branchesLoading={branchesLoading}
             showAvatar
           />
         </form>
@@ -455,7 +505,7 @@ export default function EmployeesPage() {
         const [departments, jobTitles, branches] = await Promise.all([
           listDepartments(),
           listJobTitles(),
-          listCompanyBranches().catch(() => []),
+          listBranchSelectOptions().catch(() => []),
         ]);
         if (!cancelled) {
           setDepartmentOptions(departments);
@@ -725,7 +775,6 @@ export default function EmployeesPage() {
         }}
         departmentOptions={departmentOptions}
         jobTitleOptions={jobTitleOptions}
-        branchOptions={branchOptions}
         employeeCount={employees.length}
         subscriptionTier={subscriptionTier}
         onCreated={() => handleMutationSuccess("تم إضافة الموظف بنجاح")}
@@ -754,7 +803,6 @@ export default function EmployeesPage() {
           userRole={userRole}
           departmentOptions={departmentOptions}
           jobTitleOptions={jobTitleOptions}
-          branchOptions={branchOptions}
           onClose={() => {
             setIsDetailsOpen(false);
             setSelectedEmployeeId(null);

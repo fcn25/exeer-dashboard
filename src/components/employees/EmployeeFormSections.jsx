@@ -53,6 +53,7 @@ export default function EmployeeFormSections({
   departmentOptions = [],
   jobTitleOptions = [],
   branchOptions = [],
+  branchesLoading = false,
   showAvatar = false,
 }) {
   const update = (key, value) => {
@@ -256,38 +257,36 @@ export default function EmployeeFormSections({
             )}
           </Field>
           <Field label="موقع العمل">
-            {branchOptions.length > 0 ? (
-              <select
-                value={form.work_location_id ?? ""}
-                onChange={(e) => {
-                  const nextId = e.target.value;
-                  const branch = branchOptions.find((item) => item.id === nextId);
-                  onChange((prev) => ({
-                    ...prev,
-                    work_location_id: nextId,
-                    work_location_name: branch?.name ?? "",
-                  }));
-                }}
-                disabled={disabled}
-                className={inputClass}
-              >
-                <option value="">غير محدد</option>
-                {branchOptions.map((branch) => (
-                  <option key={branch.id} value={branch.id}>
-                    {branch.name}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <input
-                type="text"
-                value={form.work_location_name}
-                onChange={(e) => update("work_location_name", e.target.value)}
-                disabled={disabled}
-                placeholder="غير محدد — عرّف الفروع من إعدادات البصمة"
-                className={inputClass}
-              />
-            )}
+            <select
+              value={form.work_location_id ?? ""}
+              onChange={(e) => {
+                const nextId = e.target.value;
+                const branch = branchOptions.find(
+                  (item) => String(item.id) === nextId,
+                );
+                onChange((prev) => ({
+                  ...prev,
+                  work_location_id: nextId,
+                  work_location_name: branch?.name ?? "",
+                }));
+              }}
+              disabled={disabled || branchesLoading}
+              className={inputClass}
+            >
+              <option value="">
+                {branchesLoading ? "جاري تحميل الفروع..." : "غير محدد"}
+              </option>
+              {branchOptions.map((branch) => (
+                <option key={branch.id} value={branch.id}>
+                  {branch.name}
+                </option>
+              ))}
+            </select>
+            {!branchesLoading && branchOptions.length === 0 ? (
+              <p className="mt-1.5 text-xs text-exeer-muted">
+                لا توجد فروع لهذه الشركة. عرّفها من إعدادات البصمة أولاً.
+              </p>
+            ) : null}
           </Field>
           <Field label="الإدارة">
             {departmentOptions.length > 0 ? (

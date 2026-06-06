@@ -74,6 +74,28 @@ export async function listCompanyBranches() {
   return (data ?? []).map(mapBranchRow).filter(Boolean);
 }
 
+/** Dropdown options: id + name for the current company (company_branches). */
+export async function listBranchSelectOptions() {
+  const companyId = requireCompanyId("تحميل فروع الشركة");
+
+  const { data, error } = await scopeQueryByCompany(
+    supabase
+      .from("company_branches")
+      .select("id, name")
+      .order("name", { ascending: true }),
+    companyId,
+  );
+
+  if (error) throw new Error(mapDbError(error));
+
+  return (data ?? [])
+    .map((row) => ({
+      id: String(row.id),
+      name: String(row.name ?? "").trim(),
+    }))
+    .filter((row) => row.id && row.name);
+}
+
 export async function saveCompanyBranch({
   id,
   name,

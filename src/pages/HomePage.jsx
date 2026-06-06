@@ -1,50 +1,20 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import {
-  FileText,
-  Fingerprint,
-  MessageSquare,
-  Sparkles,
-  Target,
-  Trophy,
-} from "lucide-react";
+import { Fingerprint } from "lucide-react";
 import {
   canAccessStrategicAI,
   canManageAttendanceSettings,
 } from "../utils/rbac.js";
-import SmartExecutiveAssistantSection from "../components/ai/SmartExecutiveAssistantSection.jsx";
+import { SMART_TOOLS } from "../constants/smartTools.js";
+import { useSmartToolsModals } from "../hooks/useSmartToolsModals.js";
+import SmartToolsModals from "../components/smart-tools/SmartToolsModals.jsx";
 import {
   fetchDashboardStats,
   fetchPendingRequestsPreview,
 } from "../services/dashboardService.js";
 import { getUserDisplay } from "../utils/mobileAuth.js";
-const SmartInterviewModal = lazy(
-  () => import("../components/SmartInterviewModal.jsx"),
-);
-const SmartGoalsModal = lazy(() => import("../components/SmartGoalsModal.jsx"));
-const SmartTasksModal = lazy(() => import("../components/SmartTasksModal.jsx"));
-const AchievementsArchiveModal = lazy(
-  () => import("../components/achievements/AchievementsArchiveModal.jsx"),
-);
-const MonthlyReportModal = lazy(
-  () => import("../components/MonthlyReportModal.jsx"),
-);
 import PlgOnboardingBanner from "../components/onboarding/PlgOnboardingBanner.jsx";
 import ExeerEmptyState from "../components/brand/ExeerEmptyState.jsx";
-
-const SMART_INTERVIEW_ID = "smart-interview";
-const SMART_TASK_ID = "smart-task";
-const SMART_GOALS_ID = "smart-goals";
-const ACHIEVEMENTS_RECORD_ID = "achievements-record";
-const MONTHLY_REPORT_ID = "monthly-report";
-
-const SMART_TASKS = [
-  { id: "smart-task", label: "المهام الذكية", icon: Sparkles },
-  { id: SMART_INTERVIEW_ID, label: "المقابلة الذكية", icon: MessageSquare },
-  { id: SMART_GOALS_ID, label: "الأهداف الذكية", icon: Target },
-  { id: ACHIEVEMENTS_RECORD_ID, label: "سجل الإنجازات", icon: Trophy },
-  { id: "monthly-report", label: "التقرير الشهري", icon: FileText },
-];
 
 function StatCard({ value, label, isLoading }) {
   return (
@@ -57,12 +27,13 @@ function StatCard({ value, label, isLoading }) {
   );
 }
 
-function SmartTaskCard({ label, icon: Icon, onClick }) {
+function SmartTaskCard({ label, icon: Icon, onClick, disabled = false }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="flex min-h-[120px] flex-col items-center justify-center gap-2.5 rounded-md border border-gray-200 bg-white px-4 py-5 text-center transition-colors hover:bg-gray-50"
+      disabled={disabled}
+      className="flex min-h-[120px] flex-col items-center justify-center gap-2.5 rounded-md border border-gray-200 bg-white px-4 py-5 text-center transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
     >
       <span className="flex h-10 w-10 items-center justify-center rounded-md border border-gray-200 bg-gray-50 text-slate-900">
         <Icon className="h-5 w-5 stroke-[1.75]" aria-hidden />
@@ -74,12 +45,7 @@ function SmartTaskCard({ label, icon: Icon, onClick }) {
 
 export default function HomePage() {
   const user = getUserDisplay();
-  const [isSmartInterviewOpen, setIsSmartInterviewOpen] = useState(false);
-  const [isSmartTasksOpen, setIsSmartTasksOpen] = useState(false);
-  const [isSmartGoalsOpen, setIsSmartGoalsOpen] = useState(false);
-  const [isAchievementsArchiveOpen, setIsAchievementsArchiveOpen] =
-    useState(false);
-  const [isMonthlyReportOpen, setIsMonthlyReportOpen] = useState(false);
+  const { resolveToolAction, modalProps } = useSmartToolsModals();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [stats, setStats] = useState({
@@ -145,8 +111,6 @@ export default function HomePage() {
 
       <PlgOnboardingBanner employeeCount={stats.employeeCount} />
 
-      {canAccessStrategicAI() ? <SmartExecutiveAssistantSection /> : null}
-
       {canManageAttendanceSettings() ? (
         <Link
           to="/dashboard/attendance/settings"
@@ -179,29 +143,22 @@ export default function HomePage() {
         {canAccessStrategicAI() ? (
           <div className="space-y-4 lg:col-span-2">
             <h2 className="text-base font-semibold text-slate-900">
-              أدوات التشغيل الذكية
+              المهام الذكية
             </h2>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              {SMART_TASKS.map((task) => (
-                <SmartTaskCard
-                  key={task.id}
-                  label={task.label}
-                  icon={task.icon}
-                  onClick={
-                    task.id === SMART_INTERVIEW_ID
-                      ? () => setIsSmartInterviewOpen(true)
-                      : task.id === SMART_TASK_ID
-                        ? () => setIsSmartTasksOpen(true)
-                        : task.id === SMART_GOALS_ID
-                          ? () => setIsSmartGoalsOpen(true)
-                          : task.id === ACHIEVEMENTS_RECORD_ID
-                            ? () => setIsAchievementsArchiveOpen(true)
-                            : task.id === MONTHLY_REPORT_ID
-                              ? () => setIsMonthlyReportOpen(true)
-                              : undefined
-                  }
-                />
-              ))}
+              {SMART_TOOLS.map((task) => {
+                const onClick = resolveToolAction(task.id);
+
+                return (
+                  <SmartTaskCard
+                    key={task.id}
+                    label={task.label}
+                    icon={task.icon}
+                    onClick={onClick}
+                    disabled={!onClick}
+                  />
+                );
+              })}
             </div>
           </div>
         ) : null}
@@ -237,32 +194,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <Suspense fallback={null}>
-        <SmartInterviewModal
-          isOpen={isSmartInterviewOpen}
-          onClose={() => setIsSmartInterviewOpen(false)}
-        />
-
-        <SmartTasksModal
-          isOpen={isSmartTasksOpen}
-          onClose={() => setIsSmartTasksOpen(false)}
-        />
-
-        <SmartGoalsModal
-          isOpen={isSmartGoalsOpen}
-          onClose={() => setIsSmartGoalsOpen(false)}
-        />
-
-        <AchievementsArchiveModal
-          isOpen={isAchievementsArchiveOpen}
-          onClose={() => setIsAchievementsArchiveOpen(false)}
-        />
-
-        <MonthlyReportModal
-          isOpen={isMonthlyReportOpen}
-          onClose={() => setIsMonthlyReportOpen(false)}
-        />
-      </Suspense>
+      <SmartToolsModals {...modalProps} />
     </div>
   );
 }

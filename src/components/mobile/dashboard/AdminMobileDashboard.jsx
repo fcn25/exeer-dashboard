@@ -10,7 +10,7 @@ import {
   canManageAdministrativeActions,
   canManageAttendanceSettings,
 } from "../../../utils/rbac.js";
-import MobileSmartExecutiveAssistant from "../../ai/MobileSmartExecutiveAssistant.jsx";
+import MobileSmartToolsGrid from "./MobileSmartToolsGrid.jsx";
 import SuccessToast from "../../ui/SuccessToast.jsx";
 import CompactMobileAppBar from "./CompactMobileAppBar.jsx";
 import AttendanceHorizontalWidget from "./AttendanceHorizontalWidget.jsx";
@@ -87,7 +87,7 @@ export default function AdminMobileDashboard({
         />
         <BentoStatGrid stats={dashboardData?.bentoStats} isLoading={isLoading} />
 
-        {canAccessStrategicAI() ? <MobileSmartExecutiveAssistant /> : null}
+        {canAccessStrategicAI() ? <MobileSmartToolsGrid /> : null}
 
         {(canManageAttendanceSettings() ||
           canManageAdministrativeActions() ||

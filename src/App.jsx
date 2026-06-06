@@ -23,6 +23,7 @@ import MobileAttendanceSettingsPage from "./pages/mobile/MobileAttendanceSetting
 import { AdministrativeActionsGate } from "./components/administrative/AdministrativeActionsGate.jsx";
 import { PerformanceGate } from "./components/performance/PerformanceGate.jsx";
 import MobileSubscriptionPage from "./pages/MobileSubscriptionPage.jsx";
+import UpdatePasswordPage from "./pages/UpdatePasswordPage.jsx";
 import { ProtectedRoute } from "./components/ProtectedRoute.jsx";
 import ErrorBoundary from "./components/ErrorBoundary.jsx";
 import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
@@ -190,6 +191,7 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/update-password" element={<UpdatePasswordPage />} />
       <Route
         path="/unauthorized"
         element={

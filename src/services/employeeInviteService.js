@@ -26,7 +26,7 @@ export async function inviteEmployeeByEmail({
       company_id: companyId ?? getCompanyId(),
       role: role ?? "Employee",
       employee_id: employeeId ?? null,
-      redirect_to: `${window.location.origin}/`,
+      redirect_to: `${window.location.origin}/update-password`,
     },
   });
 

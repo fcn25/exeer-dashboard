@@ -210,49 +210,39 @@ export async function createEmployee(form) {
 }
 
 export async function bulkCreateEmployees(rows, { sendInvites = false } = {}) {
-  const companyId = getCompanyId();
   if (!Array.isArray(rows) || rows.length === 0) {
     throw new Error("لا توجد سجلات للاستيراد.");
   }
 
   await assertCanAddEmployees(rows.length);
 
-  const payload = rows.map((row) => ({
-    company_id: companyId,
-    ...employeeFormToRow(row),
-  }));
+  const { data, error } = await supabase.functions.invoke(
+    "bulk-import-employees",
+    {
+      body: {
+        rows,
+        send_invites: sendInvites,
+        redirect_to: `${window.location.origin}/update-password`,
+      },
+    },
+  );
 
-  const { data, error } = await supabase
-    .from("employees")
-    .insert(payload)
-    .select("id, full_name, email");
+  if (error) {
+    throw new Error(
+      error.message ||
+        "تعذّر استيراد الموظفين. تأكد من نشر Edge Function: bulk-import-employees.",
+    );
+  }
 
-  if (error) throw new Error(mapDbError(error));
-
-  let invitesSent = 0;
-  if (sendInvites) {
-    for (const employee of data ?? []) {
-      const email = String(employee.email ?? "").trim();
-      if (!email) continue;
-      try {
-        await inviteEmployeeByEmail({
-          email,
-          fullName: employee.full_name,
-          role: "Employee",
-          companyId,
-          employeeId: employee.id,
-        });
-        invitesSent += 1;
-      } catch {
-        // Keep imported rows; invites can be retried individually
-      }
-    }
+  if (data?.error) {
+    throw new Error(String(data.error));
   }
 
   return {
-    imported: data?.length ?? 0,
-    invitesSent,
-    rows: data ?? [],
+    imported: Number(data?.imported) || 0,
+    invitesSent: Number(data?.invitesSent) || 0,
+    rows: data?.rows ?? [],
+    inviteErrors: data?.inviteErrors ?? [],
   };
 }
 

@@ -48,7 +48,7 @@ export async function fetchMonthlyReportMetrics() {
   };
 }
 
-function formatMetricsForPrompt(metrics) {
+export function formatMetricsForPrompt(metrics) {
   return [
     `- عدد الموظفين: ${metrics.employeeCount}`,
     `- المهام المكتملة (Done): ${metrics.completedTasks}`,

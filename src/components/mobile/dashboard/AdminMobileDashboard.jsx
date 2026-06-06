@@ -6,9 +6,11 @@ import { ROLE_LABELS } from "../../../constants/roles.js";
 import { useAuth } from "../../../context/AuthContext.jsx";
 import {
   canAccessPerformance,
+  canAccessStrategicAI,
   canManageAdministrativeActions,
   canManageAttendanceSettings,
 } from "../../../utils/rbac.js";
+import MobileSmartExecutiveAssistant from "../../ai/MobileSmartExecutiveAssistant.jsx";
 import SuccessToast from "../../ui/SuccessToast.jsx";
 import CompactMobileAppBar from "./CompactMobileAppBar.jsx";
 import AttendanceHorizontalWidget from "./AttendanceHorizontalWidget.jsx";
@@ -84,6 +86,8 @@ export default function AdminMobileDashboard({
           isLoading={isLoading}
         />
         <BentoStatGrid stats={dashboardData?.bentoStats} isLoading={isLoading} />
+
+        {canAccessStrategicAI() ? <MobileSmartExecutiveAssistant /> : null}
 
         {(canManageAttendanceSettings() ||
           canManageAdministrativeActions() ||

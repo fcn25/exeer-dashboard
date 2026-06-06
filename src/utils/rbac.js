@@ -1,5 +1,6 @@
 import { getAuthUser, getUserPermissions } from "./mobileAuth.js";
 import {
+  isManagementRole,
   isOwnerRole,
   normalizeAppRole,
 } from "../constants/roles.js";
@@ -103,4 +104,9 @@ export function isAdmin() {
 /** Biometric & geofencing settings — owner / legacy Admin only */
 export function canManageAttendanceSettings() {
   return isOwner();
+}
+
+/** Strategic AI assistant & smart management tools */
+export function canAccessStrategicAI() {
+  return isManagementRole(getCurrentUserRole());
 }

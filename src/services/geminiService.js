@@ -141,3 +141,45 @@ export async function generateExecutiveSummaryWithGemini(cyclePayloadText) {
     `بيانات دورة التقييم:\n${payload}\n\nولّد الملخص التنفيذي الآن.`,
   );
 }
+
+const ORG_HEALTH_SYSTEM_PROMPT =
+  "You are a strategic management consultant for Saudi organizations. Analyze operational metrics and produce an executive health report in formal Arabic (Markdown). Include: 1) مؤشر الصحة العامة (Overall Health Score 0-100 with brief rationale), 2) ما يسير بشكل جيد, 3) إشارات تحذيرية, 4) أولويات الإدارة للفترة القادمة. Be concise, data-driven, and actionable. Do not invent numbers not present in the data.";
+
+export async function generateOrganizationHealthReportWithGemini(
+  industry,
+  metricsText,
+  periodLabel,
+) {
+  const sector = String(industry ?? "").trim() || "عام";
+  const metrics = String(metricsText ?? "").trim() || "لا تتوفر بيانات كافية.";
+  const period = String(periodLabel ?? "").trim() || "شهري";
+
+  return generateWithGemini(
+    ORG_HEALTH_SYSTEM_PROMPT,
+    `القطاع: ${sector}\nالفترة: ${period}\n\nالبيانات التشغيلية:\n${metrics}\n\nولّد الملخص التنفيذي لصحة المنشأة.`,
+  );
+}
+
+const PERFORMANCE_PREDICTIONS_SYSTEM_PROMPT =
+  "You are an AI workforce analyst. Based on trends in the provided data, predict bottlenecks, highlight likely top performers and at-risk areas, and flag workload risks. Respond in formal Arabic Markdown with sections: 1) تنبؤات الاختناقات, 2) مؤشرات الأداء المرتفع, 3) مؤشرات تحتاج متابعة, 4) توقعات للأسبوعين القادمين. Base predictions only on patterns in the data; state assumptions clearly when data is thin.";
+
+export async function generatePerformancePredictionsWithGemini(metricsText) {
+  const metrics = String(metricsText ?? "").trim() || "لا تتوفر بيانات كافية.";
+
+  return generateWithGemini(
+    PERFORMANCE_PREDICTIONS_SYSTEM_PROMPT,
+    `بيانات الأداء والعمليات:\n${metrics}\n\nولّد تنبؤات الأداء.`,
+  );
+}
+
+const MANAGEMENT_RECOMMENDATIONS_SYSTEM_PROMPT =
+  "You are a proactive executive coach for Saudi managers. Given operational metrics, provide 5-7 prioritized, actionable management recommendations in formal Arabic Markdown. Use sections: 1) توصيات فورية (هذا الأسبوع), 2) توصيات تكتيكية (هذا الشهر), 3) مؤشرات متابعة. Each recommendation must be specific and feasible for an HR/management team.";
+
+export async function generateManagementRecommendationsWithGemini(metricsText) {
+  const metrics = String(metricsText ?? "").trim() || "لا تتوفر بيانات كافية.";
+
+  return generateWithGemini(
+    MANAGEMENT_RECOMMENDATIONS_SYSTEM_PROMPT,
+    `سياق المنشأة:\n${metrics}\n\nولّد توصيات إدارية استباقية.`,
+  );
+}

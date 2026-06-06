@@ -3,13 +3,16 @@ import { Link } from "react-router-dom";
 import {
   FileText,
   Fingerprint,
-  Lightbulb,
   MessageSquare,
   Sparkles,
   Target,
   Trophy,
 } from "lucide-react";
-import { canManageAttendanceSettings } from "../utils/rbac.js";
+import {
+  canAccessStrategicAI,
+  canManageAttendanceSettings,
+} from "../utils/rbac.js";
+import SmartExecutiveAssistantSection from "../components/ai/SmartExecutiveAssistantSection.jsx";
 import {
   fetchDashboardStats,
   fetchPendingRequestsPreview,
@@ -38,7 +41,6 @@ const MONTHLY_REPORT_ID = "monthly-report";
 const SMART_TASKS = [
   { id: "smart-task", label: "المهام الذكية", icon: Sparkles },
   { id: SMART_INTERVIEW_ID, label: "المقابلة الذكية", icon: MessageSquare },
-  { id: "management-advisor", label: "المستشار الإداري", icon: Lightbulb },
   { id: SMART_GOALS_ID, label: "الأهداف الذكية", icon: Target },
   { id: ACHIEVEMENTS_RECORD_ID, label: "سجل الإنجازات", icon: Trophy },
   { id: "monthly-report", label: "التقرير الشهري", icon: FileText },
@@ -143,6 +145,8 @@ export default function HomePage() {
 
       <PlgOnboardingBanner employeeCount={stats.employeeCount} />
 
+      {canAccessStrategicAI() ? <SmartExecutiveAssistantSection /> : null}
+
       {canManageAttendanceSettings() ? (
         <Link
           to="/dashboard/attendance/settings"
@@ -172,31 +176,35 @@ export default function HomePage() {
       </section>
 
       <section className="grid flex-1 grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="space-y-4 lg:col-span-2">
-          <h2 className="text-base font-semibold text-slate-900">المهام الذكية</h2>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            {SMART_TASKS.map((task) => (
-              <SmartTaskCard
-                key={task.id}
-                label={task.label}
-                icon={task.icon}
-                onClick={
-                  task.id === SMART_INTERVIEW_ID
-                    ? () => setIsSmartInterviewOpen(true)
-                    : task.id === SMART_TASK_ID
-                      ? () => setIsSmartTasksOpen(true)
-                      : task.id === SMART_GOALS_ID
-                        ? () => setIsSmartGoalsOpen(true)
-                        : task.id === ACHIEVEMENTS_RECORD_ID
-                          ? () => setIsAchievementsArchiveOpen(true)
-                          : task.id === MONTHLY_REPORT_ID
-                            ? () => setIsMonthlyReportOpen(true)
-                            : undefined
-                }
-              />
-            ))}
+        {canAccessStrategicAI() ? (
+          <div className="space-y-4 lg:col-span-2">
+            <h2 className="text-base font-semibold text-slate-900">
+              أدوات التشغيل الذكية
+            </h2>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {SMART_TASKS.map((task) => (
+                <SmartTaskCard
+                  key={task.id}
+                  label={task.label}
+                  icon={task.icon}
+                  onClick={
+                    task.id === SMART_INTERVIEW_ID
+                      ? () => setIsSmartInterviewOpen(true)
+                      : task.id === SMART_TASK_ID
+                        ? () => setIsSmartTasksOpen(true)
+                        : task.id === SMART_GOALS_ID
+                          ? () => setIsSmartGoalsOpen(true)
+                          : task.id === ACHIEVEMENTS_RECORD_ID
+                            ? () => setIsAchievementsArchiveOpen(true)
+                            : task.id === MONTHLY_REPORT_ID
+                              ? () => setIsMonthlyReportOpen(true)
+                              : undefined
+                  }
+                />
+              ))}
+            </div>
           </div>
-        </div>
+        ) : null}
 
         <div className="space-y-4">
           <h2 className="text-base font-semibold text-slate-900">الطلبات المعلقة</h2>

@@ -265,9 +265,33 @@ export async function bulkCreateEmployees(rows, { sendInvites = false } = {}) {
 
   if (error) throw new Error(mapDbError(error));
 
+  let invitesSent = 0;
+  let invitesSkippedNoEmail = 0;
+
+  if (sendInvites) {
+    const emailsToInvite = data.filter((emp) => emp.email);
+    invitesSkippedNoEmail = data.length - emailsToInvite.length;
+
+    for (const emp of emailsToInvite) {
+      try {
+        await inviteEmployeeByEmail({
+          email: emp.email,
+          fullName: emp.full_name,
+          role: "Employee",
+          companyId,
+          employeeId: emp.id,
+        });
+        invitesSent += 1;
+      } catch (err) {
+        console.error(`فشل إرسال دعوة لـ ${emp.email}:`, err.message);
+      }
+    }
+  }
+
   return {
     imported: data.length,
-    invitesSent: 0,
+    invitesSent,
+    invitesSkippedNoEmail,
     rows: data,
     inviteErrors: [],
   };

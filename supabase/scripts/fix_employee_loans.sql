@@ -1,16 +1,18 @@
--- Request approval workflow: structured leave/financial fields + loan schedule
+-- Run in Supabase Dashboard → SQL Editor
+-- Creates employee_loans (سلف الموظفين) and links it to payroll + request approval.
+-- Use when you see: Could not find the table 'public.employee_loans' in the schema cache
 
-alter table public.requests
-  add column if not exists leave_type text,
-  add column if not exists leave_days numeric,
-  add column if not exists start_date date;
-
--- employee_loans base table (extended in 20250630000000 / 20250706120000)
 create table if not exists public.employee_loans (
   id uuid primary key default gen_random_uuid(),
   company_id bigint not null references public.companies (id) on delete cascade,
   employee_id bigint not null references public.employees (id) on delete cascade,
   monthly_installment numeric not null default 0 check (monthly_installment >= 0),
+  total_amount numeric,
+  installments_total integer,
+  installments_remaining integer,
+  start_date date,
+  request_id bigint references public.requests (id) on delete set null,
+  last_deducted_month text,
   status text not null default 'active' check (status in ('active', 'closed')),
   notes text,
   created_at timestamptz not null default now(),
@@ -24,6 +26,9 @@ alter table public.employee_loans
   add column if not exists start_date date,
   add column if not exists request_id bigint references public.requests (id) on delete set null,
   add column if not exists last_deducted_month text;
+
+alter table public.payroll_records
+  add column if not exists loan_deductions numeric not null default 0;
 
 create index if not exists employee_loans_company_employee_idx
   on public.employee_loans (company_id, employee_id);
@@ -44,3 +49,5 @@ create policy employee_loans_company_all
   on public.employee_loans for all to authenticated
   using (company_id = public.get_my_company_id())
   with check (company_id = public.get_my_company_id());
+
+notify pgrst, 'reload schema';

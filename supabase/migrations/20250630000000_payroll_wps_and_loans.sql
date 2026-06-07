@@ -13,11 +13,25 @@ create table if not exists public.employee_loans (
   company_id bigint not null references public.companies (id) on delete cascade,
   employee_id bigint not null references public.employees (id) on delete cascade,
   monthly_installment numeric not null default 0 check (monthly_installment >= 0),
+  total_amount numeric,
+  installments_total integer,
+  installments_remaining integer,
+  start_date date,
+  request_id bigint references public.requests (id) on delete set null,
+  last_deducted_month text,
   status text not null default 'active' check (status in ('active', 'closed')),
   notes text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.employee_loans
+  add column if not exists total_amount numeric,
+  add column if not exists installments_total integer,
+  add column if not exists installments_remaining integer,
+  add column if not exists start_date date,
+  add column if not exists request_id bigint references public.requests (id) on delete set null,
+  add column if not exists last_deducted_month text;
 
 create index if not exists employee_loans_company_employee_idx
   on public.employee_loans (company_id, employee_id);

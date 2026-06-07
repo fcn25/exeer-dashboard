@@ -6,9 +6,19 @@ import {
   shouldDeductLeaveBalance,
 } from "../utils/requestDetails.js";
 
+const EMPLOYEE_LOANS_FIX_HINT =
+  "نفّذ ملف supabase/scripts/fix_employee_loans.sql في Supabase SQL Editor ثم أعد تحميل الصفحة.";
+
 function mapDbError(error) {
   if (!error) return "حدث خطأ غير متوقع.";
-  return error.message || "تعذّر معالجة الطلب.";
+  if (error.code === "PGRST205") {
+    return `جدول employee_loans غير جاهز. ${EMPLOYEE_LOANS_FIX_HINT}`;
+  }
+  const message = String(error.message ?? "");
+  if (/employee_loans/i.test(message) && /schema cache|does not exist|could not find/i.test(message)) {
+    return `جدول سلف الموظفين غير جاهز. ${EMPLOYEE_LOANS_FIX_HINT}`;
+  }
+  return message || "تعذّر معالجة الطلب.";
 }
 
 async function fetchRequestById(requestId) {

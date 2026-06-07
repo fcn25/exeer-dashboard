@@ -24,17 +24,14 @@ import { getUserDisplay } from "../utils/mobileAuth.js";
 import { fetchHomeDashboardData } from "../services/homeDashboardService.js";
 import ProbationDecisionModal from "../components/home/ProbationDecisionModal.jsx";
 import SparkLine from "../components/home/SparkLine.jsx";
+import {
+  HOME_CARD,
+  HOME_SURFACE,
+  PRIORITY_ICON_STYLES,
+} from "../components/home/homeStyles.js";
 
-const CARD =
-  "rounded-[12px] border border-[#E2E8F0] bg-white";
-const SURFACE = "rounded-[12px] bg-[#F8FAFC]";
-
-const PRIORITY_ICON_STYLES = {
-  red: "bg-[#FEE2E2] text-[#EF4444]",
-  orange: "bg-[#FEF3C7] text-[#F59E0B]",
-  blue: "bg-[#DBEAFE] text-[#3B82F6]",
-  gray: "bg-[#F1F5F9] text-[#64748B]",
-};
+const CARD = HOME_CARD;
+const SURFACE = HOME_SURFACE;
 
 const ACTION_ICONS = {
   iqama: AlertTriangle,
@@ -117,6 +114,12 @@ function initialsFromName(name) {
   return trimmed ? trimmed.charAt(0) : "؟";
 }
 
+function formatArabicNumber(value) {
+  return new Intl.NumberFormat("ar-SA", {
+    maximumFractionDigits: 1,
+  }).format(Number(value) || 0);
+}
+
 function formatCurrency(value) {
   return new Intl.NumberFormat("ar-SA", {
     minimumFractionDigits: 0,
@@ -151,10 +154,10 @@ function ActionItemRow({ item, onAction }) {
   const iconStyle = PRIORITY_ICON_STYLES[item.priority] ?? PRIORITY_ICON_STYLES.gray;
 
   return (
-    <div className="flex items-center justify-between gap-4 py-3">
+    <div className="flex items-center justify-between gap-4 py-1.5">
       <div className="flex min-w-0 flex-1 items-center gap-3">
         <span
-          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${iconStyle}`}
+          className={`flex h-[36px] w-[36px] shrink-0 items-center justify-center rounded-full ${iconStyle}`}
         >
           <Icon className="h-4 w-4" aria-hidden />
         </span>
@@ -300,17 +303,17 @@ export default function HomePage() {
 
         <div className="flex flex-wrap gap-2 sm:shrink-0">
           <PulsePill
-            label={`${workingCount} يعمل اليوم`}
+            label={`${formatArabicNumber(workingCount)} يعمل اليوم`}
             bg="#ECFDF5"
             color="#047857"
           />
           <PulsePill
-            label={`${leaveCount} في إجازة`}
+            label={`${formatArabicNumber(leaveCount)} في إجازة`}
             bg="#FEF3C7"
             color="#92400E"
           />
           <PulsePill
-            label={`${lateCount} متأخر`}
+            label={`${formatArabicNumber(lateCount)} متأخر`}
             bg="#F1F5F9"
             color="#475569"
           />
@@ -407,13 +410,21 @@ export default function HomePage() {
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-[#F1F5F9]">
-            {actionItems.map((item) => (
-              <ActionItemRow
+          <div className="flex flex-col gap-3">
+            {actionItems.map((item, index) => (
+              <div
                 key={item.id}
-                item={item}
-                onAction={handleActionItem}
-              />
+                className={
+                  index < actionItems.length - 1
+                    ? "border-b border-[#F1F5F9] pb-3"
+                    : ""
+                }
+              >
+                <ActionItemRow
+                  item={item}
+                  onAction={handleActionItem}
+                />
+              </div>
             ))}
           </div>
         )}
@@ -572,7 +583,7 @@ export default function HomePage() {
             <Link
               key={action.id}
               to={action.href}
-              className="flex items-center gap-2 rounded-[8px] border border-[#E2E8F0] bg-white px-4 py-3 text-[13px] font-medium text-[#0F172A] transition-colors hover:bg-[#F8FAFC]"
+              className="flex items-center gap-2 rounded-[8px] border border-[#E2E8F0] bg-white px-4 py-3 text-[13px] font-medium text-[#0F172A] transition-colors hover:bg-[#F8FAFC] [&_svg]:h-5 [&_svg]:w-5 [&_svg]:text-[#0F172A]"
             >
               <action.icon className="h-5 w-5 shrink-0" aria-hidden />
               <span>{action.label}</span>

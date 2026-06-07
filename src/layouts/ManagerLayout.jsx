@@ -6,7 +6,6 @@ import {
   CheckSquare,
   Fingerprint,
   Gavel,
-  HandCoins,
   Home,
   Lock,
   PanelLeftClose,
@@ -19,7 +18,6 @@ import {
   UsersRound,
 } from "lucide-react";
 import ErrorToast from "../components/ui/ErrorToast.jsx";
-import { useCompanySettings } from "../context/CompanySettingsContext.jsx";
 import { signOut } from "../utils/mobileAuth.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import ExeerLogo from "../components/brand/ExeerLogo.jsx";
@@ -63,7 +61,6 @@ export default function ManagerLayout() {
   const location = useLocation();
   const { t, dir, lang } = useAppLocale();
   const { permissions, role } = useAuth();
-  const { getSetting } = useCompanySettings();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [unauthorizedToast, setUnauthorizedToast] = useState("");
 
@@ -157,22 +154,14 @@ export default function ManagerLayout() {
 
   const systemNavItems = useMemo(() => {
     if (!isOwner()) return [];
-    const items = [
+    return [
       {
         to: "/dashboard/settings/system",
         label: t("nav.systemCustomization"),
         icon: SlidersHorizontal,
       },
     ];
-    if (getSetting("loans_enabled", true) && canViewPayroll() && !isDirectManager(role)) {
-      items.push({
-        to: "/dashboard/payroll",
-        label: t("nav.loans"),
-        icon: HandCoins,
-      });
-    }
-    return items;
-  }, [getSetting, role, t]);
+  }, [t]);
 
   const handleLogout = async () => {
     await signOut();
@@ -265,7 +254,7 @@ export default function ManagerLayout() {
           ))}
 
           {systemNavItems.length && !isSidebarCollapsed ? (
-            <p className="mt-4 px-3 pb-1 text-[11px] font-semibold tracking-wide text-[#b89a5e] uppercase">
+            <p className="mt-4 px-3 pb-1 text-[11px] font-semibold tracking-wide text-exeer-muted uppercase">
               {t("nav.systemSection")}
             </p>
           ) : null}

@@ -323,6 +323,10 @@
     "hints": {
       "salaryPayDay": "يُنصح بـ 27 لضمان WPS"
     },
+    "sections": {
+      "payrollHint": "إعدادات الرواتب، التأمينات، البدلات، والسلف المالية",
+      "loansTitle": "السلف المالية"
+    },
     "options": {
       "sunday": "الأحد",
       "monday": "الاثنين",

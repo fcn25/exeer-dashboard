@@ -1,4 +1,4 @@
-import { CreditCard, LogOut, User, X } from "lucide-react";
+import { CreditCard, LogOut, SlidersHorizontal, User, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -153,7 +153,22 @@ export default function MobileSettingsDrawer({
               ) : null}
 
               {owner ? (
-                <div className="md-surface-muted rounded-md p-4">
+                <div className="space-y-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onClose();
+                      navigate("/mobile/settings/system");
+                    }}
+                    className="flex w-full items-center justify-between gap-3 rounded-md border border-exeer-border bg-white px-4 py-3.5 text-sm font-semibold text-exeer-primary transition-colors hover:bg-exeer-hover"
+                  >
+                    <span className="inline-flex items-center gap-2">
+                      <SlidersHorizontal className="h-5 w-5" aria-hidden />
+                      {t("nav.systemCustomization")}
+                    </span>
+                  </button>
+
+                  <div className="md-surface-muted rounded-md p-4">
                   <button
                     type="button"
                     onClick={openSubscription}
@@ -175,6 +190,7 @@ export default function MobileSettingsDrawer({
                   >
                     عرض تفاصيل الاشتراك
                   </button>
+                  </div>
                 </div>
               ) : null}
 

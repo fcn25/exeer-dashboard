@@ -323,6 +323,10 @@
     "hints": {
       "salaryPayDay": "Day 27 is recommended for WPS compliance"
     },
+    "sections": {
+      "payrollHint": "Payroll, GOSI, allowances, and employee loans",
+      "loansTitle": "Employee loans"
+    },
     "options": {
       "sunday": "Sunday",
       "monday": "Monday",

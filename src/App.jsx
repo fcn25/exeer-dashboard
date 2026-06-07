@@ -23,6 +23,7 @@ import MobileAdministrativeActionsPage from "./pages/mobile/MobileAdministrative
 import MobilePerformancePage from "./pages/mobile/MobilePerformancePage.jsx";
 import MobileAttendancePage from "./pages/mobile/MobileAttendancePage.jsx";
 import MobileAttendanceSettingsPage from "./pages/mobile/MobileAttendanceSettingsPage.jsx";
+import MobileSystemCustomizationPage from "./pages/mobile/MobileSystemCustomizationPage.jsx";
 import { AdministrativeActionsGate } from "./components/administrative/AdministrativeActionsGate.jsx";
 import { PerformanceGate } from "./components/performance/PerformanceGate.jsx";
 import MobileSubscriptionPage from "./pages/MobileSubscriptionPage.jsx";
@@ -292,6 +293,18 @@ function AppRoutes() {
                 <MobileAttendanceSettingsPage />
               </MobileRoute>
             </AttendanceSettingsGate>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/mobile/settings/system"
+        element={
+          <ProtectedRoute allowPortal>
+            <SystemCustomizationGate>
+              <MobileRoute>
+                <MobileSystemCustomizationPage />
+              </MobileRoute>
+            </SystemCustomizationGate>
           </ProtectedRoute>
         }
       />

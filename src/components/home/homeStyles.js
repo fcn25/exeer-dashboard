@@ -42,7 +42,7 @@ export const HOME_ICON_BTN =
   "flex h-9 w-9 items-center justify-center rounded-md border border-[#E2E8F0] text-[#0F172A] transition-colors hover:bg-[#F8FAFC] dark:border-[var(--border-color)] dark:text-[var(--text-primary)] dark:hover:bg-[var(--bg-surface-hover)]";
 
 export const PRIORITY_ICON_STYLES = {
-  red: "bg-[#FEE2E2] text-[#EF4444] dark:bg-red-950/50 dark:text-red-300",
+  red: "bg-[#FEE2E2] text-[#EF4444] dark:bg-red-950/50 dark:text-[var(--text-error)]",
   orange: "bg-[#FEF3C7] text-[#F59E0B] dark:bg-amber-950/50 dark:text-amber-300",
   blue: "bg-[#DBEAFE] text-[#3B82F6] dark:bg-blue-950/50 dark:text-blue-300",
   gray: "bg-[#F1F5F9] text-[#64748B] dark:bg-[var(--bg-surface-hover)] dark:text-[var(--text-primary)] dark:font-medium",

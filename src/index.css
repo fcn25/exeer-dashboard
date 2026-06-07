@@ -337,6 +337,7 @@ span {
   --text-secondary: #c4c7c5;
   --border-color: #444746;
   --accent-color: #a8c7fa;
+  --text-error: #fde047;
 
   /* Tailwind slate/gray — surfaces only, never white/light for backgrounds */
   --color-slate-50: var(--bg-surface);
@@ -632,5 +633,31 @@ span {
   .dark .bg-\[\#FEF3C7\],
   .dark .bg-\[\#DBEAFE\] {
     background-color: var(--bg-surface-hover) !important;
+  }
+
+  /* Red text → yellow in dark mode (errors, warnings, required markers) */
+  .dark .text-red-300,
+  .dark .text-red-400,
+  .dark .text-red-500,
+  .dark .text-red-600,
+  .dark .text-red-700,
+  .dark .text-red-800,
+  .dark .text-red-900,
+  .dark .text-red-950,
+  .dark .dark\:text-red-100,
+  .dark .dark\:text-red-200,
+  .dark .dark\:text-red-300,
+  .dark .dark\:text-red-400,
+  .dark .text-\[\#B91C1C\],
+  .dark .text-\[\#EF4444\],
+  .dark .text-\[\#DC2626\],
+  .dark .text-\[\#991B1B\] {
+    color: var(--text-error) !important;
+  }
+
+  .dark .hover\:text-red-700:hover,
+  .dark .hover\:text-red-800:hover,
+  .dark .dark\:hover\:text-red-200:hover {
+    color: var(--text-error) !important;
   }
 }

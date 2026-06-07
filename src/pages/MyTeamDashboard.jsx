@@ -31,7 +31,11 @@ import {
   updateTeamRequestStatus,
 } from "../services/myTeamService.js";
 import { useAppLocale } from "../i18n/useAppLocale.js";
-import { formatLocaleHeaderDate, formatLocaleNumber } from "../i18n/formatLocale.js";
+import {
+  formatLocaleDate,
+  formatLocaleHeaderDate,
+  formatLocaleNumber,
+} from "../i18n/formatLocale.js";
 
 const INACTIVE_STATUSES = new Set(["منتهي الخدمة", "موقوف"]);
 
@@ -513,7 +517,11 @@ export default function MyTeamDashboard() {
                         </div>
                         <p className="mt-0.5 text-[13px] text-[#64748B]">
                           {request.request_type} ·{" "}
-                          {new Date(request.created_at).toLocaleDateString("ar-SA")}
+                          {formatLocaleDate(request.created_at, {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          })}
                         </p>
                         <p className="mt-2 text-[13px] leading-relaxed text-[#0F172A]">
                           {request.details}

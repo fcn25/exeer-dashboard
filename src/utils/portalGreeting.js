@@ -1,3 +1,5 @@
+import { formatLocaleDate } from "../i18n/formatLocale.js";
+
 export function getTimeBasedGreeting(date = new Date()) {
   const hour = date.getHours();
   if (hour >= 5 && hour < 12) return "صباح الخير";
@@ -6,14 +8,9 @@ export function getTimeBasedGreeting(date = new Date()) {
 }
 
 export function formatPortalDate(value) {
-  if (!value) return "—";
-  try {
-    return new Intl.DateTimeFormat("ar-SA", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    }).format(new Date(value));
-  } catch {
-    return "—";
-  }
+  return formatLocaleDate(value, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
 }

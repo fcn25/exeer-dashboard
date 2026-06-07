@@ -4,7 +4,15 @@ import { DateTimeInput } from "./components/ui/DateInput.jsx";
 import { createEvent, listEvents } from "./services/eventsService.js";
 import { canCreateEvents } from "./utils/rbac.js";
 import ExeerEmptyState from "./components/brand/ExeerEmptyState.jsx";
+import { formatLocaleDate } from "./i18n/formatLocale.js";
 import { useAppLocale } from "./i18n/useAppLocale.js";
+
+function formatEventDateTime(value) {
+  return formatLocaleDate(value, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+}
 
 function mapEventRow(row) {
   if (!row || typeof row !== "object") return null;
@@ -20,18 +28,6 @@ function mapEventRow(row) {
     datetime: row.event_datetime ?? row.datetime,
     datetimeLabel: formatEventDateTime(row.event_datetime),
   };
-}
-
-function formatEventDateTime(value) {
-  if (!value) return "—";
-  try {
-    return new Intl.DateTimeFormat("ar-SA", {
-      dateStyle: "medium",
-      timeStyle: "short",
-    }).format(new Date(value));
-  } catch {
-    return String(value);
-  }
 }
 
 function CreateEventModal({ isOpen, onClose, onCreated }) {

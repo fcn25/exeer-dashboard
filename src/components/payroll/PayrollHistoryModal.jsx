@@ -22,17 +22,13 @@ import {
   PAYROLL_DETAIL_COLUMNS,
   PAYROLL_HEADER_TONE_CLASS,
 } from "../../utils/payroll/payrollTableConfig.js";
+import { formatLocaleDate } from "../../i18n/formatLocale.js";
 
 function formatCreatedAt(value) {
-  if (!value) return "—";
-  try {
-    return new Intl.DateTimeFormat("ar-SA", {
-      dateStyle: "medium",
-      timeStyle: "short",
-    }).format(new Date(value));
-  } catch {
-    return "—";
-  }
+  return formatLocaleDate(value, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
 }
 
 function formatStatusLabel(status) {

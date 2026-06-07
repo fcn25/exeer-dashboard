@@ -9,6 +9,7 @@ import {
   PROMO_SUCCESS_MESSAGE,
 } from "../../services/billingService.js";
 import { handleTapPayment } from "../../services/tapPaymentService.js";
+import { formatLocaleDate } from "../../i18n/formatLocale.js";
 import { getTrialCountdown } from "../../utils/trialCountdown.js";
 
 const PLAN_LABELS = {
@@ -57,7 +58,7 @@ export default function SubscriptionPanel({
   const trialEndsAt = billing?.trial_ends_at ?? null;
   const countdown = getTrialCountdown(trialEndsAt);
   const trialEndLabel = trialEndsAt
-    ? new Date(trialEndsAt).toLocaleDateString("ar-SA", { dateStyle: "long" })
+    ? formatLocaleDate(trialEndsAt, { dateStyle: "long" })
     : "يُحدَّد بعد تفعيل الاشتراك";
 
   const handleApplyPromo = async (event) => {

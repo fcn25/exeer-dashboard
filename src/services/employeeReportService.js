@@ -4,6 +4,7 @@ import { assertEmployeeMonthlyReportRateLimit } from "./aiRateLimitService.js";
 import { generatePersonalMentorReportWithGemini } from "./geminiService.js";
 import { listAchievementsForEmployee } from "./achievementsService.js";
 import { listTasksForEmployee } from "./tasksService.js";
+import { formatLocaleDate } from "../i18n/formatLocale.js";
 
 const DONE_STATUSES = new Set([
   "مكتملة",
@@ -26,16 +27,11 @@ function isCompletedTask(status) {
 }
 
 function formatDateLabel(value) {
-  if (!value) return "—";
-  try {
-    return new Intl.DateTimeFormat("ar-SA", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    }).format(new Date(value));
-  } catch {
-    return "—";
-  }
+  return formatLocaleDate(value, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
 }
 
 async function fetchEmployeeContext(employeeId) {

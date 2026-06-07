@@ -9,6 +9,7 @@ import {
   updateTaskStatus,
 } from "../services/tasksService.js";
 import { normalizeTaskStatus } from "../utils/taskStatus.js";
+import { formatLocaleDate } from "../i18n/formatLocale.js";
 import { useAppLocale } from "../i18n/useAppLocale.js";
 
 export { normalizeTaskStatus };
@@ -32,16 +33,11 @@ function toDateInputValue(value) {
 }
 
 function formatDueDate(dateStr) {
-  if (!dateStr) return "—";
-  try {
-    return new Intl.DateTimeFormat("ar-SA", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    }).format(new Date(dateStr));
-  } catch {
-    return dateStr;
-  }
+  return formatLocaleDate(dateStr, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
 }
 
 function mapTaskRow(row) {

@@ -1,3 +1,4 @@
+import { getAppDateLocale } from "../i18n/formatLocale.js";
 import { supabase } from "../utils/supabaseClient.js";
 import { getCompanyId } from "../utils/mobileAuth.js";
 import { isMissingColumnError } from "../utils/supabaseErrors.js";
@@ -96,7 +97,7 @@ function isActiveEmployee(row) {
 function formatEventTime(datetime) {
   if (!datetime) return "—";
   try {
-    return new Intl.DateTimeFormat("ar-SA", {
+    return new Intl.DateTimeFormat(getAppDateLocale(), {
       hour: "numeric",
       minute: "2-digit",
       hour12: true,

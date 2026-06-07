@@ -2,17 +2,13 @@ import {
   ADMINISTRATIVE_ACTION_TYPE_LABELS,
   SALARY_DEDUCTION_ACTION_TYPE,
 } from "../../constants/administrativeActions.js";
+import { formatLocaleDate } from "../../i18n/formatLocale.js";
 
 function formatDate(value) {
-  if (!value) return "—";
-  try {
-    return new Intl.DateTimeFormat("ar-SA", {
-      dateStyle: "medium",
-      timeStyle: "short",
-    }).format(new Date(value));
-  } catch {
-    return String(value);
-  }
+  return formatLocaleDate(value, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
 }
 
 /**

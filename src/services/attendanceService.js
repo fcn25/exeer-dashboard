@@ -1,3 +1,4 @@
+import { getAppDateLocale } from "../i18n/formatLocale.js";
 import { supabase } from "../utils/supabaseClient.js";
 import { requireCompanyId, scopeQueryByCompany } from "../utils/tenantScope.js";
 import { isMissingColumnError } from "../utils/supabaseErrors.js";
@@ -66,7 +67,7 @@ function formatPunchedAt(value) {
   if (!value) return "—";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return String(value);
-  return new Intl.DateTimeFormat("ar-SA", {
+  return new Intl.DateTimeFormat(getAppDateLocale(), {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(date);
@@ -182,13 +183,13 @@ function mapHistoryRow(row) {
   if (recordDate) {
     try {
       const date = new Date(`${recordDate}T12:00:00`);
-      dateLabel = new Intl.DateTimeFormat("ar-SA", {
+      dateLabel = new Intl.DateTimeFormat(getAppDateLocale(), {
         day: "numeric",
         month: "long",
       }).format(date);
-      dayLabel = new Intl.DateTimeFormat("ar-SA", { weekday: "long" }).format(
-        date,
-      );
+      dayLabel = new Intl.DateTimeFormat(getAppDateLocale(), {
+        weekday: "long",
+      }).format(date);
     } catch {
       // keep defaults
     }

@@ -6,6 +6,7 @@ const env = loadEnv(mode, process.cwd(), "");
 
 const supabaseUrl = String(env.VITE_SUPABASE_URL ?? "").trim();
 const supabaseAnonKey = String(env.VITE_SUPABASE_ANON_KEY ?? "").trim();
+const geminiApiKey = String(env.VITE_GEMINI_API_KEY ?? "").trim();
 
 const PLACEHOLDER_PATTERNS = [
   "your-project",
@@ -29,6 +30,12 @@ if (!supabaseUrl || looksLikePlaceholder(supabaseUrl)) {
 if (!supabaseAnonKey || looksLikePlaceholder(supabaseAnonKey)) {
   errors.push(
     "VITE_SUPABASE_ANON_KEY is missing or still uses a placeholder value.",
+  );
+}
+
+if (!geminiApiKey || looksLikePlaceholder(geminiApiKey)) {
+  errors.push(
+    "VITE_GEMINI_API_KEY is missing or still uses a placeholder value. Add it to .env (dev) and .env.production (build/deploy).",
   );
 }
 

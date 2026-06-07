@@ -481,6 +481,163 @@ async function fetchTopPerformers(companyId, bounds) {
     }));
 }
 
+const CONTRACT_EXPIRY_WINDOW_DAYS = 90;
+const IQAMA_EXPIRY_WINDOW_DAYS = 30;
+const PROBATION_PERIOD_DAYS = 90;
+const PROBATION_ALERT_WINDOW_DAYS = 10;
+
+function toIsoDateOnly(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+function parseIsoDateOnly(value) {
+  if (!value) return null;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return null;
+  parsed.setHours(0, 0, 0, 0);
+  return parsed;
+}
+
+function addCalendarDays(date, days) {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
+}
+
+/** Next annual contract end from hire_date anniversary (start of each contract year). */
+function getNextAnnualContractEndDate(hireDate) {
+  const hire = parseIsoDateOnly(hireDate);
+  if (!hire) return null;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  let year = today.getFullYear();
+  let end = new Date(year, hire.getMonth(), hire.getDate());
+  if (end.getTime() <= today.getTime()) {
+    end = new Date(year + 1, hire.getMonth(), hire.getDate());
+  }
+
+  return toIsoDateOnly(end);
+}
+
+function resolveProbationEndDate(employee) {
+  if (employee.probation_end_date) return employee.probation_end_date;
+  if (!employee.hire_date) return null;
+
+  const hire = parseIsoDateOnly(employee.hire_date);
+  if (!hire) return null;
+
+  return toIsoDateOnly(addCalendarDays(hire, PROBATION_PERIOD_DAYS));
+}
+
+function buildEmergencyAlertItem(employee, endDate, daysLeft, type) {
+  return {
+    id: `${type}-${employee.id}`,
+    type,
+    employeeId: String(employee.id),
+    fullName: employee.full_name ?? "موظف",
+    jobTitle: employee.job_title_name ?? "—",
+    endDate,
+    daysLeft,
+    severity: daysLeft <= 7 ? "critical" : "warning",
+  };
+}
+
+function buildContractExpiryAlerts(employees) {
+  const items = [];
+
+  for (const employee of employees) {
+    if (!isActiveEmployee(employee)) continue;
+    if (!employee.hire_date) continue;
+
+    const endDate = getNextAnnualContractEndDate(employee.hire_date);
+    const daysLeft = daysUntil(endDate);
+    if (daysLeft == null || daysLeft < 0 || daysLeft > CONTRACT_EXPIRY_WINDOW_DAYS) {
+      continue;
+    }
+
+    items.push({
+      ...buildEmergencyAlertItem(employee, endDate, daysLeft, "contract"),
+      contractStartDate: employee.hire_date,
+    });
+  }
+
+  return items.sort((a, b) => a.daysLeft - b.daysLeft);
+}
+
+function buildIqamaExpiryAlerts(employees) {
+  const items = [];
+
+  for (const employee of employees) {
+    if (!isActiveEmployee(employee)) continue;
+    if (isSaudiNationality(employee.nationality)) continue;
+    if (!employee.iqama_expiry_date) continue;
+
+    const daysLeft = daysUntil(employee.iqama_expiry_date);
+    if (
+      daysLeft == null ||
+      daysLeft < 0 ||
+      daysLeft > IQAMA_EXPIRY_WINDOW_DAYS
+    ) {
+      continue;
+    }
+
+    items.push(
+      buildEmergencyAlertItem(
+        employee,
+        employee.iqama_expiry_date,
+        daysLeft,
+        "iqama",
+      ),
+    );
+  }
+
+  return items.sort((a, b) => a.daysLeft - b.daysLeft);
+}
+
+function buildProbationEndingAlerts(employees) {
+  const items = [];
+
+  for (const employee of employees) {
+    if (!isActiveEmployee(employee)) continue;
+
+    const endDate = resolveProbationEndDate(employee);
+    const daysLeft = daysUntil(endDate);
+    if (
+      daysLeft == null ||
+      daysLeft < 0 ||
+      daysLeft > PROBATION_ALERT_WINDOW_DAYS
+    ) {
+      continue;
+    }
+
+    items.push({
+      ...buildEmergencyAlertItem(employee, endDate, daysLeft, "probation"),
+      employeeName: employee.full_name ?? "موظف",
+      probationEndDate: endDate,
+    });
+  }
+
+  return items.sort((a, b) => a.daysLeft - b.daysLeft);
+}
+
+function buildEmergencyAlerts(employees) {
+  const contracts = buildContractExpiryAlerts(employees);
+  const iqamas = buildIqamaExpiryAlerts(employees);
+  const probations = buildProbationEndingAlerts(employees);
+
+  return {
+    contracts,
+    iqamas,
+    probations,
+    totalCount: contracts.length + iqamas.length + probations.length,
+  };
+}
+
 function buildIqamaActionItems(employees) {
   const items = [];
 
@@ -670,9 +827,12 @@ export async function fetchHomeDashboardData({ includePayroll = false } = {}) {
     return order[a.priority] - order[b.priority];
   });
 
+  const emergencyAlerts = buildEmergencyAlerts(employees);
+
   return {
     todayPulse,
     actionItems,
+    emergencyAlerts,
     payrollHero,
     todayAgenda,
     pendingRequests,

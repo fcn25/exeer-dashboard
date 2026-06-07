@@ -22,6 +22,7 @@ import { useSmartToolsModals } from "../hooks/useSmartToolsModals.js";
 import SmartToolsModals from "../components/smart-tools/SmartToolsModals.jsx";
 import { getUserDisplay } from "../utils/mobileAuth.js";
 import { fetchHomeDashboardData } from "../services/homeDashboardService.js";
+import EmergencyAlertsPanel from "../components/home/EmergencyAlertsPanel.jsx";
 import ProbationDecisionModal from "../components/home/ProbationDecisionModal.jsx";
 import SparkLine from "../components/home/SparkLine.jsx";
 import {
@@ -283,6 +284,7 @@ export default function HomePage() {
   };
 
   const actionItems = dashboard?.actionItems ?? [];
+  const emergencyAlerts = dashboard?.emergencyAlerts;
   const stats = dashboard?.smartStats;
   const pulse = dashboard?.todayPulse;
   const payrollHero = dashboard?.payrollHero;
@@ -378,6 +380,22 @@ export default function HomePage() {
           {successMessage}
         </p>
       ) : null}
+
+      {/* ─── تنبيهات طارئة ─── */}
+      <EmergencyAlertsPanel
+        alerts={emergencyAlerts}
+        isLoading={isLoading}
+        onProbationDecision={(item) =>
+          setProbationModal({
+            employeeId: item.employeeId,
+            employeeName: item.employeeName ?? item.fullName,
+            probationEndDate: item.probationEndDate ?? item.endDate,
+          })
+        }
+        onViewEmployee={(employeeId) =>
+          navigate(`/dashboard/employees?employee=${employeeId}`)
+        }
+      />
 
       {/* ─── 2. صف هيرو 60/40 ─── */}
       <section className="grid grid-cols-1 gap-5 lg:grid-cols-[3fr_2fr]">

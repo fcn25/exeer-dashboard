@@ -1,0 +1,223 @@
+import {
+  AlertTriangle,
+  CalendarClock,
+  Check,
+  FileWarning,
+  ShieldAlert,
+} from "lucide-react";
+import { HOME_BTN, HOME_CARD } from "./homeStyles.js";
+
+function formatArabicNumber(value) {
+  return new Intl.NumberFormat("ar-SA").format(Number(value) || 0);
+}
+
+function formatDisplayDate(isoDate) {
+  if (!isoDate) return "—";
+  try {
+    return new Intl.DateTimeFormat("ar-SA", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    }).format(new Date(isoDate));
+  } catch {
+    return isoDate;
+  }
+}
+
+function DaysBadge({ daysLeft, severity }) {
+  const isCritical = severity === "critical";
+  return (
+    <span
+      className="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums"
+      style={{
+        backgroundColor: isCritical ? "#FEE2E2" : "#FEF3C7",
+        color: isCritical ? "#B91C1C" : "#92400E",
+      }}
+    >
+      {daysLeft === 0 ? "اليوم" : `خلال ${formatArabicNumber(daysLeft)} يوم`}
+    </span>
+  );
+}
+
+function AlertList({ items, emptyLabel, onItemAction, actionLabel }) {
+  if (!items.length) {
+    return (
+      <div className="flex flex-col items-center gap-2 py-6 text-center">
+        <Check className="h-8 w-8 text-[#10B981]" aria-hidden />
+        <p className="text-[13px] text-[#64748B]">{emptyLabel}</p>
+      </div>
+    );
+  }
+
+  return (
+    <ul className="max-h-[280px] space-y-2 overflow-y-auto">
+      {items.map((item) => (
+        <li
+          key={item.id}
+          className="rounded-[10px] border border-[#FEE2E2] bg-white px-3 py-2.5"
+        >
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0 text-start">
+              <p className="truncate text-[13px] font-medium text-[#0F172A]">
+                {item.fullName}
+              </p>
+              <p className="truncate text-[12px] text-[#64748B]">{item.jobTitle}</p>
+              <p className="mt-1 text-[11px] text-[#94A3B8]">
+                {formatDisplayDate(item.endDate)}
+              </p>
+            </div>
+            <DaysBadge daysLeft={item.daysLeft} severity={item.severity} />
+          </div>
+          {onItemAction ? (
+            <button
+              type="button"
+              onClick={() => onItemAction(item)}
+              className={`${HOME_BTN} mt-2 w-full rounded-full border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-1.5 text-[12px] font-medium text-[#0F172A] hover:bg-white`}
+            >
+              {actionLabel}
+            </button>
+          ) : null}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function AlertColumn({ title, description, icon: Icon, iconTone, count, children }) {
+  return (
+    <article className={`${HOME_CARD} flex flex-col p-4`}>
+      <div className="mb-3 flex items-start justify-between gap-2">
+        <div className="flex items-start gap-2.5">
+          <span
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px]"
+            style={{ backgroundColor: iconTone.bg, color: iconTone.color }}
+          >
+            <Icon className="h-4 w-4" aria-hidden />
+          </span>
+          <div className="min-w-0 text-start">
+            <h3 className="text-[14px] font-medium text-[#0F172A]">{title}</h3>
+            <p className="mt-0.5 text-[11px] leading-relaxed text-[#64748B]">
+              {description}
+            </p>
+          </div>
+        </div>
+        {count > 0 ? (
+          <span
+            className="inline-flex min-w-6 shrink-0 items-center justify-center rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums"
+            style={{ backgroundColor: "#FEE2E2", color: "#B91C1C" }}
+          >
+            {formatArabicNumber(count)}
+          </span>
+        ) : null}
+      </div>
+      {children}
+    </article>
+  );
+}
+
+export default function EmergencyAlertsPanel({
+  alerts,
+  isLoading = false,
+  onProbationDecision,
+  onViewEmployee,
+}) {
+  const contracts = alerts?.contracts ?? [];
+  const iqamas = alerts?.iqamas ?? [];
+  const probations = alerts?.probations ?? [];
+  const totalCount = alerts?.totalCount ?? 0;
+
+  return (
+    <section
+      className="overflow-hidden rounded-[16px] border-2 border-[#F59E0B] shadow-none"
+      style={{
+        background: "linear-gradient(180deg, #FFFBEB 0%, #FFFFFF 48%)",
+      }}
+      aria-labelledby="emergency-alerts-heading"
+    >
+      <div className="border-b border-[#FDE68A] px-5 py-4 sm:px-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#FEF3C7] text-[#D97706]">
+              <ShieldAlert className="h-5 w-5" aria-hidden />
+            </span>
+            <div className="text-start">
+              <h2
+                id="emergency-alerts-heading"
+                className="text-[18px] font-semibold text-[#92400E]"
+              >
+                تنبيهات طارئة
+              </h2>
+              <p className="text-[12px] text-[#B45309]">
+                عقود · إقامات · فترات تجربة تتطلب متابعة فورية
+              </p>
+            </div>
+          </div>
+          {!isLoading && totalCount > 0 ? (
+            <span
+              className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-semibold"
+              style={{ backgroundColor: "#FEE2E2", color: "#B91C1C" }}
+            >
+              <AlertTriangle className="h-4 w-4" aria-hidden />
+              {formatArabicNumber(totalCount)} تنبيه
+            </span>
+          ) : null}
+        </div>
+      </div>
+
+      <div className="p-4 sm:p-5">
+        {isLoading ? (
+          <p className="py-10 text-center text-[13px] text-[#94A3B8]">
+            جاري فحص التنبيهات...
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <AlertColumn
+              title="انتهاء عقود العمل"
+              description="عقود سنوية تنتهي خلال ٩٠ يوماً من تاريخ بداية العقد"
+              icon={FileWarning}
+              iconTone={{ bg: "#FEE2E2", color: "#DC2626" }}
+              count={contracts.length}
+            >
+              <AlertList
+                items={contracts}
+                emptyLabel="لا عقود تنتهي قريباً"
+                onItemAction={(item) => onViewEmployee?.(item.employeeId)}
+                actionLabel="عرض الموظف"
+              />
+            </AlertColumn>
+
+            <AlertColumn
+              title="انتهاء إقامات العاملين"
+              description="غير السعوديين — قبل ٣٠ يوماً من تاريخ انتهاء الإقامة"
+              icon={AlertTriangle}
+              iconTone={{ bg: "#FFEDD5", color: "#EA580C" }}
+              count={iqamas.length}
+            >
+              <AlertList
+                items={iqamas}
+                emptyLabel="لا إقامات تنتهي قريباً"
+                onItemAction={(item) => onViewEmployee?.(item.employeeId)}
+                actionLabel="عرض الموظف"
+              />
+            </AlertColumn>
+
+            <AlertColumn
+              title="نهاية فترة التجربة"
+              description="آخر ١٠ أيام من فترة التجربة (٩٠ يوماً من بدء العمل)"
+              icon={CalendarClock}
+              iconTone={{ bg: "#EEF2FF", color: "#4F46E5" }}
+              count={probations.length}
+            >
+              <AlertList
+                items={probations}
+                emptyLabel="لا فترات تجربة تنتهي قريباً"
+                onItemAction={(item) => onProbationDecision?.(item)}
+                actionLabel="اتخاذ قرار"
+              />
+            </AlertColumn>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}

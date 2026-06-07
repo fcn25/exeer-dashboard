@@ -321,18 +321,20 @@
       "reviewCycle": "Review cycle"
     },
     "hints": {
-      "salaryPayDay": "Day 27 is recommended for WPS compliance"
+      "salaryPayDay": "Day 27 is recommended for WPS compliance",
+      "sickLeave": "Per Saudi Labor Law — up to 120 days per year"
     },
     "sections": {
       "payrollHint": "Payroll, GOSI, allowances, and employee loans",
       "loansTitle": "Employee loans"
     },
     "options": {
+      "saturday": "Saturday",
       "sunday": "Sunday",
-      "monday": "Monday",
       "hijri": "Hijri",
       "gregorian": "Gregorian",
       "gps": "GPS",
+      "faceSelfie": "Face photo / selfie",
       "biometric": "Biometric",
       "manual": "Manual",
       "monthly": "Monthly",

@@ -1,4 +1,5 @@
 import {
+  BarChart3,
   Brain,
   Building2,
   ClipboardCheck,
@@ -15,12 +16,28 @@ import {
   UserCheck,
   UserCog,
   Users,
+  RefreshCw,
 } from "lucide-react";
 
 export const PERFORMANCE_TABS = [
-  { id: "templates", label: "نماذج التقييم" },
-  { id: "cycles", label: "دورات التقييم" },
-  { id: "summary", label: "الملخص التنفيذي" },
+  {
+    id: "templates",
+    label: "نماذج التقييم",
+    icon: ClipboardCheck,
+    hint: "مكتبة النماذج والمعايير",
+  },
+  {
+    id: "cycles",
+    label: "دورات التقييم",
+    icon: RefreshCw,
+    hint: "إطلاق ومتابعة الدورات",
+  },
+  {
+    id: "summary",
+    label: "الملخص التنفيذي",
+    icon: BarChart3,
+    hint: "تحليل نتائج الأداء",
+  },
 ];
 
 export const TEMPLATE_PILLARS = [

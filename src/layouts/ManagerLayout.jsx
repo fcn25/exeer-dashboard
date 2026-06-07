@@ -18,6 +18,8 @@ import {
   UsersRound,
 } from "lucide-react";
 import ErrorToast from "../components/ui/ErrorToast.jsx";
+import DashboardTopBar from "../components/layout/DashboardTopBar.jsx";
+import SystemCalendarPanel from "../components/calendar/SystemCalendarPanel.jsx";
 import { signOut } from "../utils/mobileAuth.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import ExeerLogo from "../components/brand/ExeerLogo.jsx";
@@ -63,6 +65,7 @@ export default function ManagerLayout() {
   const { permissions, role } = useAuth();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [unauthorizedToast, setUnauthorizedToast] = useState("");
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   useEffect(() => {
     const message = location.state?.unauthorizedToast;
@@ -280,9 +283,24 @@ export default function ManagerLayout() {
         </div>
       </aside>
 
-      <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto bg-gray-50/50 px-6 py-8 md:px-8 md:py-8 dark:bg-slate-950/50">
-        <Outlet />
-      </main>
+      <div className="flex min-h-0 min-w-0 flex-1">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-gray-50/50 dark:bg-slate-950/50">
+          <div className="shrink-0 px-6 md:px-8">
+            <DashboardTopBar
+              isCalendarOpen={isCalendarOpen}
+              onToggleCalendar={() => setIsCalendarOpen((open) => !open)}
+              onLogout={handleLogout}
+            />
+          </div>
+          <main className="min-h-0 flex-1 overflow-y-auto px-6 py-8 md:px-8">
+            <Outlet />
+          </main>
+        </div>
+
+        {isCalendarOpen ? (
+          <SystemCalendarPanel onClose={() => setIsCalendarOpen(false)} />
+        ) : null}
+      </div>
 
       <ErrorToast
         message={unauthorizedToast}

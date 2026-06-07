@@ -59,7 +59,8 @@
     "mainNav": "Main navigation",
     "systemSection": "System customization",
     "systemCustomization": "System customization",
-    "loans": "Employee loans"
+    "loans": "Employee loans",
+    "openCalendar": "Open calendar"
   },
   "auth": {
     "welcome": "Welcome back",
@@ -373,11 +374,11 @@
   },
   "calendar": {
     "title": "System calendar",
-    "subtitle": "Your appointments, events, tasks, and key HR dates",
+    "subtitle": "Your private appointments and company-wide events",
     "prevMonth": "Previous month",
     "nextMonth": "Next month",
     "noEventsDay": "No events on this day",
-    "addAppointment": "Add appointment",
+    "addAppointment": "Add private appointment",
     "appointmentTitle": "Appointment title",
     "appointmentNotes": "Notes (optional)",
     "saveAppointment": "Save appointment",

@@ -59,7 +59,8 @@
     "mainNav": "القائمة الرئيسية",
     "systemSection": "تخصيص النظام",
     "systemCustomization": "تخصيص النظام",
-    "loans": "السلف المالية"
+    "loans": "السلف المالية",
+    "openCalendar": "فتح التقويم"
   },
   "auth": {
     "welcome": "مرحباً بك",
@@ -373,11 +374,11 @@
   },
   "calendar": {
     "title": "تقويم النظام",
-    "subtitle": "مواعيدك وفعاليات المنشأة والمهام والتواريخ المهمة",
+    "subtitle": "مواعيدك الشخصية وفعاليات المنشأة المشتركة",
     "prevMonth": "الشهر السابق",
     "nextMonth": "الشهر التالي",
     "noEventsDay": "لا توجد أحداث في هذا اليوم",
-    "addAppointment": "إضافة موعد",
+    "addAppointment": "إضافة موعد شخصي",
     "appointmentTitle": "عنوان الموعد",
     "appointmentNotes": "ملاحظات (اختياري)",
     "saveAppointment": "حفظ الموعد",

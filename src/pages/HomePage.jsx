@@ -4,13 +4,11 @@ import {
   AlertTriangle,
   Briefcase,
   CalendarClock,
-  CalendarDays,
   Check,
   ClipboardList,
   Download,
   FileText,
   GraduationCap,
-  LogOut,
   MessageSquare,
   Sparkles,
   Star,
@@ -22,8 +20,7 @@ import { canAccessStrategicAI, canViewPayroll } from "../utils/rbac.js";
 import { SMART_TOOLS } from "../constants/smartTools.js";
 import { useSmartToolsModals } from "../hooks/useSmartToolsModals.js";
 import SmartToolsModals from "../components/smart-tools/SmartToolsModals.jsx";
-import { getUserDisplay, signOut } from "../utils/mobileAuth.js";
-import SystemCalendarPanel from "../components/calendar/SystemCalendarPanel.jsx";
+import { getUserDisplay } from "../utils/mobileAuth.js";
 import { fetchHomeDashboardData } from "../services/homeDashboardService.js";
 import EmergencyAlertsPanel from "../components/home/EmergencyAlertsPanel.jsx";
 import PendingRequestCard from "../components/requests/PendingRequestCard.jsx";
@@ -38,7 +35,6 @@ import {
   HOME_BTN_PRIMARY,
   HOME_BTN_SECONDARY,
   HOME_CARD,
-  HOME_ICON_BTN,
   HOME_SHELL,
   HOME_SURFACE,
   HOME_TEXT_BODY,
@@ -255,8 +251,6 @@ export default function HomePage() {
   const [probationModal, setProbationModal] = useState(null);
   const [actingRequestId, setActingRequestId] = useState(null);
   const [requestActionError, setRequestActionError] = useState("");
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-
   const loadDashboard = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -305,11 +299,6 @@ export default function HomePage() {
     } finally {
       setActingRequestId(null);
     }
-  };
-
-  const handleLogout = async () => {
-    await signOut();
-    window.location.href = "/login";
   };
 
   const handleActionItem = (item) => {
@@ -376,33 +365,11 @@ export default function HomePage() {
   );
 
   return (
-    <div className="-mx-6 -my-8 flex min-h-[calc(100dvh-4rem)] md:-mx-8">
-      <div className="flex min-w-0 flex-1 flex-col gap-5 overflow-y-auto bg-[#FFFFFF] px-6 py-8 dark:bg-slate-950 md:px-8">
+    <div className="-mx-6 -my-8 flex flex-col gap-5 bg-[#FFFFFF] px-6 py-8 dark:bg-slate-950 md:-mx-8 md:px-8">
       {/* ─── 1. ترويسة ─── */}
       <header className={`${HOME_SHELL} p-6`}>
         <div className="flex flex-col gap-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setIsCalendarOpen((open) => !open)}
-                className={`${HOME_ICON_BTN} ${isCalendarOpen ? "border-slate-900 bg-slate-900 text-white dark:border-white dark:bg-white dark:text-slate-900" : ""}`}
-                aria-label={t("pages.home.openCalendar")}
-                aria-pressed={isCalendarOpen}
-              >
-                <CalendarDays className="h-[18px] w-[18px] stroke-[1.75]" aria-hidden />
-              </button>
-              <button
-                type="button"
-                onClick={handleLogout}
-                className={HOME_ICON_BTN}
-                aria-label={t("pages.home.logout")}
-              >
-                <LogOut className="h-[18px] w-[18px] stroke-[1.75]" aria-hidden />
-              </button>
-            </div>
-
-            <div className="flex flex-wrap justify-end gap-2">
+          <div className="flex flex-wrap justify-end gap-2">
             {headerActions.map((action) =>
               action.primary ? (
                 <button
@@ -427,7 +394,6 @@ export default function HomePage() {
                 </button>
               ),
             )}
-            </div>
           </div>
 
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -771,11 +737,6 @@ export default function HomePage() {
       />
 
       <SmartToolsModals {...modalProps} />
-      </div>
-
-      {isCalendarOpen ? (
-        <SystemCalendarPanel onClose={() => setIsCalendarOpen(false)} />
-      ) : null}
     </div>
   );
 }

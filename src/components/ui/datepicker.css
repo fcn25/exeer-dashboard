@@ -56,3 +56,34 @@
 .exeer-datepicker-calendar .react-datepicker__triangle {
   display: none;
 }
+
+.dark .exeer-datepicker-calendar {
+  border-color: #152742;
+  background: #070e1c;
+}
+
+.dark .exeer-datepicker-calendar .react-datepicker__header {
+  background: #0c1729;
+  border-bottom-color: #152742;
+}
+
+.dark .exeer-datepicker-calendar .react-datepicker__current-month,
+.dark .exeer-datepicker-calendar .react-datepicker-time__header,
+.dark .exeer-datepicker-calendar .react-datepicker-year-header,
+.dark .exeer-datepicker-calendar .react-datepicker__day-name,
+.dark .exeer-datepicker-calendar .react-datepicker__day,
+.dark .exeer-datepicker-calendar .react-datepicker__time-name {
+  color: #eef2f8;
+}
+
+.dark .exeer-datepicker-calendar .react-datepicker__day:hover,
+.dark .exeer-datepicker-calendar .react-datepicker__month-text:hover {
+  background: #152742;
+}
+
+.dark .exeer-datepicker-calendar .react-datepicker__day--selected,
+.dark .exeer-datepicker-calendar .react-datepicker__day--keyboard-selected,
+.dark .exeer-datepicker-calendar .react-datepicker__month-text--selected {
+  background: #eef2f8;
+  color: #070e1c;
+}

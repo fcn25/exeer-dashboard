@@ -16,7 +16,7 @@ import { getMyQuickNote } from "../../services/quickNotesService.js";
 import NotificationsDrawer from "../mobile/NotificationsDrawer.jsx";
 
 const ICON_BTN =
-  "relative flex h-9 w-9 items-center justify-center rounded-md border border-[#E2E8F0] text-[#0F172A] transition-colors hover:bg-[#F8FAFC] dark:border-slate-600 dark:text-white dark:hover:bg-slate-800";
+  "relative flex h-9 w-9 items-center justify-center rounded-md border border-[#E2E8F0] text-[#0F172A] transition-colors hover:bg-[#F8FAFC] dark:border-[#1f3354] dark:text-white dark:hover:bg-[#0c1729]";
 
 const ICON_BTN_ACTIVE =
   "border-slate-900 bg-slate-900 text-white dark:border-white dark:bg-white dark:text-slate-900";
@@ -97,7 +97,7 @@ export default function DashboardTopBar({
 
   return (
     <>
-      <div className="sticky top-0 z-30 flex shrink-0 items-center justify-end gap-2 border-b border-exeer-border bg-gray-50/95 px-0 py-3 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-950/95">
+      <div className="sticky top-0 z-30 flex shrink-0 items-center justify-end gap-2 border-b border-exeer-border bg-gray-50/95 px-0 py-3 backdrop-blur-sm dark:border-[#152742] dark:bg-[#030711]/95">
         <TopBarButton
           label={t("nav.notifications")}
           badge={unreadCount}

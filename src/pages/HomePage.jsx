@@ -552,7 +552,7 @@ export default function HomePage() {
           <div className="mt-6 h-2 overflow-hidden rounded-full bg-[#F1F5F9] dark:bg-slate-800">
             <div className="flex h-full w-full">
               <div
-                className="h-full bg-[#0F172A] dark:bg-white"
+                className="h-full bg-[#0F172A] dark:bg-[var(--text-primary)]"
                 style={{ width: `${saudiPercent}%` }}
               />
               <div
@@ -565,7 +565,7 @@ export default function HomePage() {
       </section>
 
       {/* ─── 3. يحتاج اهتمامك ─── */}
-      <section className={`${HOME_SHELL} border-r-[3px] border-r-[#0F172A] p-6 dark:border-r-white`}>
+      <section className={`${HOME_SHELL} border-r-[3px] border-r-[#0F172A] p-6 dark:border-r-[var(--text-primary)]`}>
         <div className="mb-4 flex items-center justify-between gap-3">
           <h2 className={`text-[18px] font-medium ${HOME_TEXT_HEADING}`}>
             {t("pages.home.needsAttention")}

@@ -267,7 +267,7 @@ export default function AttendancePage() {
             type="button"
             onClick={handleExportToPayroll}
             disabled={isExporting || isLoading || rows.length === 0}
-            className="md-btn-primary inline-flex items-center gap-2 bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
+            className="md-btn-primary inline-flex items-center gap-2 bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-50"
           >
             <ClipboardList className="h-4 w-4" aria-hidden />
             {isExporting ? "..." : "ترحيل للمسير (من صفحة المسير)"}

@@ -19,7 +19,7 @@ const ICON_BTN =
   "relative flex h-9 w-9 items-center justify-center rounded-md border border-[#E2E8F0] text-[#0F172A] transition-colors hover:bg-[#F8FAFC] dark:border-[var(--border-color)] dark:text-[var(--text-primary)] dark:hover:bg-[var(--bg-surface-hover)]";
 
 const ICON_BTN_ACTIVE =
-  "border-slate-900 bg-slate-900 text-white dark:border-white dark:bg-white dark:text-slate-900";
+  "border-slate-900 bg-slate-900 text-white dark:border-[var(--text-primary)] dark:bg-[var(--bg-surface-hover)] dark:text-[var(--text-primary)]";
 
 function TopBarButton({ label, onClick, children, isActive, badge }) {
   return (
@@ -32,7 +32,7 @@ function TopBarButton({ label, onClick, children, isActive, badge }) {
     >
       {children}
       {badge > 0 ? (
-        <span className="absolute -top-0.5 end-0 flex h-[16px] min-w-[16px] items-center justify-center rounded-full bg-[#0F172A] px-1 text-[9px] font-bold leading-none text-white dark:bg-white dark:text-slate-900">
+        <span className="absolute -top-0.5 end-0 flex h-[16px] min-w-[16px] items-center justify-center rounded-full bg-[#0F172A] px-1 text-[9px] font-bold leading-none text-white dark:bg-[var(--accent-color)] dark:text-[#131314]">
           {badge > 9 ? "9+" : badge}
         </span>
       ) : null}

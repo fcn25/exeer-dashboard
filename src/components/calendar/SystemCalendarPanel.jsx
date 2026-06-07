@@ -57,7 +57,7 @@ function DayCell({ date, isSelected, isToday, events, onSelect }) {
       onClick={() => onSelect(date)}
       className={`relative flex min-h-[52px] flex-col items-center justify-start rounded-md border px-1 py-1.5 text-center transition-colors ${
         isSelected
-          ? "border-slate-900 bg-slate-900 text-white dark:border-white dark:bg-white dark:text-slate-900"
+          ? "border-slate-900 bg-slate-900 text-white dark:border-[var(--text-primary)] dark:bg-[var(--bg-surface-hover)] dark:text-[var(--text-primary)]"
           : isToday
             ? "border-exeer-border bg-exeer-surface dark:border-slate-500 dark:bg-slate-800"
             : "border-transparent hover:border-exeer-border hover:bg-exeer-hover dark:hover:border-slate-600 dark:hover:bg-slate-800"

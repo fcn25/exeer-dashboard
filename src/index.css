@@ -338,25 +338,25 @@ span {
   --border-color: #444746;
   --accent-color: #a8c7fa;
 
-  /* Tailwind slate/gray — mapped to theme tokens */
-  --color-slate-50: var(--text-primary);
-  --color-slate-100: var(--text-primary);
-  --color-slate-200: var(--text-primary);
+  /* Tailwind slate/gray — surfaces only, never white/light for backgrounds */
+  --color-slate-50: var(--bg-surface);
+  --color-slate-100: var(--bg-surface-hover);
+  --color-slate-200: var(--bg-surface-hover);
   --color-slate-300: var(--text-secondary);
   --color-slate-400: var(--text-secondary);
-  --color-slate-500: var(--text-secondary);
+  --color-slate-500: #5a5d5b;
   --color-slate-600: var(--border-color);
   --color-slate-700: var(--border-color);
   --color-slate-800: var(--bg-surface-hover);
   --color-slate-900: var(--bg-surface);
   --color-slate-950: var(--bg-main);
 
-  --color-gray-50: var(--text-primary);
-  --color-gray-100: var(--text-primary);
-  --color-gray-200: var(--text-primary);
+  --color-gray-50: var(--bg-surface);
+  --color-gray-100: var(--bg-surface-hover);
+  --color-gray-200: var(--bg-surface-hover);
   --color-gray-300: var(--text-secondary);
   --color-gray-400: var(--text-secondary);
-  --color-gray-500: var(--text-secondary);
+  --color-gray-500: #5a5d5b;
   --color-gray-600: var(--border-color);
   --color-gray-700: var(--border-color);
   --color-gray-800: var(--bg-surface-hover);
@@ -482,5 +482,26 @@ span {
   .shadow-inner,
   [class*="shadow-["] {
     box-shadow: none !important;
+  }
+
+  /* Dark mode: no white/light box backgrounds — white is for text & lines only */
+  .dark .dark\:bg-white {
+    background-color: var(--bg-surface-hover) !important;
+  }
+
+  .dark .dark\:bg-slate-100,
+  .dark .dark\:bg-slate-50 {
+    background-color: var(--bg-surface-hover) !important;
+  }
+
+  .dark .dark\:hover\:bg-white:hover,
+  .dark .dark\:hover\:bg-slate-100:hover,
+  .dark .dark\:hover\:bg-slate-200:hover {
+    background-color: var(--bg-surface) !important;
+  }
+
+  .dark .dark\:border-white,
+  .dark .dark\:border-r-white {
+    border-color: var(--text-primary) !important;
   }
 }

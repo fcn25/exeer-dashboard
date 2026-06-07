@@ -17,7 +17,19 @@ export function formatPickerFromPayrollMonth(payrollMonth) {
   return `${year}-${String(month).padStart(2, "0")}`;
 }
 
-export function buildPayrollDraftFromEmployee(employee, payrollMonth) {
+export function applyLoanDeductionToDraft(draft, loanDeduction = 0) {
+  const loan_deductions = Number(loanDeduction) || 0;
+  const nextDraft = {
+    ...draft,
+    loan_deductions,
+  };
+  return {
+    ...nextDraft,
+    net_salary: calculatePayrollNetSalary(nextDraft),
+  };
+}
+
+export function buildPayrollDraftFromEmployee(employee, payrollMonth, loanDeduction = 0) {
   const basic = Number(employee.basic_salary) || 0;
   const housing = Number(employee.housing_allowance) || 0;
   const otherAllowances = Number(employee.other_allowance) || 0;
@@ -25,7 +37,7 @@ export function buildPayrollDraftFromEmployee(employee, payrollMonth) {
   const additional = 0;
   const penaltyDeductions = 0;
   const delayDeductions = 0;
-  const loanDeductions = 0;
+  const loanDeductions = Number(loanDeduction) || 0;
 
   const { amount: gosi } = calculateGosiDeduction({
     basicSalary: basic,

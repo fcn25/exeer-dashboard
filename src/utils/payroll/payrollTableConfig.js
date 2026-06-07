@@ -8,6 +8,7 @@ export const PAYROLL_DETAIL_COLUMNS = [
   { key: "penalties", label: "جزاءات", tone: "deduction" },
   { key: "gosi", label: "GOSI", tone: "deduction" },
   { key: "lateness", label: "تأخيرات", tone: "deduction" },
+  { key: "loans", label: "السلف", tone: "deduction" },
   { key: "net", label: "الصافي", tone: "neutral" },
 ];
 
@@ -17,7 +18,12 @@ export const PAYROLL_HEADER_TONE_CLASS = {
   deduction: "bg-red-50 text-red-800",
 };
 
-export const PAYROLL_DEDUCTION_KEYS = new Set(["penalties", "gosi", "lateness"]);
+export const PAYROLL_DEDUCTION_KEYS = new Set([
+  "penalties",
+  "gosi",
+  "lateness",
+  "loans",
+]);
 
 export const ARABIC_MONTHS = [
   { value: "", label: "كل الأشهر" },

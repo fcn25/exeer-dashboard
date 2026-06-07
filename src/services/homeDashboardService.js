@@ -380,18 +380,28 @@ async function fetchPayrollHero(includePayroll, monthPicker, companyId) {
 
 async function fetchPendingRequestsPreview() {
   const team = await safeCall(() => listMyTeamEmployees(), []);
-  const teamIds = team.map((row) => row.id);
-  const rows = await safeCall(
-    () => listManagerPendingRequests({ employeeIds: teamIds, limit: 8 }),
+  const teamById = new Map(team.map((row) => [Number(row.id), row]));
+  const teamIdSet = new Set(team.map((row) => Number(row.id)));
+
+  const allRows = await safeCall(
+    () => listManagerPendingRequests({ companyWide: true, limit: 30 }),
     [],
   );
 
+  const filtered = teamIdSet.size
+    ? allRows.filter((row) => teamIdSet.has(Number(row.employee_id)))
+    : allRows;
+  const rows = filtered.slice(0, 8);
+
   return {
-    total: rows.length,
+    total: filtered.length,
     items: rows.map((row) => ({
       id: row.id,
       employeeId: row.employee_id,
-      employeeName: row.employees?.full_name ?? "موظف",
+      employeeName:
+        row.employees?.full_name ??
+        teamById.get(Number(row.employee_id))?.full_name ??
+        "موظف",
       requestType: resolveRequestTypeLabel(row.request_type),
       requestTypeRaw: row.request_type,
       createdAt: row.created_at,

@@ -8,6 +8,7 @@ import { getCurrentUserRole, isDirectManager } from "../utils/rbac.js";
 import {
   REQUEST_STATUS_LABELS,
   createEmployeeRequest,
+  listManagerPendingRequests,
 } from "./requestsService.js";
 import {
   approveEmployeeRequest,
@@ -79,25 +80,18 @@ export async function listMyTeamEmployees() {
 }
 
 export async function listTeamPendingRequests(teamEmployeeIds = []) {
-  const companyId = getCompanyId();
-  const ids = [
-    ...new Set(teamEmployeeIds.map((id) => Number(id)).filter(Boolean)),
-  ];
-  if (!ids.length) return [];
+  const teamIdSet = new Set(
+    teamEmployeeIds.map((id) => Number(id)).filter(Boolean),
+  );
 
-  const { data, error } = await supabase
-    .from("requests")
-    .select(
-      "id, employee_id, request_type, details, status, routing_to, amount, installments, monthly_deduction, leave_type, leave_days, start_date, created_at",
-    )
-    .eq("company_id", companyId)
-    .eq("routing_to", "Direct_Manager")
-    .eq("status", "Pending")
-    .in("employee_id", ids)
-    .order("created_at", { ascending: false });
+  const allRows = await listManagerPendingRequests({
+    companyWide: true,
+    limit: 50,
+  });
 
-  if (error) throw new Error(mapDbError(error));
-  return data ?? [];
+  if (!teamIdSet.size) return allRows;
+
+  return allRows.filter((row) => teamIdSet.has(Number(row.employee_id)));
 }
 
 export async function updateTeamRequestStatus(requestId, status) {

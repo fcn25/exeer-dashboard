@@ -7,6 +7,7 @@ import {
   formatPayrollMonthFromPicker,
   mapPayrollRecordRow,
 } from "../utils/payroll/calculations.js";
+import { fetchDueLoanInstallmentsByEmployee } from "./payrollLoanService.js";
 
 export const PAYROLL_SCHEMA_FIX_HINT =
   "نفّذ ملف supabase/migrations/20250624000000_payroll_records_columns.sql أو supabase/scripts/fix_payroll_records_schema.sql في Supabase SQL Editor ثم أعد تحميل Schema Cache.";
@@ -230,6 +231,12 @@ export async function ensureActiveEmployeesInPayroll(pickerValue) {
     payrollRows.map((row) => Number(row.employee_id)).filter(Boolean),
   );
 
+  const { totals: loanByEmployee } = await fetchDueLoanInstallmentsByEmployee(
+    companyId,
+    period.payrollMonth,
+    { skipAlreadyDeducted: false },
+  );
+
   let includePayrollMonth = mode !== "month_year";
   let addedCount = 0;
   let upsertError = null;
@@ -237,7 +244,11 @@ export async function ensureActiveEmployeesInPayroll(pickerValue) {
   for (const employee of employees) {
     if (existingIds.has(Number(employee.id))) continue;
 
-    const draft = buildPayrollDraftFromEmployee(employee, period.payrollMonth);
+    const draft = buildPayrollDraftFromEmployee(
+      employee,
+      period.payrollMonth,
+      loanByEmployee.get(employee.id) ?? 0,
+    );
     let payload = buildPayrollRecordPayload(
       companyId,
       draft,
@@ -292,11 +303,22 @@ export async function generatePayrollForMonth(pickerValue) {
     );
   }
 
+  const { totals: loanByEmployee } = await fetchDueLoanInstallmentsByEmployee(
+    companyId,
+    period.payrollMonth,
+    { skipAlreadyDeducted: false },
+  );
+
   let includePayrollMonth = true;
   let upsertError = null;
 
   for (const employee of employees) {
-    const draft = buildPayrollDraftFromEmployee(employee, period.payrollMonth);
+    const loanDeduction = loanByEmployee.get(employee.id) ?? 0;
+    const draft = buildPayrollDraftFromEmployee(
+      employee,
+      period.payrollMonth,
+      loanDeduction,
+    );
     let payload = buildPayrollRecordPayload(
       companyId,
       draft,

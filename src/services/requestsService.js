@@ -1,5 +1,6 @@
 import { supabase } from "../utils/supabaseClient.js";
 import { getCompanyId, getEmployeeId } from "../utils/mobileAuth.js";
+import { isMissingColumnError } from "../utils/supabaseErrors.js";
 
 const MAX_ATTACHMENT_BYTES = 1048576;
 const BUCKET = "request-attachments";
@@ -193,27 +194,82 @@ export async function countCompanyRequests({
   return count ?? 0;
 }
 
-export async function listManagerPendingRequests({ employeeIds = [], limit = 8 } = {}) {
-  const companyId = getCompanyId();
-  const ids = [...new Set(employeeIds.map((id) => Number(id)).filter(Boolean))];
-  if (!ids.length) return [];
+const PENDING_REQUEST_SELECT_FULL =
+  "id, employee_id, request_type, details, status, routing_to, amount, installments, monthly_deduction, leave_type, leave_days, start_date, created_at, employees ( full_name )";
 
+const PENDING_REQUEST_SELECT_BASIC =
+  "id, employee_id, request_type, details, status, routing_to, amount, installments, monthly_deduction, created_at, employees ( full_name )";
+
+const PENDING_REQUEST_SELECT_MINIMAL =
+  "id, employee_id, request_type, details, status, routing_to, amount, installments, monthly_deduction, created_at";
+
+async function runPendingRequestQuery(companyId, { employeeIds, limit, columns }) {
   let query = supabase
     .from("requests")
-    .select(
-      "id, employee_id, request_type, details, status, routing_to, amount, installments, monthly_deduction, leave_type, leave_days, start_date, created_at, employees ( full_name )",
-    )
+    .select(columns)
     .eq("company_id", companyId)
-    .eq("routing_to", "Direct_Manager")
     .eq("status", "Pending")
-    .in("employee_id", ids)
     .order("created_at", { ascending: false });
+
+  const ids = [...new Set(employeeIds.map((id) => Number(id)).filter(Boolean))];
+  if (ids.length) {
+    query = query.in("employee_id", ids);
+  }
 
   if (limit) query = query.limit(limit);
 
-  const { data, error } = await query;
-  if (error) throw new Error(mapDbError(error));
-  return data ?? [];
+  return query;
+}
+
+export async function listManagerPendingRequests({
+  employeeIds = [],
+  limit = 8,
+  companyWide = false,
+} = {}) {
+  const companyId = getCompanyId();
+  const ids = [...new Set(employeeIds.map((id) => Number(id)).filter(Boolean))];
+
+  if (!companyWide && !ids.length) return [];
+
+  const attempts = [
+    PENDING_REQUEST_SELECT_FULL,
+    PENDING_REQUEST_SELECT_BASIC,
+    PENDING_REQUEST_SELECT_MINIMAL,
+  ];
+
+  let lastError = null;
+
+  for (const columns of attempts) {
+    const { data, error } = await runPendingRequestQuery(companyId, {
+      employeeIds: companyWide ? [] : ids,
+      limit,
+      columns,
+    });
+
+    if (!error) return data ?? [];
+
+    if (error.code === "PGRST200" || /employees/i.test(error.message ?? "")) {
+      const { data: fallback, error: fallbackError } = await runPendingRequestQuery(
+        companyId,
+        {
+          employeeIds: companyWide ? [] : ids,
+          limit,
+          columns: PENDING_REQUEST_SELECT_MINIMAL,
+        },
+      );
+      if (!fallbackError) return fallback ?? [];
+      lastError = fallbackError;
+      continue;
+    }
+
+    if (isMissingColumnError(error) || columns !== PENDING_REQUEST_SELECT_MINIMAL) {
+      lastError = error;
+      continue;
+    }
+    lastError = error;
+  }
+
+  throw new Error(mapDbError(lastError));
 }
 
 export async function listEmployeeRequests(employeeId) {

@@ -86,7 +86,11 @@ function daysUntil(dateValue) {
 function isActiveEmployee(row) {
   const status = String(row?.employment_status ?? "").trim();
   if (!status) return true;
-  return !INACTIVE_EMPLOYMENT_STATUSES.has(status);
+  if (INACTIVE_EMPLOYMENT_STATUSES.has(status)) return false;
+  const lower = status.toLowerCase();
+  return !["منتهي", "مستقيل", "terminated", "resigned", "inactive"].some(
+    (token) => lower === token || lower.includes(token),
+  );
 }
 
 function formatEventTime(datetime) {
@@ -483,7 +487,8 @@ async function fetchTopPerformers(companyId, bounds) {
 
 const CONTRACT_EXPIRY_WINDOW_DAYS = 90;
 const IQAMA_EXPIRY_WINDOW_DAYS = 30;
-const PROBATION_PERIOD_DAYS = 90;
+/** فترة التجربة من تاريخ التعيين (hire_date) */
+const PROBATION_PERIOD_DAYS = 80;
 const PROBATION_ALERT_WINDOW_DAYS = 10;
 
 function toIsoDateOnly(date) {
@@ -524,8 +529,8 @@ function getNextAnnualContractEndDate(hireDate) {
   return toIsoDateOnly(end);
 }
 
+/** نهاية التجربة = تاريخ التعيين + ٨٠ يوماً (بيانات حية من employees.hire_date). */
 function resolveProbationEndDate(employee) {
-  if (employee.probation_end_date) return employee.probation_end_date;
   if (!employee.hire_date) return null;
 
   const hire = parseIsoDateOnly(employee.hire_date);
@@ -534,7 +539,15 @@ function resolveProbationEndDate(employee) {
   return toIsoDateOnly(addCalendarDays(hire, PROBATION_PERIOD_DAYS));
 }
 
-function buildEmergencyAlertItem(employee, endDate, daysLeft, type) {
+function formatArabicDaysLeft(daysLeft) {
+  if (daysLeft === 0) return "اليوم";
+  if (daysLeft === 1) return "يوم واحد";
+  if (daysLeft === 2) return "يومان";
+  if (daysLeft >= 3 && daysLeft <= 10) return `${daysLeft} أيام`;
+  return `${daysLeft} يوم`;
+}
+
+function buildEmergencyAlertItem(employee, endDate, daysLeft, type, message) {
   return {
     id: `${type}-${employee.id}`,
     type,
@@ -543,6 +556,7 @@ function buildEmergencyAlertItem(employee, endDate, daysLeft, type) {
     jobTitle: employee.job_title_name ?? "—",
     endDate,
     daysLeft,
+    message,
     severity: daysLeft <= 7 ? "critical" : "warning",
   };
 }
@@ -560,8 +574,15 @@ function buildContractExpiryAlerts(employees) {
       continue;
     }
 
+    const daysPhrase = formatArabicDaysLeft(daysLeft);
     items.push({
-      ...buildEmergencyAlertItem(employee, endDate, daysLeft, "contract"),
+      ...buildEmergencyAlertItem(
+        employee,
+        endDate,
+        daysLeft,
+        "contract",
+        `ينتهي العقد السنوي بعد ${daysPhrase} — ذكرى بداية العقد ${employee.hire_date}`,
+      ),
       contractStartDate: employee.hire_date,
     });
   }
@@ -586,12 +607,14 @@ function buildIqamaExpiryAlerts(employees) {
       continue;
     }
 
+    const daysPhrase = formatArabicDaysLeft(daysLeft);
     items.push(
       buildEmergencyAlertItem(
         employee,
         employee.iqama_expiry_date,
         daysLeft,
         "iqama",
+        `متبقي ${daysPhrase} على انتهاء الإقامة — ${employee.iqama_expiry_date}`,
       ),
     );
   }
@@ -615,10 +638,19 @@ function buildProbationEndingAlerts(employees) {
       continue;
     }
 
+    const daysPhrase = formatArabicDaysLeft(daysLeft);
+    const name = employee.full_name ?? "الموظف";
     items.push({
-      ...buildEmergencyAlertItem(employee, endDate, daysLeft, "probation"),
-      employeeName: employee.full_name ?? "موظف",
+      ...buildEmergencyAlertItem(
+        employee,
+        endDate,
+        daysLeft,
+        "probation",
+        `تبقت ${daysPhrase} وتنتهي فترة تجربة ${name}`,
+      ),
+      employeeName: name,
       probationEndDate: endDate,
+      hireDate: employee.hire_date,
     });
   }
 

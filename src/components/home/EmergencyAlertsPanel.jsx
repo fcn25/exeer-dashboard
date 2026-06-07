@@ -30,11 +30,11 @@ function DaysBadge({ daysLeft, severity }) {
     <span
       className="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums"
       style={{
-        backgroundColor: isCritical ? "#FEE2E2" : "#FEF3C7",
-        color: isCritical ? "#B91C1C" : "#92400E",
+        backgroundColor: isCritical ? "#FEE2E2" : "#F1F5F9",
+        color: isCritical ? "#B91C1C" : "#475569",
       }}
     >
-      {daysLeft === 0 ? "اليوم" : `خلال ${formatArabicNumber(daysLeft)} يوم`}
+      {daysLeft === 0 ? "اليوم" : `${formatArabicNumber(daysLeft)} يوم`}
     </span>
   );
 }
@@ -54,7 +54,7 @@ function AlertList({ items, emptyLabel, onItemAction, actionLabel }) {
       {items.map((item) => (
         <li
           key={item.id}
-          className="rounded-[10px] border border-[#FEE2E2] bg-white px-3 py-2.5"
+          className="rounded-[10px] border border-[#E2E8F0] bg-white px-3 py-2.5"
         >
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 text-start">
@@ -62,6 +62,11 @@ function AlertList({ items, emptyLabel, onItemAction, actionLabel }) {
                 {item.fullName}
               </p>
               <p className="truncate text-[12px] text-[#64748B]">{item.jobTitle}</p>
+              {item.message ? (
+                <p className="mt-1.5 text-[12px] leading-relaxed text-[#475569]">
+                  {item.message}
+                </p>
+              ) : null}
               <p className="mt-1 text-[11px] text-[#94A3B8]">
                 {formatDisplayDate(item.endDate)}
               </p>
@@ -128,34 +133,30 @@ export default function EmergencyAlertsPanel({
 
   return (
     <section
-      className="overflow-hidden rounded-[16px] border-2 border-[#F59E0B] shadow-none"
-      style={{
-        background: "linear-gradient(180deg, #FFFBEB 0%, #FFFFFF 48%)",
-      }}
+      className="overflow-hidden rounded-[16px] border border-[#E2E8F0] bg-white shadow-none"
       aria-labelledby="emergency-alerts-heading"
     >
-      <div className="border-b border-[#FDE68A] px-5 py-4 sm:px-6">
+      <div className="border-b border-[#F1F5F9] bg-[#FAFAF9] px-5 py-4 sm:px-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#FEF3C7] text-[#D97706]">
+            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#F1F5F9] text-[#64748B]">
               <ShieldAlert className="h-5 w-5" aria-hidden />
             </span>
             <div className="text-start">
               <h2
                 id="emergency-alerts-heading"
-                className="text-[18px] font-semibold text-[#92400E]"
+                className="text-[18px] font-medium text-[#0F172A]"
               >
                 تنبيهات طارئة
               </h2>
-              <p className="text-[12px] text-[#B45309]">
-                عقود · إقامات · فترات تجربة تتطلب متابعة فورية
+              <p className="text-[12px] text-[#64748B]">
+                بيانات حية من سجل الموظفين — عقود · إقامات · فترات تجربة
               </p>
             </div>
           </div>
           {!isLoading && totalCount > 0 ? (
             <span
-              className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-semibold"
-              style={{ backgroundColor: "#FEE2E2", color: "#B91C1C" }}
+              className="inline-flex items-center gap-1.5 rounded-full bg-[#FEE2E2] px-3 py-1.5 text-[13px] font-medium text-[#B91C1C]"
             >
               <AlertTriangle className="h-4 w-4" aria-hidden />
               {formatArabicNumber(totalCount)} تنبيه
@@ -167,13 +168,13 @@ export default function EmergencyAlertsPanel({
       <div className="p-4 sm:p-5">
         {isLoading ? (
           <p className="py-10 text-center text-[13px] text-[#94A3B8]">
-            جاري فحص التنبيهات...
+            جاري جلب بيانات الموظفين...
           </p>
         ) : (
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
             <AlertColumn
               title="انتهاء عقود العمل"
-              description="عقود سنوية تنتهي خلال ٩٠ يوماً من تاريخ بداية العقد"
+              description="ذكرى بداية العقد السنوي (hire_date) خلال ٩٠ يوماً"
               icon={FileWarning}
               iconTone={{ bg: "#FEE2E2", color: "#DC2626" }}
               count={contracts.length}
@@ -188,9 +189,9 @@ export default function EmergencyAlertsPanel({
 
             <AlertColumn
               title="انتهاء إقامات العاملين"
-              description="غير السعوديين — قبل ٣٠ يوماً من تاريخ انتهاء الإقامة"
+              description="غير السعوديين فقط — iqama_expiry_date قبل ٣٠ يوماً"
               icon={AlertTriangle}
-              iconTone={{ bg: "#FFEDD5", color: "#EA580C" }}
+              iconTone={{ bg: "#F1F5F9", color: "#64748B" }}
               count={iqamas.length}
             >
               <AlertList
@@ -203,7 +204,7 @@ export default function EmergencyAlertsPanel({
 
             <AlertColumn
               title="نهاية فترة التجربة"
-              description="آخر ١٠ أيام من فترة التجربة (٩٠ يوماً من بدء العمل)"
+              description="آخر ١٠ أيام من ٨٠ يوماً محسوبة من تاريخ التعيين"
               icon={CalendarClock}
               iconTone={{ bg: "#EEF2FF", color: "#4F46E5" }}
               count={probations.length}

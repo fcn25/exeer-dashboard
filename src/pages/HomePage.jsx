@@ -64,8 +64,8 @@ const QUICK_ACTIONS = [
   { id: "one-on-one", label: "تسجيل اجتماع 1:1", icon: MessageSquare, href: "/dashboard/my-team" },
   { id: "appreciation", label: "تقدير موظف", icon: Star, href: "/dashboard/employees" },
   { id: "note", label: "إضافة ملاحظة", icon: FileText, href: "/dashboard/administrative-actions" },
-  { id: "training", label: "طلب تدريب", icon: GraduationCap, href: "/dashboard/my-team?tab=hr-requests" },
-  { id: "promotion", label: "طلب ترقية", icon: TrendingUp, href: "/dashboard/my-team?tab=hr-requests" },
+  { id: "training", label: "طلب تدريب", icon: GraduationCap, href: "/dashboard/my-team#hr-requests" },
+  { id: "promotion", label: "طلب ترقية", icon: TrendingUp, href: "/dashboard/my-team#hr-requests" },
   { id: "administrative", label: "إجراء إداري", icon: Briefcase, href: "/dashboard/administrative-actions" },
 ];
 

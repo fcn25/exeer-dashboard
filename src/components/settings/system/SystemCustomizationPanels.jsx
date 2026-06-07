@@ -33,12 +33,15 @@ export default function SystemCustomizationPanels({
           />
         </SettingField>
 
-        <SettingField label={t("systemCustomization.fields.sickLeave")}>
+        <SettingField
+          label={t("systemCustomization.fields.sickLeave")}
+          hint={t("systemCustomization.hints.sickLeave")}
+        >
           <SettingNumberInput
             fullWidth={fullWidth}
             value={draft.sick_leave_days}
-            min={14}
-            max={30}
+            min={30}
+            max={120}
             onChange={(v) => updateDraft("sick_leave_days", v)}
           />
         </SettingField>
@@ -69,23 +72,31 @@ export default function SystemCustomizationPanels({
         <SettingField label={t("systemCustomization.fields.weekStart")}>
           <SettingSelect
             fullWidth={fullWidth}
-            value={draft.week_start_day}
+            value={
+              ["saturday", "sunday"].includes(draft.week_start_day)
+                ? draft.week_start_day
+                : "sunday"
+            }
             onChange={(v) => updateDraft("week_start_day", v)}
             options={[
+              { value: "saturday", label: t("systemCustomization.options.saturday") },
               { value: "sunday", label: t("systemCustomization.options.sunday") },
-              { value: "monday", label: t("systemCustomization.options.monday") },
             ]}
           />
         </SettingField>
 
         <SettingField label={t("systemCustomization.fields.calendarType")}>
-          <SettingToggle
-            checked={draft.calendar_type === "hijri"}
-            onChange={(hijri) =>
-              updateDraft("calendar_type", hijri ? "hijri" : "gregorian")
-            }
-            labelOn={t("systemCustomization.options.hijri")}
-            labelOff={t("systemCustomization.options.gregorian")}
+          <SettingSelect
+            fullWidth={fullWidth}
+            value={draft.calendar_type}
+            onChange={(v) => updateDraft("calendar_type", v)}
+            options={[
+              { value: "hijri", label: t("systemCustomization.options.hijri") },
+              {
+                value: "gregorian",
+                label: t("systemCustomization.options.gregorian"),
+              },
+            ]}
           />
         </SettingField>
       </div>
@@ -193,6 +204,10 @@ export default function SystemCustomizationPanels({
             onChange={(v) => updateDraft("attendance_mode", v)}
             options={[
               { value: "gps", label: t("systemCustomization.options.gps") },
+              {
+                value: "face_selfie",
+                label: t("systemCustomization.options.faceSelfie"),
+              },
               {
                 value: "biometric",
                 label: t("systemCustomization.options.biometric"),

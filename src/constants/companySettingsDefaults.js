@@ -1,7 +1,7 @@
 /** Default company_settings rows seeded on first load */
 export const DEFAULT_COMPANY_SETTINGS = [
   { key: "annual_leave_days", value: 21 },
-  { key: "sick_leave_days", value: 30 },
+  { key: "sick_leave_days", value: 120 },
   { key: "work_week_days", value: 5 },
   { key: "work_day_hours", value: 8 },
   { key: "week_start_day", value: "sunday" },

@@ -321,18 +321,20 @@
       "reviewCycle": "دورية التقييم"
     },
     "hints": {
-      "salaryPayDay": "يُنصح بـ 27 لضمان WPS"
+      "salaryPayDay": "يُنصح بـ 27 لضمان WPS",
+      "sickLeave": "حسب نظام العمل السعودي — الحد الأقصى 120 يوماً سنوياً"
     },
     "sections": {
       "payrollHint": "إعدادات الرواتب، التأمينات، البدلات، والسلف المالية",
       "loansTitle": "السلف المالية"
     },
     "options": {
+      "saturday": "السبت",
       "sunday": "الأحد",
-      "monday": "الاثنين",
       "hijri": "هجري",
       "gregorian": "ميلادي",
       "gps": "GPS",
+      "faceSelfie": "صورة الوجه / سيلفي",
       "biometric": "بيومتري",
       "manual": "يدوي",
       "monthly": "شهري",

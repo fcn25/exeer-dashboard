@@ -34,7 +34,7 @@ export async function fetchDueLoanInstallmentsByEmployee(
     supabase
       .from("employee_loans")
       .select(
-        "id, employee_id, monthly_installment, status, start_date, installments_remaining, last_deducted_month",
+        "id, employee_id, monthly_installment, monthly_deduction, status, start_date, installments_remaining, remaining_balance, last_deducted_month",
       )
       .eq("status", "active"),
     companyId,
@@ -44,7 +44,9 @@ export async function fetchDueLoanInstallmentsByEmployee(
     ({ data, error } = await scopeQueryByCompany(
       supabase
         .from("employee_loans")
-        .select("id, employee_id, monthly_installment, status")
+        .select(
+          "id, employee_id, monthly_installment, monthly_deduction, status",
+        )
         .eq("status", "active"),
       companyId,
     ));
@@ -57,7 +59,7 @@ export async function fetchDueLoanInstallmentsByEmployee(
 
   for (const row of data ?? []) {
     const status = String(row.status ?? "").toLowerCase();
-    if (status !== "active") continue;
+    if (status !== "active") continue; // closed | completed | cancelled
 
     const employeeId = row.employee_id;
     if (!employeeId) continue;
@@ -69,7 +71,8 @@ export async function fetchDueLoanInstallmentsByEmployee(
       continue;
     }
 
-    const installment = Number(row.monthly_installment) || 0;
+    const installment =
+      Number(row.monthly_installment) || Number(row.monthly_deduction) || 0;
     totals.set(employeeId, (totals.get(employeeId) ?? 0) + installment);
     dueLoans.push(row);
   }
@@ -93,9 +96,20 @@ export async function markLoanInstallmentsDeducted(
       updated_at: new Date().toISOString(),
     };
 
+    const installment =
+      Number(loan.monthly_installment) || Number(loan.monthly_deduction) || 0;
+
     if (nextRemaining != null) {
       payload.installments_remaining = nextRemaining;
-      if (nextRemaining === 0) payload.status = "closed";
+      if (nextRemaining === 0) {
+        payload.status = "completed";
+        payload.remaining_balance = 0;
+      } else if (Number.isFinite(Number(loan.remaining_balance))) {
+        payload.remaining_balance = Math.max(
+          0,
+          Number(loan.remaining_balance) - installment,
+        );
+      }
     }
 
     await scopeQueryByCompany(

@@ -1,11 +1,5 @@
--- Run in Supabase Dashboard → SQL Editor
--- Detects employees.id type and creates employee_loans with a matching employee_id FK.
--- Fixes: Could not find the table 'public.employee_loans' in the schema cache
-
--- Optional: inspect employees.id type first
--- SELECT column_name, data_type, udt_name
--- FROM information_schema.columns
--- WHERE table_schema = 'public' AND table_name = 'employees' AND column_name = 'id';
+-- Creates employee_loans with employee_id FK matching public.employees(id) type (bigint or uuid).
+-- Safe to run in Supabase SQL Editor on any project state.
 
 do $$
 declare

@@ -126,6 +126,9 @@ async function applyFinancialApproval(request) {
   const payload = {
     company_id: companyId,
     employee_id: employee.id,
+    amount,
+    remaining_balance: amount,
+    monthly_deduction: monthlyInstallment,
     monthly_installment: monthlyInstallment,
     total_amount: amount,
     installments_total: installments,

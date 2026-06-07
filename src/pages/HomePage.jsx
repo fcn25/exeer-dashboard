@@ -290,7 +290,7 @@ export default function HomePage() {
     : "لم يُنشأ مسير رواتب بعد";
 
   return (
-    <div className="md-page space-y-5 bg-white">
+    <div className="-mx-6 -my-8 flex flex-col gap-5 bg-[#FFFFFF] px-6 py-8 md:-mx-8 md:px-8">
       <header className={`${CARD} flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between`}>
         <div className="space-y-1 text-start">
           <p className="text-[13px] text-[#64748B]">{getGreeting()}</p>

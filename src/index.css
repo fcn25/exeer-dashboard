@@ -384,7 +384,8 @@ span {
   --color-exeer-hover: var(--bg-surface-hover);
 }
 
-.dark body {
+.dark body,
+.dark #root {
   background: var(--bg-main);
   color: var(--text-primary);
 }
@@ -484,24 +485,152 @@ span {
     box-shadow: none !important;
   }
 
-  /* Dark mode: no white/light box backgrounds — white is for text & lines only */
-  .dark .dark\:bg-white {
-    background-color: var(--bg-surface-hover) !important;
+  /* ── Dark theme: black surfaces only, white/gray text only ── */
+
+  /* Surfaces — never white or light gray backgrounds */
+  .dark .bg-white,
+  .dark .bg-white\/95,
+  .dark .bg-white\/90,
+  .dark .bg-white\/80,
+  .dark .bg-white\/70,
+  .dark .bg-white\/60,
+  .dark .bg-white\/50,
+  .dark .bg-white\/40,
+  .dark .bg-white\/15,
+  .dark .dark\:bg-white,
+  .dark .dark\:bg-slate-50,
+  .dark .dark\:bg-slate-100 {
+    background-color: var(--bg-surface) !important;
   }
 
-  .dark .dark\:bg-slate-100,
-  .dark .dark\:bg-slate-50 {
-    background-color: var(--bg-surface-hover) !important;
+  .dark .bg-gray-50,
+  .dark .bg-gray-50\/50,
+  .dark .bg-gray-50\/95,
+  .dark .bg-gray-100,
+  .dark .dark\:bg-gray-50,
+  .dark .dark\:bg-gray-100 {
+    background-color: var(--bg-main) !important;
   }
 
+  .dark .hover\:bg-gray-50:hover,
+  .dark .hover\:bg-white:hover,
+  .dark .hover\:bg-exeer-hover:hover,
   .dark .dark\:hover\:bg-white:hover,
   .dark .dark\:hover\:bg-slate-100:hover,
-  .dark .dark\:hover\:bg-slate-200:hover {
+  .dark .dark\:hover\:bg-slate-200:hover,
+  .dark .dark\:hover\:bg-gray-50:hover {
+    background-color: var(--bg-surface-hover) !important;
+  }
+
+  .dark .bg-\[\#FFFFFF\],
+  .dark .bg-\[\#ffffff\] {
+    background-color: var(--bg-main) !important;
+  }
+
+  .dark .bg-\[\#F8FAFC\],
+  .dark .bg-\[\#FAFAFA\],
+  .dark .bg-\[\#FAFAF9\],
+  .dark .bg-\[\#fafafa\] {
     background-color: var(--bg-surface) !important;
+  }
+
+  .dark .bg-\[\#F1F5F9\],
+  .dark .bg-\[\#E2E8F0\] {
+    background-color: var(--bg-surface-hover) !important;
+  }
+
+  .dark .hover\:bg-\[\#F8FAFC\]:hover {
+    background-color: var(--bg-surface-hover) !important;
+  }
+
+  .dark .dark\:bg-\[\#1e293b\],
+  .dark .dark\:bg-\[\#334155\] {
+    background-color: var(--bg-surface) !important;
+  }
+
+  .dark .dark\:bg-\[\#1e3a5f\],
+  .dark .dark\:bg-\[\#1e3a5f\]\/20,
+  .dark .dark\:bg-\[\#1e3a5f\]\/25,
+  .dark .dark\:bg-\[\#1e3a5f\]\/30,
+  .dark .dark\:bg-\[\#1e3a5f\]\/60 {
+    background-color: var(--bg-surface-hover) !important;
+  }
+
+  .dark .dark\:bg-slate-950\/60,
+  .dark .dark\:bg-slate-900\/40 {
+    background-color: color-mix(in srgb, var(--bg-surface) 90%, transparent) !important;
+  }
+
+  /* Text — white & gray only (slate text scale remapped for readability) */
+  .dark .text-slate-800,
+  .dark .text-slate-900,
+  .dark .text-slate-50,
+  .dark .text-slate-100,
+  .dark .text-slate-200,
+  .dark .dark\:text-slate-100,
+  .dark .dark\:text-slate-200 {
+    color: var(--text-primary) !important;
+  }
+
+  .dark .text-slate-500,
+  .dark .text-slate-600,
+  .dark .text-slate-700,
+  .dark .dark\:text-slate-400,
+  .dark .dark\:text-slate-500 {
+    color: var(--text-secondary) !important;
+  }
+
+  .dark .text-\[\#0F172A\],
+  .dark .text-\[\#0f172a\] {
+    color: var(--text-primary) !important;
+  }
+
+  .dark .text-\[\#64748B\],
+  .dark .text-\[\#475569\],
+  .dark .text-\[\#94A3B8\] {
+    color: var(--text-secondary) !important;
+  }
+
+  .dark .dark\:text-\[\#e2e8f0\],
+  .dark .dark\:text-\[\#f1f5f9\],
+  .dark .dark\:text-\[\#93c5fd\] {
+    color: var(--text-primary) !important;
+  }
+
+  /* Borders & divider lines */
+  .dark .border-gray-100,
+  .dark .border-gray-200,
+  .dark .border-\[\#E2E8F0\],
+  .dark .border-\[\#F1F5F9\],
+  .dark .border-\[\#CBD5E1\] {
+    border-color: var(--border-color) !important;
   }
 
   .dark .dark\:border-white,
   .dark .dark\:border-r-white {
     border-color: var(--text-primary) !important;
+  }
+
+  .dark .divide-gray-200 > :not(:last-child),
+  .dark .divide-\[\#F1F5F9\] > :not(:last-child) {
+    border-color: var(--border-color) !important;
+  }
+
+  /* Light semantic tints → dark muted surfaces (not white) */
+  .dark .bg-red-50,
+  .dark .bg-emerald-50,
+  .dark .bg-amber-50,
+  .dark .bg-blue-50,
+  .dark .bg-indigo-50,
+  .dark .bg-slate-100 {
+    background-color: var(--bg-surface-hover) !important;
+  }
+
+  .dark .bg-\[\#EEF2FF\],
+  .dark .bg-\[\#ECFDF5\],
+  .dark .bg-\[\#FEE2E2\],
+  .dark .bg-\[\#FEF3C7\],
+  .dark .bg-\[\#DBEAFE\] {
+    background-color: var(--bg-surface-hover) !important;
   }
 }

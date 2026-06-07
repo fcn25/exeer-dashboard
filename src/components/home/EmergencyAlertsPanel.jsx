@@ -5,7 +5,7 @@ import {
   FileWarning,
   ShieldAlert,
 } from "lucide-react";
-import { HOME_BTN, HOME_CARD } from "./homeStyles.js";
+import { HOME_BTN, HOME_CARD, HOME_SHELL } from "./homeStyles.js";
 import { useAppLocale } from "../../i18n/useAppLocale.js";
 import { formatLocaleDate, formatLocaleNumber } from "../../i18n/formatLocale.js";
 
@@ -137,10 +137,10 @@ export default function EmergencyAlertsPanel({
 
   return (
     <section
-      className="overflow-hidden rounded-[16px] border border-[#E2E8F0] bg-white shadow-none"
+      className={`${HOME_SHELL} overflow-hidden`}
       aria-labelledby="emergency-alerts-heading"
     >
-      <div className="border-b border-[#F1F5F9] bg-[#FAFAF9] px-5 py-4 sm:px-6">
+      <div className="border-b border-[#F1F5F9] bg-[#FAFAF9] px-5 py-4 dark:border-[var(--border-color)] dark:bg-[var(--bg-main)] sm:px-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#F1F5F9] text-[#64748B]">

@@ -296,7 +296,7 @@ export default function MyTeamDashboard() {
   };
 
   return (
-    <div className="-mx-6 -my-8 flex flex-col gap-5 bg-[#FFFFFF] px-6 py-8 md:-mx-8 md:px-8">
+    <div className="-mx-6 -my-8 flex flex-col gap-5 bg-[#FFFFFF] px-6 py-8 dark:bg-[var(--bg-main)] md:-mx-8 md:px-8">
       {/* ─── ترويسة ─── */}
       <header className={`${HOME_SHELL} p-6`}>
         <div className="flex flex-col gap-4">

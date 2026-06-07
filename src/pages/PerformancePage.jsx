@@ -22,7 +22,7 @@ export default function PerformancePage() {
       <nav
         role="tablist"
         aria-label={t("pages.performance.title")}
-        className={`${HOME_SHELL} mb-6 grid grid-cols-1 gap-2 bg-[#F8FAFC] p-2 sm:grid-cols-3`}
+        className={`${HOME_SHELL} mb-6 grid grid-cols-1 gap-2 bg-[#F8FAFC] p-2 dark:bg-[var(--bg-surface)] sm:grid-cols-3`}
       >
         {PERFORMANCE_TABS.map((tab) => {
           const Icon = tab.icon;
@@ -37,15 +37,15 @@ export default function PerformancePage() {
               onClick={() => setActiveTab(tab.id)}
               className={`flex min-h-[72px] items-center gap-3 rounded-[12px] px-4 py-3 text-start transition-colors ${
                 isActive
-                  ? "bg-[#0F172A] text-white shadow-none"
-                  : "border border-[#E2E8F0] bg-white text-[#64748B] hover:border-[#CBD5E1] hover:text-[#0F172A]"
+                  ? "bg-[#0F172A] text-white shadow-none dark:border dark:border-[var(--border-color)] dark:bg-[var(--bg-surface-hover)] dark:text-[var(--text-primary)]"
+                  : "border border-[#E2E8F0] bg-white text-[#64748B] hover:border-[#CBD5E1] hover:text-[#0F172A] dark:border-[var(--border-color)] dark:bg-[var(--bg-main)] dark:text-[var(--text-secondary)] dark:hover:border-[var(--border-color)] dark:hover:text-[var(--text-primary)]"
               }`}
             >
               <span
                 className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] ${
                   isActive
-                    ? "bg-white/15 text-white"
-                    : "bg-[#EEF2FF] text-[#4F46E5]"
+                    ? "bg-white/15 text-white dark:bg-[var(--text-primary)]/15 dark:text-[var(--text-primary)]"
+                    : "bg-[#EEF2FF] text-[#4F46E5] dark:bg-[var(--bg-surface)] dark:text-[var(--accent-color)]"
                 }`}
               >
                 <Icon className="h-5 w-5" aria-hidden />

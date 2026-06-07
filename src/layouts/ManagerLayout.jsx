@@ -307,7 +307,7 @@ export default function ManagerLayout() {
       </aside>
 
       <div className="flex min-h-0 min-w-0 flex-1">
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-gray-50/50 dark:bg-slate-950/50">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-gray-50/50 dark:bg-[var(--bg-main)]">
           <div className="shrink-0 px-6 md:px-8">
             <DashboardTopBar
               isCalendarOpen={isCalendarOpen}

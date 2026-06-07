@@ -27,7 +27,7 @@ import ExeerEmptyState from "./components/brand/ExeerEmptyState.jsx";
 import { useAppLocale } from "./i18n/useAppLocale.js";
 
 const CARD_CLASS =
-  "rounded-md border border-gray-200 bg-white p-6 shadow-none";
+  "rounded-md border border-gray-200 bg-white p-6 shadow-none dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)]";
 
 function formatStatCount(value) {
   return safePayrollAmount(value);

@@ -112,12 +112,12 @@ export default function UpdatePasswordPage() {
   const waitingForAuth = isBootstrapping || (!sessionReady && !sessionError);
 
   return (
-    <LocaleShell className="flex min-h-screen flex-col items-center justify-center bg-white px-4 py-10 font-sans">
+    <LocaleShell className="flex min-h-screen flex-col items-center justify-center bg-white px-4 py-10 font-sans dark:bg-[var(--bg-main)] dark:text-[var(--text-primary)]">
       <div className="mb-8 flex w-full max-w-md flex-col items-center">
         <ExeerLogo onLightBackground className="h-14 w-auto object-contain" />
       </div>
 
-      <div className="w-full max-w-md rounded-md border border-gray-200 bg-white p-8 shadow-none">
+      <div className="w-full max-w-md rounded-md border border-gray-200 bg-white p-8 shadow-none dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)]">
         <h1 className="mb-2 text-center text-xl font-bold text-exeer-primary">
           إعداد كلمة المرور
         </h1>

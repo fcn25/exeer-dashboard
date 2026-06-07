@@ -51,7 +51,7 @@ const STATUS_CLASS = {
 };
 
 const CARD_CLASS =
-  "rounded-md border border-gray-200 bg-white p-6 shadow-none";
+  "rounded-md border border-gray-200 bg-white p-6 shadow-none dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)]";
 
 function getDefaultDateRange() {
   const now = new Date();
@@ -313,11 +313,11 @@ export default function AttendancePage() {
         </article>
       </section>
 
-      <section className="overflow-hidden rounded-md border border-gray-200 bg-white shadow-none">
+      <section className="overflow-hidden rounded-md border border-gray-200 bg-white shadow-none dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)]">
         <div className="overflow-x-auto">
           <table className="min-w-full border-collapse text-sm">
             <thead>
-              <tr className="border-b border-gray-200 bg-gray-50">
+              <tr className="border-b border-gray-200 bg-gray-50 dark:border-[var(--border-color)] dark:bg-[var(--bg-main)]">
                 {TABLE_COLUMNS.map((column) => (
                   <th
                     key={column.key}

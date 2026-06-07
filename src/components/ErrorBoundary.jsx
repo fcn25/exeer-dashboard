@@ -33,7 +33,7 @@ export default class ErrorBoundary extends Component {
         <div
           dir={dir}
           lang={lang}
-          className="mx-auto flex min-h-screen w-full max-w-[480px] flex-col items-center justify-center gap-4 bg-white px-6 py-12 text-center font-sans text-slate-900"
+          className="mx-auto flex min-h-screen w-full max-w-[480px] flex-col items-center justify-center gap-4 bg-white px-6 py-12 text-center font-sans text-slate-900 dark:bg-[var(--bg-main)] dark:text-[var(--text-primary)]"
         >
           <p className="text-base font-bold text-slate-900">
             {i18n.t("app.errorTitle")}

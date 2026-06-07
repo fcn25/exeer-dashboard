@@ -58,8 +58,8 @@ export default function MobileAdministrativeActionsPage() {
   };
 
   return (
-    <LocaleShell className="mx-auto min-h-screen w-full max-w-[480px] bg-white font-sans text-slate-900">
-      <header className="sticky top-0 z-40 border-b border-gray-200 bg-white/95 backdrop-blur-sm">
+    <LocaleShell className="mx-auto min-h-screen w-full max-w-[480px] bg-white font-sans text-slate-900 dark:bg-[var(--bg-main)] dark:text-[var(--text-primary)]">
+      <header className="sticky top-0 z-40 border-b border-gray-200 bg-white/95 backdrop-blur-sm dark:border-[var(--border-color)] dark:bg-[var(--bg-main)]/95">
         <div className="flex items-center gap-3 px-4 py-3">
           <Link
             to="/mobile"

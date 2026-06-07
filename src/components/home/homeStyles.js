@@ -1,3 +1,10 @@
+/** Page shell — dark uses black surfaces only, never white backgrounds */
+export const PAGE_DARK =
+  "dark:bg-[var(--bg-main)] dark:text-[var(--text-primary)]";
+
+export const SURFACE_DARK =
+  "dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)]";
+
 export const HOME_SHELL =
   "rounded-[16px] border border-[#E2E8F0] bg-white shadow-none dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)]";
 

@@ -16,8 +16,8 @@ function AuthMessage({ type, children }) {
 
   const toneClass =
     type === "success"
-      ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-      : "border-red-200 bg-red-50 text-red-800";
+      ? "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200"
+      : "border-red-200 bg-red-50 text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200";
 
   return (
     <p
@@ -38,7 +38,7 @@ export default function AuthContainer() {
     <div
       dir={dir}
       lang={lang}
-      className="relative flex min-h-screen flex-col items-center justify-center bg-white px-4 py-10 font-sans"
+      className="relative flex min-h-screen flex-col items-center justify-center bg-white px-4 py-10 font-sans dark:bg-[var(--bg-main)] dark:text-[var(--text-primary)]"
     >
       <div className="absolute top-4 end-4 z-10">
         <AuthLanguageToggle />
@@ -48,7 +48,7 @@ export default function AuthContainer() {
         <ExeerLogo onLightBackground className="h-14 w-auto object-contain" />
       </div>
 
-      <div className="w-full max-w-md rounded-md border border-gray-200 bg-white p-8 shadow-none">
+      <div className="w-full max-w-md rounded-md border border-gray-200 bg-white p-8 shadow-none dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)]">
         {authView === "login" ? (
           <LoginView
             successMessage={successMessage}

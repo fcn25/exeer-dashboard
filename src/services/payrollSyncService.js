@@ -246,7 +246,6 @@ const ACCOUNTING_PAYROLL_SELECT = `
   employee_name,
   basic_salary,
   housing_allowance,
-  transport_allowance,
   delay_deductions,
   penalty_deductions,
   loan_deductions,

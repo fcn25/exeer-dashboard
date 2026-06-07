@@ -41,7 +41,6 @@ export function employeeFormToRow(form) {
     other_allowance: Number(form.other_allowance) || 0,
     bank_name: form.bank_name?.trim() || null,
     iban: form.iban?.trim() || null,
-    transport_allowance: Number(form.transport_allowance) || 0,
   };
 }
 
@@ -132,7 +131,7 @@ export async function listActiveEmployees() {
   const { data, error } = await supabase
     .from("employees")
     .select(
-      "id, full_name, email, department, basic_salary, housing_allowance, transport_allowance, other_allowance, nationality, employment_status, job_title_name",
+      "id, full_name, email, department, basic_salary, housing_allowance, other_allowance, nationality, employment_status, job_title_name",
     )
     .eq("company_id", companyId)
     .order("full_name", { ascending: true });
@@ -251,7 +250,6 @@ export async function bulkCreateEmployees(rows, { sendInvites = false } = {}) {
       department: row.department ?? null,
       basic_salary: Number(row.basic_salary) || 0,
       housing_allowance: Number(row.housing_allowance) || 0,
-      transport_allowance: Number(row.transport_allowance) || 0,
       other_allowance: Number(row.other_allowance) || 0,
       bank_name: row.bank_name ?? null,
       iban: row.iban ?? null,

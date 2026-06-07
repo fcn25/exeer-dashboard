@@ -62,7 +62,6 @@ function buildPayrollRecordPayload(companyId, draft, period, includePayrollMonth
     year: period.year,
     basic_salary: draft.basic_salary,
     housing_allowance: draft.housing_allowance,
-    transport_allowance: draft.transport_allowance ?? 0,
     other_allowances: draft.other_allowances,
     allowances: draft.other_allowances,
     loan_deductions: draft.loan_deductions ?? 0,

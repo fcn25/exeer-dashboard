@@ -303,16 +303,6 @@ export default function EmployeeFormSections({
               className={inputClass}
             />
           </Field>
-          <Field label="بدل النقل">
-            <input
-              type="number"
-              min="0"
-              value={form.transport_allowance}
-              onChange={(e) => update("transport_allowance", e.target.value)}
-              disabled={disabled}
-              className={inputClass}
-            />
-          </Field>
           <Field label="بدلات أخرى">
             <input
               type="number"

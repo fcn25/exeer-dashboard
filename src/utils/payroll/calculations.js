@@ -20,7 +20,6 @@ export function formatPickerFromPayrollMonth(payrollMonth) {
 export function buildPayrollDraftFromEmployee(employee, payrollMonth) {
   const basic = Number(employee.basic_salary) || 0;
   const housing = Number(employee.housing_allowance) || 0;
-  const transport = Number(employee.transport_allowance) || 0;
   const otherAllowances = Number(employee.other_allowance) || 0;
   const commissions = 0;
   const additional = 0;
@@ -38,7 +37,6 @@ export function buildPayrollDraftFromEmployee(employee, payrollMonth) {
   const draftRow = {
     basic_salary: basic,
     housing_allowance: housing,
-    transport_allowance: transport,
     other_allowances: otherAllowances,
     commissions,
     additional,
@@ -55,7 +53,6 @@ export function buildPayrollDraftFromEmployee(employee, payrollMonth) {
     payroll_month: payrollMonth,
     basic_salary: basic,
     housing_allowance: housing,
-    transport_allowance: transport,
     other_allowances: otherAllowances,
     commissions,
     additional,

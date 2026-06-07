@@ -11,13 +11,14 @@ function mapDbError(error) {
   if (error.code === "PGRST205") {
     return "جدول الملاحظات غير جاهز. نفّذ migration user_quick_notes في Supabase.";
   }
+  if (error.code === "PGRST116") {
+    return "لم يتم العثور على سجل موظف مرتبط بـ auth_user_id لهذا الحساب.";
+  }
   return error.message || "تعذّر حفظ الملاحظة.";
 }
 
 /**
- * Resolves employee bigint id + company_id from the live auth session.
- * Previously getEmployeeId() only read localStorage/cache and could be stale
- * even when employees.auth_user_id was already set in the database.
+ * Resolve employee bigint id + company_id from the live Supabase auth session.
  */
 async function resolveNoteEmployeeContext() {
   const {
@@ -32,16 +33,18 @@ async function resolveNoteEmployeeContext() {
     throw new Error("يجب تسجيل الدخول لحفظ الملاحظة.");
   }
 
-  const { data: employee, error } = await supabase
+  const { data: emp, error: employeeError } = await supabase
     .from("employees")
     .select("id, company_id")
     .eq("auth_user_id", user.id)
-    .maybeSingle();
+    .single();
 
-  if (error) throw new Error(mapDbError(error));
+  if (employeeError) {
+    throw new Error(mapDbError(employeeError));
+  }
 
-  const employeeId = Number(employee?.id);
-  const companyId = Number(employee?.company_id);
+  const employeeId = Number(emp?.id);
+  const companyId = Number(emp?.company_id);
 
   if (!Number.isFinite(employeeId) || employeeId <= 0 || !Number.isFinite(companyId) || companyId <= 0) {
     throw new Error("يجب ربط حسابك بسجل موظف (auth_user_id) لحفظ الملاحظة.");
@@ -54,7 +57,7 @@ async function resolveNoteEmployeeContext() {
     ),
   );
 
-  return { employeeId, companyId };
+  return { employeeId, companyId, authUserId: user.id };
 }
 
 export function normalizeNoteColor(color) {

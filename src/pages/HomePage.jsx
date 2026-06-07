@@ -180,15 +180,46 @@ function ActionItemRow({ item, onAction }) {
 
 function CompactStatCard({ label, value, sublabel, sparkline }) {
   return (
-    <article className={`${SURFACE} p-4`}>
+    <article className={`${SURFACE} p-3`}>
       <p className="text-[12px] text-[#64748B]">{label}</p>
-      <p className="mt-1 text-[22px] font-medium tabular-nums text-[#0F172A]">
+      <p className="mt-0.5 text-[18px] font-medium tabular-nums text-[#0F172A]">
         {value}
       </p>
       {sublabel ? (
-        <p className="mt-0.5 text-[12px] text-[#94A3B8]">{sublabel}</p>
+        <p className="mt-0.5 text-[11px] text-[#94A3B8]">{sublabel}</p>
       ) : null}
-      <SparkLine data={sparkline} height={40} className="mt-2" />
+      <SparkLine data={sparkline} height={32} className="mt-1.5" />
+    </article>
+  );
+}
+
+function PayrollStatsHeroCard({
+  isLoading,
+  monthLabel,
+  displayValue,
+  hint,
+  percentChange,
+  sparkline,
+}) {
+  return (
+    <article className={`${SURFACE} p-6`}>
+      <p className="text-[14px] text-[#64748B]">
+        إجمالي رواتب {monthLabel ?? "الشهر"}
+      </p>
+      <p className="mt-2 text-[36px] font-medium tabular-nums text-[#0F172A]">
+        {isLoading ? "0 ر.س" : displayValue}
+      </p>
+      {hint ? (
+        <p className="mt-1 text-[12px] text-[#94A3B8]">{hint}</p>
+      ) : null}
+      {!isLoading && percentChange != null ? (
+        <span className="mt-3 inline-flex items-center gap-1 rounded-full bg-[#ECFDF5] px-2.5 py-1 text-[12px] font-medium text-[#047857]">
+          <TrendingUp className="h-3.5 w-3.5" aria-hidden />
+          {percentChange > 0 ? "+" : ""}
+          {percentChange}% عن الشهر الماضي
+        </span>
+      ) : null}
+      <SparkLine data={sparkline ?? []} height={48} className="mt-4" />
     </article>
   );
 }
@@ -431,53 +462,54 @@ export default function HomePage() {
       </section>
 
       <section
-        className="grid grid-cols-2 gap-4 lg:grid-cols-4"
-        aria-label="إحصائيات مصغّرة"
+        className="grid grid-cols-1 gap-5 lg:grid-cols-[3fr_2fr]"
+        aria-label="إحصائيات"
       >
-        <CompactStatCard
-          label="نسبة الحضور"
-          value={
-            isLoading || !stats
-              ? "0%"
-              : stats.hasAttendanceData
-                ? `${stats.attendanceRate}%`
-                : "0%"
-          }
-          sublabel={
-            stats?.hasAttendanceData ? null : "لا توجد بيانات حضور"
-          }
-          sparkline={stats?.attendanceSparkline}
+        <PayrollStatsHeroCard
+          isLoading={isLoading}
+          monthLabel={payrollHero?.monthLabel ?? stats?.payrollMonthLabel}
+          displayValue={payrollDisplay}
+          hint={payrollHint}
+          percentChange={payrollHero?.percentChange}
+          sparkline={payrollHero?.sparkline}
         />
-        <CompactStatCard
-          label="إجمالي الموظفين"
-          value={isLoading || !stats ? "0" : String(stats.employeeCount)}
-          sublabel={
-            stats?.hasEmployeeData
-              ? `${stats.saudiCount} سعودي · ${stats.nonSaudiCount} غير سعودي`
-              : "لا يوجد موظفون بعد"
-          }
-        />
-        <CompactStatCard
-          label="متوسط الأقدمية"
-          value={
-            isLoading || !stats
-              ? "—"
-              : stats.hasTenureData
-                ? stats.tenureLabel
-                : "—"
-          }
-          sublabel={stats?.hasTenureData ? null : "لا توجد تواريخ تعيين"}
-        />
-        <CompactStatCard
-          label="طلبات الشهر"
-          value={
-            isLoading || !stats ? "0" : String(stats.monthlyRequestsCount)
-          }
-          sublabel={
-            stats?.hasMonthlyRequestsData ? null : "لم يُسجّل طلب هذا الشهر"
-          }
-          sparkline={stats?.monthlyRequestsSparkline}
-        />
+
+        <div className="flex flex-col gap-4">
+          <CompactStatCard
+            label="نسبة الحضور"
+            value={
+              isLoading || !stats
+                ? "0%"
+                : stats.hasAttendanceData
+                  ? `${stats.attendanceRate}%`
+                  : "0%"
+            }
+            sublabel={
+              stats?.hasAttendanceData ? null : "لا توجد بيانات حضور"
+            }
+            sparkline={stats?.attendanceSparkline}
+          />
+          <CompactStatCard
+            label="إجمالي الموظفين"
+            value={isLoading || !stats ? "0" : String(stats.employeeCount)}
+            sublabel={
+              stats?.hasEmployeeData
+                ? `${stats.saudiCount} سعودي · ${stats.nonSaudiCount} غير سعودي`
+                : "لا يوجد موظفون بعد"
+            }
+          />
+          <CompactStatCard
+            label="متوسط الأقدمية"
+            value={
+              isLoading || !stats
+                ? "—"
+                : stats.hasTenureData
+                  ? stats.tenureLabel
+                  : "—"
+            }
+            sublabel={stats?.hasTenureData ? null : "لا توجد تواريخ تعيين"}
+          />
+        </div>
       </section>
 
       <section className="grid grid-cols-1 gap-5 lg:grid-cols-[3fr_2fr]">
@@ -583,7 +615,7 @@ export default function HomePage() {
             <Link
               key={action.id}
               to={action.href}
-              className="flex items-center gap-2 rounded-[8px] border border-[#E2E8F0] bg-white px-4 py-3 text-[13px] font-medium text-[#0F172A] transition-colors hover:bg-[#F8FAFC] [&_svg]:h-5 [&_svg]:w-5 [&_svg]:text-[#0F172A]"
+              className="flex items-center gap-2 rounded-[8px] border border-[#E2E8F0] bg-white px-4 py-3 text-[13px] font-medium text-[#0F172A] shadow-none transition-colors hover:bg-[#F8FAFC] [&_svg]:h-5 [&_svg]:w-5 [&_svg]:text-[#0F172A]"
             >
               <action.icon className="h-5 w-5 shrink-0" aria-hidden />
               <span>{action.label}</span>

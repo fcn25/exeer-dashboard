@@ -44,6 +44,51 @@ function Section({ title, description, defaultOpen = true, children }) {
   );
 }
 
+function DirectManagerSelect({
+  form,
+  update,
+  disabled,
+  managerOptions = [],
+  inputClass,
+}) {
+  const normalizedName = String(form.direct_manager_name ?? "").trim();
+  const matchedManager = managerOptions.find(
+    (manager) => manager.name === normalizedName,
+  );
+  const selectedId = matchedManager ? String(matchedManager.id) : "";
+
+  const handleChange = (event) => {
+    const nextId = event.target.value;
+    if (!nextId) {
+      update("direct_manager_name", "");
+      return;
+    }
+    const manager = managerOptions.find((item) => String(item.id) === nextId);
+    update("direct_manager_name", manager?.name ?? "");
+  };
+
+  return (
+    <select
+      value={selectedId}
+      onChange={handleChange}
+      disabled={disabled}
+      className={inputClass}
+    >
+      <option value="">— اختر المدير —</option>
+      {normalizedName && !matchedManager ? (
+        <option value="" disabled>
+          {normalizedName} (محفوظ سابقاً — اختر من القائمة)
+        </option>
+      ) : null}
+      {managerOptions.map((manager) => (
+        <option key={manager.id} value={manager.id}>
+          {manager.label ?? manager.name}
+        </option>
+      ))}
+    </select>
+  );
+}
+
 export default function EmployeeFormSections({
   form,
   onChange,
@@ -52,6 +97,7 @@ export default function EmployeeFormSections({
   jobTitleOptions = [],
   branchOptions = [],
   branchesLoading = false,
+  managerOptions = [],
 }) {
   const update = (key, value) => {
     onChange((prev) => ({ ...prev, [key]: value }));
@@ -223,12 +269,12 @@ export default function EmployeeFormSections({
             </select>
           </Field>
           <Field label="المدير المباشر">
-            <input
-              type="text"
-              value={form.direct_manager_name}
-              onChange={(e) => update("direct_manager_name", e.target.value)}
+            <DirectManagerSelect
+              form={form}
+              update={update}
               disabled={disabled}
-              className={inputClass}
+              managerOptions={managerOptions}
+              inputClass={inputClass}
             />
           </Field>
           <Field label="المسمى الوظيفي">

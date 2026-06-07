@@ -86,6 +86,7 @@ function AddEmployeeSlideOver({
   onOpenBulkImport,
   departmentOptions,
   jobTitleOptions,
+  managerOptions = [],
   employeeCount = 0,
   subscriptionTier = "trial",
 }) {
@@ -200,6 +201,7 @@ function AddEmployeeSlideOver({
           jobTitleOptions={jobTitleOptions}
           branchOptions={branchOptions}
           branchesLoading={branchesLoading}
+          managerOptions={managerOptions}
         />
       </form>
     </SlideOver>
@@ -213,6 +215,7 @@ function EmployeeDetailsSlideOver({
   onSave,
   departmentOptions,
   jobTitleOptions,
+  managerOptions = [],
   canEdit,
   userRole,
 }) {
@@ -416,6 +419,7 @@ function EmployeeDetailsSlideOver({
             jobTitleOptions={jobTitleOptions}
             branchOptions={branchOptions}
             branchesLoading={branchesLoading}
+            managerOptions={managerOptions}
           />
         </form>
       )}
@@ -454,6 +458,30 @@ export default function EmployeesPage() {
 
   const userRole = getCurrentUserRole();
   const canEdit = canEditEmployeeRecords();
+
+  const allManagerOptions = useMemo(
+    () =>
+      employees
+        .filter((employee) => employee.full_name && employee.full_name !== "—")
+        .map((employee) => {
+          const department =
+            employee.department && employee.department !== "—"
+              ? employee.department
+              : "";
+          const jobTitle =
+            employee.job_title_name && employee.job_title_name !== "—"
+              ? employee.job_title_name
+              : "";
+          const suffix = [jobTitle, department].filter(Boolean).join(" · ");
+
+          return {
+            id: employee.id,
+            name: employee.full_name,
+            label: suffix ? `${employee.full_name} — ${suffix}` : employee.full_name,
+          };
+        }),
+    [employees],
+  );
 
   const loadEmployees = useCallback(async () => {
     setIsListLoading(true);
@@ -811,6 +839,7 @@ export default function EmployeesPage() {
         }}
         departmentOptions={departmentOptions}
         jobTitleOptions={jobTitleOptions}
+        managerOptions={allManagerOptions}
         employeeCount={employees.length}
         subscriptionTier={subscriptionTier}
         onCreated={() =>
@@ -839,6 +868,9 @@ export default function EmployeesPage() {
           userRole={userRole}
           departmentOptions={departmentOptions}
           jobTitleOptions={jobTitleOptions}
+          managerOptions={allManagerOptions.filter(
+            (manager) => String(manager.id) !== String(selectedEmployeeId),
+          )}
           onClose={() => {
             setIsDetailsOpen(false);
             setSelectedEmployeeId(null);

@@ -5,7 +5,7 @@ import {
 } from "../utils/geminiConfig.js";
 
 /** Low-latency, cost-optimized Flash model only — never use Pro or legacy models. */
-const GEMINI_FLASH_MODEL = "gemini-1.5-flash";
+const GEMINI_FLASH_MODEL = "gemini-2.5-flash";
 
 const PLACEHOLDER_KEY_PATTERN =
   /^(your[-_]?gemini|replace[-_]?me|xxx+|test|demo|sample)/i;
@@ -23,7 +23,7 @@ function assertFlashModel(modelId) {
   const normalized = String(modelId ?? "").trim().toLowerCase();
   if (!normalized.includes("flash")) {
     throw new Error(
-      "إعداد نموذج Gemini غير صالح: يجب استخدام إصدار Flash فقط (مثل gemini-1.5-flash).",
+      "إعداد نموذج Gemini غير صالح: يجب استخدام إصدار Flash فقط (مثل gemini-2.5-flash).",
     );
   }
   if (normalized.includes("pro") || normalized.includes("ultra")) {

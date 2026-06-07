@@ -13,6 +13,9 @@ export default defineConfig(({ mode }) => {
       "import.meta.env.VITE_GEMINI_API_KEY": JSON.stringify(
         env.VITE_GEMINI_API_KEY ?? "",
       ),
+      "import.meta.env.VITE_GEMINI_MODEL": JSON.stringify(
+        env.VITE_GEMINI_MODEL ?? "gemini-2.5-flash",
+      ),
     },
     plugins: [
       react(),

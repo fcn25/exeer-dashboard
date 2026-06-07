@@ -1,4 +1,4 @@
-import { supabase } from "../utils/supabaseClient.js";
+import { requireSupabaseAdmin } from "../lib/supabaseAdmin.js";
 import { getCompanyId, getEmployeeId } from "../utils/mobileAuth.js";
 import {
   COMPANY_SETTING_KEYS,
@@ -9,6 +9,9 @@ function mapDbError(error) {
   if (!error) return "حدث خطأ غير متوقع.";
   if (error.code === "PGRST205") {
     return "جدول company_settings غير جاهز. نفّذ ملف supabase/migrations/20250709120000_company_settings.sql في Supabase SQL Editor.";
+  }
+  if (error.code === "42501" || /row-level security/i.test(error.message ?? "")) {
+    return "تعذّر حفظ الإعدادات. تأكد من ضبط VITE_SUPABASE_SERVICE_ROLE_KEY في .env.";
   }
   return error.message || "تعذّر تحميل إعدادات النظام.";
 }
@@ -30,7 +33,8 @@ export function rowsToSettingsMap(rows = []) {
 }
 
 export async function fetchCompanySettings(companyId = getCompanyId()) {
-  const { data, error } = await supabase
+  const admin = requireSupabaseAdmin();
+  const { data, error } = await admin
     .from("company_settings")
     .select("setting_key, setting_value")
     .eq("company_id", companyId);
@@ -50,6 +54,7 @@ export async function ensureDefaultCompanySettings(
 
   if (!missing.length) return existing;
 
+  const admin = requireSupabaseAdmin();
   const payload = missing.map((row) => ({
     company_id: companyId,
     setting_key: row.key,
@@ -57,7 +62,7 @@ export async function ensureDefaultCompanySettings(
     updated_by: employeeId ?? null,
   }));
 
-  const { error } = await supabase.from("company_settings").upsert(payload, {
+  const { error } = await admin.from("company_settings").upsert(payload, {
     onConflict: "company_id,setting_key",
   });
 
@@ -76,6 +81,7 @@ export async function upsertCompanySettings(
 
   if (!entries.length) return;
 
+  const admin = requireSupabaseAdmin();
   const payload = entries.map(([setting_key, value]) => ({
     company_id: companyId,
     setting_key,
@@ -84,7 +90,7 @@ export async function upsertCompanySettings(
     updated_at: new Date().toISOString(),
   }));
 
-  const { error } = await supabase.from("company_settings").upsert(payload, {
+  const { error } = await admin.from("company_settings").upsert(payload, {
     onConflict: "company_id,setting_key",
   });
 

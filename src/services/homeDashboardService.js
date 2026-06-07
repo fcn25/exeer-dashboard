@@ -100,6 +100,17 @@ function resolveRequestTypeLabel(requestType) {
   return REQUEST_TYPE_LABELS[requestType] ?? requestType ?? "طلب";
 }
 
+function formatShortMonthLabel(month, year) {
+  if (!month || !year) return "—";
+  try {
+    return new Intl.DateTimeFormat("ar-SA", { month: "short" }).format(
+      new Date(year, month - 1, 1),
+    );
+  } catch {
+    return `${month}/${year}`;
+  }
+}
+
 function scoreFromAnswers(answers) {
   if (!answers || typeof answers !== "object") return null;
   const score = calculateEvaluationScore(answers);
@@ -278,6 +289,7 @@ async function fetchPayrollHero(includePayroll, monthPicker) {
   const sparklineSource = sorted.slice(0, 6).reverse();
   const sparkline = sparklineSource.map((item) => ({
     value: item.totalNet ?? 0,
+    label: formatShortMonthLabel(item.month, item.year),
   }));
 
   let percentChange = null;

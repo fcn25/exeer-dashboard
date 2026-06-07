@@ -15,14 +15,40 @@ export const MONTHLY_REPORT_ID = "monthly-report";
 export const MANAGEMENT_ADVISOR_ID = "management-advisor";
 
 export const SMART_TOOLS = [
-  { id: SMART_TASK_ID, label: "المهام الذكية", icon: Sparkles },
-  { id: SMART_INTERVIEW_ID, label: "المقابلة الذكية", icon: MessageSquare },
+  {
+    id: SMART_TASK_ID,
+    label: "المهام الذكية",
+    description: "اقتراح مهام وتكليفات بمساعدة الذكاء الاصطناعي",
+    icon: Sparkles,
+  },
+  {
+    id: SMART_INTERVIEW_ID,
+    label: "المقابلة الذكية",
+    description: "أسئلة مقابلات مخصّصة حسب الوظيفة",
+    icon: MessageSquare,
+  },
   {
     id: MANAGEMENT_ADVISOR_ID,
     label: "المستشار الإداري",
+    description: "مشورة إدارية سريعة لقرارات الموارد البشرية",
     icon: Lightbulb,
   },
-  { id: SMART_GOALS_ID, label: "الأهداف الذكية", icon: Target },
-  { id: ACHIEVEMENTS_RECORD_ID, label: "سجل الإنجازات", icon: Trophy },
-  { id: MONTHLY_REPORT_ID, label: "التقرير الشهري", icon: FileText },
+  {
+    id: SMART_GOALS_ID,
+    label: "الأهداف الذكية",
+    description: "صياغة أهداف قابلة للقياس للفريق",
+    icon: Target,
+  },
+  {
+    id: ACHIEVEMENTS_RECORD_ID,
+    label: "سجل الإنجازات",
+    description: "أرشيف إنجازات الموظفين والتقدير",
+    icon: Trophy,
+  },
+  {
+    id: MONTHLY_REPORT_ID,
+    label: "التقرير الشهري",
+    description: "ملخص شهري مدعوم بالذكاء الاصطناعي",
+    icon: FileText,
+  },
 ];

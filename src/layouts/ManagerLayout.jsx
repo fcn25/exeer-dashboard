@@ -20,6 +20,8 @@ import {
 import ErrorToast from "../components/ui/ErrorToast.jsx";
 import DashboardTopBar from "../components/layout/DashboardTopBar.jsx";
 import SystemCalendarPanel from "../components/calendar/SystemCalendarPanel.jsx";
+import QuickStickyNote from "../components/notes/QuickStickyNote.jsx";
+import { getMyQuickNote } from "../services/quickNotesService.js";
 import { signOut } from "../utils/mobileAuth.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import ExeerLogo from "../components/brand/ExeerLogo.jsx";
@@ -66,6 +68,27 @@ export default function ManagerLayout() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [unauthorizedToast, setUnauthorizedToast] = useState("");
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [isStickyNoteOpen, setIsStickyNoteOpen] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    getMyQuickNote()
+      .then((note) => {
+        if (cancelled) return;
+        const hasContent = Boolean(String(note?.content ?? "").trim());
+        if (note?.is_visible !== false && hasContent) {
+          setIsStickyNoteOpen(true);
+        }
+      })
+      .catch(() => {
+        // ignore — sticky note stays closed until user opens it
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     const message = location.state?.unauthorizedToast;
@@ -289,6 +312,8 @@ export default function ManagerLayout() {
             <DashboardTopBar
               isCalendarOpen={isCalendarOpen}
               onToggleCalendar={() => setIsCalendarOpen((open) => !open)}
+              isStickyNoteOpen={isStickyNoteOpen}
+              onToggleStickyNote={() => setIsStickyNoteOpen((open) => !open)}
               onLogout={handleLogout}
             />
           </div>
@@ -301,6 +326,11 @@ export default function ManagerLayout() {
           <SystemCalendarPanel onClose={() => setIsCalendarOpen(false)} />
         ) : null}
       </div>
+
+      <QuickStickyNote
+        isOpen={isStickyNoteOpen}
+        onClose={() => setIsStickyNoteOpen(false)}
+      />
 
       <ErrorToast
         message={unauthorizedToast}

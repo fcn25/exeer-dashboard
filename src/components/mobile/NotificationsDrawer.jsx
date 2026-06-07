@@ -170,7 +170,7 @@ export default function NotificationsDrawer({ isOpen, onClose, userId, onUnreadC
       <aside
         dir={dir}
         lang={i18n.language?.startsWith("en") ? "en" : "ar"}
-        className="relative flex h-full w-full max-w-[480px] flex-col border-s border-gray-200 bg-white"
+        className="relative flex h-full w-full max-w-[480px] flex-col border-s border-exeer-border bg-md-surface dark:border-slate-700 dark:bg-slate-900"
         role="dialog"
         aria-modal="true"
         aria-labelledby="notifications-drawer-title"

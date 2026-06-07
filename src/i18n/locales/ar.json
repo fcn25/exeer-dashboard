@@ -60,7 +60,11 @@
     "systemSection": "تخصيص النظام",
     "systemCustomization": "تخصيص النظام",
     "loans": "السلف المالية",
-    "openCalendar": "فتح التقويم"
+    "openCalendar": "فتح التقويم",
+    "notifications": "الإشعارات",
+    "toggleTheme": "تغيير المظهر",
+    "toggleLanguage": "تغيير اللغة",
+    "quickNote": "ملاحظة سريعة"
   },
   "auth": {
     "welcome": "مرحباً بك",
@@ -397,6 +401,18 @@
       "review": "تقييم أداء",
       "training": "تدريب",
       "holiday": "عطلة رسمية"
+    }
+  },
+  "quickNote": {
+    "title": "ملاحظة سريعة",
+    "placeholder": "اكتب ما لا تريد نسيانه…",
+    "loadError": "تعذّر تحميل الملاحظة",
+    "saveError": "تعذّر حفظ الملاحظة",
+    "colors": {
+      "amber": "أصفر",
+      "mint": "أخضر",
+      "sky": "أزرق",
+      "rose": "وردي"
     }
   }
 }

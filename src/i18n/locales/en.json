@@ -60,7 +60,11 @@
     "systemSection": "System customization",
     "systemCustomization": "System customization",
     "loans": "Employee loans",
-    "openCalendar": "Open calendar"
+    "openCalendar": "Open calendar",
+    "notifications": "Notifications",
+    "toggleTheme": "Toggle theme",
+    "toggleLanguage": "Change language",
+    "quickNote": "Quick note"
   },
   "auth": {
     "welcome": "Welcome back",
@@ -397,6 +401,18 @@
       "review": "Performance review",
       "training": "Training",
       "holiday": "Public holiday"
+    }
+  },
+  "quickNote": {
+    "title": "Quick note",
+    "placeholder": "Write what you must not forget…",
+    "loadError": "Could not load note",
+    "saveError": "Could not save note",
+    "colors": {
+      "amber": "Yellow",
+      "mint": "Green",
+      "sky": "Blue",
+      "rose": "Pink"
     }
   }
 }

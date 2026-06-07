@@ -1,38 +1,169 @@
-import { CalendarDays, LogOut } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import {
+  Bell,
+  CalendarDays,
+  Languages,
+  LogOut,
+  Moon,
+  StickyNote,
+  Sun,
+} from "lucide-react";
+import { useAuth } from "../../context/AuthContext.jsx";
 import { useAppLocale } from "../../i18n/useAppLocale.js";
+import { useTheme } from "../../providers/ThemeProvider.jsx";
+import { countUnreadNotifications } from "../../services/notificationsService.js";
+import { getMyQuickNote } from "../../services/quickNotesService.js";
+import NotificationsDrawer from "../mobile/NotificationsDrawer.jsx";
 
 const ICON_BTN =
-  "flex h-9 w-9 items-center justify-center rounded-md border border-[#E2E8F0] text-[#0F172A] transition-colors hover:bg-[#F8FAFC] dark:border-slate-600 dark:text-white dark:hover:bg-slate-800";
+  "relative flex h-9 w-9 items-center justify-center rounded-md border border-[#E2E8F0] text-[#0F172A] transition-colors hover:bg-[#F8FAFC] dark:border-slate-600 dark:text-white dark:hover:bg-slate-800";
 
 const ICON_BTN_ACTIVE =
   "border-slate-900 bg-slate-900 text-white dark:border-white dark:bg-white dark:text-slate-900";
 
+function TopBarButton({ label, onClick, children, isActive, badge }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`${ICON_BTN} ${isActive ? ICON_BTN_ACTIVE : ""}`}
+      aria-label={label}
+      aria-pressed={isActive}
+    >
+      {children}
+      {badge > 0 ? (
+        <span className="absolute -top-0.5 end-0 flex h-[16px] min-w-[16px] items-center justify-center rounded-full bg-[#0F172A] px-1 text-[9px] font-bold leading-none text-white dark:bg-white dark:text-slate-900">
+          {badge > 9 ? "9+" : badge}
+        </span>
+      ) : null}
+    </button>
+  );
+}
+
 export default function DashboardTopBar({
   isCalendarOpen,
   onToggleCalendar,
+  isStickyNoteOpen,
+  onToggleStickyNote,
   onLogout,
 }) {
-  const { t } = useAppLocale();
+  const { t, isEn, i18n } = useAppLocale();
+  const { isDark, toggleTheme } = useTheme();
+  const { user } = useAuth();
+  const userId = user?.id;
+
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [hasQuickNote, setHasQuickNote] = useState(false);
+
+  const refreshUnreadCount = useCallback(async () => {
+    if (!userId) {
+      setUnreadCount(0);
+      return;
+    }
+    try {
+      const count = await countUnreadNotifications(userId);
+      setUnreadCount(count);
+    } catch {
+      // silent
+    }
+  }, [userId]);
+
+  const refreshQuickNoteState = useCallback(async () => {
+    try {
+      const note = await getMyQuickNote();
+      setHasQuickNote(Boolean(String(note?.content ?? "").trim()));
+    } catch {
+      // silent
+    }
+  }, []);
+
+  useEffect(() => {
+    refreshUnreadCount();
+  }, [refreshUnreadCount]);
+
+  useEffect(() => {
+    refreshQuickNoteState();
+  }, [refreshQuickNoteState]);
+
+  const handleToggleLanguage = () => {
+    i18n.changeLanguage(isEn ? "ar" : "en");
+  };
+
+  const handleToggleStickyNote = () => {
+    onToggleStickyNote?.();
+    window.setTimeout(() => refreshQuickNoteState(), 700);
+  };
 
   return (
-    <div className="sticky top-0 z-30 flex shrink-0 items-center justify-end gap-2 border-b border-exeer-border bg-gray-50/95 px-0 py-3 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-950/95">
-      <button
-        type="button"
-        onClick={onToggleCalendar}
-        className={`${ICON_BTN} ${isCalendarOpen ? ICON_BTN_ACTIVE : ""}`}
-        aria-label={t("nav.openCalendar")}
-        aria-pressed={isCalendarOpen}
-      >
-        <CalendarDays className="h-[18px] w-[18px] stroke-[1.75]" aria-hidden />
-      </button>
-      <button
-        type="button"
-        onClick={onLogout}
-        className={ICON_BTN}
-        aria-label={t("common.logout")}
-      >
-        <LogOut className="h-[18px] w-[18px] stroke-[1.75]" aria-hidden />
-      </button>
-    </div>
+    <>
+      <div className="sticky top-0 z-30 flex shrink-0 items-center justify-end gap-2 border-b border-exeer-border bg-gray-50/95 px-0 py-3 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-950/95">
+        <TopBarButton
+          label={t("nav.notifications")}
+          badge={unreadCount}
+          onClick={() => {
+            setIsNotificationsOpen(true);
+            refreshUnreadCount();
+          }}
+        >
+          <Bell className="h-[18px] w-[18px] stroke-[1.75]" aria-hidden />
+        </TopBarButton>
+
+        <TopBarButton
+          label={t("nav.toggleTheme")}
+          onClick={toggleTheme}
+        >
+          {isDark ? (
+            <Sun className="h-[18px] w-[18px] stroke-[1.75]" aria-hidden />
+          ) : (
+            <Moon className="h-[18px] w-[18px] stroke-[1.75]" aria-hidden />
+          )}
+        </TopBarButton>
+
+        <TopBarButton
+          label={t("nav.toggleLanguage")}
+          onClick={handleToggleLanguage}
+        >
+          <Languages className="h-[18px] w-[18px] stroke-[1.75]" aria-hidden />
+          <span className="sr-only">{isEn ? "AR" : "EN"}</span>
+        </TopBarButton>
+
+        <TopBarButton
+          label={t("nav.quickNote")}
+          isActive={isStickyNoteOpen}
+          onClick={handleToggleStickyNote}
+        >
+          <StickyNote className="h-[18px] w-[18px] stroke-[1.75]" aria-hidden />
+          {hasQuickNote && !isStickyNoteOpen ? (
+            <span
+              className="absolute bottom-0.5 end-0.5 h-2 w-2 rounded-full bg-amber-500 ring-2 ring-white dark:ring-slate-950"
+              aria-hidden
+            />
+          ) : null}
+        </TopBarButton>
+
+        <TopBarButton
+          label={t("nav.openCalendar")}
+          isActive={isCalendarOpen}
+          onClick={onToggleCalendar}
+        >
+          <CalendarDays className="h-[18px] w-[18px] stroke-[1.75]" aria-hidden />
+        </TopBarButton>
+
+        <TopBarButton label={t("common.logout")} onClick={onLogout}>
+          <LogOut className="h-[18px] w-[18px] stroke-[1.75]" aria-hidden />
+        </TopBarButton>
+      </div>
+
+      <NotificationsDrawer
+        isOpen={isNotificationsOpen}
+        onClose={() => {
+          setIsNotificationsOpen(false);
+          refreshUnreadCount();
+        }}
+        userId={userId}
+        onUnreadChange={setUnreadCount}
+      />
+    </>
   );
 }

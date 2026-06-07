@@ -5,9 +5,9 @@ import TermsModal from "./TermsModal.jsx";
 import {
   SUPPORT_EMAIL_ADDRESS,
   SUPPORT_EMAIL_HREF,
+  SUPPORT_WHATSAPP_DISPLAY,
+  SUPPORT_WHATSAPP_HREF,
 } from "../../constants/supportContact.js";
-
-const SUPPORT_WHATSAPP = "https://wa.me/966500000000";
 
 export default function SupportSettingsTab() {
   const { t } = useTranslation();
@@ -27,7 +27,7 @@ export default function SupportSettingsTab() {
 
         <div className="grid max-w-2xl grid-cols-1 gap-4 sm:grid-cols-2">
           <a
-            href={SUPPORT_WHATSAPP}
+            href={SUPPORT_WHATSAPP_HREF}
             target="_blank"
             rel="noopener noreferrer"
             className="md-surface flex items-center gap-4 p-5 transition-colors hover:bg-exeer-hover"
@@ -40,7 +40,7 @@ export default function SupportSettingsTab() {
                 {t("settings.support.whatsapp")}
               </span>
               <span className="text-xs text-exeer-muted" dir="ltr">
-                +966 50 000 0000
+                {SUPPORT_WHATSAPP_DISPLAY}
               </span>
             </span>
           </a>

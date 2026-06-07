@@ -26,7 +26,9 @@
     "noData": "No data yet",
     "errorGeneric": "Something went wrong. Please try again.",
     "languageArabic": "Arabic",
-    "languageEnglish": "English"
+    "languageEnglish": "English",
+    "enabled": "Enabled",
+    "disabled": "Disabled"
   },
   "app": {
     "title": "Exeer — Manager Dashboard",
@@ -54,7 +56,10 @@
     "addEmployee": "Add employee",
     "collapseSidebar": "Collapse menu",
     "expandSidebar": "Expand menu",
-    "mainNav": "Main navigation"
+    "mainNav": "Main navigation",
+    "systemSection": "System customization",
+    "systemCustomization": "System customization",
+    "loans": "Employee loans"
   },
   "auth": {
     "welcome": "Welcome back",
@@ -282,6 +287,53 @@
       "title": "Terms of Service",
       "close": "Close",
       "body": "This is placeholder Terms of Service text. It will be replaced with the official legal copy for the Exeer platform. By using the platform, you agree to comply with applicable policies and regulations."
+    }
+  },
+  "systemCustomization": {
+    "title": "System customization",
+    "subtitle": "Configure company policies — leave, payroll, attendance, and performance",
+    "backToSettings": "Back to settings",
+    "saveSuccess": "Settings saved successfully",
+    "saveError": "Failed to save settings",
+    "tabs": {
+      "hr": "Human resources",
+      "payroll": "Payroll & finance",
+      "attendance": "Attendance",
+      "performance": "Performance reviews"
+    },
+    "fields": {
+      "annualLeave": "Annual leave days",
+      "sickLeave": "Sick leave days",
+      "workWeekDays": "Work week days",
+      "workDayHours": "Daily work hours",
+      "weekStart": "Week start day",
+      "calendarType": "Calendar type",
+      "salaryPayDay": "Salary pay day",
+      "gosiRate": "Employer GOSI rate",
+      "loansEnabled": "Enable employee loans",
+      "loanMaxPercent": "Maximum loan (% of salary)",
+      "transportAllowance": "Enable transport allowance",
+      "housingAllowance": "Enable housing allowance",
+      "attendanceMode": "Attendance tracking mode",
+      "lateTolerance": "Late arrival tolerance (minutes)",
+      "overtimeRate": "Overtime rate",
+      "performanceEnabled": "Enable performance reviews",
+      "reviewCycle": "Review cycle"
+    },
+    "hints": {
+      "salaryPayDay": "Day 27 is recommended for WPS compliance"
+    },
+    "options": {
+      "sunday": "Sunday",
+      "monday": "Monday",
+      "hijri": "Hijri",
+      "gregorian": "Gregorian",
+      "gps": "GPS",
+      "biometric": "Biometric",
+      "manual": "Manual",
+      "monthly": "Monthly",
+      "quarterly": "Quarterly",
+      "yearly": "Yearly"
     }
   }
 }

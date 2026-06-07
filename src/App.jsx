@@ -4,6 +4,9 @@ import ManagerLayout from "./layouts/ManagerLayout.jsx";
 import HomePage from "./pages/HomePage.jsx";
 import TasksPage from "./pages/TasksPage.jsx";
 import SettingsPage from "./pages/SettingsPage.jsx";
+import SystemCustomizationPage from "./pages/SystemCustomizationPage.jsx";
+import { SystemCustomizationGate } from "./components/settings/SystemCustomizationGate.jsx";
+import { CompanySettingsProvider } from "./context/CompanySettingsContext.jsx";
 import PermissionsPage from "./pages/PermissionsPage.jsx";
 import UnauthorizedPage from "./pages/UnauthorizedPage.jsx";
 import EmployeePortalPage from "./pages/EmployeePortalPage.jsx";
@@ -150,6 +153,14 @@ function DashboardRoutes() {
             }
           />
           <Route path="settings" element={<SettingsPage />} />
+          <Route
+            path="settings/system"
+            element={
+              <SystemCustomizationGate>
+                <SystemCustomizationPage />
+              </SystemCustomizationGate>
+            }
+          />
           <Route
             path="subscription"
             element={
@@ -304,9 +315,11 @@ export default function App() {
     <SentryReact.ErrorBoundary fallback={<SentryErrorFallback />}>
       {/* 💡 هذا كودك الأصلي تماماً بداخل الغلاف */}
       <AuthProvider>
-        <ErrorBoundary>
-          <AppRoutes />
-        </ErrorBoundary>
+        <CompanySettingsProvider>
+          <ErrorBoundary>
+            <AppRoutes />
+          </ErrorBoundary>
+        </CompanySettingsProvider>
       </AuthProvider>
     </SentryReact.ErrorBoundary>
   );

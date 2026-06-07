@@ -1,21 +1,25 @@
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { useMemo, useState } from "react";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
 import {
   Banknote,
   Calendar,
   CheckSquare,
   Fingerprint,
   Gavel,
+  HandCoins,
   Home,
   Lock,
   PanelLeftClose,
   PanelLeftOpen,
   Settings,
+  SlidersHorizontal,
   Target,
   UserPlus,
   Users,
   UsersRound,
 } from "lucide-react";
+import ErrorToast from "../components/ui/ErrorToast.jsx";
+import { useCompanySettings } from "../context/CompanySettingsContext.jsx";
 import { signOut } from "../utils/mobileAuth.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import ExeerLogo from "../components/brand/ExeerLogo.jsx";
@@ -56,9 +60,19 @@ function SidebarLink({ to, label, icon: Icon, end, collapsed }) {
 
 export default function ManagerLayout() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { t, dir, lang } = useAppLocale();
   const { permissions, role } = useAuth();
+  const { getSetting } = useCompanySettings();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [unauthorizedToast, setUnauthorizedToast] = useState("");
+
+  useEffect(() => {
+    const message = location.state?.unauthorizedToast;
+    if (!message) return;
+    setUnauthorizedToast(message);
+    navigate(location.pathname, { replace: true, state: {} });
+  }, [location.pathname, location.state, navigate]);
 
   const navItems = useMemo(() => {
     const managerOnly = isDirectManager(role);
@@ -140,6 +154,25 @@ export default function ManagerLayout() {
 
     return items;
   }, [permissions, role, t]);
+
+  const systemNavItems = useMemo(() => {
+    if (!isOwner()) return [];
+    const items = [
+      {
+        to: "/dashboard/settings/system",
+        label: t("nav.systemCustomization"),
+        icon: SlidersHorizontal,
+      },
+    ];
+    if (getSetting("loans_enabled", true) && canViewPayroll() && !isDirectManager(role)) {
+      items.push({
+        to: "/dashboard/payroll",
+        label: t("nav.loans"),
+        icon: HandCoins,
+      });
+    }
+    return items;
+  }, [getSetting, role, t]);
 
   const handleLogout = async () => {
     await signOut();
@@ -230,6 +263,20 @@ export default function ManagerLayout() {
               collapsed={isSidebarCollapsed}
             />
           ))}
+
+          {systemNavItems.length && !isSidebarCollapsed ? (
+            <p className="mt-4 px-3 pb-1 text-[11px] font-semibold tracking-wide text-[#b89a5e] uppercase">
+              {t("nav.systemSection")}
+            </p>
+          ) : null}
+
+          {systemNavItems.map((item) => (
+            <SidebarLink
+              key={item.to}
+              {...item}
+              collapsed={isSidebarCollapsed}
+            />
+          ))}
         </nav>
 
         <div className="mt-4 border-t border-gray-200 pt-4 dark:border-slate-800">
@@ -247,6 +294,11 @@ export default function ManagerLayout() {
       <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto bg-gray-50/50 px-6 py-8 md:px-8 md:py-8 dark:bg-slate-950/50">
         <Outlet />
       </main>
+
+      <ErrorToast
+        message={unauthorizedToast}
+        onDismiss={() => setUnauthorizedToast("")}
+      />
     </div>
   );
 }

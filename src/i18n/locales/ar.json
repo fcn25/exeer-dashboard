@@ -26,7 +26,9 @@
     "noData": "لا توجد بيانات بعد",
     "errorGeneric": "تعذّر إكمال العملية. حاول مرة أخرى.",
     "languageArabic": "العربية",
-    "languageEnglish": "English"
+    "languageEnglish": "English",
+    "enabled": "مفعّل",
+    "disabled": "معطّل"
   },
   "app": {
     "title": "Exeer — لوحة المدير",
@@ -54,7 +56,10 @@
     "addEmployee": "إضافة موظف جديد",
     "collapseSidebar": "طي القائمة",
     "expandSidebar": "توسيع القائمة",
-    "mainNav": "القائمة الرئيسية"
+    "mainNav": "القائمة الرئيسية",
+    "systemSection": "تخصيص النظام",
+    "systemCustomization": "تخصيص النظام",
+    "loans": "السلف المالية"
   },
   "auth": {
     "welcome": "مرحباً بك",
@@ -282,6 +287,53 @@
       "title": "شروط الخدمة",
       "close": "إغلاق",
       "body": "هذا نص تجريبي لشروط الخدمة. سيتم استبداله بالنص القانوني المعتمد لمنصة Exeer. باستخدامك للمنصة، فإنك توافق على الالتزام بالسياسات واللوائح المعمول بها."
+    }
+  },
+  "systemCustomization": {
+    "title": "تخصيص النظام",
+    "subtitle": "ضبط سياسات المنشأة — الإجازات، الرواتب، الحضور، والتقييم",
+    "backToSettings": "العودة إلى الإعدادات",
+    "saveSuccess": "تم حفظ الإعدادات بنجاح",
+    "saveError": "تعذّر حفظ الإعدادات",
+    "tabs": {
+      "hr": "الموارد البشرية",
+      "payroll": "الرواتب والمالية",
+      "attendance": "الحضور",
+      "performance": "التقييم والأداء"
+    },
+    "fields": {
+      "annualLeave": "أيام الإجازة السنوية",
+      "sickLeave": "أيام الإجازة المرضية",
+      "workWeekDays": "أيام أسبوع العمل",
+      "workDayHours": "ساعات الدوام اليومي",
+      "weekStart": "بداية الأسبوع",
+      "calendarType": "نوع التقويم",
+      "salaryPayDay": "يوم صرف الراتب",
+      "gosiRate": "نسبة GOSI على المنشأة",
+      "loansEnabled": "تفعيل السلف المالية",
+      "loanMaxPercent": "الحد الأقصى للسلفة (% من الراتب)",
+      "transportAllowance": "تفعيل بدل النقل",
+      "housingAllowance": "تفعيل بدل السكن",
+      "attendanceMode": "نظام تسجيل الحضور",
+      "lateTolerance": "دقائق السماح بالتأخير",
+      "overtimeRate": "معدل الأوفرتايم",
+      "performanceEnabled": "تفعيل تقييم الأداء",
+      "reviewCycle": "دورية التقييم"
+    },
+    "hints": {
+      "salaryPayDay": "يُنصح بـ 27 لضمان WPS"
+    },
+    "options": {
+      "sunday": "الأحد",
+      "monday": "الاثنين",
+      "hijri": "هجري",
+      "gregorian": "ميلادي",
+      "gps": "GPS",
+      "biometric": "بيومتري",
+      "manual": "يدوي",
+      "monthly": "شهري",
+      "quarterly": "ربعي",
+      "yearly": "سنوي"
     }
   }
 }

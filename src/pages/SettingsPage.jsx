@@ -92,7 +92,11 @@ export default function SettingsPage() {
           })}
         </nav>
 
-        <section className="md-surface min-w-0 flex-1 p-6 md:p-8">
+        <section
+          className={`md-surface min-h-0 min-w-0 flex-1 p-6 md:p-8 ${
+            resolvedTab === "support" ? "overflow-visible" : ""
+          }`}
+        >
           <TabPanel tabId="general" activeTab={resolvedTab}>
             <GeneralSettingsTab />
           </TabPanel>

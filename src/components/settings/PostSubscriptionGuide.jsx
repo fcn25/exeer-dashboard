@@ -25,12 +25,12 @@ export default function PostSubscriptionGuide() {
   const stepList = Array.isArray(steps) ? steps : [];
 
   return (
-    <section className="md-surface-muted max-w-2xl space-y-4 p-5">
+    <section className="w-full min-w-0 space-y-4 rounded-md border border-exeer-border bg-white p-5 dark:bg-slate-950/60">
       <header className="space-y-1">
         <h3 className="text-base font-bold text-exeer-primary">
           {t("settings.postSubscription.title")}
         </h3>
-        <p className="text-sm text-exeer-muted">
+        <p className="text-sm leading-relaxed text-exeer-muted">
           {t("settings.postSubscription.subtitle")}
         </p>
       </header>
@@ -40,14 +40,14 @@ export default function PostSubscriptionGuide() {
           const Icon = STEP_ICONS[index] ?? CheckCircle2;
           return (
             <li key={step.title} className="flex gap-3">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-white text-exeer-primary dark:bg-[#334155]">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-md-surface-dim text-exeer-primary dark:bg-slate-800">
                 <Icon className="h-4 w-4 stroke-[1.75]" aria-hidden />
               </span>
-              <div className="min-w-0 space-y-1">
+              <div className="min-w-0 flex-1 space-y-1">
                 <p className="text-sm font-semibold text-exeer-primary">
                   {index + 1}. {step.title}
                 </p>
-                <p className="text-sm leading-relaxed text-exeer-muted">
+                <p className="text-sm leading-relaxed break-words text-exeer-muted">
                   {step.body}
                 </p>
                 {step.linkLabel && step.linkTo ? (
@@ -64,33 +64,35 @@ export default function PostSubscriptionGuide() {
         })}
       </ol>
 
-      <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-100">
+      <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-relaxed break-words text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-100">
         <p className="font-semibold">{t("settings.postSubscription.noteTitle")}</p>
         <p className="mt-1">{t("settings.postSubscription.noteBody")}</p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3 border-t border-exeer-border pt-4 text-sm">
-        <Users className="h-4 w-4 text-exeer-muted" aria-hidden />
-        <span className="text-exeer-muted">
-          {t("settings.postSubscription.contactPrompt")}
-        </span>
-        <a
-          href={SUPPORT_EMAIL_HREF}
-          className="font-medium text-exeer-primary hover:underline"
-          dir="ltr"
-        >
-          {SUPPORT_EMAIL_ADDRESS}
-        </a>
-        <span className="text-exeer-muted">·</span>
-        <a
-          href={SUPPORT_WHATSAPP_HREF}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="font-medium text-exeer-primary hover:underline"
-          dir="ltr"
-        >
-          {SUPPORT_WHATSAPP_DISPLAY}
-        </a>
+      <div className="flex flex-col gap-2 border-t border-exeer-border pt-4 text-sm sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
+        <div className="flex items-center gap-2 text-exeer-muted">
+          <Users className="h-4 w-4 shrink-0" aria-hidden />
+          <span>{t("settings.postSubscription.contactPrompt")}</span>
+        </div>
+        <div className="flex min-w-0 flex-col gap-1 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
+          <a
+            href={SUPPORT_EMAIL_HREF}
+            className="break-all font-medium text-exeer-primary hover:underline"
+            dir="ltr"
+          >
+            {SUPPORT_EMAIL_ADDRESS}
+          </a>
+          <span className="hidden text-exeer-muted sm:inline">·</span>
+          <a
+            href={SUPPORT_WHATSAPP_HREF}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="break-words font-medium text-exeer-primary hover:underline"
+            dir="ltr"
+          >
+            {SUPPORT_WHATSAPP_DISPLAY}
+          </a>
+        </div>
       </div>
     </section>
   );

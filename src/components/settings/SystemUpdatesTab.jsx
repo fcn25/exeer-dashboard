@@ -78,9 +78,6 @@ export default function SystemUpdatesTab() {
         <h2 className="text-lg font-bold text-exeer-primary">
           {t("settings.updates.title")}
         </h2>
-        <p className="text-sm text-exeer-muted">
-          {t("settings.updates.description")}
-        </p>
         {generatedAt ? (
           <p className="text-xs text-exeer-muted">
             {t("settings.updates.lastSynced")}{" "}

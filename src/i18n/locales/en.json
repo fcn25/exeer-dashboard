@@ -224,7 +224,6 @@
     },
     "updates": {
       "title": "System update log",
-      "description": "Latest updates published on GitHub — owner only.",
       "loading": "Loading update log...",
       "loadError": "Could not load the update log.",
       "empty": "No updates recorded yet.",

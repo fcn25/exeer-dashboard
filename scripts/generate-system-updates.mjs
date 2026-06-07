@@ -2,6 +2,10 @@ import { spawnSync } from "node:child_process";
 import { writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  isSystemUpdateVisible,
+  SYSTEM_UPDATES_DISPLAY_FROM,
+} from "../shared/systemUpdatesConfig.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootDir = join(__dirname, "..");
@@ -37,13 +41,16 @@ function parseGitLog() {
   }
 }
 
-const updates = parseGitLog();
+const updates = parseGitLog().filter((item) =>
+  isSystemUpdateVisible(item.publishedAt),
+);
 
 writeFileSync(
   outputPath,
   `${JSON.stringify(
     {
       generatedAt: new Date().toISOString(),
+      displayFrom: SYSTEM_UPDATES_DISPLAY_FROM,
       source: "git",
       updates,
     },

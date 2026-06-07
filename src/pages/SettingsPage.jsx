@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   CreditCard,
+  History,
   LifeBuoy,
   Palette,
   Settings2,
@@ -11,12 +12,14 @@ import GeneralSettingsTab from "../components/settings/GeneralSettingsTab.jsx";
 import AppearanceSettingsTab from "../components/settings/AppearanceSettingsTab.jsx";
 import SupportSettingsTab from "../components/settings/SupportSettingsTab.jsx";
 import SubscriptionSettingsTab from "../components/settings/SubscriptionSettingsTab.jsx";
+import SystemUpdatesTab from "../components/settings/SystemUpdatesTab.jsx";
 import { isOwner } from "../utils/rbac.js";
 
 const TAB_DEFS = [
   { id: "general", icon: Settings2, adminOnly: false },
   { id: "appearance", icon: Palette, adminOnly: false },
   { id: "support", icon: LifeBuoy, adminOnly: false },
+  { id: "updates", icon: History, adminOnly: true },
   { id: "subscription", icon: CreditCard, adminOnly: true },
 ];
 
@@ -100,9 +103,14 @@ export default function SettingsPage() {
             <SupportSettingsTab />
           </TabPanel>
           {showSubscription ? (
-            <TabPanel tabId="subscription" activeTab={resolvedTab}>
-              <SubscriptionSettingsTab />
-            </TabPanel>
+            <>
+              <TabPanel tabId="updates" activeTab={resolvedTab}>
+                <SystemUpdatesTab />
+              </TabPanel>
+              <TabPanel tabId="subscription" activeTab={resolvedTab}>
+                <SubscriptionSettingsTab />
+              </TabPanel>
+            </>
           ) : null}
         </section>
       </div>

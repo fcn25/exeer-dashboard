@@ -6,6 +6,7 @@ import { useAuth } from "./context/AuthContext.jsx";
 import { signInWithEmail, signUpCompany, SIGNUP_SUCCESS_MESSAGE } from "./services/authService.js";
 import { formatErrorMessage } from "./utils/formatErrorMessage.js";
 import ExeerLogo from "./components/brand/ExeerLogo.jsx";
+import AuthLanguageToggle from "./components/auth/AuthLanguageToggle.jsx";
 import { useAppLocale } from "./i18n/useAppLocale.js";
 
 const INPUT_CLASS = "md-input";
@@ -37,8 +38,12 @@ export default function AuthContainer() {
     <div
       dir={dir}
       lang={lang}
-      className="flex min-h-screen flex-col items-center justify-center bg-white px-4 py-10 font-sans"
+      className="relative flex min-h-screen flex-col items-center justify-center bg-white px-4 py-10 font-sans"
     >
+      <div className="absolute top-4 end-4 z-10">
+        <AuthLanguageToggle />
+      </div>
+
       <div className="mb-8 flex w-full max-w-md flex-col items-center">
         <ExeerLogo onLightBackground className="h-14 w-auto object-contain" />
       </div>

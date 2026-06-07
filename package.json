@@ -4,8 +4,8 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "node scripts/validate-vite-env.mjs && vite build",
+    "dev": "node scripts/generate-system-updates.mjs && vite",
+    "build": "node scripts/validate-vite-env.mjs && node scripts/generate-system-updates.mjs && vite build",
     "build:capacitor": "node scripts/validate-vite-env.mjs && vite build --mode production",
     "cap:sync": "npm run build && npx cap sync",
     "cap:sync:ios": "npm run build && npx cap sync ios",

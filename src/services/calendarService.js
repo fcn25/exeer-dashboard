@@ -1,11 +1,30 @@
+import i18n from "../i18n/index.js";
+import {
+  DEFAULT_APPOINTMENT_TYPE,
+  isValidUserAppointmentType,
+  resolveAppointmentTypeMeta,
+  USER_APPOINTMENT_TYPES,
+} from "../constants/appointmentTypes.js";
+import { getSaudiPublicHolidaysInRange } from "../constants/saudiPublicHolidays.js";
 import { supabase } from "../utils/supabaseClient.js";
 import { getAuthUser, getCompanyId } from "../utils/mobileAuth.js";
 import { eventDateFromTimestamp, getMonthRange, isDateInRange } from "../utils/calendarDates.js";
 
-export const CALENDAR_TYPES = {
-  appointment: { color: "#6366f1", labelKey: "calendar.types.appointment" },
-  event: { color: "#3b82f6", labelKey: "calendar.types.event" },
+export const CALENDAR_LEGEND_TYPES = {
+  holiday: resolveAppointmentTypeMeta("holiday"),
+  event: resolveAppointmentTypeMeta("event"),
+  ...USER_APPOINTMENT_TYPES,
 };
+
+const SORT_ORDER = [
+  "holiday",
+  "event",
+  "meeting",
+  "interview",
+  "leave",
+  "review",
+  "training",
+];
 
 function mapDbError(error) {
   if (!error) return "حدث خطأ غير متوقع.";
@@ -23,6 +42,10 @@ function requireCurrentUserId() {
   return userId;
 }
 
+function currentLang() {
+  return i18n.language?.startsWith("en") ? "en" : "ar";
+}
+
 function pushEntry(map, entry) {
   if (!entry?.date) return;
   const list = map.get(entry.date) ?? [];
@@ -32,9 +55,13 @@ function pushEntry(map, entry) {
 
 function sortEntries(entries) {
   return [...entries].sort((a, b) => {
-    const typeOrder = Object.keys(CALENDAR_TYPES);
-    const typeDiff = typeOrder.indexOf(a.type) - typeOrder.indexOf(b.type);
-    if (typeDiff !== 0) return typeDiff;
+    const kindA = a.kind ?? a.type;
+    const kindB = b.kind ?? b.type;
+    const orderA = SORT_ORDER.indexOf(kindA);
+    const orderB = SORT_ORDER.indexOf(kindB);
+    const safeA = orderA === -1 ? SORT_ORDER.length : orderA;
+    const safeB = orderB === -1 ? SORT_ORDER.length : orderB;
+    if (safeA !== safeB) return safeA - safeB;
     return String(a.title).localeCompare(String(b.title), "ar");
   });
 }
@@ -62,6 +89,9 @@ export async function listCalendarAppointments(year, month) {
 export async function createCalendarAppointment(payload) {
   const companyId = getCompanyId();
   const userId = requireCurrentUserId();
+  const appointmentType = isValidUserAppointmentType(payload.appointment_type)
+    ? payload.appointment_type
+    : DEFAULT_APPOINTMENT_TYPE;
 
   const { data, error } = await supabase
     .from("calendar_appointments")
@@ -72,6 +102,7 @@ export async function createCalendarAppointment(payload) {
       description: payload.description?.trim() || null,
       appointment_date: payload.appointment_date,
       appointment_time: payload.appointment_time || null,
+      appointment_type: appointmentType,
     })
     .select()
     .single();
@@ -113,16 +144,24 @@ async function fetchCompanyEventsInMonth(year, month) {
 }
 
 export async function fetchCalendarMonthData(year, month) {
-  const [appointments, events] = await Promise.all([
+  const { start, end } = getMonthRange(year, month);
+  const lang = currentLang();
+
+  const [appointments, events, saudiHolidays] = await Promise.all([
     listCalendarAppointments(year, month),
     fetchCompanyEventsInMonth(year, month),
+    Promise.resolve(getSaudiPublicHolidaysInRange(start, end, lang)),
   ]);
 
   const byDate = new Map();
 
   for (const row of appointments) {
+    const appointmentType = row.appointment_type || DEFAULT_APPOINTMENT_TYPE;
+    const meta = resolveAppointmentTypeMeta(appointmentType);
+
     pushEntry(byDate, {
       id: `appointment-${row.id}`,
+      kind: appointmentType,
       type: "appointment",
       date: row.appointment_date,
       title: row.title,
@@ -130,20 +169,42 @@ export async function fetchCalendarMonthData(year, month) {
       time: row.appointment_time?.slice(0, 5) || undefined,
       sourceId: row.id,
       deletable: true,
-      color: CALENDAR_TYPES.appointment.color,
+      color: meta.color,
+      typeLabelKey: meta.labelKey,
     });
   }
 
   for (const row of events) {
     const date = eventDateFromTimestamp(row.event_datetime);
+    const meta = resolveAppointmentTypeMeta("event");
+
     pushEntry(byDate, {
       id: `event-${row.id}`,
+      kind: "event",
       type: "event",
       date,
       title: row.name,
       subtitle: row.location || row.description || undefined,
       sourceId: row.id,
-      color: CALENDAR_TYPES.event.color,
+      color: meta.color,
+      typeLabelKey: meta.labelKey,
+      shared: true,
+    });
+  }
+
+  for (const holiday of saudiHolidays) {
+    const meta = resolveAppointmentTypeMeta("holiday");
+
+    pushEntry(byDate, {
+      id: holiday.id,
+      kind: "holiday",
+      type: "holiday",
+      date: holiday.date,
+      title: holiday.title,
+      subtitle: holiday.subtitle,
+      color: meta.color,
+      typeLabelKey: meta.labelKey,
+      shared: true,
     });
   }
 

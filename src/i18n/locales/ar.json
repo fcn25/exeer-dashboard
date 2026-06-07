@@ -374,7 +374,8 @@
   },
   "calendar": {
     "title": "تقويم النظام",
-    "subtitle": "مواعيدك الشخصية وفعاليات المنشأة المشتركة",
+    "subtitle": "مواعيدك الشخصية، فعاليات المنشأة، والعطل الرسمية السعودية",
+    "appointmentTypeLabel": "نوع الموعد",
     "prevMonth": "الشهر السابق",
     "nextMonth": "الشهر التالي",
     "noEventsDay": "لا توجد أحداث في هذا اليوم",
@@ -386,12 +387,16 @@
     "saveError": "تعذّر حفظ الموعد",
     "deleteError": "تعذّر حذف الموعد",
     "types": {
-      "appointment": "موعد",
-      "event": "فعالية",
-      "task": "مهمة",
-      "contract": "عقد",
-      "iqama": "إقامة",
-      "probation": "تجربة"
+      "appointment": "موعد شخصي",
+      "event": "فعالية"
+    },
+    "appointmentTypes": {
+      "meeting": "اجتماع",
+      "interview": "مقابلة توظيف",
+      "leave": "إجازة",
+      "review": "تقييم أداء",
+      "training": "تدريب",
+      "holiday": "عطلة رسمية"
     }
   }
 }

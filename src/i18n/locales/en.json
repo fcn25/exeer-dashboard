@@ -374,7 +374,8 @@
   },
   "calendar": {
     "title": "System calendar",
-    "subtitle": "Your private appointments and company-wide events",
+    "subtitle": "Private appointments, company events, and Saudi public holidays",
+    "appointmentTypeLabel": "Appointment type",
     "prevMonth": "Previous month",
     "nextMonth": "Next month",
     "noEventsDay": "No events on this day",
@@ -386,12 +387,16 @@
     "saveError": "Could not save appointment",
     "deleteError": "Could not delete appointment",
     "types": {
-      "appointment": "Appointment",
-      "event": "Event",
-      "task": "Task",
-      "contract": "Contract",
-      "iqama": "Iqama",
-      "probation": "Probation"
+      "appointment": "Private appointment",
+      "event": "Event"
+    },
+    "appointmentTypes": {
+      "meeting": "Meeting",
+      "interview": "Interview",
+      "leave": "Leave",
+      "review": "Performance review",
+      "training": "Training",
+      "holiday": "Public holiday"
     }
   }
 }

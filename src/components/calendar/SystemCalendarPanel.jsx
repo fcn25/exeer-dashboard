@@ -11,7 +11,11 @@ import {
 import { useAppLocale } from "../../i18n/useAppLocale.js";
 import { formatLocaleDate } from "../../i18n/formatLocale.js";
 import {
-  CALENDAR_TYPES,
+  DEFAULT_APPOINTMENT_TYPE,
+  USER_APPOINTMENT_TYPES,
+} from "../../constants/appointmentTypes.js";
+import {
+  CALENDAR_LEGEND_TYPES,
   createCalendarAppointment,
   deleteCalendarAppointment,
   fetchCalendarMonthData,
@@ -26,7 +30,7 @@ const WEEKDAY_HEADERS = ["سب", "أحد", "اثن", "ثل", "أرب", "خم", "
 function TypeLegend({ t }) {
   return (
     <div className="flex flex-wrap gap-2">
-      {Object.entries(CALENDAR_TYPES).map(([type, meta]) => (
+      {Object.entries(CALENDAR_LEGEND_TYPES).map(([type, meta]) => (
         <span
           key={type}
           className="inline-flex items-center gap-1.5 rounded-full border border-exeer-border px-2 py-0.5 text-[11px] font-medium text-exeer-primary dark:font-semibold"
@@ -36,7 +40,7 @@ function TypeLegend({ t }) {
             style={{ backgroundColor: meta.color }}
             aria-hidden
           />
-          {t(meta.labelKey)}
+          {t(meta.labelKey, { defaultValue: type })}
         </span>
       ))}
     </div>
@@ -45,7 +49,7 @@ function TypeLegend({ t }) {
 
 function DayCell({ date, isSelected, isToday, events, onSelect }) {
   const count = events.length;
-  const types = [...new Set(events.map((e) => e.type))].slice(0, 4);
+  const types = [...new Set(events.map((e) => e.kind ?? e.type))].slice(0, 4);
 
   return (
     <button
@@ -72,7 +76,7 @@ function DayCell({ date, isSelected, isToday, events, onSelect }) {
             <span
               key={type}
               className="h-1.5 w-1.5 rounded-full"
-              style={{ backgroundColor: CALENDAR_TYPES[type]?.color }}
+              style={{ backgroundColor: CALENDAR_LEGEND_TYPES[type]?.color }}
               aria-hidden
             />
           ))}
@@ -98,7 +102,12 @@ export default function SystemCalendarPanel({ onClose }) {
   const [isSaving, setIsSaving] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
   const [error, setError] = useState("");
-  const [form, setForm] = useState({ title: "", description: "", time: "" });
+  const [form, setForm] = useState({
+    title: "",
+    description: "",
+    time: "",
+    appointment_type: DEFAULT_APPOINTMENT_TYPE,
+  });
 
   const monthLabel = useMemo(
     () =>
@@ -164,8 +173,14 @@ export default function SystemCalendarPanel({ onClose }) {
         description: form.description,
         appointment_date: selectedDate,
         appointment_time: form.time || null,
+        appointment_type: form.appointment_type,
       });
-      setForm({ title: "", description: "", time: "" });
+      setForm({
+        title: "",
+        description: "",
+        time: "",
+        appointment_type: DEFAULT_APPOINTMENT_TYPE,
+      });
       await loadMonth();
     } catch (err) {
       setError(err.message || t("calendar.saveError"));
@@ -307,7 +322,9 @@ export default function SystemCalendarPanel({ onClose }) {
                           </p>
                         ) : null}
                         <p className="mt-0.5 text-[11px] font-medium text-exeer-muted">
-                          {t(CALENDAR_TYPES[entry.type]?.labelKey)}
+                          {t(entry.typeLabelKey ?? `calendar.types.${entry.type}`, {
+                            defaultValue: entry.kind ?? entry.type,
+                          })}
                         </p>
                       </div>
                       {entry.deletable ? (
@@ -335,6 +352,27 @@ export default function SystemCalendarPanel({ onClose }) {
                 <Plus className="h-4 w-4" aria-hidden />
                 {t("calendar.addAppointment")}
               </p>
+              <label className="block space-y-1">
+                <span className="text-xs font-medium text-exeer-muted">
+                  {t("calendar.appointmentTypeLabel")}
+                </span>
+                <select
+                  value={form.appointment_type}
+                  onChange={(e) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      appointment_type: e.target.value,
+                    }))
+                  }
+                  className="w-full rounded-md border border-exeer-border bg-md-surface px-3 py-2 text-sm text-exeer-primary outline-none focus:border-slate-900 dark:border-slate-600 dark:bg-slate-800"
+                >
+                  {Object.values(USER_APPOINTMENT_TYPES).map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {t(option.labelKey)}
+                    </option>
+                  ))}
+                </select>
+              </label>
               <input
                 type="text"
                 value={form.title}

@@ -1,4 +1,5 @@
-import { CalendarDays, ClipboardCheck, ClipboardList, Star } from "lucide-react";
+import { CalendarDays, CheckCircle2, ClipboardCheck, ClipboardList, Star } from "lucide-react";
+import { normalizeTaskStatus } from "../../../utils/taskStatus.js";
 import { TabListSkeleton } from "./MobileDashboardSkeleton.jsx";
 
 function EmptyState({ message }) {
@@ -26,7 +27,10 @@ function RequestRow({ item }) {
   );
 }
 
-function TaskRow({ item }) {
+function TaskRow({ item, onSubmitForReview, updatingTaskId }) {
+  const canSubmitForReview =
+    normalizeTaskStatus(item.status) === "قيد التنفيذ" && Boolean(onSubmitForReview);
+
   return (
     <article className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
       <div className="flex items-start gap-3">
@@ -45,6 +49,18 @@ function TaskRow({ item }) {
             ) : null}
           </div>
         </div>
+        {canSubmitForReview ? (
+          <button
+            type="button"
+            disabled={updatingTaskId === item.id}
+            onClick={() => onSubmitForReview(item.id)}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700 disabled:opacity-50"
+            aria-label="تأكيد إنجاز المهمة"
+            title="تأكيد الإنجاز"
+          >
+            <CheckCircle2 className="h-5 w-5" aria-hidden />
+          </button>
+        ) : null}
       </div>
     </article>
   );
@@ -105,7 +121,13 @@ const EMPTY_MESSAGES = {
   logs: "لا توجد سجلات إدارية لعرضها.",
 };
 
-export default function MobileTabPanels({ activeTab, data, isLoading }) {
+export default function MobileTabPanels({
+  activeTab,
+  data,
+  isLoading,
+  onTaskSubmitForReview,
+  updatingTaskId,
+}) {
   if (isLoading) {
     return <TabListSkeleton />;
   }
@@ -129,7 +151,14 @@ export default function MobileTabPanels({ activeTab, data, isLoading }) {
       {activeTab === "requests" &&
         items.map((item) => <RequestRow key={item.id} item={item} />)}
       {activeTab === "tasks" &&
-        items.map((item) => <TaskRow key={item.id} item={item} />)}
+        items.map((item) => (
+          <TaskRow
+            key={item.id}
+            item={item}
+            onSubmitForReview={onTaskSubmitForReview}
+            updatingTaskId={updatingTaskId}
+          />
+        ))}
       {activeTab === "evaluations" &&
         items.map((item) => <EvaluationRow key={item.id} item={item} />)}
       {activeTab === "achievements" &&

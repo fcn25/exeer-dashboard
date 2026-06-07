@@ -5,6 +5,7 @@ import {
   CalendarDays,
   CheckCircle2,
   ClipboardList,
+  Clock3,
   LogOut,
   PlayCircle,
   Plus,
@@ -25,7 +26,10 @@ import {
   ROUTING_LABELS,
   listEmployeeRequests,
 } from "../services/requestsService.js";
-import { updateTaskStatus } from "../services/tasksService.js";
+import {
+  submitEmployeeTaskCompletion,
+  updateTaskStatus,
+} from "../services/tasksService.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import EmployeeAdministrativeInbox from "../components/administrative/EmployeeAdministrativeInbox.jsx";
 import { formatDisplayValue } from "../utils/displayValue.js";
@@ -73,61 +77,81 @@ function getRequestTypeLabel(value) {
   return REQUEST_TYPE_OPTIONS.find((item) => item.value === value)?.label ?? value;
 }
 
-function PortalTaskCard({ task, onStatusChange, isUpdating }) {
+function PortalTaskCard({
+  task,
+  onStatusChange,
+  onSubmitForReview,
+  isUpdating,
+}) {
   const status = normalizeTaskStatus(task.status);
   const canStart = status === "قيد الانتظار";
-  const canComplete = status === "قيد التنفيذ" || status === "قيد الانتظار";
+  const canSubmitForReview = status === "قيد التنفيذ";
+  const awaitingReview = status === "للمراجعة";
 
   return (
-    <article className="md-surface flex flex-col gap-4 p-4">
-      <div className="space-y-1">
-        <h3 className="text-sm font-bold text-exeer-primary">
-          {task.title || task.description?.slice(0, 80) || "مهمة"}
-        </h3>
-        {task.description && task.description !== task.title ? (
-          <p className="line-clamp-2 text-xs leading-relaxed text-exeer-muted">
-            {task.description}
-          </p>
-        ) : null}
-      </div>
+    <article className="md-surface flex items-start gap-3 p-4">
+      <div className="min-w-0 flex-1 space-y-4">
+        <div className="space-y-1">
+          <h3 className="text-sm font-bold text-exeer-primary">
+            {task.title || task.description?.slice(0, 80) || "مهمة"}
+          </h3>
+          {task.description && task.description !== task.title ? (
+            <p className="line-clamp-2 text-xs leading-relaxed text-exeer-muted">
+              {task.description}
+            </p>
+          ) : null}
+        </div>
 
-      <div className="flex flex-wrap items-center gap-3 text-xs text-exeer-muted">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-exeer-surface px-2.5 py-1">
-          <ClipboardList className="h-3.5 w-3.5" aria-hidden />
-          {status}
-        </span>
-        {task.deadline ? (
-          <span className="inline-flex items-center gap-1.5">
-            <CalendarDays className="h-3.5 w-3.5" aria-hidden />
-            {formatPortalDate(task.deadline)}
+        <div className="flex flex-wrap items-center gap-3 text-xs text-exeer-muted">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-exeer-surface px-2.5 py-1">
+            <ClipboardList className="h-3.5 w-3.5" aria-hidden />
+            {status}
           </span>
+          {task.deadline ? (
+            <span className="inline-flex items-center gap-1.5">
+              <CalendarDays className="h-3.5 w-3.5" aria-hidden />
+              {formatPortalDate(task.deadline)}
+            </span>
+          ) : null}
+        </div>
+
+        {canStart ? (
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              disabled={isUpdating}
+              onClick={() => onStatusChange(task.id, "قيد التنفيذ")}
+              className="md-btn-tonal inline-flex items-center gap-2 px-3 py-2 text-xs"
+            >
+              <PlayCircle className="h-4 w-4" aria-hidden />
+              بدء المهمة
+            </button>
+          </div>
         ) : null}
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        {canStart ? (
-          <button
-            type="button"
-            disabled={isUpdating}
-            onClick={() => onStatusChange(task.id, "قيد التنفيذ")}
-            className="md-btn-tonal inline-flex items-center gap-2 px-3 py-2 text-xs"
-          >
-            <PlayCircle className="h-4 w-4" aria-hidden />
-            بدء المهمة
-          </button>
-        ) : null}
-        {canComplete ? (
-          <button
-            type="button"
-            disabled={isUpdating}
-            onClick={() => onStatusChange(task.id, "مكتملة")}
-            className="md-btn-primary inline-flex items-center gap-2 px-3 py-2 text-xs"
-          >
-            <CheckCircle2 className="h-4 w-4" aria-hidden />
-            إكمال
-          </button>
-        ) : null}
-      </div>
+      {canSubmitForReview ? (
+        <button
+          type="button"
+          disabled={isUpdating}
+          onClick={() => onSubmitForReview(task.id)}
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700 transition-colors hover:bg-emerald-100 disabled:opacity-50 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300 dark:hover:bg-emerald-950/60"
+          aria-label="تأكيد إنجاز المهمة وإرسالها للمراجعة"
+          title="تأكيد الإنجاز"
+        >
+          <CheckCircle2 className="h-5 w-5" aria-hidden />
+        </button>
+      ) : null}
+
+      {awaitingReview ? (
+        <span
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300"
+          aria-label="بانتظار مراجعة المدير"
+          title="بانتظار المراجعة"
+        >
+          <Clock3 className="h-5 w-5" aria-hidden />
+        </span>
+      ) : null}
     </article>
   );
 }
@@ -228,6 +252,24 @@ export default function EmployeePortalPage() {
       await loadPortal();
     } catch (err) {
       setError(err.message || "تعذّر تحديث حالة المهمة.");
+    } finally {
+      setUpdatingTaskId(null);
+    }
+  };
+
+  const handleTaskSubmitForReview = async (taskId) => {
+    setUpdatingTaskId(taskId);
+    setError("");
+    try {
+      const result = await submitEmployeeTaskCompletion(taskId, employeeId);
+      setSuccessToast(
+        result.alreadySubmitted
+          ? "المهمة بانتظار مراجعة المدير مسبقاً."
+          : "تم تأكيد الإنجاز — نُقلت المهمة للمراجعة وسُجّلت في إنجازاتك.",
+      );
+      await loadPortal();
+    } catch (err) {
+      setError(err.message || "تعذّر تأكيد إنجاز المهمة.");
     } finally {
       setUpdatingTaskId(null);
     }
@@ -401,6 +443,7 @@ export default function EmployeePortalPage() {
                           title: task?.title || task?.description?.slice(0, 80),
                         }}
                         onStatusChange={handleTaskStatusChange}
+                        onSubmitForReview={handleTaskSubmitForReview}
                         isUpdating={updatingTaskId === task.id}
                       />
                     ) : null,

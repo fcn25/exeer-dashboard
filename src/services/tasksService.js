@@ -4,6 +4,11 @@ import {
   isMissingColumnError,
   SCHEMA_FIX_HINT,
 } from "../utils/supabaseErrors.js";
+import { createAchievementFromCompletedTask } from "./achievementsService.js";
+import { normalizeTaskStatus } from "../utils/taskStatus.js";
+
+const IN_PROGRESS_STATUS = "قيد التنفيذ";
+const REVIEW_STATUS = "للمراجعة";
 
 const TASK_SELECT_FULL =
   "id, company_id, title, description, assigned_to_id, assigned_to_name, deadline, status, created_at, updated_at, ai_source";
@@ -177,6 +182,58 @@ export async function createTask(form) {
   };
 
   return insertTaskWithFallbacks(payload);
+}
+
+async function getTaskAssignedToEmployee(taskId, employeeId) {
+  const companyId = getCompanyId();
+  const attempts = [TASK_SELECT_FULL, TASK_SELECT_NO_AI, TASK_SELECT_NO_TITLE];
+  let lastError = null;
+
+  for (const columns of attempts) {
+    const { data, error } = await supabase
+      .from("tasks")
+      .select(columns)
+      .eq("company_id", companyId)
+      .eq("id", taskId)
+      .eq("assigned_to_id", Number(employeeId))
+      .maybeSingle();
+
+    if (!error) {
+      return data ? normalizeTaskRow(data) : null;
+    }
+    if (!isMissingColumnError(error)) {
+      throw new Error(mapDbError(error));
+    }
+    lastError = error;
+  }
+
+  throw new Error(mapDbError(lastError));
+}
+
+export async function submitEmployeeTaskCompletion(taskId, employeeId) {
+  if (!taskId) throw new Error("معرّف المهمة مطلوب.");
+  if (!employeeId) throw new Error("معرّف الموظف مطلوب.");
+
+  const task = await getTaskAssignedToEmployee(taskId, employeeId);
+  if (!task) {
+    throw new Error("المهمة غير موجودة أو غير مسندة إليك.");
+  }
+
+  const status = normalizeTaskStatus(task.status);
+  if (status === REVIEW_STATUS) {
+    return { task, achievement: null, alreadySubmitted: true };
+  }
+  if (status !== IN_PROGRESS_STATUS) {
+    throw new Error("يمكن تأكيد الإنجاز فقط للمهام قيد التنفيذ.");
+  }
+
+  const updatedTask = await updateTaskStatus(taskId, REVIEW_STATUS);
+  const achievement = await createAchievementFromCompletedTask({
+    task: updatedTask,
+    employeeId,
+  });
+
+  return { task: updatedTask, achievement, alreadySubmitted: false };
 }
 
 export async function updateTaskStatus(taskId, status) {

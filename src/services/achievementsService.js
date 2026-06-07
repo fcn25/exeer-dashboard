@@ -56,6 +56,47 @@ export async function listEmployeeAchievementsWithEmployees() {
   return data ?? [];
 }
 
+const TASK_ACHIEVEMENT_MARKER_PREFIX = "source_task_id:";
+
+function taskAchievementMarker(taskId) {
+  return `${TASK_ACHIEVEMENT_MARKER_PREFIX}${taskId}`;
+}
+
+export async function createAchievementFromCompletedTask({ task, employeeId }) {
+  const companyId = getCompanyId();
+  const resolvedEmployeeId = Number(employeeId);
+  const marker = taskAchievementMarker(task.id);
+
+  const { data: existing, error: lookupError } = await supabase
+    .from("employee_achievements")
+    .select("id, title, description, achievement_date, created_at")
+    .eq("company_id", companyId)
+    .eq("employee_id", resolvedEmployeeId)
+    .like("description", `%${marker}%`)
+    .maybeSingle();
+
+  if (lookupError) throw new Error(mapDbError(lookupError));
+  if (existing) return existing;
+
+  const taskTitle = String(task.title ?? "").trim() || "مهمة";
+  const taskDescription = String(task.description ?? "").trim();
+  const today = new Date();
+  const achievementDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+
+  return createEmployeeAchievement({
+    employeeId: resolvedEmployeeId,
+    title: `إنجاز: ${taskTitle}`,
+    description: [
+      marker,
+      "أُنجزت المهمة وأُرسلت للمراجعة.",
+      taskDescription && taskDescription !== taskTitle ? taskDescription : "",
+    ]
+      .filter(Boolean)
+      .join("\n"),
+    achievementDate,
+  });
+}
+
 export async function listAchievementsForEmployee(employeeId) {
   const companyId = getCompanyId();
   if (!employeeId) return [];

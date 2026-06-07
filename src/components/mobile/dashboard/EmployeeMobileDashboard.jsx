@@ -5,6 +5,7 @@ import { useAuth } from "../../../context/AuthContext.jsx";
 import SuccessToast from "../../ui/SuccessToast.jsx";
 import ErrorToast from "../../ui/ErrorToast.jsx";
 import { performAttendancePunch } from "../../../services/attendancePunchService.js";
+import { submitEmployeeTaskCompletion } from "../../../services/tasksService.js";
 import CompactMobileAppBar from "./CompactMobileAppBar.jsx";
 import AttendanceHorizontalWidget from "./AttendanceHorizontalWidget.jsx";
 import BentoStatGrid from "./BentoStatGrid.jsx";
@@ -38,6 +39,7 @@ export default function EmployeeMobileDashboard({
   const [successToast, setSuccessToast] = useState("");
   const [errorToast, setErrorToast] = useState("");
   const [isPunching, setIsPunching] = useState(false);
+  const [updatingTaskId, setUpdatingTaskId] = useState(null);
 
   const resolvedRole = dashboardData?.employee?.role ?? role ?? user?.role;
   const roleLabel =
@@ -75,6 +77,30 @@ export default function EmployeeMobileDashboard({
       setErrorToast(err.message || "تعذّر إتمام التسجيل.");
     } finally {
       setIsPunching(false);
+    }
+  };
+
+  const handleTaskSubmitForReview = async (taskId) => {
+    if (!employeeId) {
+      setErrorToast("لم يتم ربط حسابك بسجل موظف. تواصل مع الموارد البشرية.");
+      return;
+    }
+
+    setUpdatingTaskId(taskId);
+    setErrorToast("");
+
+    try {
+      const result = await submitEmployeeTaskCompletion(taskId, employeeId);
+      setSuccessToast(
+        result.alreadySubmitted
+          ? "المهمة بانتظار مراجعة المدير مسبقاً."
+          : "تم تأكيد الإنجاز — نُقلت المهمة للمراجعة وسُجّلت في إنجازاتك.",
+      );
+      await onDashboardRefresh?.();
+    } catch (err) {
+      setErrorToast(err.message || "تعذّر تأكيد إنجاز المهمة.");
+    } finally {
+      setUpdatingTaskId(null);
     }
   };
 
@@ -131,6 +157,8 @@ export default function EmployeeMobileDashboard({
           activeTab={activeTab}
           data={dashboardData?.tabData}
           isLoading={isLoading}
+          onTaskSubmitForReview={handleTaskSubmitForReview}
+          updatingTaskId={updatingTaskId}
         />
       </main>
 

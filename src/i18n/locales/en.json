@@ -287,6 +287,33 @@
       "title": "Terms of use",
       "close": "Close",
       "bodyEn": "The full terms of use are available in Arabic. Switch the interface language to Arabic to read the agreement."
+    },
+    "postSubscription": {
+      "title": "After subscription",
+      "subtitle": "A quick start guide after activating your account — before the mobile apps launch.",
+      "steps": [
+        {
+          "title": "Customize the system first",
+          "body": "Start with System customization to set leave, payroll, attendance, loans, and performance policies. This ensures payroll, requests, and reports match your organization from day one.",
+          "linkLabel": "Go to system customization",
+          "linkTo": "/dashboard/settings/system"
+        },
+        {
+          "title": "Bulk-import your team",
+          "body": "On the Employees page, use Bulk import and upload an Excel/CSV file. Invitations are not sent automatically — you can finish setup and review data calmly.",
+          "linkLabel": "Open employees & bulk import",
+          "linkTo": "/dashboard/employees?bulkImport=1"
+        },
+        {
+          "title": "Coordinate mobile app launch with support",
+          "body": "Employee mobile apps are launching soon. Contact support to confirm the official launch date, then use Send invitations on the Employees page so your team can sign in by email.",
+          "linkLabel": "",
+          "linkTo": ""
+        }
+      ],
+      "noteTitle": "Important",
+      "noteBody": "Hold off on sending employee login invitations until iOS and Android apps are officially released. Until then, manage employees, payroll, and requests from the web manager dashboard.",
+      "contactPrompt": "Contact support:"
     }
   },
   "systemCustomization": {

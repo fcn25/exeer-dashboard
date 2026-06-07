@@ -2,6 +2,7 @@ import { useState } from "react";
 import { FileText, Mail, MessageCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import TermsModal from "./TermsModal.jsx";
+import PostSubscriptionGuide from "./PostSubscriptionGuide.jsx";
 import {
   SUPPORT_EMAIL_ADDRESS,
   SUPPORT_EMAIL_HREF,
@@ -80,6 +81,8 @@ export default function SupportSettingsTab() {
             </span>
           </span>
         </button>
+
+        <PostSubscriptionGuide />
       </div>
 
       <TermsModal isOpen={isTermsOpen} onClose={() => setIsTermsOpen(false)} />

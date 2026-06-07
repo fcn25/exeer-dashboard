@@ -2,10 +2,14 @@ import { supabase } from "../utils/supabaseClient.js";
 import { requireCompanyId, scopeQueryByCompany } from "../utils/tenantScope.js";
 import { isMissingColumnError } from "../utils/supabaseErrors.js";
 import { SALARY_DEDUCTION_ACTION_TYPE } from "../constants/administrativeActions.js";
-import { calculateDelayDeduction, resolveEmployeeBaseSalary } from "../utils/attendance/deductions.js";
-import { formatPayrollMonthFromPicker } from "../utils/payroll/calculations.js";
+import { calculateDelayDeduction } from "../utils/attendance/deductions.js";
+import {
+  buildPayrollDraftFromEmployee,
+  formatPayrollMonthFromPicker,
+} from "../utils/payroll/calculations.js";
 import { getMonthBoundsFromPicker } from "../utils/payroll/period.js";
-import { calculateSafeProtocolNetSalary } from "../utils/payroll/netSalary.js";
+import { calculatePayrollNetSalary } from "../utils/payroll/netSalary.js";
+import { ensureActiveEmployeesInPayroll } from "./payrollService.js";
 function mapDbError(error) {
   if (!error) return "حدث خطأ غير متوقع.";
   if (error.code === "PGRST205") {
@@ -98,13 +102,15 @@ async function fetchActiveLoanInstallmentsByEmployee(companyId) {
   return map;
 }
 
-async function fetchEmployeesBaseSalaries(companyId, employeeIds) {
+async function fetchEmployeesCompensation(companyId, employeeIds) {
   if (!employeeIds.length) return new Map();
 
   const { data, error } = await scopeQueryByCompany(
     supabase
       .from("employees")
-      .select("id, basic_salary")
+      .select(
+        "id, full_name, basic_salary, housing_allowance, other_allowance, nationality, employment_status",
+      )
       .in("id", employeeIds),
     companyId,
   );
@@ -113,7 +119,7 @@ async function fetchEmployeesBaseSalaries(companyId, employeeIds) {
 
   const map = new Map();
   for (const row of data ?? []) {
-    map.set(row.id, resolveEmployeeBaseSalary(row));
+    map.set(row.id, row);
   }
   return map;
 }
@@ -153,35 +159,65 @@ export async function syncPayrollDeductionsForMonth(pickerValue) {
   }
 
   const companyId = requireCompanyId("تحديث أرقام المسير");
-  const payrollRows = await fetchPayrollRecordsRaw(companyId, period);
+  let payrollRows = await fetchPayrollRecordsRaw(companyId, period);
   if (payrollRows.length === 0) {
     throw new Error(
       "لا يوجد مسير لهذا الشهر. أنشئ المسير أولاً ثم اضغط «تحديث أرقام المسير».",
     );
   }
 
+  const { addedCount } = await ensureActiveEmployeesInPayroll(pickerValue);
+  if (addedCount > 0) {
+    payrollRows = await fetchPayrollRecordsRaw(companyId, period);
+  }
+
   const employeeIds = [
     ...new Set(payrollRows.map((row) => row.employee_id).filter(Boolean)),
   ];
 
-  const [delayByEmployee, penaltyByEmployee, loanByEmployee, baseSalaries] =
+  const [delayByEmployee, penaltyByEmployee, loanByEmployee, compensationByEmployee] =
     await Promise.all([
       fetchDelayMinutesByEmployee(companyId, bounds),
       fetchPenaltyDeductionsByEmployee(companyId, bounds),
       fetchActiveLoanInstallmentsByEmployee(companyId),
-      fetchEmployeesBaseSalaries(companyId, employeeIds),
+      fetchEmployeesCompensation(companyId, employeeIds),
     ]);
 
   let updatedCount = 0;
 
   for (const row of payrollRows) {
     const employeeId = row.employee_id;
-    const baseSalary =
-      baseSalaries.get(employeeId) ?? (Number(row.basic_salary) || 0);
+    const employee = compensationByEmployee.get(employeeId);
+    const isExported =
+      String(row.status ?? "").trim().toLowerCase() === "exported";
+
+    let basicSalary = Number(row.basic_salary) || 0;
+    let housingAllowance = Number(row.housing_allowance) || 0;
+    let otherAllowances =
+      Number(row.other_allowances ?? row.allowances) || 0;
+    let gosiDeduction = Number(row.gosi_deduction ?? row.gosi) || 0;
+    let employeeName = row.employee_name;
+
+    if (employee && !isExported) {
+      const draft = buildPayrollDraftFromEmployee(employee, period.payrollMonth);
+      basicSalary = draft.basic_salary;
+      housingAllowance = draft.housing_allowance;
+      otherAllowances = draft.other_allowances;
+      gosiDeduction = draft.gosi_deduction;
+      employeeName = employee.full_name ?? row.employee_name;
+    } else if (employee) {
+      basicSalary =
+        Number(employee.basic_salary) || Number(row.basic_salary) || 0;
+      housingAllowance =
+        Number(employee.housing_allowance) ||
+        Number(row.housing_allowance) ||
+        0;
+    }
+
     const totalDelay = delayByEmployee.get(employeeId) ?? 0;
 
     const delayDeductions = calculateDelayDeduction({
-      baseSalary,
+      baseSalary: basicSalary,
       totalDelayMinutes: totalDelay,
     });
     const penaltyDeductions = Math.round(
@@ -193,13 +229,28 @@ export async function syncPayrollDeductionsForMonth(pickerValue) {
 
     const merged = {
       ...row,
+      basic_salary: basicSalary,
+      housing_allowance: housingAllowance,
+      other_allowances: otherAllowances,
+      allowances: otherAllowances,
+      gosi_deduction: gosiDeduction,
+      gosi: gosiDeduction,
+      commissions: Number(row.commissions) || 0,
+      additional: Number(row.additional) || 0,
       delay_deductions: delayDeductions,
       penalty_deductions: penaltyDeductions,
       loan_deductions: loanDeductions,
     };
-    const netSalary = calculateSafeProtocolNetSalary(merged);
+    const netSalary = calculatePayrollNetSalary(merged);
 
     const payload = {
+      employee_name: employeeName,
+      basic_salary: basicSalary,
+      housing_allowance: housingAllowance,
+      other_allowances: otherAllowances,
+      allowances: otherAllowances,
+      gosi_deduction: gosiDeduction,
+      gosi: gosiDeduction,
       delay_deductions: delayDeductions,
       lateness_deduction: delayDeductions,
       delays: delayDeductions,
@@ -221,6 +272,7 @@ export async function syncPayrollDeductionsForMonth(pickerValue) {
 
   return {
     updatedCount,
+    addedCount,
     payrollMonth: period.payrollMonth,
   };
 }

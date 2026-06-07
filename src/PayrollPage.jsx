@@ -134,8 +134,12 @@ export default function PayrollPage() {
     try {
       const result = await syncPayrollDeductionsForMonth(selectedMonth);
       await loadPayroll();
+      const addedNote =
+        result.addedCount > 0
+          ? ` — أُضيف ${result.addedCount} موظف للمسير`
+          : "";
       setSuccessMessage(
-        `تم تحديث أرقام المسير لشهر ${result.payrollMonth} — ${result.updatedCount} موظف`,
+        `تم تحديث الرواتب والبدلات والخصومات لشهر ${result.payrollMonth} — ${result.updatedCount} موظف${addedNote}`,
       );
     } catch (err) {
       setError(err.message || "تعذّر تحديث أرقام المسير.");

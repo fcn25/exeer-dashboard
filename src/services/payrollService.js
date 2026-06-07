@@ -201,6 +201,77 @@ export async function fetchPayrollForMonth(pickerValue) {
   };
 }
 
+/**
+ * Adds active employees missing from an existing draft payroll month (e.g. system owner).
+ */
+export async function ensureActiveEmployeesInPayroll(pickerValue) {
+  const period = parsePayrollPeriod(pickerValue);
+  if (!period) return { addedCount: 0, payrollMonth: "" };
+
+  const companyId = requireCompanyId("تحديث المسير");
+  const { data: payrollRows, mode } = await queryPayrollRecordsForMonth(
+    companyId,
+    period,
+  );
+
+  if (!payrollRows.length) {
+    return { addedCount: 0, payrollMonth: period.payrollMonth };
+  }
+
+  const isExported = payrollRows.some(
+    (row) => String(row.status ?? "").trim().toLowerCase() === "exported",
+  );
+  if (isExported) {
+    return { addedCount: 0, payrollMonth: period.payrollMonth };
+  }
+
+  const employees = await listActiveEmployees();
+  const existingIds = new Set(
+    payrollRows.map((row) => Number(row.employee_id)).filter(Boolean),
+  );
+
+  let includePayrollMonth = mode !== "month_year";
+  let addedCount = 0;
+  let upsertError = null;
+
+  for (const employee of employees) {
+    if (existingIds.has(Number(employee.id))) continue;
+
+    const draft = buildPayrollDraftFromEmployee(employee, period.payrollMonth);
+    let payload = buildPayrollRecordPayload(
+      companyId,
+      draft,
+      period,
+      includePayrollMonth,
+    );
+
+    let { error } = await supabase.from("payroll_records").insert(payload);
+
+    if (
+      error &&
+      includePayrollMonth &&
+      (isMissingPayrollMonthColumn(error) || isMissingColumnError(error))
+    ) {
+      includePayrollMonth = false;
+      payload = buildPayrollRecordPayload(companyId, draft, period, false);
+      ({ error } = await supabase.from("payroll_records").insert(payload));
+    }
+
+    if (error) {
+      upsertError = error;
+      continue;
+    }
+
+    addedCount += 1;
+  }
+
+  if (upsertError && addedCount === 0) {
+    throw new Error(mapDbError(upsertError));
+  }
+
+  return { addedCount, payrollMonth: period.payrollMonth };
+}
+
 export async function generatePayrollForMonth(pickerValue) {
   const period = parsePayrollPeriod(pickerValue);
   if (!period) {

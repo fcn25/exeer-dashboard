@@ -28,7 +28,7 @@ async function createAdminEmployeeRecord(companyId, adminFullName, adminEmail) {
     email: adminEmail.trim().toLowerCase(),
     employee_number: "EMP-001",
     role: SIGNUP_OWNER_DB_ROLE,
-    employment_status: "Active",
+    employment_status: "نشط",
     department: "الإدارة",
     job_title_name: "مدير النظام",
     hire_date: new Date().toISOString().slice(0, 10),

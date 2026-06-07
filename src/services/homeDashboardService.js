@@ -3,10 +3,11 @@ import { supabase } from "../utils/supabaseClient.js";
 import { getCompanyId } from "../utils/mobileAuth.js";
 import { isMissingColumnError } from "../utils/supabaseErrors.js";
 import {
-  countCompanyRequests,
-  listCompanyRequests,
+  listManagerPendingRequests,
   REQUEST_TYPE_OPTIONS,
 } from "./requestsService.js";
+import { listMyTeamEmployees } from "./myTeamService.js";
+import { buildRequestSummary } from "../utils/requestDetails.js";
 import { listCompanyPendingEvaluations } from "./performanceService.js";
 import {
   fetchPayrollForMonth,
@@ -378,17 +379,24 @@ async function fetchPayrollHero(includePayroll, monthPicker, companyId) {
 }
 
 async function fetchPendingRequestsPreview() {
-  const rows = await safeCall(() => listCompanyRequests({ limit: 4 }), []);
-  const total = await safeCall(() => countCompanyRequests(), 0);
+  const team = await safeCall(() => listMyTeamEmployees(), []);
+  const teamIds = team.map((row) => row.id);
+  const rows = await safeCall(
+    () => listManagerPendingRequests({ employeeIds: teamIds, limit: 8 }),
+    [],
+  );
 
   return {
-    total,
+    total: rows.length,
     items: rows.map((row) => ({
       id: row.id,
+      employeeId: row.employee_id,
       employeeName: row.employees?.full_name ?? "موظف",
       requestType: resolveRequestTypeLabel(row.request_type),
       requestTypeRaw: row.request_type,
       createdAt: row.created_at,
+      summary: buildRequestSummary(row),
+      request: row,
     })),
   };
 }
@@ -788,7 +796,7 @@ export async function fetchHomeDashboardData({ includePayroll = false } = {}) {
   const [
     todayPulseRaw,
     attendanceResult,
-    pendingRequestsCount,
+    _legacyPendingCount,
     pendingEvaluations,
     payrollHero,
     todayAgenda,
@@ -807,7 +815,7 @@ export async function fetchHomeDashboardData({ includePayroll = false } = {}) {
       hasData: false,
       sparkline: [],
     }),
-    safeCall(() => countCompanyRequests(), 0),
+    Promise.resolve(0),
     safeCall(() => listCompanyPendingEvaluations({ limit: 100 }), []),
     safeCall(() => fetchPayrollHero(includePayroll, monthPicker, companyId), null),
     safeCall(() => fetchTodayAgenda(companyId, today), []),
@@ -841,19 +849,16 @@ export async function fetchHomeDashboardData({ includePayroll = false } = {}) {
   const actionItems = [
     ...buildIqamaActionItems(employees),
     ...buildProbationActionItems(employees),
-    ...(pendingRequestsCount > 0
-      ? [
-          {
-            id: "pending-requests",
-            type: "requests",
-            priority: "blue",
-            title: `${pendingRequestsCount} طلبات بانتظار موافقتك`,
-            detail: "طلبات الموظفين قيد المراجعة",
-            actionLabel: "مراجعة",
-            href: "/dashboard/my-team",
-          },
-        ]
-      : []),
+    ...(pendingRequests.items ?? []).map((item) => ({
+      id: `request-${item.id}`,
+      type: "request",
+      priority: "blue",
+      title: `${item.employeeName} — ${item.requestType}`,
+      detail: item.summary,
+      requestId: item.id,
+      request: item.request,
+      employeeName: item.employeeName,
+    })),
     ...buildEvaluationActionItems(pendingEvaluations),
   ].sort((a, b) => {
     const order = { red: 0, orange: 1, blue: 2, gray: 3 };

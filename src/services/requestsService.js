@@ -30,9 +30,8 @@ export const ROUTING_LABELS = {
   Direct_Manager: "المدير المباشر",
 };
 
-export function resolveRoutingForType(requestType) {
-  if (requestType === "General") return "Direct_Manager";
-  return "HR_Manager";
+export function resolveRoutingForType() {
+  return "Direct_Manager";
 }
 
 export function calculateMonthlyDeduction(amount, installments) {
@@ -77,6 +76,9 @@ export async function createEmployeeRequest({
   monthlyDeduction,
   attachmentUrl,
   employeeId,
+  leaveType,
+  leaveDays,
+  startDate,
 }) {
   const companyId = getCompanyId();
   const resolvedEmployeeId = employeeId ?? getEmployeeId();
@@ -94,6 +96,21 @@ export async function createEmployeeRequest({
     if (!installments || Number(installments) <= 0) {
       throw new Error("عدد الأقساط مطلوب للطلبات المالية.");
     }
+    if (!startDate) {
+      throw new Error("تاريخ بداية الخصم مطلوب للسلفة.");
+    }
+  }
+
+  if (requestType === "Leave") {
+    if (!leaveType) {
+      throw new Error("نوع الإجازة مطلوب.");
+    }
+    if (!leaveDays || Number(leaveDays) <= 0) {
+      throw new Error("عدد أيام الإجازة مطلوب.");
+    }
+    if (!startDate) {
+      throw new Error("تاريخ بداية الإجازة مطلوب.");
+    }
   }
 
   const payload = {
@@ -107,7 +124,12 @@ export async function createEmployeeRequest({
     amount: requestType === "Financial" ? Number(amount) : null,
     installments: requestType === "Financial" ? Number(installments) : null,
     monthly_deduction:
-      requestType === "Financial" ? monthlyDeduction ?? calculateMonthlyDeduction(amount, installments) : null,
+      requestType === "Financial"
+        ? monthlyDeduction ?? calculateMonthlyDeduction(amount, installments)
+        : null,
+    leave_type: requestType === "Leave" ? String(leaveType).trim() : null,
+    leave_days: requestType === "Leave" ? Number(leaveDays) : null,
+    start_date: startDate || null,
   };
 
   const { data, error } = await supabase
@@ -169,6 +191,29 @@ export async function countCompanyRequests({
   const { count, error } = await query;
   if (error) throw new Error(mapDbError(error));
   return count ?? 0;
+}
+
+export async function listManagerPendingRequests({ employeeIds = [], limit = 8 } = {}) {
+  const companyId = getCompanyId();
+  const ids = [...new Set(employeeIds.map((id) => Number(id)).filter(Boolean))];
+  if (!ids.length) return [];
+
+  let query = supabase
+    .from("requests")
+    .select(
+      "id, employee_id, request_type, details, status, routing_to, amount, installments, monthly_deduction, leave_type, leave_days, start_date, created_at, employees ( full_name )",
+    )
+    .eq("company_id", companyId)
+    .eq("routing_to", "Direct_Manager")
+    .eq("status", "Pending")
+    .in("employee_id", ids)
+    .order("created_at", { ascending: false });
+
+  if (limit) query = query.limit(limit);
+
+  const { data, error } = await query;
+  if (error) throw new Error(mapDbError(error));
+  return data ?? [];
 }
 
 export async function listEmployeeRequests(employeeId) {

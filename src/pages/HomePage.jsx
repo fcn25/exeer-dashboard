@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   AlertTriangle,
@@ -23,6 +23,11 @@ import SmartToolsModals from "../components/smart-tools/SmartToolsModals.jsx";
 import { getUserDisplay } from "../utils/mobileAuth.js";
 import { fetchHomeDashboardData } from "../services/homeDashboardService.js";
 import EmergencyAlertsPanel from "../components/home/EmergencyAlertsPanel.jsx";
+import PendingRequestCard from "../components/requests/PendingRequestCard.jsx";
+import {
+  approveEmployeeRequest,
+  rejectEmployeeRequest,
+} from "../services/requestApprovalService.js";
 import ProbationDecisionModal from "../components/home/ProbationDecisionModal.jsx";
 import SparkLine from "../components/home/SparkLine.jsx";
 import {
@@ -166,7 +171,25 @@ function PulsePill({ label, bg, color }) {
   );
 }
 
-function ActionItemRow({ item, onAction }) {
+function ActionItemRow({
+  item,
+  onAction,
+  actingRequestId,
+  onApproveRequest,
+  onRejectRequest,
+}) {
+  if (item.type === "request" && item.request) {
+    return (
+      <PendingRequestCard
+        request={item.request}
+        employeeName={item.employeeName}
+        actingRequestId={actingRequestId}
+        onApprove={onApproveRequest}
+        onReject={onRejectRequest}
+      />
+    );
+  }
+
   const Icon = ACTION_ICONS[item.type] ?? AlertTriangle;
   const iconStyle = PRIORITY_ICON_STYLES[item.priority] ?? PRIORITY_ICON_STYLES.gray;
 
@@ -219,33 +242,58 @@ export default function HomePage() {
   const [successMessage, setSuccessMessage] = useState("");
   const [dashboard, setDashboard] = useState(null);
   const [probationModal, setProbationModal] = useState(null);
+  const [actingRequestId, setActingRequestId] = useState(null);
+  const [requestActionError, setRequestActionError] = useState("");
+
+  const loadDashboard = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const data = await fetchHomeDashboardData({ includePayroll: showPayroll });
+      setDashboard(data);
+    } catch {
+      setDashboard(null);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [showPayroll]);
 
   useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      setIsLoading(true);
-      try {
-        const data = await fetchHomeDashboardData({ includePayroll: showPayroll });
-        if (!cancelled) setDashboard(data);
-      } catch {
-        if (!cancelled) setDashboard(null);
-      } finally {
-        if (!cancelled) setIsLoading(false);
-      }
-    }
-
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [showPayroll]);
+    loadDashboard();
+  }, [loadDashboard]);
 
   useEffect(() => {
     if (!successMessage) return undefined;
     const timer = setTimeout(() => setSuccessMessage(""), 4000);
     return () => clearTimeout(timer);
   }, [successMessage]);
+
+  const handleApproveRequest = async (requestId) => {
+    setActingRequestId(requestId);
+    setRequestActionError("");
+    try {
+      await approveEmployeeRequest(requestId);
+      setSuccessMessage("تمت الموافقة على الطلب وتسجيله في النظام.");
+      await loadDashboard();
+    } catch (err) {
+      setRequestActionError(err.message || "تعذّر اعتماد الطلب.");
+    } finally {
+      setActingRequestId(null);
+    }
+  };
+
+  const handleRejectRequest = async (requestId) => {
+    setActingRequestId(requestId);
+    setRequestActionError("");
+    try {
+      await rejectEmployeeRequest(requestId);
+      setSuccessMessage("تم رفض الطلب.");
+      await loadDashboard();
+    } catch (err) {
+      setRequestActionError(err.message || "تعذّر رفض الطلب.");
+    } finally {
+      setActingRequestId(null);
+    }
+  };
 
   const handleActionItem = (item) => {
     if (item.type === "probation") {
@@ -539,6 +587,11 @@ export default function HomePage() {
           </div>
         ) : (
           <div className="flex flex-col gap-3">
+            {requestActionError ? (
+              <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+                {requestActionError}
+              </p>
+            ) : null}
             {actionItems.map((item, index) => (
               <div
                 key={item.id}
@@ -548,7 +601,13 @@ export default function HomePage() {
                     : ""
                 }
               >
-                <ActionItemRow item={item} onAction={handleActionItem} />
+                <ActionItemRow
+                  item={item}
+                  onAction={handleActionItem}
+                  actingRequestId={actingRequestId}
+                  onApproveRequest={handleApproveRequest}
+                  onRejectRequest={handleRejectRequest}
+                />
               </div>
             ))}
           </div>

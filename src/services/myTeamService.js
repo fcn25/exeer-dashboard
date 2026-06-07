@@ -9,6 +9,10 @@ import {
   REQUEST_STATUS_LABELS,
   createEmployeeRequest,
 } from "./requestsService.js";
+import {
+  approveEmployeeRequest,
+  rejectEmployeeRequest,
+} from "./requestApprovalService.js";
 
 const TEAM_EMPLOYEE_SELECT =
   "id, full_name, email, department, job_title_name, employment_status, direct_manager_name, employee_number";
@@ -84,7 +88,7 @@ export async function listTeamPendingRequests(teamEmployeeIds = []) {
   const { data, error } = await supabase
     .from("requests")
     .select(
-      "id, employee_id, request_type, details, status, routing_to, amount, installments, created_at",
+      "id, employee_id, request_type, details, status, routing_to, amount, installments, monthly_deduction, leave_type, leave_days, start_date, created_at",
     )
     .eq("company_id", companyId)
     .eq("routing_to", "Direct_Manager")
@@ -97,6 +101,13 @@ export async function listTeamPendingRequests(teamEmployeeIds = []) {
 }
 
 export async function updateTeamRequestStatus(requestId, status) {
+  if (status === "Approved") {
+    return approveEmployeeRequest(requestId);
+  }
+  if (status === "Rejected") {
+    return rejectEmployeeRequest(requestId);
+  }
+
   const companyId = getCompanyId();
   const { data, error } = await supabase
     .from("requests")

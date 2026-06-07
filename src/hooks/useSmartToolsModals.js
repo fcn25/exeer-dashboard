@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 import {
   ACHIEVEMENTS_RECORD_ID,
+  isSmartToolTemporarilyDisabled,
   MANAGEMENT_ADVISOR_ID,
   MONTHLY_REPORT_ID,
   SMART_GOALS_ID,
@@ -17,6 +18,9 @@ export function useSmartToolsModals() {
   const [isMonthlyReportOpen, setIsMonthlyReportOpen] = useState(false);
 
   const resolveToolAction = useCallback((toolId) => {
+    if (isSmartToolTemporarilyDisabled(toolId)) {
+      return undefined;
+    }
     if (toolId === SMART_INTERVIEW_ID) {
       return () => setIsSmartInterviewOpen(true);
     }

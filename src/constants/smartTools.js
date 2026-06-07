@@ -14,6 +14,21 @@ export const ACHIEVEMENTS_RECORD_ID = "achievements-record";
 export const MONTHLY_REPORT_ID = "monthly-report";
 export const MANAGEMENT_ADVISOR_ID = "management-advisor";
 
+/** Set to true when Gemini-powered smart tools are ready again. */
+export const SMART_GEMINI_FEATURES_ENABLED = false;
+
+const GEMINI_POWERED_TOOL_IDS = new Set([
+  SMART_TASK_ID,
+  SMART_INTERVIEW_ID,
+  SMART_GOALS_ID,
+  MONTHLY_REPORT_ID,
+]);
+
+export function isSmartToolTemporarilyDisabled(toolId) {
+  if (SMART_GEMINI_FEATURES_ENABLED) return false;
+  return GEMINI_POWERED_TOOL_IDS.has(toolId);
+}
+
 export const SMART_TOOLS = [
   {
     id: SMART_TASK_ID,

@@ -118,6 +118,23 @@ export default function EmployeeFormSections({
               className={inputClass}
             />
           </Field>
+          <Field label="رقم الإقامة">
+            <input
+              type="text"
+              value={form.iqama_number}
+              onChange={(e) => update("iqama_number", e.target.value)}
+              disabled={disabled}
+              className={inputClass}
+            />
+          </Field>
+          <Field label="تاريخ انتهاء الإقامة">
+            <DateInput
+              id="employee-iqama-expiry"
+              value={form.iqama_expiry_date}
+              onChange={(e) => update("iqama_expiry_date", e.target.value)}
+              disabled={disabled}
+            />
+          </Field>
           <Field label="رقم الهوية">
             <input
               type="text"
@@ -156,6 +173,14 @@ export default function EmployeeFormSections({
               id="employee-hire-date"
               value={form.hire_date}
               onChange={(e) => update("hire_date", e.target.value)}
+              disabled={disabled}
+            />
+          </Field>
+          <Field label="نهاية فترة التجربة">
+            <DateInput
+              id="employee-probation-end"
+              value={form.probation_end_date}
+              onChange={(e) => update("probation_end_date", e.target.value)}
               disabled={disabled}
             />
           </Field>

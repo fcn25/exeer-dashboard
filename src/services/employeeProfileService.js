@@ -3,10 +3,10 @@ import { getCompanyId } from "../utils/mobileAuth.js";
 import { isMissingColumnError } from "../utils/supabaseErrors.js";
 
 const EMPLOYEE_PROFILE_COLUMNS =
-  "id, company_id, full_name, email, phone_number, gender, date_of_birth, nationality, id_number, employee_number, hire_date, contract_type, employment_status, role, direct_manager_name, job_title_name, department, basic_salary, housing_allowance, other_allowance, leave_balance";
+  "id, company_id, full_name, email, phone_number, gender, date_of_birth, nationality, iqama_number, iqama_expiry_date, probation_end_date, id_number, employee_number, hire_date, contract_type, employment_status, role, direct_manager_name, job_title_name, department, basic_salary, housing_allowance, other_allowance, leave_balance";
 
 const EMPLOYEE_PROFILE_COLUMNS_NO_LEAVE =
-  "id, company_id, full_name, email, phone_number, gender, date_of_birth, nationality, id_number, employee_number, hire_date, contract_type, employment_status, role, direct_manager_name, job_title_name, department, basic_salary, housing_allowance, other_allowance";
+  "id, company_id, full_name, email, phone_number, gender, date_of_birth, nationality, iqama_number, iqama_expiry_date, probation_end_date, id_number, employee_number, hire_date, contract_type, employment_status, role, direct_manager_name, job_title_name, department, basic_salary, housing_allowance, other_allowance";
 
 function mapDbError(error) {
   if (!error) return "حدث خطأ غير متوقع.";

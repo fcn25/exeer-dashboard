@@ -536,6 +536,12 @@ export default function EmployeesPage() {
       setIsBulkImportOpen(true);
       setSearchParams({}, { replace: true });
     }
+    const employeeId = searchParams.get("employee");
+    if (employeeId) {
+      setSelectedEmployeeId(employeeId);
+      setIsDetailsOpen(true);
+      setSearchParams({}, { replace: true });
+    }
   }, [searchParams, setSearchParams]);
 
   useEffect(() => {

@@ -1,1 +1,1 @@
-full_name,email,phone_number,gender,date_of_birth,nationality,id_number,national_address,employee_number,hire_date,contract_type,employment_status,role,direct_manager_name,job_title_name,department,basic_salary,housing_allowance,other_allowance,bank_name,iban
+full_name,email,phone_number,gender,date_of_birth,nationality,iqama_number,iqama_expiry_date,id_number,national_address,employee_number,hire_date,probation_end_date,contract_type,employment_status,role,direct_manager_name,job_title_name,department,basic_salary,housing_allowance,other_allowance,bank_name,iban

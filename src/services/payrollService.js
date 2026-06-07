@@ -323,3 +323,108 @@ export async function exportPayrollMonth(pickerValue) {
   const refreshed = await fetchPayrollForMonth(pickerValue);
   return { ...refreshed, alreadyExported: false };
 }
+
+function roundMoney(value) {
+  return Math.round((Number(value) + Number.EPSILON) * 100) / 100;
+}
+
+function resolveRecordPeriod(row) {
+  if (row.payroll_month) {
+    const [monthPart, yearPart] = String(row.payroll_month).split("/");
+    const month = Number(monthPart);
+    const year = Number(yearPart);
+    if (!month || !year) return null;
+    return {
+      payrollMonth: row.payroll_month,
+      month,
+      year,
+      pickerValue: `${year}-${String(month).padStart(2, "0")}`,
+    };
+  }
+
+  const month = Number(row.month);
+  const year = Number(row.year);
+  if (!month || !year) return null;
+
+  return {
+    payrollMonth: `${String(month).padStart(2, "0")}/${year}`,
+    month,
+    year,
+    pickerValue: `${year}-${String(month).padStart(2, "0")}`,
+  };
+}
+
+function normalizeHistoryStatus(status) {
+  return String(status ?? "draft").trim().toLowerCase() === "exported"
+    ? "exported"
+    : "draft";
+}
+
+export async function fetchPayrollHistorySummaries({ year, month } = {}) {
+  const companyId = requireCompanyId("سجل المسيرات");
+  const { data, error } = await scopeQueryByCompany(
+    supabase
+      .from("payroll_records")
+      .select("payroll_month, month, year, net_salary, net, status, created_at"),
+    companyId,
+  );
+
+  if (error) throw new Error(mapDbError(error));
+
+  const yearFilter = year ? Number(year) : null;
+  const monthFilter = month ? Number(month) : null;
+  const groups = new Map();
+
+  for (const row of data ?? []) {
+    const period = resolveRecordPeriod(row);
+    if (!period) continue;
+    if (yearFilter && period.year !== yearFilter) continue;
+    if (monthFilter && period.month !== monthFilter) continue;
+
+    const key = period.payrollMonth;
+    if (!groups.has(key)) {
+      groups.set(key, {
+        payrollMonth: period.payrollMonth,
+        pickerValue: period.pickerValue,
+        month: period.month,
+        year: period.year,
+        employeeCount: 0,
+        totalNet: 0,
+        statuses: new Set(),
+        createdAt: row.created_at ?? null,
+      });
+    }
+
+    const group = groups.get(key);
+    group.employeeCount += 1;
+    group.totalNet += Number(row.net_salary ?? row.net) || 0;
+    group.statuses.add(normalizeHistoryStatus(row.status));
+
+    if (
+      row.created_at &&
+      (!group.createdAt || String(row.created_at) < String(group.createdAt))
+    ) {
+      group.createdAt = row.created_at;
+    }
+  }
+
+  return [...groups.values()]
+    .map((group) => ({
+      payrollMonth: group.payrollMonth,
+      pickerValue: group.pickerValue,
+      month: group.month,
+      year: group.year,
+      employeeCount: group.employeeCount,
+      totalNet: roundMoney(group.totalNet),
+      status: group.statuses.has("exported") ? "exported" : "draft",
+      createdAt: group.createdAt,
+    }))
+    .sort((a, b) => b.year - a.year || b.month - a.month);
+}
+
+export async function fetchPayrollHistoryYears() {
+  const summaries = await fetchPayrollHistorySummaries();
+  return [...new Set(summaries.map((item) => item.year))].sort(
+    (a, b) => b - a,
+  );
+}

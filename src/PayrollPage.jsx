@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { FileSpreadsheet, Lock, Printer, RefreshCw } from "lucide-react";
+import { FileSpreadsheet, History, Lock, Printer, RefreshCw } from "lucide-react";
+import PayrollHistoryModal from "./components/payroll/PayrollHistoryModal.jsx";
 import { MonthInput } from "./components/ui/DateInput.jsx";
 import {
   exportPayrollMonth,
@@ -15,49 +16,23 @@ import {
   formatPayrollMonthFromPicker,
 } from "./utils/payroll/calculations.js";
 import { downloadPayrollAccountingExcel } from "./utils/payroll/exportPayrollAccountingExcel.js";
+import {
+  formatPayrollCurrency,
+  PAYROLL_DEDUCTION_KEYS,
+  PAYROLL_DETAIL_COLUMNS,
+  PAYROLL_HEADER_TONE_CLASS,
+  safePayrollAmount,
+} from "./utils/payroll/payrollTableConfig.js";
 import ExeerEmptyState from "./components/brand/ExeerEmptyState.jsx";
 
 const PAYROLL_SUBTITLE =
   "بروتوكول المزامنة الآمن — أنشئ المسير ثم حدّث الخصومات عند الطلب (حضور، إجراءات إدارية، قروض) قبل تصدير ملف المحاسبة.";
 
-const TABLE_COLUMNS = [
-  { key: "employeeName", label: "اسم الموظف", tone: "neutral" },
-  { key: "basic", label: "الأساسي", tone: "neutral" },
-  { key: "housing", label: "السكن", tone: "neutral" },
-  { key: "allowances", label: "البدلات", tone: "addition" },
-  { key: "commissions", label: "العمولات", tone: "addition" },
-  { key: "additional", label: "الإضافي", tone: "addition" },
-  { key: "penalties", label: "جزاءات", tone: "deduction" },
-  { key: "gosi", label: "GOSI", tone: "deduction" },
-  { key: "lateness", label: "تأخيرات", tone: "deduction" },
-  { key: "net", label: "الصافي", tone: "neutral" },
-];
-
-const HEADER_TONE_CLASS = {
-  neutral: "bg-gray-50 text-slate-900",
-  addition: "bg-emerald-50 text-emerald-800",
-  deduction: "bg-red-50 text-red-800",
-};
-
-const DEDUCTION_KEYS = new Set(["penalties", "gosi", "lateness"]);
-
 const CARD_CLASS =
   "rounded-md border border-gray-200 bg-white p-6 shadow-none";
 
-function safeAmount(value) {
-  const num = Number(value);
-  return Number.isFinite(num) ? num : 0;
-}
-
-function formatCurrency(value) {
-  return new Intl.NumberFormat("ar-SA", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(safeAmount(value));
-}
-
 function formatStatCount(value) {
-  return safeAmount(value);
+  return safePayrollAmount(value);
 }
 
 function getCurrentMonthValue() {
@@ -87,6 +62,7 @@ export default function PayrollPage() {
   const [schemaWarning, setSchemaWarning] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [hasLoaded, setHasLoaded] = useState(false);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
   const payrollMonthLabel = formatPayrollMonthFromPicker(selectedMonth);
   const stats = useMemo(() => computePayrollStats(rows), [rows]);
@@ -277,6 +253,14 @@ export default function PayrollPage() {
           <div className="flex flex-wrap gap-3">
             <button
               type="button"
+              onClick={() => setIsHistoryOpen(true)}
+              className="inline-flex items-center gap-2 rounded-md border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 shadow-none hover:bg-gray-50"
+            >
+              <History className="h-4 w-4" aria-hidden />
+              سجل المسيرات
+            </button>
+            <button
+              type="button"
               onClick={handleExportAccounting}
               disabled={isLoading || !selectedMonth || rows.length === 0}
               className="inline-flex items-center gap-2 rounded-md border border-slate-900 bg-slate-900 px-4 py-2.5 text-sm font-medium text-white shadow-none hover:bg-slate-800 disabled:opacity-50"
@@ -310,12 +294,12 @@ export default function PayrollPage() {
           <StatCard
             label="إجمالي الخصومات"
             value={
-              statsReady ? formatCurrency(stats.totalDeductions) : "—"
+              statsReady ? formatPayrollCurrency(stats.totalDeductions) : "—"
             }
           />
           <StatCard
             label="إجمالي صافي الرواتب"
-            value={statsReady ? formatCurrency(stats.totalNet) : "—"}
+            value={statsReady ? formatPayrollCurrency(stats.totalNet) : "—"}
           />
         </section>
 
@@ -324,10 +308,10 @@ export default function PayrollPage() {
             <table className="payroll-table w-full min-w-[1100px] border-collapse text-sm shadow-none">
               <thead>
                 <tr>
-                  {TABLE_COLUMNS.map((column) => (
+                  {PAYROLL_DETAIL_COLUMNS.map((column) => (
                     <th
                       key={column.key}
-                      className={`border-b border-gray-200 px-4 py-3 text-center text-xs font-semibold shadow-none ${HEADER_TONE_CLASS[column.tone]}`}
+                      className={`border-b border-gray-200 px-4 py-3 text-center text-xs font-semibold shadow-none ${PAYROLL_HEADER_TONE_CLASS[column.tone]}`}
                     >
                       {column.label}
                     </th>
@@ -338,7 +322,7 @@ export default function PayrollPage() {
                 {isLoading ? (
                   <tr>
                     <td
-                      colSpan={TABLE_COLUMNS.length}
+                      colSpan={PAYROLL_DETAIL_COLUMNS.length}
                       className="px-4 py-16 text-center text-slate-500"
                     >
                       جاري التحميل...
@@ -346,7 +330,7 @@ export default function PayrollPage() {
                   </tr>
                 ) : !hasLoaded || rows.length === 0 ? (
                   <tr>
-                    <td colSpan={TABLE_COLUMNS.length} className="p-0">
+                    <td colSpan={PAYROLL_DETAIL_COLUMNS.length} className="p-0">
                       <ExeerEmptyState
                         message={
                           hasLoaded
@@ -362,18 +346,18 @@ export default function PayrollPage() {
                       key={row.id}
                       className="border-b border-gray-200 hover:bg-gray-50/80"
                     >
-                      {TABLE_COLUMNS.map((column) => (
+                      {PAYROLL_DETAIL_COLUMNS.map((column) => (
                         <td
                           key={column.key}
                           className={`px-4 py-3 text-center tabular-nums ${
-                            DEDUCTION_KEYS.has(column.key)
+                            PAYROLL_DEDUCTION_KEYS.has(column.key)
                               ? "font-medium text-red-700"
                               : "text-slate-800"
                           }`}
                         >
                           {column.key === "employeeName"
                             ? row.employeeName
-                            : formatCurrency(row[column.key])}
+                            : formatPayrollCurrency(row[column.key])}
                         </td>
                       ))}
                     </tr>
@@ -384,6 +368,11 @@ export default function PayrollPage() {
           </div>
         </section>
       </div>
+
+      <PayrollHistoryModal
+        isOpen={isHistoryOpen}
+        onClose={() => setIsHistoryOpen(false)}
+      />
 
       <style>{`
         @media print {

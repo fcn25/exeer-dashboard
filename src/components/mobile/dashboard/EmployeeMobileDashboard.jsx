@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ROLE_LABELS } from "../../../constants/roles.js";
 import { useAuth } from "../../../context/AuthContext.jsx";
+import { useCurrentEmployee } from "../../../hooks/useCurrentEmployee.js";
 import SuccessToast from "../../ui/SuccessToast.jsx";
 import ErrorToast from "../../ui/ErrorToast.jsx";
 import { performAttendancePunch } from "../../../services/attendancePunchService.js";
@@ -30,7 +31,7 @@ export default function EmployeeMobileDashboard({
 }) {
   const { i18n } = useTranslation();
   const { user } = useAuth();
-  const employeeId = user?.employee_id;
+  const { employeeId } = useCurrentEmployee();
   const pageDir = i18n.language?.startsWith("en") ? "ltr" : "rtl";
   const pageLang = i18n.language?.startsWith("en") ? "en" : "ar";
 

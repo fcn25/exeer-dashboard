@@ -7,7 +7,7 @@ import {
 } from "../constants/appointmentTypes.js";
 import { getSaudiPublicHolidaysInRange } from "../constants/saudiPublicHolidays.js";
 import { supabase } from "../utils/supabaseClient.js";
-import { getAuthUser, getCompanyId } from "../utils/mobileAuth.js";
+import { getAuthUserId, getCompanyId } from "../utils/mobileAuth.js";
 import { eventDateFromTimestamp, getMonthRange, isDateInRange } from "../utils/calendarDates.js";
 
 export const CALENDAR_LEGEND_TYPES = {
@@ -34,8 +34,8 @@ function mapDbError(error) {
   return error.message || "تعذّر إكمال العملية.";
 }
 
-function requireCurrentUserId() {
-  const userId = getAuthUser()?.id;
+function requireAuthUserId() {
+  const userId = getAuthUserId();
   if (!userId) {
     throw new Error("يجب تسجيل الدخول لحفظ المواعيد الشخصية.");
   }
@@ -68,7 +68,7 @@ function sortEntries(entries) {
 
 export async function listCalendarAppointments(year, month) {
   const companyId = getCompanyId();
-  const userId = getAuthUser()?.id;
+  const userId = getAuthUserId();
   if (!userId) return [];
 
   const { start, end } = getMonthRange(year, month);
@@ -88,7 +88,7 @@ export async function listCalendarAppointments(year, month) {
 
 export async function createCalendarAppointment(payload) {
   const companyId = getCompanyId();
-  const userId = requireCurrentUserId();
+  const userId = requireAuthUserId();
   const appointmentType = isValidUserAppointmentType(payload.appointment_type)
     ? payload.appointment_type
     : DEFAULT_APPOINTMENT_TYPE;
@@ -113,7 +113,7 @@ export async function createCalendarAppointment(payload) {
 
 export async function deleteCalendarAppointment(id) {
   const companyId = getCompanyId();
-  const userId = requireCurrentUserId();
+  const userId = requireAuthUserId();
 
   const { error } = await supabase
     .from("calendar_appointments")

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Bell, Settings } from "lucide-react";
 import { useAuth } from "../../../context/AuthContext.jsx";
+import { useCurrentEmployee } from "../../../hooks/useCurrentEmployee.js";
 import { countUnreadNotifications } from "../../../services/notificationsService.js";
 import { getTimeBasedGreeting } from "../../../utils/portalGreeting.js";
 import NotificationsDrawer from "../NotificationsDrawer.jsx";
@@ -30,6 +31,7 @@ export default function CompactMobileAppBar({
   profileImageUrl,
 }) {
   const { user } = useAuth();
+  const { employeeId } = useCurrentEmployee();
   const greeting = getTimeBasedGreeting();
   const userId = user?.id;
 
@@ -102,7 +104,7 @@ export default function CompactMobileAppBar({
       <MobileSettingsDrawer
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
-        employeeId={user?.employee_id}
+        employeeId={employeeId}
         fullName={employeeName}
         imageUrl={profileImageUrl}
       />

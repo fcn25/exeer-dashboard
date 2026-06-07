@@ -1,5 +1,6 @@
 import { supabase } from "../utils/supabaseClient.js";
-import { getAuthUser, getCompanyId } from "../utils/mobileAuth.js";
+import { getCurrentEmployeeCache } from "./currentEmployeeService.js";
+import { getCompanyId } from "../utils/mobileAuth.js";
 import {
   normalizeAppRole,
   normalizeAssignedEmployeeIds,
@@ -44,7 +45,6 @@ async function fetchAssignedEmployeeIdsForDirectManager() {
 
 export async function listMyTeamEmployees() {
   const companyId = getCompanyId();
-  const user = getAuthUser();
   const role = getCurrentUserRole();
 
   const { data, error } = await supabase
@@ -70,7 +70,10 @@ export async function listMyTeamEmployees() {
   if (!isDirectManager(role)) return [];
 
   const assignedIds = await fetchAssignedEmployeeIdsForDirectManager();
-  const managerName = user?.name ?? "";
+  const managerName =
+    getCurrentEmployeeCache()?.fullName ??
+    getCurrentEmployeeCache()?.employee?.full_name ??
+    "";
 
   return rows.filter(
     (row) =>

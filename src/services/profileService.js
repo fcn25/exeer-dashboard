@@ -1,5 +1,9 @@
 import { supabase } from "../utils/supabaseClient.js";
-import { getCompanyId } from "../utils/mobileAuth.js";
+import {
+  fetchEmployeeRowByAuthUserId,
+  normalizeCurrentEmployee,
+  setCurrentEmployeeCache,
+} from "./currentEmployeeService.js";
 import {
   DEFAULT_PERMISSIONS,
   normalizeAppRole,
@@ -13,6 +17,7 @@ function mapDbError(error) {
   return error.message || "تعذّر إكمال العملية.";
 }
 
+/** @deprecated Prefer auth_user_id via fetchEmployeeRowByAuthUserId */
 export async function fetchEmployeeProfileByEmail(email) {
   const normalizedEmail = String(email ?? "").trim().toLowerCase();
   if (!normalizedEmail) return null;
@@ -20,7 +25,7 @@ export async function fetchEmployeeProfileByEmail(email) {
   const { data, error } = await supabase
     .from("employees")
     .select(
-      "id, company_id, full_name, email, role, department, job_title_name",
+      "id, company_id, auth_user_id, full_name, email, role, department, job_title_name",
     )
     .ilike("email", normalizedEmail)
     .limit(1)
@@ -31,16 +36,20 @@ export async function fetchEmployeeProfileByEmail(email) {
 }
 
 export async function resolveAuthProfile(sessionUser) {
-  const email = sessionUser?.email;
-  const employee = await fetchEmployeeProfileByEmail(email);
+  const authUserId = sessionUser?.id;
+  if (!authUserId) {
+    throw new Error("جلسة الدخول غير صالحة.");
+  }
 
-  const rawRole =
-    employee?.role ?? sessionUser?.user_metadata?.role ?? "Employee";
-  const role = normalizeAppRole(rawRole);
+  const employeeRow = await fetchEmployeeRowByAuthUserId(authUserId);
+  const current = normalizeCurrentEmployee(employeeRow, authUserId);
+  setCurrentEmployeeCache(current);
+
+  const role = normalizeAppRole(
+    current?.role ?? sessionUser?.user_metadata?.role ?? "Employee",
+  );
   const companyId =
-    employee?.company_id ??
-    sessionUser?.user_metadata?.company_id ??
-    getCompanyId();
+    current?.companyId ?? sessionUser?.user_metadata?.company_id ?? null;
 
   let permissions = { ...DEFAULT_PERMISSIONS };
   if (role === "owner") {
@@ -58,18 +67,19 @@ export async function resolveAuthProfile(sessionUser) {
   }
 
   return {
-    id: sessionUser?.id,
-    email,
+    id: authUserId,
+    auth_user_id: authUserId,
+    email: current?.email ?? sessionUser?.email,
     name:
-      employee?.full_name ??
+      current?.fullName ??
       sessionUser?.user_metadata?.full_name ??
-      email ??
+      sessionUser?.email ??
       "مستخدم",
     role,
     company_id: companyId,
-    employee_id: employee?.id ?? null,
-    department: employee?.department ?? null,
-    job_title: employee?.job_title_name ?? null,
+    employee_id: current?.employeeId ?? null,
+    department: current?.department ?? null,
+    job_title: current?.jobTitle ?? null,
     permissions: normalizePermissions(permissions),
   };
 }

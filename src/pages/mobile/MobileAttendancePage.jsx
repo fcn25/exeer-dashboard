@@ -7,7 +7,7 @@ import AttendanceTodaySummary from "../../components/attendance/mobile/Attendanc
 import AttendanceHistorySection from "../../components/attendance/mobile/AttendanceHistorySection.jsx";
 import SuccessToast from "../../components/ui/SuccessToast.jsx";
 import ErrorToast from "../../components/ui/ErrorToast.jsx";
-import { useAuth } from "../../context/AuthContext.jsx";
+import { useCurrentEmployee } from "../../hooks/useCurrentEmployee.js";
 import {
   fetchRecentAttendanceHistory,
   fetchTodayAttendanceForEmployee,
@@ -16,8 +16,7 @@ import { performAttendancePunch } from "../../services/attendancePunchService.js
 
 export default function MobileAttendancePage() {
   const { i18n } = useTranslation();
-  const { user } = useAuth();
-  const employeeId = user?.employee_id;
+  const { employeeId } = useCurrentEmployee();
   const pageDir = i18n.language?.startsWith("en") ? "ltr" : "rtl";
   const pageLang = i18n.language?.startsWith("en") ? "en" : "ar";
 

@@ -31,6 +31,7 @@ import {
   updateTaskStatus,
 } from "../services/tasksService.js";
 import { useAuth } from "../context/AuthContext.jsx";
+import { useCurrentEmployee } from "../hooks/useCurrentEmployee.js";
 import EmployeeAdministrativeInbox from "../components/administrative/EmployeeAdministrativeInbox.jsx";
 import { formatDisplayValue } from "../utils/displayValue.js";
 import { formatPortalDate, getTimeBasedGreeting } from "../utils/portalGreeting.js";
@@ -182,7 +183,7 @@ export default function EmployeePortalPage() {
     isMobile && location.pathname === "/employee-portal";
   const useCompactMobileDashboard =
     isMobileSelfService || isMobileEmployeePortal;
-  const employeeId = user?.employee_id;
+  const { employeeId } = useCurrentEmployee();
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");

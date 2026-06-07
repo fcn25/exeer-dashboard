@@ -13,6 +13,7 @@ import {
   upsertCompanySettings,
 } from "../services/companySettingsService.js";
 import { useAuth } from "./AuthContext.jsx";
+import { useCurrentEmployee } from "./CurrentEmployeeContext.jsx";
 
 const CompanySettingsContext = createContext(null);
 
@@ -21,13 +22,14 @@ const DEFAULTS_MAP = new Map(
 );
 
 export function CompanySettingsProvider({ children }) {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated } = useAuth();
+  const { companyId, employeeId, isLoading: employeeLoading } = useCurrentEmployee();
   const [settings, setSettings] = useState(() => new Map(DEFAULTS_MAP));
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
   const loadSettings = useCallback(async () => {
-    if (!isAuthenticated || !user?.company_id) {
+    if (!isAuthenticated || !companyId) {
       setSettings(new Map(DEFAULTS_MAP));
       return;
     }
@@ -36,16 +38,13 @@ export function CompanySettingsProvider({ children }) {
     setError("");
 
     try {
-      const map = await ensureDefaultCompanySettings(
-        user.company_id,
-        user.employee_id,
-      );
+      const map = await ensureDefaultCompanySettings(companyId, employeeId);
       setSettings(map);
     } catch (err) {
       console.error("Company settings load failed:", err);
       setError(err.message || "تعذّر تحميل إعدادات النظام.");
       try {
-        const fallback = await fetchCompanySettings(user.company_id);
+        const fallback = await fetchCompanySettings(companyId);
         setSettings(fallback);
       } catch {
         setSettings(new Map(DEFAULTS_MAP));
@@ -53,7 +52,7 @@ export function CompanySettingsProvider({ children }) {
     } finally {
       setIsLoading(false);
     }
-  }, [isAuthenticated, user?.company_id, user?.employee_id]);
+  }, [isAuthenticated, companyId, employeeId]);
 
   useEffect(() => {
     loadSettings();
@@ -70,8 +69,8 @@ export function CompanySettingsProvider({ children }) {
   const saveSettings = useCallback(
     async (changes) => {
       await upsertCompanySettings(changes, {
-        companyId: user?.company_id,
-        employeeId: user?.employee_id,
+        companyId,
+        employeeId,
       });
 
       setSettings((prev) => {
@@ -82,19 +81,19 @@ export function CompanySettingsProvider({ children }) {
         return next;
       });
     },
-    [user?.company_id, user?.employee_id],
+    [companyId, employeeId],
   );
 
   const value = useMemo(
     () => ({
       settings,
-      isLoading,
+      isLoading: isLoading || employeeLoading,
       error,
       getSetting,
       saveSettings,
       refreshSettings: loadSettings,
     }),
-    [settings, isLoading, error, getSetting, saveSettings, loadSettings],
+    [settings, isLoading, employeeLoading, error, getSetting, saveSettings, loadSettings],
   );
 
   return (

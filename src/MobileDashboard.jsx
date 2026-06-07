@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import AdminMobileDashboard from "./components/mobile/dashboard/AdminMobileDashboard.jsx";
+import { useCurrentEmployee } from "./hooks/useCurrentEmployee.js";
 import { getUserDisplay } from "./utils/mobileAuth.js";
 import { fetchAdminMobileDashboard } from "./services/mobileDashboardService.js";
 
@@ -8,6 +9,7 @@ import { fetchAdminMobileDashboard } from "./services/mobileDashboardService.js"
  */
 export default function MobileDashboard() {
   const user = getUserDisplay();
+  const { employeeId } = useCurrentEmployee();
   const [dashboardData, setDashboardData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -17,7 +19,7 @@ export default function MobileDashboard() {
     setError("");
 
     try {
-      const data = await fetchAdminMobileDashboard(user?.employee_id);
+      const data = await fetchAdminMobileDashboard(employeeId);
       setDashboardData(data);
     } catch (err) {
       setError(err.message || "تعذّر تحميل لوحة الجوال.");
@@ -25,7 +27,7 @@ export default function MobileDashboard() {
     } finally {
       setIsLoading(false);
     }
-  }, [user?.employee_id]);
+  }, [employeeId]);
 
   useEffect(() => {
     loadDashboard();

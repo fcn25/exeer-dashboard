@@ -33,6 +33,7 @@ import ErrorBoundary from "./components/ErrorBoundary.jsx";
 import AppLoadingScreen from "./components/ui/AppLoadingScreen.jsx";
 import SentryErrorFallback from "./components/ui/SentryErrorFallback.jsx";
 import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
+import { CurrentEmployeeProvider } from "./context/CurrentEmployeeContext.jsx";
 
 // 💡 إضافة Sentry هنا
 import * as SentryReact from "@sentry/react";
@@ -328,11 +329,13 @@ export default function App() {
     <SentryReact.ErrorBoundary fallback={<SentryErrorFallback />}>
       {/* 💡 هذا كودك الأصلي تماماً بداخل الغلاف */}
       <AuthProvider>
-        <CompanySettingsProvider>
-          <ErrorBoundary>
-            <AppRoutes />
-          </ErrorBoundary>
-        </CompanySettingsProvider>
+        <CurrentEmployeeProvider>
+          <CompanySettingsProvider>
+            <ErrorBoundary>
+              <AppRoutes />
+            </ErrorBoundary>
+          </CompanySettingsProvider>
+        </CurrentEmployeeProvider>
       </AuthProvider>
     </SentryReact.ErrorBoundary>
   );

@@ -13,6 +13,7 @@ import {
   X,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext.jsx";
+import { useCurrentEmployee } from "../hooks/useCurrentEmployee.js";
 import { isDirectManager } from "../utils/rbac.js";
 import { getUserDisplay } from "../utils/mobileAuth.js";
 import {
@@ -219,7 +220,8 @@ function ManagerHrRequestModal({
 
 export default function MyTeamDashboard() {
   const { t } = useAppLocale();
-  const { user, role } = useAuth();
+  const { role } = useAuth();
+  const { employeeId } = useCurrentEmployee();
   const displayUser = getUserDisplay();
   const headerDate = formatLocaleHeaderDate();
 
@@ -233,8 +235,6 @@ export default function MyTeamDashboard() {
   const [hrSuccess, setHrSuccess] = useState("");
 
   const managerView = isDirectManager(role);
-  const employeeId = user?.employee_id ?? null;
-
   const teamById = useMemo(() => {
     const map = new Map();
     team.forEach((member) => map.set(Number(member.id), member));

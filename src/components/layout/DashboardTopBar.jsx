@@ -8,7 +8,7 @@ import {
   StickyNote,
   Sun,
 } from "lucide-react";
-import { useAuth } from "../../context/AuthContext.jsx";
+import { useCurrentEmployee } from "../../hooks/useCurrentEmployee.js";
 import { useAppLocale } from "../../i18n/useAppLocale.js";
 import { useTheme } from "../../providers/ThemeProvider.jsx";
 import { countUnreadNotifications } from "../../services/notificationsService.js";
@@ -49,8 +49,8 @@ export default function DashboardTopBar({
 }) {
   const { t, isEn, i18n } = useAppLocale();
   const { isDark, toggleTheme } = useTheme();
-  const { user } = useAuth();
-  const userId = user?.id;
+  const { authUserId } = useCurrentEmployee();
+  const userId = authUserId;
 
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);

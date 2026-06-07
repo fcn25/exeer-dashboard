@@ -55,14 +55,26 @@ Deno.serve(async (req) => {
 
     const invitedUserId = data.user?.id;
     const employeeId = body.employee_id;
-    if (invitedUserId && employeeId != null && employeeId !== "") {
-      const { error: linkError } = await adminClient
-        .from("employees")
-        .update({ auth_user_id: invitedUserId })
-        .eq("id", Number(employeeId));
+    if (invitedUserId) {
+      if (employeeId != null && employeeId !== "") {
+        const { error: linkError } = await adminClient
+          .from("employees")
+          .update({ auth_user_id: invitedUserId })
+          .eq("id", Number(employeeId));
 
-      if (linkError) {
-        console.error("8. auth_user_id link error:", linkError.message);
+        if (linkError) {
+          console.error("8. auth_user_id link error:", linkError.message);
+        }
+      } else if (email) {
+        const { error: linkByEmailError } = await adminClient
+          .from("employees")
+          .update({ auth_user_id: invitedUserId })
+          .ilike("email", email)
+          .is("auth_user_id", null);
+
+        if (linkByEmailError) {
+          console.error("8b. auth_user_id email link error:", linkByEmailError.message);
+        }
       }
     }
 

@@ -1,37 +1,8 @@
 import { supabase } from "../utils/supabaseClient.js";
-import { getAuthCompanyId } from "../utils/mobileAuth.js";
 import { requireCompanyId, scopeQueryByCompany } from "../utils/tenantScope.js";
-import { fetchEmployeeProfileByEmail } from "./profileService.js";
 
 async function resolveCompanyIdForWrite(context) {
-  const {
-    data: { session },
-    error: sessionError,
-  } = await supabase.auth.getSession();
-
-  if (sessionError) {
-    throw new Error(sessionError.message || "تعذّر التحقق من الجلسة.");
-  }
-
-  const employee = await fetchEmployeeProfileByEmail(session?.user?.email);
-  const fromEmployee = Number(employee?.company_id);
-  const fromMetadata = Number(session?.user?.user_metadata?.company_id);
-  const cached = getAuthCompanyId();
-
-  const companyId =
-    Number.isFinite(fromEmployee) && fromEmployee > 0
-      ? fromEmployee
-      : Number.isFinite(fromMetadata) && fromMetadata > 0
-        ? fromMetadata
-        : cached;
-
-  if (!Number.isFinite(companyId) || companyId <= 0) {
-    throw new Error(
-      `لم يتم تحديد الشركة الحالية. أعد تسجيل الدخول ثم حاول مرة أخرى (${context}).`,
-    );
-  }
-
-  return companyId;
+  return requireCompanyId(context);
 }
 
 function mapDbError(error) {

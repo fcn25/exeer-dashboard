@@ -1,3 +1,7 @@
+import {
+  clearCurrentEmployeeCache,
+  getCurrentEmployeeCache,
+} from "../services/currentEmployeeService.js";
 import { supabase } from "./supabaseClient.js";
 import { normalizeAppRole, normalizePermissions } from "../constants/roles.js";
 
@@ -9,6 +13,7 @@ export function clearAuthStorage() {
   localStorage.removeItem("authToken");
   localStorage.removeItem("auth_user");
   localStorage.removeItem("company_id");
+  clearCurrentEmployeeCache();
 }
 
 export function persistAuthSession(session, profile) {
@@ -20,6 +25,7 @@ export function persistAuthSession(session, profile) {
   if (user && typeof user === "object") {
     const companyId =
       user.company_id ??
+      user.companyId ??
       user.user_metadata?.company_id ??
       user.app_metadata?.company_id;
 
@@ -32,11 +38,14 @@ export function persistAuthSession(session, profile) {
     );
 
     const permissions = normalizePermissions(user.permissions);
+    const authUserId = user.id ?? user.auth_user_id ?? null;
+    const employeeId = user.employee_id ?? user.employeeId ?? null;
 
     localStorage.setItem(
       "auth_user",
       JSON.stringify({
-        id: user.id,
+        id: authUserId,
+        auth_user_id: authUserId,
         email: user.email,
         name:
           user.name ??
@@ -45,7 +54,7 @@ export function persistAuthSession(session, profile) {
           user.user_metadata?.name ??
           user.email,
         company_id: companyId,
-        employee_id: user.employee_id ?? null,
+        employee_id: employeeId,
         department: user.department ?? null,
         job_title: user.job_title ?? null,
         role,
@@ -59,8 +68,24 @@ export function persistAuthSession(session, profile) {
   }
 }
 
-/** Company id from authenticated profile only (no dev fallback). */
+/** Supabase auth.users.id (UUID) */
+export function getAuthUserId() {
+  const cached = getCurrentEmployeeCache()?.authUserId;
+  if (cached) return cached;
+
+  try {
+    const user = JSON.parse(localStorage.getItem("auth_user") || "null");
+    return user?.auth_user_id ?? user?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** Company id from current employee (auth_user_id), then cached auth profile. */
 export function getAuthCompanyId() {
+  const fromEmployee = getCurrentEmployeeCache()?.companyId;
+  if (Number.isFinite(fromEmployee) && fromEmployee > 0) return fromEmployee;
+
   try {
     const user = JSON.parse(localStorage.getItem("auth_user") || "null");
     const fromUser = Number(user?.company_id ?? user?.companyId);
@@ -76,18 +101,23 @@ export function getAuthCompanyId() {
 }
 
 export function getCompanyId() {
-  const authCompanyId = getAuthCompanyId();
-  if (authCompanyId != null) return authCompanyId;
+  const companyId = getAuthCompanyId();
+  if (companyId != null) return companyId;
 
-  // Legacy dev fallback when profile has no company_id
-  return 118;
+  throw new Error(
+    "لم يتم تحديد الشركة الحالية. تأكد من ربط auth_user_id بسجل الموظف.",
+  );
 }
 
+/** Employee bigint id from auth_user_id link. */
 export function getEmployeeId() {
+  const fromEmployee = getCurrentEmployeeCache()?.employeeId;
+  if (Number.isFinite(fromEmployee) && fromEmployee > 0) return fromEmployee;
+
   try {
     const user = JSON.parse(localStorage.getItem("auth_user") || "null");
     const employeeId = Number(user?.employee_id);
-    return Number.isNaN(employeeId) ? null : employeeId;
+    return Number.isFinite(employeeId) && employeeId > 0 ? employeeId : null;
   } catch {
     return null;
   }
@@ -104,8 +134,16 @@ export function getAuthUser() {
   try {
     const user = JSON.parse(localStorage.getItem("auth_user") || "null");
     if (!user || typeof user !== "object") return null;
+
+    const cached = getCurrentEmployeeCache();
+
     return {
       ...user,
+      id: user.auth_user_id ?? user.id,
+      auth_user_id: user.auth_user_id ?? user.id,
+      employee_id: cached?.employeeId ?? user.employee_id ?? null,
+      company_id: cached?.companyId ?? user.company_id ?? null,
+      role: cached?.role ?? user.role,
       permissions: normalizePermissions(user.permissions),
     };
   } catch {
@@ -120,12 +158,17 @@ export function getUserPermissions() {
 export function getUserDisplay() {
   try {
     const user = getAuthUser();
+    const cached = getCurrentEmployeeCache();
     if (!user || typeof user !== "object") {
       return { name: "مستخدم", initials: "م" };
     }
 
     const name = String(
-      user.name ?? user.full_name ?? user.email ?? "مستخدم",
+      cached?.fullName ??
+        user.name ??
+        user.full_name ??
+        user.email ??
+        "مستخدم",
     ).trim();
     const parts = name.split(/\s+/).filter(Boolean);
     const initials =

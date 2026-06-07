@@ -121,19 +121,6 @@ export async function signUpCompany({
       authUserId,
     );
 
-    if (authUserId) {
-      const { error: linkError } = await supabase
-        .from("employees")
-        .update({ auth_user_id: authUserId })
-        .eq("company_id", companyId)
-        .eq("email", trimmedEmail)
-        .is("auth_user_id", null);
-
-      if (linkError) {
-        console.warn("auth_user_id link after signup:", linkError.message);
-      }
-    }
-
     return {
       auth: authData,
       company,

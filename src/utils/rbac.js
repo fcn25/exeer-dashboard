@@ -1,3 +1,4 @@
+import { getCurrentEmployeeCache } from "../services/currentEmployeeService.js";
 import { getAuthUser, getUserPermissions } from "./mobileAuth.js";
 import {
   isManagementRole,
@@ -24,6 +25,8 @@ export function canAccessMyTeam(role = getCurrentUserRole()) {
 import { ADMINISTRATIVE_MASTER_LOG_ROLES } from "../constants/administrativeActions.js";
 
 export function getCurrentUserRole() {
+  const cachedRole = getCurrentEmployeeCache()?.role;
+  if (cachedRole) return normalizeAppRole(cachedRole);
   const user = getAuthUser();
   return normalizeAppRole(user?.role);
 }

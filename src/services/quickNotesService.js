@@ -1,5 +1,5 @@
 import { supabase } from "../utils/supabaseClient.js";
-import { getAuthUser, getCompanyId } from "../utils/mobileAuth.js";
+import { getAuthUserId, getCompanyId } from "../utils/mobileAuth.js";
 
 const NOTE_COLORS = new Set(["amber", "mint", "sky", "rose"]);
 
@@ -11,8 +11,8 @@ function mapDbError(error) {
   return error.message || "تعذّر حفظ الملاحظة.";
 }
 
-function requireCurrentUserId() {
-  const userId = getAuthUser()?.id;
+function requireAuthUserId() {
+  const userId = getAuthUserId();
   if (!userId) {
     throw new Error("يجب تسجيل الدخول لحفظ الملاحظة.");
   }
@@ -26,7 +26,7 @@ export function normalizeNoteColor(color) {
 
 export async function getMyQuickNote() {
   const companyId = getCompanyId();
-  const userId = getAuthUser()?.id;
+  const userId = getAuthUserId();
   if (!userId) return null;
 
   const { data, error } = await supabase
@@ -42,7 +42,7 @@ export async function getMyQuickNote() {
 
 export async function upsertMyQuickNote({ content, color, is_visible }) {
   const companyId = getCompanyId();
-  const userId = requireCurrentUserId();
+  const userId = requireAuthUserId();
 
   const payload = {
     company_id: companyId,

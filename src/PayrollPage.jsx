@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { FileSpreadsheet, Lock, Printer, RefreshCw } from "lucide-react";
 import { MonthInput } from "./components/ui/DateInput.jsx";
 import {
+  exportPayrollMonth,
   fetchPayrollForMonth,
   generatePayrollForMonth,
 } from "./services/payrollService.js";
@@ -13,7 +14,7 @@ import {
   computePayrollStats,
   formatPayrollMonthFromPicker,
 } from "./utils/payroll/calculations.js";
-import { downloadPayrollAccountingCsv } from "./utils/payroll/exportPayrollAccountingCsv.js";
+import { downloadPayrollAccountingExcel } from "./utils/payroll/exportPayrollAccountingExcel.js";
 import ExeerEmptyState from "./components/brand/ExeerEmptyState.jsx";
 
 const PAYROLL_SUBTITLE =
@@ -79,7 +80,8 @@ function StatCard({ label, value }) {
 export default function PayrollPage() {
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonthValue);
   const [rows, setRows] = useState([]);
-  const [isLocked, setIsLocked] = useState(false);
+  const [isExported, setIsExported] = useState(false);
+  const [hasExistingPayroll, setHasExistingPayroll] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [schemaWarning, setSchemaWarning] = useState("");
@@ -99,13 +101,15 @@ export default function PayrollPage() {
     try {
       const result = await fetchPayrollForMonth(selectedMonth);
       setRows(result.rows);
-      setIsLocked(result.isLocked);
+      setIsExported(result.isExported);
+      setHasExistingPayroll(result.hasRecords);
       setSchemaWarning(result.schemaWarning ?? "");
       setHasLoaded(true);
     } catch (err) {
       setError(err.message || "تعذّر تحميل المسير.");
       setRows([]);
-      setIsLocked(false);
+      setIsExported(false);
+      setHasExistingPayroll(false);
       setHasLoaded(true);
     } finally {
       setIsLoading(false);
@@ -123,7 +127,7 @@ export default function PayrollPage() {
   }, [successMessage]);
 
   const handleGeneratePayroll = async () => {
-    if (!selectedMonth || isLocked) return;
+    if (!selectedMonth || hasExistingPayroll) return;
 
     setIsLoading(true);
     setError("");
@@ -132,10 +136,11 @@ export default function PayrollPage() {
     try {
       const result = await generatePayrollForMonth(selectedMonth);
       setRows(result.rows);
-      setIsLocked(result.isLocked);
+      setIsExported(result.isExported);
+      setHasExistingPayroll(result.hasRecords);
       setSchemaWarning(result.schemaWarning ?? "");
       setHasLoaded(true);
-      setSuccessMessage("تم إنشاء/تحديث مسير الشهر بنجاح");
+      setSuccessMessage("تم إنشاء مسير الشهر بنجاح");
     } catch (err) {
       setError(err.message || "تعذّر إنشاء المسير.");
     } finally {
@@ -144,7 +149,7 @@ export default function PayrollPage() {
   };
 
   const handleSyncDeductions = async () => {
-    if (!selectedMonth || isLocked) return;
+    if (!selectedMonth || rows.length === 0) return;
 
     setIsLoading(true);
     setError("");
@@ -153,11 +158,9 @@ export default function PayrollPage() {
     try {
       const result = await syncPayrollDeductionsForMonth(selectedMonth);
       await loadPayroll();
-      let message = `تم تحديث أرقام المسير لشهر ${result.payrollMonth} — ${result.updatedCount} موظف`;
-      if (result.lockedSkipped > 0) {
-        message += ` (تخطّي ${result.lockedSkipped} سجل مُصدَّر)`;
-      }
-      setSuccessMessage(message);
+      setSuccessMessage(
+        `تم تحديث أرقام المسير لشهر ${result.payrollMonth} — ${result.updatedCount} موظف`,
+      );
     } catch (err) {
       setError(err.message || "تعذّر تحديث أرقام المسير.");
     } finally {
@@ -166,19 +169,34 @@ export default function PayrollPage() {
   };
 
   const handleExportAccounting = async () => {
-    if (!selectedMonth) return;
+    if (!selectedMonth || rows.length === 0) return;
 
+    setIsLoading(true);
     setError("");
+    setSuccessMessage("");
+
     try {
       const records = await fetchPayrollAccountingRows(selectedMonth);
-      downloadPayrollAccountingCsv(records, payrollMonthLabel);
-      setSuccessMessage("تم تنزيل ملف المحاسبة بنجاح");
+      downloadPayrollAccountingExcel(records, payrollMonthLabel);
+      await exportPayrollMonth(selectedMonth);
+      await loadPayroll();
+      setSuccessMessage("تم تصدير ملف المحاسبة وتحديث حالة المسير إلى exported");
     } catch (err) {
       setError(err.message || "تعذّر تصدير ملف المحاسبة.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handlePrint = () => {
+    document.body.classList.add("printing-payroll");
+
+    const cleanup = () => {
+      document.body.classList.remove("printing-payroll");
+      window.removeEventListener("afterprint", cleanup);
+    };
+
+    window.addEventListener("afterprint", cleanup);
     window.print();
   };
 
@@ -192,10 +210,10 @@ export default function PayrollPage() {
       </header>
 
       <div className="payroll-no-print space-y-4">
-        {isLocked ? (
+        {isExported ? (
           <div className="flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 shadow-none">
             <Lock className="h-4 w-4 shrink-0" aria-hidden />
-            مسير شهر {payrollMonthLabel} مُصدَّر ومقفل — لا يمكن إعادة الإنشاء
+            مسير شهر {payrollMonthLabel} مُصدَّر — يمكن تحديث الأرقام أو إعادة التصدير
           </div>
         ) : null}
 
@@ -230,19 +248,24 @@ export default function PayrollPage() {
               className="min-w-[220px]"
             />
 
-            <button
-              type="button"
-              onClick={handleGeneratePayroll}
-              disabled={isLoading || !selectedMonth || isLocked}
-              className="md-btn-primary shadow-none"
-            >
-              {isLoading ? "جاري المعالجة..." : "إنشاء المسير الشهري"}
-            </button>
+            <div className="flex flex-col gap-1">
+              <button
+                type="button"
+                onClick={handleGeneratePayroll}
+                disabled={isLoading || !selectedMonth || hasExistingPayroll}
+                className="md-btn-primary shadow-none"
+              >
+                {isLoading ? "جاري المعالجة..." : "إنشاء المسير الشهري"}
+              </button>
+              {hasExistingPayroll ? (
+                <p className="text-xs text-slate-500">تم إنشاء مسير هذا الشهر</p>
+              ) : null}
+            </div>
 
             <button
               type="button"
               onClick={handleSyncDeductions}
-              disabled={isLoading || !selectedMonth || isLocked || rows.length === 0}
+              disabled={isLoading || !selectedMonth || rows.length === 0}
               className="inline-flex items-center gap-2 rounded-md border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 shadow-none hover:bg-gray-50 disabled:opacity-50"
               title="مزامنة التأخيرات والجزاءات والقروض للشهر المعروض"
             >
@@ -257,7 +280,7 @@ export default function PayrollPage() {
               onClick={handleExportAccounting}
               disabled={isLoading || !selectedMonth || rows.length === 0}
               className="inline-flex items-center gap-2 rounded-md border border-slate-900 bg-slate-900 px-4 py-2.5 text-sm font-medium text-white shadow-none hover:bg-slate-800 disabled:opacity-50"
-              title="تصدير CSV للمحاسبة (يشمل البنك والآيبان — غير معروض في الجدول)"
+              title="تصدير Excel للمحاسبة (يشمل البنك والآيبان — غير معروض في الجدول)"
             >
               <FileSpreadsheet className="h-4 w-4" aria-hidden />
               تصدير للمحاسبة
@@ -265,7 +288,8 @@ export default function PayrollPage() {
             <button
               type="button"
               onClick={handlePrint}
-              className="inline-flex items-center gap-2 rounded-md border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 shadow-none hover:bg-gray-50"
+              disabled={rows.length === 0}
+              className="inline-flex items-center gap-2 rounded-md border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 shadow-none hover:bg-gray-50 disabled:opacity-50"
             >
               <Printer className="h-4 w-4" aria-hidden />
               طباعة
@@ -276,7 +300,7 @@ export default function PayrollPage() {
 
       <div id="payroll-print-area" className="space-y-6">
         <section
-          className="grid grid-cols-1 gap-5 sm:grid-cols-3"
+          className="payroll-no-print grid grid-cols-1 gap-5 sm:grid-cols-3"
           aria-label="ملخص المسير"
         >
           <StatCard
@@ -295,11 +319,9 @@ export default function PayrollPage() {
           />
         </section>
 
-        <section
-          className={`${CARD_CLASS} overflow-hidden p-0`}
-        >
+        <section className={`${CARD_CLASS} overflow-hidden p-0`}>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1100px] border-collapse text-sm shadow-none">
+            <table className="payroll-table w-full min-w-[1100px] border-collapse text-sm shadow-none">
               <thead>
                 <tr>
                   {TABLE_COLUMNS.map((column) => (
@@ -366,20 +388,18 @@ export default function PayrollPage() {
       <style>{`
         @media print {
           @page { size: A4 landscape; margin: 12mm; }
-          aside,
-          nav,
-          .payroll-no-print,
-          button {
-            display: none !important;
+          body:not(.printing-payroll) * {
+            visibility: hidden;
           }
-          #payroll-print-area {
-            display: block !important;
-            width: 100% !important;
-            box-shadow: none !important;
-            border: none !important;
+          .payroll-table,
+          .payroll-table * {
+            visibility: visible;
           }
-          #payroll-print-area * {
-            box-shadow: none !important;
+          .payroll-table {
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 100%;
           }
         }
       `}</style>

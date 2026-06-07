@@ -63,8 +63,13 @@ export function buildPayrollDraftFromEmployee(employee, payrollMonth) {
     gosi_deduction: gosi,
     lateness_deduction: delayDeductions,
     net_salary: net,
-    status: "Draft",
+    status: "draft",
   };
+}
+
+function normalizePayrollStatus(status) {
+  const value = String(status ?? "draft").trim().toLowerCase();
+  return value === "exported" ? "exported" : "draft";
 }
 
 export function mapPayrollRecordRow(row) {
@@ -91,7 +96,7 @@ export function mapPayrollRecordRow(row) {
       ) || 0,
     loans: Number(row.loan_deductions) || 0,
     net: Number(row.net_salary ?? row.net) || 0,
-    status: row.status ?? "Draft",
+    status: normalizePayrollStatus(row.status),
   };
 }
 

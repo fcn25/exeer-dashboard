@@ -76,7 +76,7 @@ function buildPayrollRecordPayload(companyId, draft, period, includePayrollMonth
     delays: draft.delay_deductions ?? draft.lateness_deduction ?? 0,
     net_salary: draft.net_salary,
     net: draft.net_salary,
-    status: "Draft",
+    status: "draft",
   };
 
   if (includePayrollMonth) {
@@ -166,7 +166,13 @@ async function findExistingRecord(companyId, period, employeeId, includePayrollM
 export async function fetchPayrollForMonth(pickerValue) {
   const period = parsePayrollPeriod(pickerValue);
   if (!period) {
-    return { rows: [], payrollMonth: "", isLocked: false, schemaWarning: null };
+    return {
+      rows: [],
+      payrollMonth: "",
+      isExported: false,
+      hasRecords: false,
+      schemaWarning: null,
+    };
   }
 
   const companyId = requireCompanyId("تحميل المسير");
@@ -176,7 +182,7 @@ export async function fetchPayrollForMonth(pickerValue) {
   );
 
   const rows = data.map(mapPayrollRecordRow).filter(Boolean);
-  const isLocked = rows.some((row) => row.status === "Exported");
+  const isExported = rows.some((row) => row.status === "exported");
 
   let schemaWarning = null;
   if (usedFallback && mode === "payroll_month") {
@@ -189,7 +195,8 @@ export async function fetchPayrollForMonth(pickerValue) {
   return {
     rows,
     payrollMonth: period.payrollMonth,
-    isLocked,
+    isExported,
+    hasRecords: rows.length > 0,
     schemaWarning,
   };
 }
@@ -203,10 +210,8 @@ export async function generatePayrollForMonth(pickerValue) {
   const companyId = requireCompanyId("إنشاء المسير الشهري");
   const existing = await fetchPayrollForMonth(pickerValue);
 
-  if (existing.isLocked) {
-    throw new Error(
-      "تم تصدير مسير هذا الشهر وهو مقفل. لا يمكن إعادة الإنشاء.",
-    );
+  if (existing.hasRecords) {
+    throw new Error("تم إنشاء مسير هذا الشهر بالفعل.");
   }
 
   const employees = await listActiveEmployees();
@@ -235,7 +240,7 @@ export async function generatePayrollForMonth(pickerValue) {
       includePayrollMonth,
     );
 
-    if (existingRow?.status === "Exported") continue;
+    if (existingRow?.status === "exported") continue;
 
     if (existingRow?.id) {
       const { error } = await scopeQueryByCompany(
@@ -256,7 +261,7 @@ export async function generatePayrollForMonth(pickerValue) {
       includePayrollMonth = false;
       payload = buildPayrollRecordPayload(companyId, draft, period, false);
       existingRow = await findExistingRecord(companyId, period, employee.id, false);
-      if (existingRow?.status === "Exported") continue;
+      if (existingRow?.status === "exported") continue;
       if (existingRow?.id) {
         ({ error } = await scopeQueryByCompany(
           supabase.from("payroll_records").update(payload),
@@ -282,13 +287,13 @@ export async function exportPayrollMonth(pickerValue) {
   }
 
   const companyId = requireCompanyId("تصدير المسير");
-  const { rows, isLocked } = await fetchPayrollForMonth(pickerValue);
+  const { rows, isExported } = await fetchPayrollForMonth(pickerValue);
 
   if (rows.length === 0) {
     throw new Error("لا توجد سجلات مسير لتصديرها.");
   }
 
-  if (isLocked) {
+  if (isExported) {
     return { rows, payrollMonth: period.payrollMonth, alreadyExported: true };
   }
 
@@ -296,7 +301,7 @@ export async function exportPayrollMonth(pickerValue) {
     const byMonth = await scopeQueryByCompany(
       supabase
         .from("payroll_records")
-        .update({ status: "Exported" })
+        .update({ status: "exported" })
         .eq("payroll_month", period.payrollMonth),
       companyId,
     );
@@ -304,7 +309,7 @@ export async function exportPayrollMonth(pickerValue) {
       const legacy = await scopeQueryByCompany(
         supabase
           .from("payroll_records")
-          .update({ status: "Exported" })
+          .update({ status: "exported" })
           .eq("month", period.month)
           .eq("year", period.year),
         companyId,

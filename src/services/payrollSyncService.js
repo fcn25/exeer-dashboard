@@ -6,8 +6,6 @@ import { calculateDelayDeduction, resolveEmployeeBaseSalary } from "../utils/att
 import { formatPayrollMonthFromPicker } from "../utils/payroll/calculations.js";
 import { getMonthBoundsFromPicker } from "../utils/payroll/period.js";
 import { calculateSafeProtocolNetSalary } from "../utils/payroll/netSalary.js";
-import { fetchPayrollForMonth } from "./payrollService.js";
-
 function mapDbError(error) {
   if (!error) return "حدث خطأ غير متوقع.";
   if (error.code === "PGRST205") {
@@ -106,7 +104,7 @@ async function fetchEmployeesBaseSalaries(companyId, employeeIds) {
   const { data, error } = await scopeQueryByCompany(
     supabase
       .from("employees")
-      .select("id, basic_salary, base_salary")
+      .select("id, basic_salary")
       .in("id", employeeIds),
     companyId,
   );
@@ -155,12 +153,6 @@ export async function syncPayrollDeductionsForMonth(pickerValue) {
   }
 
   const companyId = requireCompanyId("تحديث أرقام المسير");
-  const existing = await fetchPayrollForMonth(pickerValue);
-
-  if (existing.isLocked) {
-    throw new Error("مسير هذا الشهر مُصدَّر ومقفل — لا يمكن المزامنة.");
-  }
-
   const payrollRows = await fetchPayrollRecordsRaw(companyId, period);
   if (payrollRows.length === 0) {
     throw new Error(
@@ -181,14 +173,8 @@ export async function syncPayrollDeductionsForMonth(pickerValue) {
     ]);
 
   let updatedCount = 0;
-  let lockedSkipped = 0;
 
   for (const row of payrollRows) {
-    if (row.status === "Exported") {
-      lockedSkipped += 1;
-      continue;
-    }
-
     const employeeId = row.employee_id;
     const baseSalary =
       baseSalaries.get(employeeId) ?? (Number(row.basic_salary) || 0);
@@ -235,7 +221,6 @@ export async function syncPayrollDeductionsForMonth(pickerValue) {
 
   return {
     updatedCount,
-    lockedSkipped,
     payrollMonth: period.payrollMonth,
   };
 }
@@ -246,6 +231,12 @@ const ACCOUNTING_PAYROLL_SELECT = `
   employee_name,
   basic_salary,
   housing_allowance,
+  other_allowances,
+  allowances,
+  commissions,
+  additional,
+  gosi_deduction,
+  gosi,
   delay_deductions,
   penalty_deductions,
   loan_deductions,

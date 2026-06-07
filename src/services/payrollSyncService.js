@@ -77,29 +77,74 @@ async function fetchPenaltyDeductionsByEmployee(companyId, bounds) {
   return groupPenaltySum(data);
 }
 
-async function fetchActiveLoanInstallmentsByEmployee(companyId) {
+function isLoanDueForMonth(loan, payrollMonth) {
+  if (!loan?.start_date) return true;
+  const [monthPart, yearPart] = String(payrollMonth).split("/");
+  const payrollKey = `${yearPart}-${String(monthPart).padStart(2, "0")}`;
+  const startKey = String(loan.start_date).slice(0, 7);
+  return payrollKey >= startKey;
+}
+
+async function fetchActiveLoanInstallmentsByEmployee(companyId, payrollMonth) {
   let { data, error } = await scopeQueryByCompany(
     supabase
       .from("employee_loans")
-      .select("employee_id, monthly_installment, status")
+      .select(
+        "id, employee_id, monthly_installment, status, start_date, installments_remaining, last_deducted_month",
+      )
       .eq("status", "active"),
     companyId,
   );
 
   if (error && isMissingColumnError(error)) {
-    return new Map();
+    return { totals: new Map(), dueLoans: [] };
   }
   if (error) throw new Error(mapDbError(error));
 
-  const map = new Map();
+  const totals = new Map();
+  const dueLoans = [];
+
   for (const row of data ?? []) {
     const status = String(row.status ?? "").toLowerCase();
     if (status !== "active") continue;
-    const id = row.employee_id;
-    if (!id) continue;
-    map.set(id, (map.get(id) ?? 0) + (Number(row.monthly_installment) || 0));
+    const employeeId = row.employee_id;
+    if (!employeeId) continue;
+
+    const remaining = Number(row.installments_remaining);
+    if (Number.isFinite(remaining) && remaining <= 0) continue;
+    if (!isLoanDueForMonth(row, payrollMonth)) continue;
+    if (row.last_deducted_month === payrollMonth) continue;
+
+    const installment = Number(row.monthly_installment) || 0;
+    totals.set(employeeId, (totals.get(employeeId) ?? 0) + installment);
+    dueLoans.push(row);
   }
-  return map;
+
+  return { totals, dueLoans };
+}
+
+async function markLoanInstallmentsDeducted(companyId, loans, payrollMonth) {
+  for (const loan of loans) {
+    const remaining = Number(loan.installments_remaining);
+    const nextRemaining = Number.isFinite(remaining)
+      ? Math.max(0, remaining - 1)
+      : null;
+
+    const payload = {
+      last_deducted_month: payrollMonth,
+      updated_at: new Date().toISOString(),
+    };
+
+    if (nextRemaining != null) {
+      payload.installments_remaining = nextRemaining;
+      if (nextRemaining === 0) payload.status = "closed";
+    }
+
+    await scopeQueryByCompany(
+      supabase.from("employee_loans").update(payload).eq("id", loan.id),
+      companyId,
+    );
+  }
 }
 
 async function fetchEmployeesCompensation(companyId, employeeIds) {
@@ -175,13 +220,16 @@ export async function syncPayrollDeductionsForMonth(pickerValue) {
     ...new Set(payrollRows.map((row) => row.employee_id).filter(Boolean)),
   ];
 
-  const [delayByEmployee, penaltyByEmployee, loanByEmployee, compensationByEmployee] =
+  const [delayByEmployee, penaltyByEmployee, loanResult, compensationByEmployee] =
     await Promise.all([
       fetchDelayMinutesByEmployee(companyId, bounds),
       fetchPenaltyDeductionsByEmployee(companyId, bounds),
-      fetchActiveLoanInstallmentsByEmployee(companyId),
+      fetchActiveLoanInstallmentsByEmployee(companyId, period.payrollMonth),
       fetchEmployeesCompensation(companyId, employeeIds),
     ]);
+
+  const loanByEmployee = loanResult.totals;
+  const dueLoans = loanResult.dueLoans;
 
   let updatedCount = 0;
 
@@ -268,6 +316,10 @@ export async function syncPayrollDeductionsForMonth(pickerValue) {
 
     if (error) throw new Error(mapDbError(error));
     updatedCount += 1;
+  }
+
+  if (dueLoans.length) {
+    await markLoanInstallmentsDeducted(companyId, dueLoans, period.payrollMonth);
   }
 
   return {

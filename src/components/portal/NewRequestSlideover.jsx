@@ -7,12 +7,15 @@ import {
   uploadRequestAttachment,
 } from "../../services/requestsService.js";
 import { listLeaveTypes } from "../../services/catalogService.js";
+import { DateInput } from "../ui/DateInput.jsx";
 
 const MAX_BYTES = 1048576;
 
 const EMPTY_FORM = {
   requestType: "General",
   leaveType: "",
+  leaveDays: "",
+  startDate: "",
   details: "",
   amount: "",
   installments: "",
@@ -101,10 +104,6 @@ export default function NewRequestSlideover({
           ? `نوع الإجازة: ${form.leaveType}\n${trimmedDetails}`
           : trimmedDetails;
 
-      if (form.requestType === "Leave" && !form.leaveType) {
-        throw new Error("نوع الإجازة مطلوب.");
-      }
-
       await createEmployeeRequest({
         employeeId,
         requestType: form.requestType,
@@ -113,6 +112,9 @@ export default function NewRequestSlideover({
         installments: form.installments,
         monthlyDeduction,
         attachmentUrl,
+        leaveType: form.leaveType,
+        leaveDays: form.leaveDays,
+        startDate: form.startDate,
       });
 
       onSuccess?.();
@@ -187,29 +189,59 @@ export default function NewRequestSlideover({
             </div>
 
             {form.requestType === "Leave" ? (
-              <div className="space-y-2">
-                <label htmlFor="leave-type" className="md-label block">
-                  نوع الإجازة
-                </label>
-                <select
-                  id="leave-type"
-                  value={form.leaveType}
+              <div className="space-y-4 rounded-md border border-exeer-border bg-exeer-surface p-4">
+                <div className="space-y-2">
+                  <label htmlFor="leave-type" className="md-label block">
+                    نوع الإجازة
+                  </label>
+                  <select
+                    id="leave-type"
+                    value={form.leaveType}
+                    onChange={(e) =>
+                      setForm((prev) => ({ ...prev, leaveType: e.target.value }))
+                    }
+                    disabled={isSaving || leaveTypes.length === 0}
+                    required
+                    className="md-input"
+                  >
+                    <option value="">اختر نوع الإجازة</option>
+                    {leaveTypes.map((leaveType) => (
+                      <option key={leaveType.id ?? leaveType.name} value={leaveType.name}>
+                        {leaveType.default_days > 0
+                          ? `${leaveType.name} (${leaveType.default_days} يوم)`
+                          : leaveType.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="leave-days" className="md-label block">
+                    عدد الأيام
+                  </label>
+                  <input
+                    id="leave-days"
+                    type="number"
+                    min="1"
+                    step="1"
+                    value={form.leaveDays}
+                    onChange={(e) =>
+                      setForm((prev) => ({ ...prev, leaveDays: e.target.value }))
+                    }
+                    disabled={isSaving}
+                    required
+                    className="md-input"
+                  />
+                </div>
+                <DateInput
+                  id="leave-start-date"
+                  label="تاريخ بداية الإجازة"
+                  value={form.startDate}
                   onChange={(e) =>
-                    setForm((prev) => ({ ...prev, leaveType: e.target.value }))
+                    setForm((prev) => ({ ...prev, startDate: e.target.value }))
                   }
-                  disabled={isSaving || leaveTypes.length === 0}
+                  disabled={isSaving}
                   required
-                  className="md-input"
-                >
-                  <option value="">اختر نوع الإجازة</option>
-                  {leaveTypes.map((leaveType) => (
-                    <option key={leaveType.id ?? leaveType.name} value={leaveType.name}>
-                      {leaveType.default_days > 0
-                        ? `${leaveType.name} (${leaveType.default_days} يوم)`
-                        : leaveType.name}
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
             ) : null}
 
@@ -255,6 +287,17 @@ export default function NewRequestSlideover({
                     className="md-input"
                   />
                 </div>
+
+                <DateInput
+                  id="loan-start-date"
+                  label="تاريخ بداية الخصم"
+                  value={form.startDate}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, startDate: e.target.value }))
+                  }
+                  disabled={isSaving}
+                  required
+                />
 
                 <div className="rounded-md bg-white px-4 py-3 dark:bg-[#1e293b]">
                   <p className="text-xs text-exeer-muted">الخصم الشهري التقديري</p>

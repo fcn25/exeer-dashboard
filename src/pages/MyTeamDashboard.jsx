@@ -22,6 +22,7 @@ import {
   HOME_SURFACE,
   PRIORITY_ICON_STYLES,
 } from "../components/home/homeStyles.js";
+import PendingRequestCard from "../components/requests/PendingRequestCard.jsx";
 import {
   listMyTeamEmployees,
   listTeamPendingRequests,
@@ -489,8 +490,6 @@ export default function MyTeamDashboard() {
           <div className="flex flex-col gap-3">
             {requests.map((request, index) => {
               const member = teamById.get(Number(request.employee_id));
-              const iconStyle =
-                PRIORITY_ICON_STYLES.orange ?? PRIORITY_ICON_STYLES.gray;
 
               return (
                 <div
@@ -501,61 +500,18 @@ export default function MyTeamDashboard() {
                       : ""
                   }
                 >
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                    <div className="flex min-w-0 flex-1 items-start gap-3">
-                      <span
-                        className={`flex h-[36px] w-[36px] shrink-0 items-center justify-center rounded-full ${iconStyle}`}
-                      >
-                        <ClipboardList className="h-4 w-4" aria-hidden />
-                      </span>
-                      <div className="min-w-0 text-start">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <p className="text-[14px] font-medium text-[#0F172A]">
-                            {member?.full_name ?? `موظف #${request.employee_id}`}
-                          </p>
-                          <StatusBadge status={request.status} />
-                        </div>
-                        <p className="mt-0.5 text-[13px] text-[#64748B]">
-                          {request.request_type} ·{" "}
-                          {formatLocaleDate(request.created_at, {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                          })}
-                        </p>
-                        <p className="mt-2 text-[13px] leading-relaxed text-[#0F172A]">
-                          {request.details}
-                        </p>
-                      </div>
-                    </div>
-
-                    {managerView ? (
-                      <div className="flex shrink-0 flex-wrap gap-2 sm:pt-1">
-                        <button
-                          type="button"
-                          disabled={actingRequestId === request.id}
-                          onClick={() =>
-                            handleRequestAction(request.id, "Approved")
-                          }
-                          className={`${HOME_BTN} inline-flex items-center gap-1.5 rounded-full bg-[#0F172A] px-4 py-2 text-[13px] font-medium text-white hover:opacity-90 disabled:opacity-50`}
-                        >
-                          <Check className="h-4 w-4" aria-hidden />
-                          {t("pages.myTeam.approve")}
-                        </button>
-                        <button
-                          type="button"
-                          disabled={actingRequestId === request.id}
-                          onClick={() =>
-                            handleRequestAction(request.id, "Rejected")
-                          }
-                          className={`${HOME_BTN} inline-flex items-center gap-1.5 rounded-full border border-[#E2E8F0] bg-white px-4 py-2 text-[13px] font-medium text-[#0F172A] hover:bg-[#F8FAFC] disabled:opacity-50`}
-                        >
-                          <X className="h-4 w-4" aria-hidden />
-                          {t("pages.myTeam.reject")}
-                        </button>
-                      </div>
-                    ) : null}
-                  </div>
+                  <PendingRequestCard
+                    request={request}
+                    employeeName={member?.full_name}
+                    actingRequestId={actingRequestId}
+                    showActions={managerView}
+                    onApprove={(requestId) =>
+                      handleRequestAction(requestId, "Approved")
+                    }
+                    onReject={(requestId) =>
+                      handleRequestAction(requestId, "Rejected")
+                    }
+                  />
                 </div>
               );
             })}

@@ -30,6 +30,8 @@ import {
   submitManagerHrRequest,
   updateTeamRequestStatus,
 } from "../services/myTeamService.js";
+import { useAppLocale } from "../i18n/useAppLocale.js";
+import { formatLocaleHeaderDate, formatLocaleNumber } from "../i18n/formatLocale.js";
 
 const INACTIVE_STATUSES = new Set(["منتهي الخدمة", "موقوف"]);
 
@@ -49,38 +51,15 @@ const HR_REQUEST_DESCRIPTIONS = {
   administrative: "طلب إجراء إداري من الموارد البشرية",
 };
 
-function getGreeting() {
+function getGreeting(t) {
   const hour = new Date().getHours();
-  if (hour < 12) return "صباح الخير";
-  if (hour < 17) return "مساء الخير";
-  return "مساءً طيباً";
-}
-
-function formatHeaderDate() {
-  const now = new Date();
-  const gregorian = new Intl.DateTimeFormat("ar-SA", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  }).format(now);
-
-  let hijri = "";
-  try {
-    hijri = new Intl.DateTimeFormat("ar-SA-u-ca-islamic", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    }).format(now);
-  } catch {
-    hijri = "";
-  }
-
-  return hijri ? `${gregorian} · ${hijri}` : gregorian;
+  if (hour < 12) return t("pages.home.greetingMorning");
+  if (hour < 17) return t("pages.home.greetingAfternoon");
+  return t("pages.home.greetingEvening");
 }
 
 function formatArabicNumber(value) {
-  return new Intl.NumberFormat("ar-SA").format(Number(value) || 0);
+  return formatLocaleNumber(value);
 }
 
 function isActiveEmployee(member) {
@@ -234,9 +213,10 @@ function ManagerHrRequestModal({
 }
 
 export default function MyTeamDashboard() {
+  const { t } = useAppLocale();
   const { user, role } = useAuth();
   const displayUser = getUserDisplay();
-  const headerDate = formatHeaderDate();
+  const headerDate = formatLocaleHeaderDate();
 
   const [team, setTeam] = useState([]);
   const [requests, setRequests] = useState([]);
@@ -318,34 +298,34 @@ export default function MyTeamDashboard() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-1 text-start">
               <p className="text-[13px] font-normal text-[#64748B]">
-                {getGreeting()}
+                {getGreeting(t)}
               </p>
               <h1 className="text-[24px] font-medium text-[#0F172A]">
-                فريق العمل
+                {t("pages.myTeam.title")}
               </h1>
               <p className="text-[12px] font-normal text-[#94A3B8]">
                 {headerDate}
               </p>
               <p className="pt-1 text-[13px] font-normal text-[#64748B]">
                 {managerView
-                  ? `مرحباً ${displayUser.name} — إدارة موظفيك واعتماد طلباتهم ورفع الطلبات للموارد البشرية.`
-                  : "متابعة فرق المدراء المباشرين وطلباتهم المعلقة."}
+                  ? t("pages.myTeam.subtitleManager")
+                  : t("pages.myTeam.subtitleHr")}
               </p>
             </div>
 
             <div className="flex flex-wrap gap-2 sm:shrink-0">
               <PulsePill
-                label={`${formatArabicNumber(isLoading ? 0 : team.length)} موظف`}
+                label={`${formatArabicNumber(isLoading ? 0 : team.length)} ${t("pages.myTeam.teamTotal")}`}
                 bg="#EEF2FF"
                 color="#4F46E5"
               />
               <PulsePill
-                label={`${formatArabicNumber(isLoading ? 0 : activeCount)} نشط`}
+                label={`${formatArabicNumber(isLoading ? 0 : activeCount)} ${t("pages.myTeam.active")}`}
                 bg="#ECFDF5"
                 color="#047857"
               />
               <PulsePill
-                label={`${formatArabicNumber(isLoading ? 0 : requests.length)} طلب معلّق`}
+                label={`${formatArabicNumber(isLoading ? 0 : requests.length)} ${t("pages.myTeam.pendingRequests")}`}
                 bg={requests.length > 0 ? "#FEE2E2" : "#F1F5F9"}
                 color={requests.length > 0 ? "#B91C1C" : "#475569"}
               />
@@ -476,7 +456,7 @@ export default function MyTeamDashboard() {
               id="team-requests-heading"
               className="text-[18px] font-medium text-[#0F172A]"
             >
-              طلبات الفريق
+              {t("pages.myTeam.contractSection")}
             </h2>
           </div>
           {!isLoading && requests.length > 0 ? (
@@ -552,7 +532,7 @@ export default function MyTeamDashboard() {
                           className={`${HOME_BTN} inline-flex items-center gap-1.5 rounded-full bg-[#0F172A] px-4 py-2 text-[13px] font-medium text-white hover:opacity-90 disabled:opacity-50`}
                         >
                           <Check className="h-4 w-4" aria-hidden />
-                          موافقة
+                          {t("pages.myTeam.approve")}
                         </button>
                         <button
                           type="button"
@@ -563,7 +543,7 @@ export default function MyTeamDashboard() {
                           className={`${HOME_BTN} inline-flex items-center gap-1.5 rounded-full border border-[#E2E8F0] bg-white px-4 py-2 text-[13px] font-medium text-[#0F172A] hover:bg-[#F8FAFC] disabled:opacity-50`}
                         >
                           <X className="h-4 w-4" aria-hidden />
-                          رفض
+                          {t("pages.myTeam.reject")}
                         </button>
                       </div>
                     ) : null}
@@ -614,7 +594,7 @@ export default function MyTeamDashboard() {
             id="team-members-heading"
             className="text-[16px] font-medium text-[#0F172A]"
           >
-            موظفي فريقي
+            {t("pages.myTeam.teamMembers")}
           </h2>
         </div>
 
@@ -627,7 +607,7 @@ export default function MyTeamDashboard() {
           <p
             className={`${HOME_CARD} px-4 py-10 text-center text-[14px] text-[#64748B]`}
           >
-            لا يوجد موظفون مرتبطون بفريقك حالياً.
+            {t("pages.myTeam.noTeam")}
           </p>
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -694,7 +674,7 @@ export default function MyTeamDashboard() {
             id="hr-requests-heading"
             className="text-[16px] font-medium text-[#0F172A]"
           >
-            طلباتي للإدارة
+            {t("pages.myTeam.hrRequests")}
           </h2>
         </div>
 

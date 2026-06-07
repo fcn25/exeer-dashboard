@@ -1,5 +1,8 @@
 import { supabase } from "../utils/supabaseClient.js";
-import { getCompanyId, getEmployeeId } from "../utils/mobileAuth.js";
+import {
+  normalizeCurrentEmployee,
+  setCurrentEmployeeCache,
+} from "./currentEmployeeService.js";
 
 const NOTE_COLORS = new Set(["amber", "mint", "sky", "rose"]);
 
@@ -11,12 +14,47 @@ function mapDbError(error) {
   return error.message || "تعذّر حفظ الملاحظة.";
 }
 
-function requireEmployeeId() {
-  const employeeId = getEmployeeId();
-  if (!employeeId) {
+/**
+ * Resolves employee bigint id + company_id from the live auth session.
+ * Previously getEmployeeId() only read localStorage/cache and could be stale
+ * even when employees.auth_user_id was already set in the database.
+ */
+async function resolveNoteEmployeeContext() {
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError) {
+    throw new Error(authError.message || "تعذّر التحقق من الجلسة.");
+  }
+  if (!user?.id) {
+    throw new Error("يجب تسجيل الدخول لحفظ الملاحظة.");
+  }
+
+  const { data: employee, error } = await supabase
+    .from("employees")
+    .select("id, company_id")
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
+
+  if (error) throw new Error(mapDbError(error));
+
+  const employeeId = Number(employee?.id);
+  const companyId = Number(employee?.company_id);
+
+  if (!Number.isFinite(employeeId) || employeeId <= 0 || !Number.isFinite(companyId) || companyId <= 0) {
     throw new Error("يجب ربط حسابك بسجل موظف (auth_user_id) لحفظ الملاحظة.");
   }
-  return employeeId;
+
+  setCurrentEmployeeCache(
+    normalizeCurrentEmployee(
+      { id: employeeId, company_id: companyId },
+      user.id,
+    ),
+  );
+
+  return { employeeId, companyId };
 }
 
 export function normalizeNoteColor(color) {
@@ -25,9 +63,7 @@ export function normalizeNoteColor(color) {
 }
 
 export async function getMyQuickNote() {
-  const companyId = getCompanyId();
-  const employeeId = getEmployeeId();
-  if (!employeeId) return null;
+  const { employeeId, companyId } = await resolveNoteEmployeeContext();
 
   const { data, error } = await supabase
     .from("user_quick_notes")
@@ -41,8 +77,7 @@ export async function getMyQuickNote() {
 }
 
 export async function upsertMyQuickNote({ content, color, is_pinned }) {
-  const companyId = getCompanyId();
-  const employeeId = requireEmployeeId();
+  const { employeeId, companyId } = await resolveNoteEmployeeContext();
 
   const payload = {
     company_id: companyId,

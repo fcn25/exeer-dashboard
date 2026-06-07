@@ -59,4 +59,4 @@ if (errors.length > 0) {
   process.exit(1);
 }
 
-console.log("[build] Supabase env vars validated for production bundle.");
+console.log("[build] Supabase and Gemini env vars validated for production bundle.");

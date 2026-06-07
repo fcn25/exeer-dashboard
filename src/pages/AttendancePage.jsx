@@ -24,9 +24,7 @@ import {
   formatGridCell,
   formatSummaryStat,
 } from "../utils/attendance/stats.js";
-
-const SUBTITLE =
-  "سجل الحضور والانصراف — عرض للقراءة فقط. تُحدَّث البيانات عبر استيراد ملف البصمة CSV فقط.";
+import { useAppLocale } from "../i18n/useAppLocale.js";
 
 const TABLE_COLUMNS = [
   { key: "employeeNumber", label: "الرقم الوظيفي" },
@@ -72,6 +70,7 @@ function formatDisplayDate(value) {
 }
 
 export default function AttendancePage() {
+  const { t } = useAppLocale();
   const defaults = getDefaultDateRange();
   const [dateFrom, setDateFrom] = useState(defaults.dateFrom);
   const [dateTo, setDateTo] = useState(defaults.dateTo);
@@ -189,8 +188,8 @@ export default function AttendancePage() {
     <div className="md-page attendance-page">
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div className="space-y-2">
-          <h1 className="md-page-title">سجل الحضور والانصراف</h1>
-          <p className="md-page-subtitle max-w-3xl">{SUBTITLE}</p>
+          <h1 className="md-page-title">{t("pages.attendance.title")}</h1>
+          <p className="md-page-subtitle max-w-3xl">{t("pages.attendance.subtitle")}</p>
         </div>
         {canManageAttendanceSettings() ? (
           <Link

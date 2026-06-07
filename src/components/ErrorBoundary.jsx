@@ -1,4 +1,6 @@
 import { Component } from "react";
+import i18n from "../i18n/index.js";
+import { resolveAppDir, resolveAppLang } from "../i18n/useAppLocale.js";
 
 /**
  * Catches render errors so the app shows a fallback instead of a white screen.
@@ -24,24 +26,25 @@ export default class ErrorBoundary extends Component {
 
   render() {
     if (this.state.hasError) {
+      const lang = resolveAppLang(i18n.language);
+      const dir = resolveAppDir(i18n.language);
+
       return (
         <div
-          dir="rtl"
-          lang="ar"
+          dir={dir}
+          lang={lang}
           className="mx-auto flex min-h-screen w-full max-w-[480px] flex-col items-center justify-center gap-4 bg-white px-6 py-12 text-center font-sans text-slate-900"
         >
           <p className="text-base font-bold text-slate-900">
-            حدث خطأ غير متوقع، يرجى تحديث الصفحة
+            {i18n.t("app.errorTitle")}
           </p>
-          <p className="text-sm text-slate-500">
-            إذا استمرت المشكلة، تواصل مع الدعم الفني.
-          </p>
+          <p className="text-sm text-slate-500">{i18n.t("app.errorBody")}</p>
           <button
             type="button"
             onClick={this.handleRefresh}
             className="md-btn-primary min-h-[44px] px-6"
           >
-            تحديث الصفحة
+            {i18n.t("app.errorRefresh")}
           </button>
         </div>
       );

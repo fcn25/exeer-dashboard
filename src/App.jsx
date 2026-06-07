@@ -26,6 +26,8 @@ import MobileSubscriptionPage from "./pages/MobileSubscriptionPage.jsx";
 import UpdatePasswordPage from "./pages/UpdatePasswordPage.jsx";
 import { ProtectedRoute } from "./components/ProtectedRoute.jsx";
 import ErrorBoundary from "./components/ErrorBoundary.jsx";
+import AppLoadingScreen from "./components/ui/AppLoadingScreen.jsx";
+import SentryErrorFallback from "./components/ui/SentryErrorFallback.jsx";
 import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
 
 // 💡 إضافة Sentry هنا
@@ -39,15 +41,7 @@ function LoginPage() {
   const { isAuthenticated, isBootstrapping, homePath } = useAuth();
 
   if (isBootstrapping) {
-    return (
-      <div
-        dir="rtl"
-        lang="ar"
-        className="flex min-h-screen items-center justify-center bg-md-surface-dim text-sm text-exeer-muted"
-      >
-        جاري التحميل...
-      </div>
-    );
+    return <AppLoadingScreen />;
   }
 
   if (isAuthenticated) {
@@ -180,15 +174,7 @@ function AppRoutes() {
   const { isBootstrapping, isAuthenticated, homePath } = useAuth();
 
   if (isBootstrapping) {
-    return (
-      <div
-        dir="rtl"
-        lang="ar"
-        className="flex min-h-screen items-center justify-center bg-md-surface-dim text-sm text-exeer-muted"
-      >
-        جاري التحميل...
-      </div>
-    );
+    return <AppLoadingScreen />;
   }
 
   return (
@@ -315,28 +301,7 @@ function AppRoutes() {
 export default function App() {
   return (
     // 💡 تغليف التطبيق بالكامل بجدار حماية Sentry هنا
-    <SentryReact.ErrorBoundary
-      fallback={
-        <div 
-          dir="rtl" 
-          lang="ar" 
-          className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-6 text-center"
-        >
-          <div className="max-w-md p-8 bg-white rounded-xl shadow-md border border-gray-100">
-            <h1 className="text-2xl font-bold text-gray-800 mb-3">عذراً، حدث خطأ غير متوقع</h1>
-            <p className="text-gray-600 mb-4">
-              نواجه مشكلة تقنية بسيطة حالياً. تم إبلاغ فريق الدعم تلقائياً وجاري العمل على إصلاحها.
-            </p>
-            <button 
-              onClick={() => window.location.reload()} 
-              className="px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition"
-            >
-              تحديث الصفحة
-            </button>
-          </div>
-        </div>
-      }
-    >
+    <SentryReact.ErrorBoundary fallback={<SentryErrorFallback />}>
       {/* 💡 هذا كودك الأصلي تماماً بداخل الغلاف */}
       <AuthProvider>
         <ErrorBoundary>

@@ -7,11 +7,10 @@ import {
   fetchAdministrativeActionsMasterLog,
 } from "../services/administrativeActionsService.js";
 import { listEmployees } from "../services/employeesService.js";
-
-const SUBTITLE =
-  "إصدار ومتابعة الإجراءات الإدارية المباشرة — بدون سلسلة موافقات.";
+import { useAppLocale } from "../i18n/useAppLocale.js";
 
 export default function AdministrativeActionsPage() {
+  const { t } = useAppLocale();
   const [employees, setEmployees] = useState([]);
   const [rows, setRows] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -56,8 +55,8 @@ export default function AdministrativeActionsPage() {
   return (
     <div className="md-page space-y-6">
       <header className="space-y-2">
-        <h1 className="md-page-title">الإجراءات الإدارية</h1>
-        <p className="md-page-subtitle max-w-3xl">{SUBTITLE}</p>
+        <h1 className="md-page-title">{t("pages.adminActions.title")}</h1>
+        <p className="md-page-subtitle max-w-3xl">{t("pages.adminActions.subtitle")}</p>
       </header>
 
       {error ? (

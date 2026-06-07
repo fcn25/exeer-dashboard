@@ -19,7 +19,7 @@ export default function LanguageToggle() {
         }`}
         aria-pressed={current === "ar"}
       >
-        العربية
+        {t("common.languageArabic")}
       </button>
       <button
         type="button"
@@ -29,7 +29,7 @@ export default function LanguageToggle() {
         }`}
         aria-pressed={current === "en"}
       >
-        English
+        {t("common.languageEnglish")}
       </button>
     </div>
   );

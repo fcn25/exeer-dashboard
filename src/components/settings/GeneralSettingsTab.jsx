@@ -9,10 +9,6 @@ import {
   updateCompanyIndustry,
 } from "../../services/companyService.js";
 
-const LANGUAGES = [
-  { value: "ar", label: "العربية" },
-  { value: "en", label: "English" },
-];
 
 export default function GeneralSettingsTab() {
   const { t, i18n } = useTranslation();
@@ -91,11 +87,8 @@ export default function GeneralSettingsTab() {
           onChange={(e) => i18n.changeLanguage(e.target.value)}
           className="md-input"
         >
-          {LANGUAGES.map((lang) => (
-            <option key={lang.value} value={lang.value}>
-              {lang.label}
-            </option>
-          ))}
+          <option value="ar">{t("common.languageArabic")}</option>
+          <option value="en">{t("common.languageEnglish")}</option>
         </select>
         <p className="text-xs leading-relaxed text-exeer-muted">
           {t("settings.general.languageHint")}

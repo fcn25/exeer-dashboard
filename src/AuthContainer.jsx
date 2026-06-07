@@ -6,6 +6,7 @@ import { useAuth } from "./context/AuthContext.jsx";
 import { signInWithEmail, signUpCompany, SIGNUP_SUCCESS_MESSAGE } from "./services/authService.js";
 import { formatErrorMessage } from "./utils/formatErrorMessage.js";
 import ExeerLogo from "./components/brand/ExeerLogo.jsx";
+import { useAppLocale } from "./i18n/useAppLocale.js";
 
 const INPUT_CLASS = "md-input";
 
@@ -28,13 +29,14 @@ function AuthMessage({ type, children }) {
 }
 
 export default function AuthContainer() {
+  const { dir, lang } = useAppLocale();
   const [authView, setAuthView] = useState("login");
   const [successMessage, setSuccessMessage] = useState("");
 
   return (
     <div
-      dir="rtl"
-      lang="ar"
+      dir={dir}
+      lang={lang}
       className="flex min-h-screen flex-col items-center justify-center bg-white px-4 py-10 font-sans"
     >
       <div className="mb-8 flex w-full max-w-md flex-col items-center">
@@ -85,6 +87,7 @@ function LoginView({
   onForgot,
   onSignup,
 }) {
+  const { t } = useAppLocale();
   const navigate = useNavigate();
   const { hydrateSession } = useAuth();
   const [email, setEmail] = useState("");
@@ -98,7 +101,7 @@ function LoginView({
     setSuccessMessage("");
 
     if (!email.trim() || !password) {
-      setError("يرجى إدخال البريد الإلكتروني وكلمة المرور.");
+      setError(t("auth.loginRequired"));
       return;
     }
 
@@ -107,7 +110,7 @@ function LoginView({
     try {
       const { session } = await signInWithEmail(email, password);
       if (!session) {
-        setError("تحقق من بريدك الإلكتروني لتفعيل الحساب.");
+        setError(t("auth.verifyEmail"));
         return;
       }
 
@@ -117,7 +120,7 @@ function LoginView({
         { replace: true },
       );
     } catch (err) {
-      setError(err.message || "بيانات الدخول غير صحيحة.");
+      setError(err.message || t("auth.invalidCredentials"));
     } finally {
       setIsLoading(false);
     }
@@ -126,7 +129,7 @@ function LoginView({
   return (
     <>
       <h1 className="mb-6 text-center text-xl font-bold text-slate-900">
-        مرحباً بك
+        {t("auth.welcome")}
       </h1>
 
       <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
@@ -138,7 +141,7 @@ function LoginView({
             htmlFor="login-email"
             className="mb-2 block text-sm font-medium text-slate-700"
           >
-            البريد الإلكتروني
+            {t("auth.email")}
           </label>
           <input
             id="login-email"
@@ -156,7 +159,7 @@ function LoginView({
             htmlFor="login-password"
             className="mb-2 block text-sm font-medium text-slate-700"
           >
-            كلمة المرور
+            {t("auth.password")}
           </label>
           <input
             id="login-password"
@@ -174,7 +177,7 @@ function LoginView({
           onClick={onForgot}
           className="self-start text-sm font-medium text-slate-500 transition-colors hover:text-slate-900"
         >
-          نسيت كلمة المرور؟
+          {t("auth.forgotPassword")}
         </button>
 
         <button
@@ -182,18 +185,18 @@ function LoginView({
           disabled={isLoading}
           className="w-full rounded-md bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
         >
-          {isLoading ? "جاري تسجيل الدخول..." : "تسجيل الدخول"}
+          {isLoading ? t("auth.signingIn") : t("auth.signIn")}
         </button>
       </form>
 
       <p className="mt-6 text-center text-sm text-slate-500">
-        ليس لديك حساب؟{" "}
+        {t("auth.noAccount")}{" "}
         <button
           type="button"
           onClick={onSignup}
           className="font-semibold text-slate-900 hover:underline"
         >
-          سجل الآن
+          {t("auth.signUpNow")}
         </button>
       </p>
     </>
@@ -201,6 +204,7 @@ function LoginView({
 }
 
 function SignupView({ onLogin }) {
+  const { t } = useAppLocale();
   const [companyName, setCompanyName] = useState("");
   const [adminFullName, setAdminFullName] = useState("");
   const [adminEmail, setAdminEmail] = useState("");
@@ -222,7 +226,7 @@ function SignupView({ onLogin }) {
       !password ||
       !agreedToTerms
     ) {
-      setError("يرجى تعبئة جميع الحقول والموافقة على الشروط.");
+      setError(t("auth.signupRequired"));
       return;
     }
 
@@ -245,7 +249,7 @@ function SignupView({ onLogin }) {
       setSuccessMessage(result.successMessage ?? SIGNUP_SUCCESS_MESSAGE);
     } catch (err) {
       setSuccessMessage("");
-      setError(formatErrorMessage(err, "تعذّر إنشاء الحساب."));
+      setError(formatErrorMessage(err, t("auth.signupFailed")));
     } finally {
       setIsLoading(false);
     }
@@ -254,7 +258,7 @@ function SignupView({ onLogin }) {
   return (
     <>
       <h1 className="mb-6 text-center text-xl font-bold text-slate-900">
-        إنشاء حساب جديد
+        {t("auth.createAccount")}
       </h1>
 
       <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
@@ -266,7 +270,7 @@ function SignupView({ onLogin }) {
             htmlFor="company-name"
             className="mb-2 block text-sm font-medium text-slate-700"
           >
-            اسم المنشأة
+            {t("auth.companyName")}
           </label>
           <input
             id="company-name"
@@ -283,7 +287,7 @@ function SignupView({ onLogin }) {
             htmlFor="admin-name"
             className="mb-2 block text-sm font-medium text-slate-700"
           >
-            اسم المدير الكامل
+            {t("auth.adminFullName")}
           </label>
           <input
             id="admin-name"
@@ -300,7 +304,7 @@ function SignupView({ onLogin }) {
             htmlFor="admin-email"
             className="mb-2 block text-sm font-medium text-slate-700"
           >
-            البريد الإلكتروني
+            {t("auth.email")}
           </label>
           <input
             id="admin-email"
@@ -318,7 +322,7 @@ function SignupView({ onLogin }) {
             htmlFor="signup-password"
             className="mb-2 block text-sm font-medium text-slate-700"
           >
-            كلمة المرور
+            {t("auth.password")}
           </label>
           <input
             id="signup-password"
@@ -339,7 +343,7 @@ function SignupView({ onLogin }) {
             disabled={isLoading}
             className="mt-1 h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-0"
           />
-          <span>أوافق على الشروط والأحكام</span>
+          <span>{t("auth.agreeTerms")}</span>
         </label>
 
         <button
@@ -347,18 +351,18 @@ function SignupView({ onLogin }) {
           disabled={isLoading}
           className="w-full rounded-md bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
         >
-          {isLoading ? "جاري إنشاء الحساب..." : "إنشاء حساب"}
+          {isLoading ? t("auth.creatingAccount") : t("auth.createAccountBtn")}
         </button>
       </form>
 
       <p className="mt-6 text-center text-sm text-slate-500">
-        لديك حساب بالفعل؟{" "}
+        {t("auth.hasAccount")}{" "}
         <button
           type="button"
           onClick={onLogin}
           className="font-semibold text-slate-900 hover:underline"
         >
-          تسجيل الدخول
+          {t("auth.signIn")}
         </button>
       </p>
     </>
@@ -366,6 +370,7 @@ function SignupView({ onLogin }) {
 }
 
 function ForgotPasswordView({ onBack }) {
+  const { t } = useAppLocale();
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
@@ -378,17 +383,15 @@ function ForgotPasswordView({ onBack }) {
   return (
     <>
       <h1 className="mb-2 text-center text-xl font-bold text-slate-900">
-        نسيت كلمة المرور؟
+        {t("auth.forgotTitle")}
       </h1>
       <p className="mb-6 text-center text-sm leading-relaxed text-slate-500">
-        أدخل بريدك الإلكتروني وسنرسل لك رمز التحقق.
+        {t("auth.forgotHint")}
       </p>
 
       <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
         {submitted ? (
-          <AuthMessage type="success">
-            تم إرسال رمز التحقق إلى بريدك الإلكتروني (واجهة تجريبية).
-          </AuthMessage>
+          <AuthMessage type="success">{t("auth.forgotSuccess")}</AuthMessage>
         ) : null}
 
         <div>
@@ -396,7 +399,7 @@ function ForgotPasswordView({ onBack }) {
             htmlFor="forgot-email"
             className="mb-2 block text-sm font-medium text-slate-700"
           >
-            البريد الإلكتروني
+            {t("auth.email")}
           </label>
           <input
             id="forgot-email"
@@ -413,7 +416,7 @@ function ForgotPasswordView({ onBack }) {
           disabled={!email.trim()}
           className="w-full rounded-md bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
         >
-          إرسال الرمز
+          {t("auth.sendCode")}
         </button>
       </form>
 
@@ -423,7 +426,7 @@ function ForgotPasswordView({ onBack }) {
           onClick={onBack}
           className="font-semibold text-slate-900 hover:underline"
         >
-          العودة لتسجيل الدخول
+          {t("auth.backToLogin")}
         </button>
       </p>
     </>

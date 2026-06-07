@@ -13,6 +13,7 @@ import {
   updateRoleAssignedEmployees,
   updateRolePermissions,
 } from "../services/permissionsService.js";
+import { useAppLocale } from "../i18n/useAppLocale.js";
 
 function ToggleSwitch({ checked, disabled, onChange, label }) {
   return (
@@ -135,6 +136,7 @@ function EmployeeAssignMultiselect({
 }
 
 export default function PermissionsPage() {
+  const { t } = useAppLocale();
   const [roles, setRoles] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [activeRole, setActiveRole] = useState("");
@@ -241,9 +243,9 @@ export default function PermissionsPage() {
   return (
     <div className="md-page">
       <header className="space-y-2">
-        <h1 className="md-page-title">الصلاحيات</h1>
+        <h1 className="md-page-title">{t("pages.permissions.title")}</h1>
         <p className="text-sm text-exeer-muted">
-          إدارة صلاحيات الأدوار لمنشأتك — مدير النظام لديه صلاحيات كاملة دائماً
+          {t("pages.permissions.subtitle")}
         </p>
       </header>
 

@@ -1,5 +1,4 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
 import { useMemo, useState } from "react";
 import {
   Banknote,
@@ -20,6 +19,7 @@ import {
 import { signOut } from "../utils/mobileAuth.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import ExeerLogo from "../components/brand/ExeerLogo.jsx";
+import { useAppLocale } from "../i18n/useAppLocale.js";
 import {
   canAccessMyTeam,
   canAccessPerformance,
@@ -56,23 +56,21 @@ function SidebarLink({ to, label, icon: Icon, end, collapsed }) {
 
 export default function ManagerLayout() {
   const navigate = useNavigate();
-  const { i18n } = useTranslation();
+  const { t, dir, lang } = useAppLocale();
   const { permissions, role } = useAuth();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const dir = i18n.language?.startsWith("en") ? "ltr" : "rtl";
-  const lang = i18n.language?.startsWith("en") ? "en" : "ar";
 
   const navItems = useMemo(() => {
     const managerOnly = isDirectManager(role);
     const items = [
-      { to: "/dashboard", label: "الرئيسية", icon: Home, end: true },
-      { to: "/dashboard/tasks", label: "المهام", icon: CheckSquare },
+      { to: "/dashboard", label: t("nav.home"), icon: Home, end: true },
+      { to: "/dashboard/tasks", label: t("nav.tasks"), icon: CheckSquare },
     ];
 
     if (canManageEvents() || managerOnly) {
       items.push({
         to: "/dashboard/events",
-        label: "الفعاليات",
+        label: t("nav.events"),
         icon: Calendar,
       });
     }
@@ -81,7 +79,7 @@ export default function ManagerLayout() {
       if (canEditEmployeeRecords()) {
         items.push({
           to: "/dashboard/employees",
-          label: "الموظفين",
+          label: t("nav.employees"),
           icon: Users,
         });
       }
@@ -89,7 +87,7 @@ export default function ManagerLayout() {
       if (canManageAdministrativeActions()) {
         items.push({
           to: "/dashboard/administrative-actions",
-          label: "الإجراءات الإدارية",
+          label: t("nav.adminActions"),
           icon: Gavel,
         });
       }
@@ -97,12 +95,12 @@ export default function ManagerLayout() {
       if (canViewPayroll()) {
         items.push({
           to: "/dashboard/payroll",
-          label: "مسير الرواتب",
+          label: t("nav.payroll"),
           icon: Banknote,
         });
         items.push({
           to: "/dashboard/attendance",
-          label: "سجل الحضور",
+          label: t("nav.attendance"),
           icon: Fingerprint,
         });
       }
@@ -111,7 +109,7 @@ export default function ManagerLayout() {
     if (canAccessMyTeam(role)) {
       items.push({
         to: "/dashboard/my-team",
-        label: "فريق العمل",
+        label: t("nav.myTeam"),
         icon: UsersRound,
       });
     }
@@ -119,7 +117,7 @@ export default function ManagerLayout() {
     if (canAccessPerformance()) {
       items.push({
         to: "/dashboard/performance",
-        label: "إدارة الأداء",
+        label: t("nav.performance"),
         icon: Target,
       });
     }
@@ -127,7 +125,7 @@ export default function ManagerLayout() {
     if (canAccessSettings()) {
       items.push({
         to: "/dashboard/settings",
-        label: "الإعدادات",
+        label: t("nav.settings"),
         icon: Settings,
       });
     }
@@ -135,13 +133,13 @@ export default function ManagerLayout() {
     if (!managerOnly && isOwner()) {
       items.push({
         to: "/dashboard/permissions",
-        label: "الصلاحيات",
+        label: t("nav.permissions"),
         icon: Lock,
       });
     }
 
     return items;
-  }, [permissions, role]);
+  }, [permissions, role, t]);
 
   const handleLogout = async () => {
     await signOut();
@@ -172,7 +170,7 @@ export default function ManagerLayout() {
             />
             {isSidebarCollapsed ? null : (
               <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                لوحة المدير
+                {t("nav.subtitle")}
               </p>
             )}
           </div>
@@ -181,7 +179,7 @@ export default function ManagerLayout() {
               type="button"
               onClick={() => setIsSidebarCollapsed(true)}
               className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-gray-200 text-slate-500 transition-colors hover:bg-gray-50 dark:border-slate-700 dark:hover:bg-slate-900"
-              aria-label="طي القائمة"
+              aria-label={t("nav.collapseSidebar")}
             >
               <PanelLeftClose className="h-4 w-4" aria-hidden />
             </button>
@@ -193,7 +191,7 @@ export default function ManagerLayout() {
             type="button"
             onClick={() => setIsSidebarCollapsed(false)}
             className="mb-4 flex w-full items-center justify-center rounded-md border border-gray-200 py-2 text-slate-500 hover:bg-gray-50 dark:border-slate-700 dark:hover:bg-slate-900"
-            aria-label="توسيع القائمة"
+            aria-label={t("nav.expandSidebar")}
           >
             <PanelLeftOpen className="h-4 w-4" aria-hidden />
           </button>
@@ -206,7 +204,7 @@ export default function ManagerLayout() {
             className="mb-5 flex w-full items-center justify-center gap-2 rounded-md border border-slate-900 bg-slate-900 px-3 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-800 dark:border-slate-200 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200"
           >
             <UserPlus className="h-4 w-4 stroke-[1.75]" aria-hidden />
-            إضافة موظف جديد
+            {t("nav.addEmployee")}
           </button>
         ) : null}
 
@@ -214,7 +212,7 @@ export default function ManagerLayout() {
           <button
             type="button"
             onClick={() => navigate("/dashboard/employees?add=1")}
-            title="إضافة موظف جديد"
+            title={t("nav.addEmployee")}
             className="mb-4 flex w-full items-center justify-center rounded-md border border-slate-900 bg-slate-900 p-2.5 text-white hover:bg-slate-800 dark:border-slate-200 dark:bg-slate-100 dark:text-slate-900"
           >
             <UserPlus className="h-4 w-4" aria-hidden />
@@ -223,7 +221,7 @@ export default function ManagerLayout() {
 
         <nav
           className="flex flex-1 flex-col gap-0.5"
-          aria-label="القائمة الرئيسية"
+          aria-label={t("nav.mainNav")}
         >
           {navItems.map((item) => (
             <SidebarLink
@@ -239,9 +237,9 @@ export default function ManagerLayout() {
             type="button"
             onClick={handleLogout}
             className={`md-btn-tonal w-full ${isSidebarCollapsed ? "px-2 py-2.5 text-xs" : ""}`}
-            title={isSidebarCollapsed ? "تسجيل الخروج" : undefined}
+            title={isSidebarCollapsed ? t("common.logout") : undefined}
           >
-            {isSidebarCollapsed ? "خروج" : "تسجيل الخروج"}
+            {isSidebarCollapsed ? t("common.logoutShort") : t("common.logout")}
           </button>
         </div>
       </aside>

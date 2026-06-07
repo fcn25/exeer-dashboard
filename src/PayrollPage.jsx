@@ -24,9 +24,7 @@ import {
   safePayrollAmount,
 } from "./utils/payroll/payrollTableConfig.js";
 import ExeerEmptyState from "./components/brand/ExeerEmptyState.jsx";
-
-const PAYROLL_SUBTITLE =
-  "بروتوكول المزامنة الآمن — أنشئ المسير ثم حدّث الخصومات عند الطلب (حضور، إجراءات إدارية، قروض) قبل تصدير ملف المحاسبة.";
+import { useAppLocale } from "./i18n/useAppLocale.js";
 
 const CARD_CLASS =
   "rounded-md border border-gray-200 bg-white p-6 shadow-none";
@@ -53,6 +51,7 @@ function StatCard({ label, value }) {
 }
 
 export default function PayrollPage() {
+  const { t } = useAppLocale();
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonthValue);
   const [rows, setRows] = useState([]);
   const [isExported, setIsExported] = useState(false);
@@ -185,15 +184,15 @@ export default function PayrollPage() {
   return (
     <div className="md-page payroll-page">
       <header className="payroll-no-print space-y-2">
-        <h1 className="md-page-title">مسير الرواتب</h1>
-        <p className="text-sm text-slate-500">{PAYROLL_SUBTITLE}</p>
+        <h1 className="md-page-title">{t("pages.payroll.title")}</h1>
+        <p className="text-sm text-slate-500">{t("pages.payroll.subtitle")}</p>
       </header>
 
       <div className="payroll-no-print space-y-4">
         {isExported ? (
           <div className="flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 shadow-none">
             <Lock className="h-4 w-4 shrink-0" aria-hidden />
-            مسير شهر {payrollMonthLabel} مُصدَّر — يمكن تحديث الأرقام أو إعادة التصدير
+            {t("pages.payroll.exportedNote", { month: payrollMonthLabel })}
           </div>
         ) : null}
 
@@ -221,7 +220,7 @@ export default function PayrollPage() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
             <MonthInput
               id="payroll-month"
-              label="الشهر / السنة"
+              label={t("pages.payroll.selectMonth")}
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
               disabled={isLoading}
@@ -235,7 +234,7 @@ export default function PayrollPage() {
                 disabled={isLoading || !selectedMonth || hasExistingPayroll}
                 className="md-btn-primary shadow-none"
               >
-                {isLoading ? "جاري المعالجة..." : "إنشاء المسير الشهري"}
+                {isLoading ? t("common.loading") : t("pages.payroll.generate")}
               </button>
               {hasExistingPayroll ? (
                 <p className="text-xs text-slate-500">تم إنشاء مسير هذا الشهر</p>
@@ -250,7 +249,7 @@ export default function PayrollPage() {
               title="مزامنة التأخيرات والجزاءات والقروض للشهر المعروض"
             >
               <RefreshCw className="h-4 w-4" aria-hidden />
-              تحديث أرقام المسير
+              {t("pages.payroll.sync")}
             </button>
           </div>
 
@@ -261,7 +260,7 @@ export default function PayrollPage() {
               className="inline-flex items-center gap-2 rounded-md border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 shadow-none hover:bg-gray-50"
             >
               <History className="h-4 w-4" aria-hidden />
-              سجل المسيرات
+              {t("pages.payroll.history")}
             </button>
             <button
               type="button"
@@ -271,7 +270,7 @@ export default function PayrollPage() {
               title="تصدير Excel للمحاسبة (يشمل البنك والآيبان — غير معروض في الجدول)"
             >
               <FileSpreadsheet className="h-4 w-4" aria-hidden />
-              تصدير للمحاسبة
+              {t("pages.payroll.exportAccounting")}
             </button>
             <button
               type="button"
@@ -280,7 +279,7 @@ export default function PayrollPage() {
               className="inline-flex items-center gap-2 rounded-md border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 shadow-none hover:bg-gray-50 disabled:opacity-50"
             >
               <Printer className="h-4 w-4" aria-hidden />
-              طباعة
+              {t("pages.payroll.print")}
             </button>
           </div>
         </section>
@@ -292,17 +291,17 @@ export default function PayrollPage() {
           aria-label="ملخص المسير"
         >
           <StatCard
-            label="عدد الموظفين"
+            label={t("pages.payroll.employees")}
             value={statsReady ? formatStatCount(stats.employeeCount) : "—"}
           />
           <StatCard
-            label="إجمالي الخصومات"
+            label={t("pages.payroll.totalDeductions")}
             value={
               statsReady ? formatPayrollCurrency(stats.totalDeductions) : "—"
             }
           />
           <StatCard
-            label="إجمالي صافي الرواتب"
+            label={t("pages.payroll.totalNet")}
             value={statsReady ? formatPayrollCurrency(stats.totalNet) : "—"}
           />
         </section>
@@ -338,8 +337,8 @@ export default function PayrollPage() {
                       <ExeerEmptyState
                         message={
                           hasLoaded
-                            ? "لا توجد سجلات — اضغط «إنشاء المسير الشهري»"
-                            : "اختر الشهر ثم أنشئ المسير"
+                            ? t("pages.payroll.emptyTitle")
+                            : t("pages.payroll.emptyBody")
                         }
                       />
                     </td>

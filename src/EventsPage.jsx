@@ -4,6 +4,7 @@ import { DateTimeInput } from "./components/ui/DateInput.jsx";
 import { createEvent, listEvents } from "./services/eventsService.js";
 import { canCreateEvents } from "./utils/rbac.js";
 import ExeerEmptyState from "./components/brand/ExeerEmptyState.jsx";
+import { useAppLocale } from "./i18n/useAppLocale.js";
 
 function mapEventRow(row) {
   if (!row || typeof row !== "object") return null;
@@ -178,6 +179,7 @@ function CreateEventModal({ isOpen, onClose, onCreated }) {
 }
 
 export default function EventsPage() {
+  const { t } = useAppLocale();
   const [events, setEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -219,9 +221,9 @@ export default function EventsPage() {
     <div className="md-page">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-2">
-          <h1 className="md-page-title">الفعاليات</h1>
+          <h1 className="md-page-title">{t("pages.events.title")}</h1>
           <p className="text-sm text-exeer-muted">
-            إدارة فعاليات المنشأة وجدولها الزمني
+            {t("pages.events.subtitle")}
           </p>
         </div>
         {canCreateEvents() ? (

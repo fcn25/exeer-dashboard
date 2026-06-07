@@ -4,8 +4,10 @@ import { ArrowRight, Fingerprint } from "lucide-react";
 import BranchGeofenceManager from "../components/attendance/BranchGeofenceManager.jsx";
 import EmployeeBranchAssignments from "../components/attendance/EmployeeBranchAssignments.jsx";
 import SuccessToast from "../components/ui/SuccessToast.jsx";
+import { useAppLocale } from "../i18n/useAppLocale.js";
 
 export default function AttendanceSettingsPage() {
+  const { t } = useAppLocale();
   const [successToast, setSuccessToast] = useState("");
 
   return (
@@ -23,9 +25,9 @@ export default function AttendanceSettingsPage() {
             <Fingerprint className="h-5 w-5 stroke-[1.75]" aria-hidden />
           </span>
           <div className="space-y-1">
-            <h1 className="md-page-title">إعدادات البصمة والمواقع</h1>
+            <h1 className="md-page-title">{t("pages.attendanceSettings.title")}</h1>
             <p className="text-sm text-exeer-muted">
-              إدارة مواقع الفروع ونطاقات الحضور وربط الموظفين — للمالك فقط
+              {t("pages.attendanceSettings.subtitle")}
             </p>
           </div>
         </div>

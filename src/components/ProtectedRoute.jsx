@@ -1,4 +1,5 @@
 import { Navigate, useLocation } from "react-router-dom";
+import AppLoadingScreen from "./ui/AppLoadingScreen.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import { normalizeAppRole } from "../constants/roles.js";
 
@@ -36,15 +37,7 @@ export function ProtectedRoute({
   const location = useLocation();
 
   if (isBootstrapping) {
-    return (
-      <div
-        dir="rtl"
-        lang="ar"
-        className="flex min-h-screen items-center justify-center bg-md-surface-dim text-sm text-exeer-muted"
-      >
-        جاري التحميل...
-      </div>
-    );
+    return <AppLoadingScreen />;
   }
 
   if (!isAuthenticated) {

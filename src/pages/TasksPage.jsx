@@ -9,6 +9,7 @@ import {
   updateTaskStatus,
 } from "../services/tasksService.js";
 import { normalizeTaskStatus } from "../utils/taskStatus.js";
+import { useAppLocale } from "../i18n/useAppLocale.js";
 
 export { normalizeTaskStatus };
 
@@ -315,6 +316,7 @@ function CreateTaskModal({ isOpen, onClose, onTaskCreated }) {
 }
 
 export default function TasksPage() {
+  const { t } = useAppLocale();
   const [tasks, setTasks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -370,9 +372,9 @@ export default function TasksPage() {
     <div className="md-page">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-2">
-          <h1 className="md-page-title">إدارة المهام</h1>
+          <h1 className="md-page-title">{t("pages.tasks.title")}</h1>
           <p className="text-sm text-exeer-muted">
-            لوحة كانبان — غيّر الحالة من القائمة لتحديث المهمة فوراً
+            {t("pages.tasks.subtitle")}
           </p>
         </div>
         <button

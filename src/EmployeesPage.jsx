@@ -34,6 +34,7 @@ import {
   canEditEmployeeRecords,
   getCurrentUserRole,
 } from "./utils/rbac.js";
+import { useAppLocale } from "./i18n/useAppLocale.js";
 
 function mapDirectoryRow(item, index) {
   if (!item || typeof item !== "object") return null;
@@ -440,6 +441,7 @@ function EmployeeDetailsSlideOver({
 }
 
 export default function EmployeesPage() {
+  const { t } = useAppLocale();
   const [searchParams, setSearchParams] = useSearchParams();
   const [employees, setEmployees] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -607,7 +609,7 @@ export default function EmployeesPage() {
     <div className="md-page">
       <header className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
         <div className="space-y-2">
-          <h1 className="md-page-title">إدارة الموظفين</h1>
+          <h1 className="md-page-title">{t("pages.employees.title")}</h1>
           <p className="text-sm text-exeer-muted">
             إدارة سجلات الموظفين —{" "}
             <span className="font-medium text-exeer-primary">{userRole}</span>

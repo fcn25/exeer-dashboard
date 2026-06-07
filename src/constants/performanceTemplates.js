@@ -20,24 +20,9 @@ import {
 } from "lucide-react";
 
 export const PERFORMANCE_TABS = [
-  {
-    id: "templates",
-    label: "نماذج التقييم",
-    icon: ClipboardCheck,
-    hint: "مكتبة النماذج والمعايير",
-  },
-  {
-    id: "cycles",
-    label: "دورات التقييم",
-    icon: RefreshCw,
-    hint: "إطلاق ومتابعة الدورات",
-  },
-  {
-    id: "summary",
-    label: "الملخص التنفيذي",
-    icon: BarChart3,
-    hint: "تحليل نتائج الأداء",
-  },
+  { id: "templates", icon: ClipboardCheck },
+  { id: "cycles", icon: RefreshCw },
+  { id: "summary", icon: BarChart3 },
 ];
 
 export const TEMPLATE_PILLARS = [

@@ -4,22 +4,24 @@ import CyclesTab from "../components/performance/CyclesTab.jsx";
 import ExecutiveSummaryTab from "../components/performance/ExecutiveSummaryTab.jsx";
 import TemplatesTab from "../components/performance/TemplatesTab.jsx";
 import { HOME_SHELL } from "../components/home/homeStyles.js";
+import { useAppLocale } from "../i18n/useAppLocale.js";
 
 export default function PerformancePage() {
+  const { t } = useAppLocale();
   const [activeTab, setActiveTab] = useState("templates");
 
   return (
     <div className="md-page">
       <header className="space-y-2">
-        <h1 className="md-page-title">إدارة الأداء</h1>
+        <h1 className="md-page-title">{t("pages.performance.title")}</h1>
         <p className="text-sm text-exeer-muted">
-          نماذج التقييم، دورات الأداء، والملخص التنفيذي — في منصة واحدة.
+          {t("pages.performance.subtitle")}
         </p>
       </header>
 
       <nav
         role="tablist"
-        aria-label="تبويبات إدارة الأداء"
+        aria-label={t("pages.performance.title")}
         className={`${HOME_SHELL} mb-6 grid grid-cols-1 gap-2 bg-[#F8FAFC] p-2 sm:grid-cols-3`}
       >
         {PERFORMANCE_TABS.map((tab) => {
@@ -50,17 +52,15 @@ export default function PerformancePage() {
               </span>
               <span className="min-w-0">
                 <span className="block text-[14px] font-semibold leading-snug">
-                  {tab.label}
+                  {t(`pages.performance.tabs.${tab.id}.label`)}
                 </span>
-                {tab.hint ? (
-                  <span
-                    className={`mt-0.5 block text-[11px] font-normal leading-relaxed ${
-                      isActive ? "text-white/75" : "text-[#94A3B8]"
-                    }`}
-                  >
-                    {tab.hint}
-                  </span>
-                ) : null}
+                <span
+                  className={`mt-0.5 block text-[11px] font-normal leading-relaxed ${
+                    isActive ? "text-white/75" : "text-[#94A3B8]"
+                  }`}
+                >
+                  {t(`pages.performance.tabs.${tab.id}.hint`)}
+                </span>
               </span>
             </button>
           );

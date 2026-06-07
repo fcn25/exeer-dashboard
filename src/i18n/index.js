@@ -15,10 +15,16 @@ function getInitialLanguage() {
   return "ar";
 }
 
+const APP_TITLES = {
+  ar: "Exeer — لوحة المدير",
+  en: "Exeer — Manager Dashboard",
+};
+
 function applyDocumentLanguage(lng) {
   const language = lng === "en" ? "en" : "ar";
   document.documentElement.lang = language;
   document.documentElement.dir = language === "ar" ? "rtl" : "ltr";
+  document.title = APP_TITLES[language] ?? APP_TITLES.ar;
 }
 
 const initialLanguage = getInitialLanguage();

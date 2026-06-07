@@ -257,8 +257,8 @@
       "description": "Reach the Exeer team for help or inquiries.",
       "whatsapp": "WhatsApp support",
       "email": "Email",
-      "terms": "Terms of Service",
-      "termsHint": "Read Exeer platform terms of use"
+      "terms": "Terms of use",
+      "termsHint": "Read the Exeer system usage agreement"
     },
     "subscription": {
       "title": "Subscription",
@@ -284,9 +284,9 @@
       }
     },
     "termsModal": {
-      "title": "Terms of Service",
+      "title": "Terms of use",
       "close": "Close",
-      "body": "This is placeholder Terms of Service text. It will be replaced with the official legal copy for the Exeer platform. By using the platform, you agree to comply with applicable policies and regulations."
+      "bodyEn": "The full terms of use are available in Arabic. Switch the interface language to Arabic to read the agreement."
     }
   },
   "systemCustomization": {

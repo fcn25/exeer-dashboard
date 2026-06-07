@@ -2,9 +2,12 @@ import { useState } from "react";
 import { FileText, Mail, MessageCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import TermsModal from "./TermsModal.jsx";
+import {
+  SUPPORT_EMAIL_ADDRESS,
+  SUPPORT_EMAIL_HREF,
+} from "../../constants/supportContact.js";
 
 const SUPPORT_WHATSAPP = "https://wa.me/966500000000";
-const SUPPORT_EMAIL = "mailto:support@exeer.com";
 
 export default function SupportSettingsTab() {
   const { t } = useTranslation();
@@ -43,7 +46,7 @@ export default function SupportSettingsTab() {
           </a>
 
           <a
-            href={SUPPORT_EMAIL}
+            href={SUPPORT_EMAIL_HREF}
             className="md-surface flex items-center gap-4 p-5 transition-colors hover:bg-exeer-hover"
           >
             <span className="flex h-11 w-11 items-center justify-center rounded-md bg-md-primary-container text-exeer-primary dark:bg-[#1e3a5f] dark:text-[#e2e8f0]">
@@ -54,7 +57,7 @@ export default function SupportSettingsTab() {
                 {t("settings.support.email")}
               </span>
               <span className="text-xs text-exeer-muted" dir="ltr">
-                support@exeer.com
+                {SUPPORT_EMAIL_ADDRESS}
               </span>
             </span>
           </a>

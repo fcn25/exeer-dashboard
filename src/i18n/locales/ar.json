@@ -257,8 +257,8 @@
       "description": "تواصل مع فريق Exeer للمساعدة أو الاستفسارات.",
       "whatsapp": "واتساب الدعم",
       "email": "البريد الإلكتروني",
-      "terms": "شروط الخدمة",
-      "termsHint": "اطّلع على شروط استخدام منصة Exeer"
+      "terms": "اتفاقية الاستخدام",
+      "termsHint": "اطّلع على اتفاقية استخدام نظام إكسير"
     },
     "subscription": {
       "title": "الاشتراك",
@@ -284,9 +284,9 @@
       }
     },
     "termsModal": {
-      "title": "شروط الخدمة",
+      "title": "اتفاقية الاستخدام",
       "close": "إغلاق",
-      "body": "هذا نص تجريبي لشروط الخدمة. سيتم استبداله بالنص القانوني المعتمد لمنصة Exeer. باستخدامك للمنصة، فإنك توافق على الالتزام بالسياسات واللوائح المعمول بها."
+      "bodyEn": "The full terms of use are available in Arabic. Switch the interface language to Arabic to read the agreement."
     }
   },
   "systemCustomization": {

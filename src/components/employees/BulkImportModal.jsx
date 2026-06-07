@@ -23,7 +23,6 @@ export default function BulkImportModal({ isOpen, onClose, onSuccess }) {
   const [limitError, setLimitError] = useState("");
   const [isParsing, setIsParsing] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
-  const [sendInvites, setSendInvites] = useState(false);
   const [limitContext, setLimitContext] = useState({
     tier: "trial",
     employeeCount: 0,
@@ -37,7 +36,6 @@ export default function BulkImportModal({ isOpen, onClose, onSuccess }) {
     setLimitError("");
     setIsParsing(false);
     setIsImporting(false);
-    setSendInvites(false);
     if (inputRef.current) inputRef.current.value = "";
   };
 
@@ -78,6 +76,8 @@ export default function BulkImportModal({ isOpen, onClose, onSuccess }) {
     () => parsedRows.filter((row) => !isValidEmployeeEmail(row.email)).length,
     [parsedRows],
   );
+
+  const rowsWithEmail = previewCount - rowsMissingEmail;
 
   const handleFileChange = async (event) => {
     const selected = event.target.files?.[0] ?? null;
@@ -131,7 +131,7 @@ export default function BulkImportModal({ isOpen, onClose, onSuccess }) {
     setError("");
 
     try {
-      const result = await bulkCreateEmployees(parsedRows, { sendInvites });
+      const result = await bulkCreateEmployees(parsedRows);
       onSuccess?.(result);
       handleClose();
     } catch (err) {
@@ -209,20 +209,14 @@ export default function BulkImportModal({ isOpen, onClose, onSuccess }) {
               جاهز للاستيراد: {previewCount} موظف
             </p>
             <p className="text-xs text-exeer-muted">{file.name}</p>
-            <label className="flex cursor-pointer items-center gap-2 text-sm text-exeer-primary">
-              <input
-                type="checkbox"
-                checked={sendInvites}
-                onChange={(e) => setSendInvites(e.target.checked)}
-                disabled={isImporting}
-                className="h-4 w-4 rounded border-exeer-border"
-              />
-              إرسال دعوات الدخول للبريد الإلكتروني (إن وُجد)
-            </label>
-            {sendInvites && rowsMissingEmail > 0 ? (
+            <p className="text-xs text-exeer-muted">
+              لن تُرسل دعوات تلقائياً. بعد الاستيراد استخدم زر «إرسال الدعوات»
+              في صفحة الموظفين.
+            </p>
+            {rowsMissingEmail > 0 ? (
               <p className="text-xs text-amber-800">
-                {rowsMissingEmail} موظف بدون بريد صالح — سيُستوردون دون دعوة
-                دخول.
+                {rowsMissingEmail} موظف بدون بريد صالح — لن يصلهم دعوة حتى
+                يُحدَّث البريد ({rowsWithEmail} جاهزون للدعوة لاحقاً).
               </p>
             ) : null}
           </div>

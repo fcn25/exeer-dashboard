@@ -137,7 +137,7 @@ function AddEmployeeSlideOver({
       return;
     }
     if (!form.email?.trim()) {
-      setError("البريد الإلكتروني مطلوب لإرسال دعوة الدخول للموظف.");
+      setError("البريد الإلكتروني مطلوب.");
       return;
     }
 
@@ -152,15 +152,8 @@ function AddEmployeeSlideOver({
     setSuccessMessage("");
 
     try {
-      const created = await createEmployee(form);
+      await createEmployee(form);
       await onCreated();
-      if (created.invitationSent) {
-        setSuccessMessage(
-          `تم حفظ الموظف وإرسال دعوة الدخول إلى ${form.email.trim()}.`,
-        );
-        setTimeout(() => onClose(), 1400);
-        return;
-      }
       onClose();
     } catch (err) {
       setError(err.message || "تعذّر إضافة الموظف.");
@@ -596,7 +589,15 @@ export default function EmployeesPage() {
     setListError("");
 
     try {
-      const { invitesSent } = await inviteEmployeesWithoutAccounts();
+      const { invitesSent, total } = await inviteEmployeesWithoutAccounts();
+      if (invitesSent === 0) {
+        setSuccessMessage(
+          total === 0
+            ? "لا يوجد موظفون بانتظار الدعوة (جميعهم لديهم حساب أو بريد غير متوفر)."
+            : "لم تُرسل أي دعوة. تحقق من البريد الإلكتروني أو حالة الحسابات.",
+        );
+        return;
+      }
       setSuccessMessage(`تم إرسال ${invitesSent} دعوة بنجاح`);
     } catch (err) {
       setListError(err.message || "تعذّر إرسال الدعوات.");
@@ -625,7 +626,7 @@ export default function EmployeesPage() {
               className="md-btn-tonal inline-flex items-center justify-center gap-2 disabled:opacity-50"
             >
               <Mail className="h-5 w-5" aria-hidden />
-              {isInvitingEmployees ? "جاري إرسال الدعوات..." : "دعوة الموظفين"}
+              {isInvitingEmployees ? "جاري إرسال الدعوات..." : "إرسال الدعوات"}
             </button>
             <button
               type="button"
@@ -812,7 +813,11 @@ export default function EmployeesPage() {
         jobTitleOptions={jobTitleOptions}
         employeeCount={employees.length}
         subscriptionTier={subscriptionTier}
-        onCreated={() => handleMutationSuccess("تم إضافة الموظف بنجاح")}
+        onCreated={() =>
+          handleMutationSuccess(
+            "تم إضافة الموظف بنجاح. أرسل دعوة الدخول لاحقاً من زر «إرسال الدعوات».",
+          )
+        }
       />
 
       <BulkImportModal
@@ -820,15 +825,7 @@ export default function EmployeesPage() {
         onClose={() => setIsBulkImportOpen(false)}
         onSuccess={(result) =>
           handleMutationSuccess(
-            `تم استيراد ${result.imported} موظف بنجاح${
-              result.invitesSent
-                ? ` · أُرسلت ${result.invitesSent} دعوة`
-                : ""
-            }${
-              result.invitesSkippedNoEmail
-                ? ` · تُركت ${result.invitesSkippedNoEmail} بدون دعوة (بريد غير متوفر)`
-                : ""
-            }`,
+            `تم استيراد ${result.imported} موظف بنجاح. أرسل الدعوات من زر «إرسال الدعوات» عند الجاهزية.`,
           )
         }
       />

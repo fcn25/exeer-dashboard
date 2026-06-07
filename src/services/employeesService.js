@@ -171,7 +171,6 @@ export async function createEmployee(form) {
   await assertCanAddEmployees(1);
 
   const companyId = getCompanyId();
-  const email = String(form.email ?? "").trim();
 
   const { data, error } = await supabase
     .from("employees")
@@ -184,31 +183,10 @@ export async function createEmployee(form) {
 
   if (error) throw new Error(mapDbError(error));
 
-  if (email) {
-    try {
-      await inviteEmployeeByEmail({
-        email,
-        fullName: form.full_name,
-        role: form.role || "Employee",
-        companyId,
-        employeeId: data.id,
-      });
-    } catch (inviteError) {
-      await supabase.from("employees").delete().eq("id", data.id);
-      throw new Error(
-        inviteError.message ||
-          "تعذّر إرسال دعوة الدخول. تأكد من نشر Edge Function: invite-employee.",
-      );
-    }
-  }
-
-  return {
-    ...data,
-    invitationSent: Boolean(email),
-  };
+  return data;
 }
 
-export async function bulkCreateEmployees(rows, { sendInvites = false } = {}) {
+export async function bulkCreateEmployees(rows) {
   if (!Array.isArray(rows) || rows.length === 0) {
     throw new Error("لا توجد سجلات للاستيراد.");
   }
@@ -269,36 +247,9 @@ export async function bulkCreateEmployees(rows, { sendInvites = false } = {}) {
 
   if (error) throw new Error(mapDbError(error));
 
-  let invitesSent = 0;
-  let invitesSkippedNoEmail = 0;
-
-  if (sendInvites) {
-    const emailsToInvite = data.filter((emp) => emp.email);
-    invitesSkippedNoEmail = data.length - emailsToInvite.length;
-
-    for (const emp of emailsToInvite) {
-      const sourceRow = rows.find((row) => row.email === emp.email);
-      try {
-        await inviteEmployeeByEmail({
-          email: emp.email,
-          fullName: emp.full_name,
-          role: sourceRow?.role ?? "Employee",
-          companyId,
-          employeeId: emp.id,
-        });
-        invitesSent += 1;
-      } catch (err) {
-        console.error(`فشل إرسال دعوة لـ ${emp.email}:`, err.message);
-      }
-    }
-  }
-
   return {
     imported: data.length,
-    invitesSent,
-    invitesSkippedNoEmail,
     rows: data,
-    inviteErrors: [],
   };
 }
 

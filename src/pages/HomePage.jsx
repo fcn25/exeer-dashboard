@@ -24,7 +24,6 @@ import { getUserDisplay } from "../utils/mobileAuth.js";
 import { fetchHomeDashboardData } from "../services/homeDashboardService.js";
 import ProbationDecisionModal from "../components/home/ProbationDecisionModal.jsx";
 import SparkLine from "../components/home/SparkLine.jsx";
-import PayrollBarChart from "../components/home/PayrollBarChart.jsx";
 import {
   HOME_BTN,
   HOME_CARD,
@@ -112,6 +111,24 @@ function splitMoneyParts(value) {
     integer: formatArabicNumber(integerPart),
     decimal: `.${decimalPart}`,
   };
+}
+
+function PayrollSubMetric({ label, value, color, isLoading = false }) {
+  const display = isLoading
+    ? "0"
+    : formatArabicNumber(value, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+
+  return (
+    <div className="min-w-0 flex-1">
+      <p className="text-[13px] font-normal text-[#64748B]">{label}</p>
+      <p
+        className="mt-1 text-[18px] font-semibold tabular-nums"
+        style={{ color }}
+      >
+        {display} ر.س
+      </p>
+    </div>
+  );
 }
 
 function DeltaBadge({ value, className = "" }) {
@@ -285,7 +302,8 @@ export default function HomePage() {
   const payrollTotal = payrollHero?.total ?? 0;
   const payrollMonthLabel =
     payrollHero?.monthLabel ?? stats?.payrollMonthLabel ?? "الشهر";
-  const chartData = payrollHero?.sparkline ?? [];
+  const totalDeductions = payrollHero?.totalDeductions ?? 0;
+  const totalOvertime = payrollHero?.totalOvertime ?? 0;
 
   const headerActions = HEADER_ACTIONS.map((action) =>
     action.id === "export" && !showPayroll
@@ -387,7 +405,20 @@ export default function HomePage() {
             ) : null}
           </div>
 
-          <PayrollBarChart data={chartData} height={128} className="mt-5" />
+          <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <PayrollSubMetric
+              label="إجمالي الخصومات"
+              value={totalDeductions}
+              color="#EF4444"
+              isLoading={isLoading}
+            />
+            <PayrollSubMetric
+              label="إجمالي العمل الإضافي"
+              value={totalOvertime}
+              color="#10B981"
+              isLoading={isLoading}
+            />
+          </div>
         </article>
 
         <article className={`${HOME_SHELL} p-6`}>

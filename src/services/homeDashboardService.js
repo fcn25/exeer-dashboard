@@ -14,7 +14,15 @@ import {
 import { formatPayrollMonthFromPicker } from "../utils/payroll/calculations.js";
 import { calculateEvaluationScore } from "../constants/evaluationCriteria.js";
 
-const ACTIVE_STATUSES = new Set(["نشط", "Active", "active"]);
+const INACTIVE_EMPLOYMENT_STATUSES = new Set(["منتهي الخدمة", "موقوف"]);
+
+const SAUDI_NATIONALITIES = new Set([
+  "سعودي",
+  "سعودية",
+  "saudi",
+  "sa",
+  "ksa",
+]);
 
 const EMPLOYEE_SELECT_FULL =
   "id, full_name, nationality, employment_status, hire_date, job_title_name, iqama_expiry_date, probation_end_date";
@@ -60,12 +68,8 @@ function lastNDaysIso(count) {
 }
 
 function isSaudiNationality(nationality) {
-  const value = String(nationality ?? "").trim().toLowerCase();
-  return (
-    value.includes("سعود") ||
-    value.includes("saudi") ||
-    value === "sa" ||
-    value === "ksa"
+  return SAUDI_NATIONALITIES.has(
+    String(nationality ?? "").trim().toLowerCase(),
   );
 }
 
@@ -80,7 +84,9 @@ function daysUntil(dateValue) {
 }
 
 function isActiveEmployee(row) {
-  return ACTIVE_STATUSES.has(String(row?.employment_status ?? "").trim());
+  const status = String(row?.employment_status ?? "").trim();
+  if (!status) return true;
+  return !INACTIVE_EMPLOYMENT_STATUSES.has(status);
 }
 
 function formatEventTime(datetime) {
@@ -98,17 +104,6 @@ function formatEventTime(datetime) {
 
 function resolveRequestTypeLabel(requestType) {
   return REQUEST_TYPE_LABELS[requestType] ?? requestType ?? "طلب";
-}
-
-function formatShortMonthLabel(month, year) {
-  if (!month || !year) return "—";
-  try {
-    return new Intl.DateTimeFormat("ar-SA", { month: "short" }).format(
-      new Date(year, month - 1, 1),
-    );
-  } catch {
-    return `${month}/${year}`;
-  }
 }
 
 function scoreFromAnswers(answers) {
@@ -269,7 +264,65 @@ async function fetchTodayAgenda(companyId, today) {
     }));
 }
 
-async function fetchPayrollHero(includePayroll, monthPicker) {
+function parseMonthPicker(pickerValue) {
+  const [yearPart, monthPart] = String(pickerValue ?? "").split("-");
+  const year = Number(yearPart);
+  const month = Number(monthPart);
+  if (!year || !month) return null;
+  return { year, month, payrollMonth: `${month}/${year}` };
+}
+
+function sumPayrollDeductions(rawRows) {
+  return (rawRows ?? []).reduce((sum, row) => {
+    const totalField = Number(row.total_deductions);
+    if (Number.isFinite(totalField) && totalField !== 0) {
+      return sum + totalField;
+    }
+
+    const gosi = Number(row.gosi_deduction ?? row.gosi) || 0;
+    const penalties = Number(row.penalty_deductions ?? row.penalties) || 0;
+    const late =
+      Number(row.delay_deductions ?? row.lateness_deduction ?? row.delays) ||
+      0;
+    const loans = Number(row.loan_deductions) || 0;
+
+    return sum + gosi + penalties + late + loans;
+  }, 0);
+}
+
+function sumPayrollOvertime(rawRows) {
+  return (rawRows ?? []).reduce(
+    (sum, row) => sum + (Number(row.overtime) || 0),
+    0,
+  );
+}
+
+async function fetchPayrollRawRecords(companyId, monthPicker) {
+  const period = parseMonthPicker(monthPicker);
+  if (!period) return [];
+
+  const byPayrollMonth = await supabase
+    .from("payroll_records")
+    .select("*")
+    .eq("company_id", companyId)
+    .eq("payroll_month", period.payrollMonth);
+
+  if (!byPayrollMonth.error && (byPayrollMonth.data ?? []).length) {
+    return byPayrollMonth.data ?? [];
+  }
+
+  const byLegacy = await supabase
+    .from("payroll_records")
+    .select("*")
+    .eq("company_id", companyId)
+    .eq("month", period.month)
+    .eq("year", period.year);
+
+  if (byLegacy.error) return [];
+  return byLegacy.data ?? [];
+}
+
+async function fetchPayrollHero(includePayroll, monthPicker, companyId) {
   if (!includePayroll) return null;
 
   const summaries = await safeCall(() => fetchPayrollHistorySummaries(), []);
@@ -285,12 +338,6 @@ async function fetchPayrollHero(includePayroll, monthPicker) {
       (item.year < current?.year ||
         (item.year === current?.year && item.month < current?.month)),
   );
-
-  const sparklineSource = sorted.slice(0, 6).reverse();
-  const sparkline = sparklineSource.map((item) => ({
-    value: item.totalNet ?? 0,
-    label: formatShortMonthLabel(item.month, item.year),
-  }));
 
   let percentChange = null;
   if (current && previous && previous.totalNet > 0) {
@@ -310,11 +357,17 @@ async function fetchPayrollHero(includePayroll, monthPicker) {
     0,
   );
 
+  const rawRecords = await safeCall(
+    () => fetchPayrollRawRecords(companyId, monthPicker),
+    [],
+  );
+
   return {
     total: liveTotal > 0 ? liveTotal : (current?.totalNet ?? 0),
     monthLabel: formatPayrollMonthFromPicker(monthPicker),
     percentChange,
-    sparkline,
+    totalDeductions: sumPayrollDeductions(rawRecords),
+    totalOvertime: sumPayrollOvertime(rawRecords),
     hasData: Boolean(current) || rows.length > 0,
   };
 }
@@ -566,7 +619,7 @@ export async function fetchHomeDashboardData({ includePayroll = false } = {}) {
     }),
     safeCall(() => countCompanyRequests(), 0),
     safeCall(() => listCompanyPendingEvaluations({ limit: 100 }), []),
-    safeCall(() => fetchPayrollHero(includePayroll, monthPicker), null),
+    safeCall(() => fetchPayrollHero(includePayroll, monthPicker, companyId), null),
     safeCall(() => fetchTodayAgenda(companyId, today), []),
     safeCall(() => fetchPendingRequestsPreview(), { total: 0, items: [] }),
     safeCall(() => fetchTopPerformers(companyId, bounds), []),
@@ -588,11 +641,11 @@ export async function fetchHomeDashboardData({ includePayroll = false } = {}) {
     hasData: todayPulseRaw.hasData || leaveFromStatus > 0,
   };
 
-  const activeEmployees = employees.filter(isActiveEmployee);
-  const saudiCount = activeEmployees.filter((row) =>
+  const workforceEmployees = employees.filter(isActiveEmployee);
+  const saudiCount = workforceEmployees.filter((row) =>
     isSaudiNationality(row.nationality),
   ).length;
-  const nonSaudiCount = activeEmployees.length - saudiCount;
+  const nonSaudiCount = workforceEmployees.length - saudiCount;
   const tenure = computeTenureSummary(employees);
 
   const actionItems = [
@@ -628,8 +681,8 @@ export async function fetchHomeDashboardData({ includePayroll = false } = {}) {
       attendanceRate: attendanceResult.rate,
       hasAttendanceData: attendanceResult.hasData,
       attendanceSparkline: attendanceResult.sparkline,
-      employeeCount: activeEmployees.length,
-      hasEmployeeData: employees.length > 0,
+      employeeCount: workforceEmployees.length,
+      hasEmployeeData: workforceEmployees.length > 0,
       saudiCount,
       nonSaudiCount,
       tenureLabel: tenure.label,

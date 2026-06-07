@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   Briefcase,
   Check,
@@ -135,9 +136,14 @@ function ManagerHrRequestModal({
   );
 }
 
+const VALID_TABS = new Set(TABS.map((tab) => tab.id));
+
 export default function MyTeamDashboard() {
   const { user, role } = useAuth();
-  const [activeTab, setActiveTab] = useState("employees");
+  const [searchParams] = useSearchParams();
+  const tabFromUrl = searchParams.get("tab");
+  const initialTab = VALID_TABS.has(tabFromUrl) ? tabFromUrl : "employees";
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [team, setTeam] = useState([]);
   const [requests, setRequests] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -178,6 +184,12 @@ export default function MyTeamDashboard() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  useEffect(() => {
+    if (VALID_TABS.has(tabFromUrl)) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [tabFromUrl]);
 
   const handleRequestAction = async (requestId, status) => {
     setActingRequestId(requestId);

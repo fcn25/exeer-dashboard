@@ -34,6 +34,7 @@ import { signOut } from "../utils/mobileAuth.js";
 import { ensureArray } from "../utils/ensureArray.js";
 import AdminMobileDashboard from "../components/mobile/dashboard/AdminMobileDashboard.jsx";
 import EmployeeMobileDashboard from "../components/mobile/dashboard/EmployeeMobileDashboard.jsx";
+import LocaleShell from "../components/ui/LocaleShell.jsx";
 import {
   fetchAdminMobileDashboard,
   fetchEmployeeMobileDashboard,
@@ -308,11 +309,7 @@ export default function EmployeePortalPage() {
   }
 
   return (
-    <div
-      dir="rtl"
-      lang="ar"
-      className="min-h-screen bg-md-surface-dim font-sans text-exeer-primary"
-    >
+    <LocaleShell className="min-h-screen bg-md-surface-dim font-sans text-exeer-primary">
       <header className="border-b border-exeer-border bg-md-surface/90 backdrop-blur-sm">
         <div className="mx-auto flex flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-6 max-w-7xl lg:px-8">
           <div className="space-y-1">
@@ -549,6 +546,6 @@ export default function EmployeePortalPage() {
         message={successToast}
         onDismiss={() => setSuccessToast("")}
       />
-    </div>
+    </LocaleShell>
   );
 }

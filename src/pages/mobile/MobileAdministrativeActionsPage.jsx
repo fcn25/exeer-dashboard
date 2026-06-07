@@ -11,6 +11,7 @@ import {
 import { listEmployees } from "../../services/employeesService.js";
 import { ensureArray } from "../../utils/ensureArray.js";
 import MobileLoadingState from "../../components/mobile/MobileLoadingState.jsx";
+import LocaleShell from "../../components/ui/LocaleShell.jsx";
 
 export default function MobileAdministrativeActionsPage() {
   const [employees, setEmployees] = useState([]);
@@ -57,11 +58,7 @@ export default function MobileAdministrativeActionsPage() {
   };
 
   return (
-    <div
-      dir="rtl"
-      lang="ar"
-      className="mx-auto min-h-screen w-full max-w-[480px] bg-white font-sans text-slate-900"
-    >
+    <LocaleShell className="mx-auto min-h-screen w-full max-w-[480px] bg-white font-sans text-slate-900">
       <header className="sticky top-0 z-40 border-b border-gray-200 bg-white/95 backdrop-blur-sm">
         <div className="flex items-center gap-3 px-4 py-3">
           <Link
@@ -147,6 +144,6 @@ export default function MobileAdministrativeActionsPage() {
         message={successToast}
         onDismiss={() => setSuccessToast("")}
       />
-    </div>
+    </LocaleShell>
   );
 }

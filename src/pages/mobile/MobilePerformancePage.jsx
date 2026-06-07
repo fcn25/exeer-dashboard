@@ -5,6 +5,7 @@ import SuccessToast from "../../components/ui/SuccessToast.jsx";
 import MobileExecutiveSummary from "../../components/performance/mobile/MobileExecutiveSummary.jsx";
 import MobileCyclesList from "../../components/performance/mobile/MobileCyclesList.jsx";
 import MobileLaunchCycleForm from "../../components/performance/mobile/MobileLaunchCycleForm.jsx";
+import LocaleShell from "../../components/ui/LocaleShell.jsx";
 
 const TABS = [
   { id: "summary", label: "الملخص التنفيذي" },
@@ -24,11 +25,7 @@ export default function MobilePerformancePage() {
   };
 
   return (
-    <div
-      dir="rtl"
-      lang="ar"
-      className="mx-auto min-h-screen w-full max-w-[480px] overflow-x-hidden bg-white font-sans text-slate-900"
-    >
+    <LocaleShell className="mx-auto min-h-screen w-full max-w-[480px] overflow-x-hidden bg-white font-sans text-slate-900">
       <header className="sticky top-0 z-40 border-b border-gray-200 bg-white/95 backdrop-blur-sm">
         <div className="flex items-center gap-3 px-4 py-3">
           <Link
@@ -79,6 +76,6 @@ export default function MobilePerformancePage() {
         message={successToast}
         onDismiss={() => setSuccessToast("")}
       />
-    </div>
+    </LocaleShell>
   );
 }

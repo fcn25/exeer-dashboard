@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext.jsx";
 import { supabase } from "../utils/supabaseClient.js";
 import { getAuthenticatedHomePath } from "../constants/roles.js";
 import { detectIsMobile } from "../hooks/useIsMobile.js";
+import LocaleShell from "../components/ui/LocaleShell.jsx";
 
 const INPUT_CLASS = "md-input";
 
@@ -111,11 +112,7 @@ export default function UpdatePasswordPage() {
   const waitingForAuth = isBootstrapping || (!sessionReady && !sessionError);
 
   return (
-    <div
-      dir="rtl"
-      lang="ar"
-      className="flex min-h-screen flex-col items-center justify-center bg-white px-4 py-10 font-sans"
-    >
+    <LocaleShell className="flex min-h-screen flex-col items-center justify-center bg-white px-4 py-10 font-sans">
       <div className="mb-8 flex w-full max-w-md flex-col items-center">
         <ExeerLogo onLightBackground className="h-14 w-auto object-contain" />
       </div>
@@ -184,6 +181,6 @@ export default function UpdatePasswordPage() {
           </form>
         )}
       </div>
-    </div>
+    </LocaleShell>
   );
 }

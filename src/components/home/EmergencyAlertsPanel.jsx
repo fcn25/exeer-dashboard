@@ -6,26 +6,17 @@ import {
   ShieldAlert,
 } from "lucide-react";
 import { HOME_BTN, HOME_CARD } from "./homeStyles.js";
+import { useAppLocale } from "../../i18n/useAppLocale.js";
+import { formatLocaleDate, formatLocaleNumber } from "../../i18n/formatLocale.js";
 
-function formatArabicNumber(value) {
-  return new Intl.NumberFormat("ar-SA").format(Number(value) || 0);
-}
-
-function formatDisplayDate(isoDate) {
-  if (!isoDate) return "—";
-  try {
-    return new Intl.DateTimeFormat("ar-SA", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    }).format(new Date(isoDate));
-  } catch {
-    return isoDate;
-  }
-}
-
-function DaysBadge({ daysLeft, severity }) {
+function DaysBadge({ daysLeft, severity, todayLabel, isEn }) {
   const isCritical = severity === "critical";
+  const dayLabel =
+    daysLeft === 0
+      ? todayLabel
+      : isEn
+        ? `${formatLocaleNumber(daysLeft)}d`
+        : `${formatLocaleNumber(daysLeft)} يوم`;
   return (
     <span
       className="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums"
@@ -34,7 +25,7 @@ function DaysBadge({ daysLeft, severity }) {
         color: isCritical ? "#B91C1C" : "#475569",
       }}
     >
-      {daysLeft === 0 ? "اليوم" : `${formatArabicNumber(daysLeft)} يوم`}
+      {dayLabel}
     </span>
   );
 }
@@ -68,10 +59,19 @@ function AlertList({ items, emptyLabel, onItemAction, actionLabel }) {
                 </p>
               ) : null}
               <p className="mt-1 text-[11px] text-[#94A3B8]">
-                {formatDisplayDate(item.endDate)}
+                {formatLocaleDate(item.endDate, {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                })}
               </p>
             </div>
-            <DaysBadge daysLeft={item.daysLeft} severity={item.severity} />
+            <DaysBadge
+              daysLeft={item.daysLeft}
+              severity={item.severity}
+              todayLabel={item.todayLabel}
+              isEn={item.isEn}
+            />
           </div>
           {onItemAction ? (
             <button
@@ -111,7 +111,7 @@ function AlertColumn({ title, description, icon: Icon, iconTone, count, children
             className="inline-flex min-w-6 shrink-0 items-center justify-center rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums"
             style={{ backgroundColor: "#FEE2E2", color: "#B91C1C" }}
           >
-            {formatArabicNumber(count)}
+            {formatLocaleNumber(count)}
           </span>
         ) : null}
       </div>
@@ -126,10 +126,14 @@ export default function EmergencyAlertsPanel({
   onProbationDecision,
   onViewEmployee,
 }) {
+  const { t, isEn } = useAppLocale();
   const contracts = alerts?.contracts ?? [];
   const iqamas = alerts?.iqamas ?? [];
   const probations = alerts?.probations ?? [];
   const totalCount = alerts?.totalCount ?? 0;
+  const todayLabel = t("common.today");
+  const mapItems = (items) =>
+    items.map((item) => ({ ...item, todayLabel, isEn }));
 
   return (
     <section
@@ -147,10 +151,10 @@ export default function EmergencyAlertsPanel({
                 id="emergency-alerts-heading"
                 className="text-[18px] font-medium text-[#0F172A]"
               >
-                تنبيهات طارئة
+                {t("pages.home.emergencyTitle")}
               </h2>
               <p className="text-[12px] text-[#64748B]">
-                بيانات حية من سجل الموظفين — عقود · إقامات · فترات تجربة
+                {t("pages.home.emergencySubtitle")}
               </p>
             </div>
           </div>
@@ -159,7 +163,7 @@ export default function EmergencyAlertsPanel({
               className="inline-flex items-center gap-1.5 rounded-full bg-[#FEE2E2] px-3 py-1.5 text-[13px] font-medium text-[#B91C1C]"
             >
               <AlertTriangle className="h-4 w-4" aria-hidden />
-              {formatArabicNumber(totalCount)} تنبيه
+              {t("pages.home.emergencyCount", { count: formatLocaleNumber(totalCount) })}
             </span>
           ) : null}
         </div>
@@ -168,52 +172,52 @@ export default function EmergencyAlertsPanel({
       <div className="p-4 sm:p-5">
         {isLoading ? (
           <p className="py-10 text-center text-[13px] text-[#94A3B8]">
-            جاري جلب بيانات الموظفين...
+            {t("pages.home.checkingAlerts")}
           </p>
         ) : (
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
             <AlertColumn
-              title="انتهاء عقود العمل"
-              description="ذكرى بداية العقد السنوي (hire_date) خلال ٩٠ يوماً"
+              title={t("pages.home.contractExpiry")}
+              description={t("pages.home.contractExpiryHint")}
               icon={FileWarning}
               iconTone={{ bg: "#FEE2E2", color: "#DC2626" }}
               count={contracts.length}
             >
               <AlertList
-                items={contracts}
-                emptyLabel="لا عقود تنتهي قريباً"
+                items={mapItems(contracts)}
+                emptyLabel={t("pages.home.contractEmpty")}
                 onItemAction={(item) => onViewEmployee?.(item.employeeId)}
-                actionLabel="عرض الموظف"
+                actionLabel={t("pages.home.viewEmployee")}
               />
             </AlertColumn>
 
             <AlertColumn
-              title="انتهاء إقامات العاملين"
-              description="غير السعوديين فقط — iqama_expiry_date قبل ٣٠ يوماً"
+              title={t("pages.home.iqamaExpiry")}
+              description={t("pages.home.iqamaExpiryHint")}
               icon={AlertTriangle}
               iconTone={{ bg: "#F1F5F9", color: "#64748B" }}
               count={iqamas.length}
             >
               <AlertList
-                items={iqamas}
-                emptyLabel="لا إقامات تنتهي قريباً"
+                items={mapItems(iqamas)}
+                emptyLabel={t("pages.home.iqamaEmpty")}
                 onItemAction={(item) => onViewEmployee?.(item.employeeId)}
-                actionLabel="عرض الموظف"
+                actionLabel={t("pages.home.viewEmployee")}
               />
             </AlertColumn>
 
             <AlertColumn
-              title="نهاية فترة التجربة"
-              description="آخر ١٠ أيام من ٨٠ يوماً محسوبة من تاريخ التعيين"
+              title={t("pages.home.probationEnding")}
+              description={t("pages.home.probationEndingHint")}
               icon={CalendarClock}
               iconTone={{ bg: "#EEF2FF", color: "#4F46E5" }}
               count={probations.length}
             >
               <AlertList
-                items={probations}
-                emptyLabel="لا فترات تجربة تنتهي قريباً"
+                items={mapItems(probations)}
+                emptyLabel={t("pages.home.probationEmpty")}
                 onItemAction={(item) => onProbationDecision?.(item)}
-                actionLabel="اتخاذ قرار"
+                actionLabel={t("pages.home.probationDecision")}
               />
             </AlertColumn>
           </div>

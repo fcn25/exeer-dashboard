@@ -1,16 +1,13 @@
 import { useNavigate } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import SubscriptionPanel from "../components/subscription/SubscriptionPanel.jsx";
+import LocaleShell from "../components/ui/LocaleShell.jsx";
 
 export default function MobileSubscriptionPage() {
   const navigate = useNavigate();
 
   return (
-    <div
-      dir="rtl"
-      lang="ar"
-      className="min-h-screen bg-md-surface-dim pb-8"
-    >
+    <LocaleShell className="min-h-screen bg-md-surface-dim pb-8">
       <header className="sticky top-0 z-10 border-b border-exeer-border bg-md-surface px-4 py-3">
         <div className="mx-auto flex max-w-[480px] items-center gap-3">
           <button
@@ -30,6 +27,6 @@ export default function MobileSubscriptionPage() {
       <div className="mx-auto max-w-[480px] px-4 py-5">
         <SubscriptionPanel variant="mobile" showPayNow />
       </div>
-    </div>
+    </LocaleShell>
   );
 }

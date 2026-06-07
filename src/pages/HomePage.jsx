@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   AlertTriangle,
@@ -32,6 +32,11 @@ import {
   HOME_SURFACE,
   PRIORITY_ICON_STYLES,
 } from "../components/home/homeStyles.js";
+import { useAppLocale } from "../i18n/useAppLocale.js";
+import {
+  formatLocaleHeaderDate,
+  formatLocaleNumber,
+} from "../i18n/formatLocale.js";
 
 const ACTION_ICONS = {
   iqama: AlertTriangle,
@@ -43,65 +48,38 @@ const ACTION_ICONS = {
 const HEADER_ACTIONS = [
   {
     id: "add-employee",
-    label: "إضافة موظف",
+    labelKey: "pages.home.addEmployee",
     primary: true,
     href: "/dashboard/employees?add=1",
   },
   {
     id: "create-request",
-    label: "إنشاء طلب",
+    labelKey: "pages.home.createRequest",
     primary: false,
     href: "/dashboard/my-team",
   },
   {
     id: "export",
-    label: "تصدير",
+    labelKey: "pages.home.export",
     primary: false,
     href: "/dashboard/payroll",
   },
 ];
 
 const QUICK_ACTIONS = [
-  { id: "one-on-one", label: "تسجيل اجتماع 1:1", icon: MessageSquare, href: "/dashboard/my-team" },
-  { id: "appreciation", label: "تقدير موظف", icon: Star, href: "/dashboard/employees" },
-  { id: "note", label: "إضافة ملاحظة", icon: FileText, href: "/dashboard/administrative-actions" },
-  { id: "training", label: "طلب تدريب", icon: GraduationCap, href: "/dashboard/my-team#hr-requests" },
-  { id: "promotion", label: "طلب ترقية", icon: TrendingUp, href: "/dashboard/my-team#hr-requests" },
-  { id: "administrative", label: "إجراء إداري", icon: Briefcase, href: "/dashboard/administrative-actions" },
+  { id: "one-on-one", labelKey: "pages.home.oneOnOne", icon: MessageSquare, href: "/dashboard/my-team" },
+  { id: "appreciation", labelKey: "pages.home.appreciation", icon: Star, href: "/dashboard/employees" },
+  { id: "note", labelKey: "pages.home.addNote", icon: FileText, href: "/dashboard/administrative-actions" },
+  { id: "training", labelKey: "pages.home.trainingRequest", icon: GraduationCap, href: "/dashboard/my-team#hr-requests" },
+  { id: "promotion", labelKey: "pages.home.promotionRequest", icon: TrendingUp, href: "/dashboard/my-team#hr-requests" },
+  { id: "administrative", labelKey: "pages.home.adminAction", icon: Briefcase, href: "/dashboard/administrative-actions" },
 ];
 
-function getGreeting() {
+function getGreeting(t) {
   const hour = new Date().getHours();
-  if (hour < 12) return "صباح الخير";
-  if (hour < 17) return "مساء الخير";
-  return "مساءً طيباً";
-}
-
-function formatHeaderDate() {
-  const now = new Date();
-  const gregorian = new Intl.DateTimeFormat("ar-SA", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  }).format(now);
-
-  let hijri = "";
-  try {
-    hijri = new Intl.DateTimeFormat("ar-SA-u-ca-islamic", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    }).format(now);
-  } catch {
-    hijri = "";
-  }
-
-  return hijri ? `${gregorian} · ${hijri}` : gregorian;
-}
-
-function formatArabicNumber(value, options = {}) {
-  return new Intl.NumberFormat("ar-SA", options).format(Number(value) || 0);
+  if (hour < 12) return t("pages.home.greetingMorning");
+  if (hour < 17) return t("pages.home.greetingAfternoon");
+  return t("pages.home.greetingEvening");
 }
 
 function splitMoneyParts(value) {
@@ -109,15 +87,18 @@ function splitMoneyParts(value) {
   const fixed = amount.toFixed(2);
   const [integerPart, decimalPart] = fixed.split(".");
   return {
-    integer: formatArabicNumber(integerPart),
+    integer: formatLocaleNumber(integerPart),
     decimal: `.${decimalPart}`,
   };
 }
 
-function PayrollSubMetric({ label, value, color, isLoading = false }) {
+function PayrollSubMetric({ label, value, color, isLoading = false, currencyLabel }) {
   const display = isLoading
     ? "0"
-    : formatArabicNumber(value, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    : formatLocaleNumber(value, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      });
 
   return (
     <div className="min-w-0 flex-1">
@@ -126,7 +107,7 @@ function PayrollSubMetric({ label, value, color, isLoading = false }) {
         className="mt-1 text-[18px] font-semibold tabular-nums"
         style={{ color }}
       >
-        {display} ر.س
+        {display} {currencyLabel}
       </p>
     </div>
   );
@@ -153,7 +134,7 @@ function DeltaBadge({ value, className = "" }) {
   );
 }
 
-function SplitMoneyValue({ value, suffix = " ر.س", isLoading = false }) {
+function SplitMoneyValue({ value, suffix, isLoading = false }) {
   if (isLoading) {
     return (
       <p className="tabular-nums">
@@ -227,9 +208,10 @@ function MiniStatCard({ label, value, sublabel, sparkline }) {
 }
 
 export default function HomePage() {
+  const { t } = useAppLocale();
   const navigate = useNavigate();
   const user = getUserDisplay();
-  const headerDate = formatHeaderDate();
+  const headerDate = formatLocaleHeaderDate();
   const { resolveToolAction, modalProps } = useSmartToolsModals();
   const showPayroll = canViewPayroll();
 
@@ -307,10 +289,25 @@ export default function HomePage() {
   const totalDeductions = payrollHero?.totalDeductions ?? 0;
   const totalOvertime = payrollHero?.totalOvertime ?? 0;
 
-  const headerActions = HEADER_ACTIONS.map((action) =>
-    action.id === "export" && !showPayroll
-      ? { ...action, href: "/dashboard/employees" }
-      : action,
+  const headerActions = useMemo(
+    () =>
+      HEADER_ACTIONS.map((action) => ({
+        ...action,
+        label: t(action.labelKey),
+        ...(action.id === "export" && !showPayroll
+          ? { href: "/dashboard/employees" }
+          : {}),
+      })),
+    [t, showPayroll],
+  );
+
+  const quickActions = useMemo(
+    () =>
+      QUICK_ACTIONS.map((action) => ({
+        ...action,
+        label: t(action.labelKey),
+      })),
+    [t],
   );
 
   return (
@@ -347,24 +344,24 @@ export default function HomePage() {
 
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-1 text-start">
-              <p className="text-[13px] font-normal text-[#64748B]">{getGreeting()}</p>
+              <p className="text-[13px] font-normal text-[#64748B]">{getGreeting(t)}</p>
               <h1 className="text-[24px] font-medium text-[#0F172A]">{user.name}</h1>
               <p className="text-[12px] font-normal text-[#94A3B8]">{headerDate}</p>
             </div>
 
             <div className="flex flex-wrap gap-2 sm:shrink-0">
               <PulsePill
-                label={`${formatArabicNumber(workingCount)} يعمل اليوم`}
+                label={`${formatLocaleNumber(workingCount)} ${t("pages.home.workingToday")}`}
                 bg="#ECFDF5"
                 color="#047857"
               />
               <PulsePill
-                label={`${formatArabicNumber(leaveCount)} في إجازة`}
+                label={`${formatLocaleNumber(leaveCount)} ${t("pages.home.onLeave")}`}
                 bg="#FEF3C7"
                 color="#92400E"
               />
               <PulsePill
-                label={`${formatArabicNumber(lateCount)} متأخر`}
+                label={`${formatLocaleNumber(lateCount)} ${t("pages.home.late")}`}
                 bg="#F1F5F9"
                 color="#475569"
               />
@@ -401,16 +398,20 @@ export default function HomePage() {
       <section className="grid grid-cols-1 gap-5 lg:grid-cols-[3fr_2fr]">
         <article className={`${HOME_SHELL} p-6`}>
           <p className="text-[14px] font-normal text-[#64748B]">
-            إجمالي رواتب {payrollMonthLabel}
+            {t("pages.home.payrollTotal", { month: payrollMonthLabel })}
           </p>
 
           <div className="mt-2">
-            <SplitMoneyValue value={payrollTotal} isLoading={isLoading} />
+            <SplitMoneyValue
+              value={payrollTotal}
+              suffix={` ${t("common.sar")}`}
+              isLoading={isLoading}
+            />
           </div>
 
           {!isLoading && !payrollHero?.hasData ? (
             <p className="mt-1 text-[12px] font-normal text-[#94A3B8]">
-              لم يُنشأ مسير رواتب بعد
+              {t("pages.home.noPayrollYet")}
             </p>
           ) : null}
 
@@ -418,35 +419,41 @@ export default function HomePage() {
             <DeltaBadge value={payrollHero?.percentChange ?? null} />
             {payrollHero?.percentChange != null ? (
               <span className="text-[12px] font-normal text-[#94A3B8]">
-                مقارنة بالشهر الماضي
+                {t("pages.home.vsLastMonth")}
               </span>
             ) : null}
           </div>
 
           <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <PayrollSubMetric
-              label="إجمالي الخصومات"
+              label={t("pages.home.totalDeductions")}
               value={totalDeductions}
               color="#EF4444"
               isLoading={isLoading}
+              currencyLabel={t("common.sar")}
             />
             <PayrollSubMetric
-              label="إجمالي العمل الإضافي"
+              label={t("pages.home.totalOvertime")}
               value={totalOvertime}
               color="#10B981"
               isLoading={isLoading}
+              currencyLabel={t("common.sar")}
             />
           </div>
         </article>
 
         <article className={`${HOME_SHELL} p-6`}>
-          <h2 className="text-[16px] font-medium text-[#0F172A]">توزيع القوى العاملة</h2>
+          <h2 className="text-[16px] font-medium text-[#0F172A]">
+            {t("pages.home.workforceTitle")}
+          </h2>
           <p className="mt-1 text-[12px] font-normal text-[#94A3B8]">
             {isLoading
-              ? "جاري التحميل..."
+              ? t("common.loading")
               : stats?.hasEmployeeData
-                ? `${formatArabicNumber(employeeTotal)} موظف نشط`
-                : "لا يوجد موظفون بعد"}
+                ? t("pages.home.activeEmployees", {
+                    count: formatLocaleNumber(employeeTotal),
+                  })
+                : t("pages.home.noEmployeesYet")}
           </p>
 
           <ul className="mt-5 space-y-4">
@@ -455,14 +462,16 @@ export default function HomePage() {
                 <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#ECFDF5] text-[#047857]">
                   <Users className="h-4 w-4" aria-hidden />
                 </span>
-                سعوديون
+                {t("pages.home.saudi")}
               </div>
               <div className="text-end">
                 <p className="text-[14px] font-semibold tabular-nums text-[#0F172A]">
-                  {formatArabicNumber(saudiPercent)}%
+                  {formatLocaleNumber(saudiPercent)}%
                 </p>
                 <p className="text-[12px] font-normal text-[#64748B]">
-                  {formatArabicNumber(saudiCount)} موظف
+                  {t("pages.home.employeeCount", {
+                    count: formatLocaleNumber(saudiCount),
+                  })}
                 </p>
               </div>
             </li>
@@ -471,14 +480,16 @@ export default function HomePage() {
                 <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F1F5F9] text-[#475569]">
                   <Users className="h-4 w-4" aria-hidden />
                 </span>
-                غير سعوديين
+                {t("pages.home.nonSaudi")}
               </div>
               <div className="text-end">
                 <p className="text-[14px] font-semibold tabular-nums text-[#0F172A]">
-                  {formatArabicNumber(nonSaudiPercent)}%
+                  {formatLocaleNumber(nonSaudiPercent)}%
                 </p>
                 <p className="text-[12px] font-normal text-[#64748B]">
-                  {formatArabicNumber(nonSaudiCount)} موظف
+                  {t("pages.home.employeeCount", {
+                    count: formatLocaleNumber(nonSaudiCount),
+                  })}
                 </p>
               </div>
             </li>
@@ -502,7 +513,9 @@ export default function HomePage() {
       {/* ─── 3. يحتاج اهتمامك ─── */}
       <section className={`${HOME_SHELL} border-r-[3px] border-r-[#0F172A] p-6`}>
         <div className="mb-4 flex items-center justify-between gap-3">
-          <h2 className="text-[18px] font-medium text-[#0F172A]">يحتاج اهتمامك</h2>
+          <h2 className="text-[18px] font-medium text-[#0F172A]">
+            {t("pages.home.needsAttention")}
+          </h2>
           {!isLoading && actionItems.length > 0 ? (
             <span
               className="inline-flex min-w-6 items-center justify-center rounded-full px-2.5 py-0.5 text-[12px] font-medium"
@@ -515,13 +528,13 @@ export default function HomePage() {
 
         {isLoading ? (
           <p className="py-6 text-center text-[13px] font-normal text-[#94A3B8]">
-            جاري التحميل...
+            {t("common.loading")}
           </p>
         ) : actionItems.length === 0 ? (
           <div className="flex flex-col items-center gap-3 py-8 text-center">
             <Check className="h-10 w-10 text-[#10B981]" aria-hidden />
             <p className="text-[14px] font-normal text-[#64748B]">
-              كل شيء مرتّب، لا توجد إجراءات معلّقة
+              {t("pages.home.allClear")}
             </p>
           </div>
         ) : (
@@ -548,7 +561,7 @@ export default function HomePage() {
         aria-label="إحصائيات مصغّرة"
       >
         <MiniStatCard
-          label="نسبة الحضور"
+          label={t("pages.home.attendanceRate")}
           value={
             isLoading || !stats
               ? "0%"
@@ -556,20 +569,20 @@ export default function HomePage() {
                 ? `${stats.attendanceRate}%`
                 : "0%"
           }
-          sublabel={stats?.hasAttendanceData ? null : "لا توجد بيانات حضور"}
+          sublabel={stats?.hasAttendanceData ? null : t("pages.home.noAttendanceData")}
           sparkline={stats?.attendanceSparkline}
         />
         <MiniStatCard
-          label="إجمالي الموظفين"
-          value={isLoading || !stats ? "0" : formatArabicNumber(stats.employeeCount)}
+          label={t("pages.home.totalEmployees")}
+          value={isLoading || !stats ? "0" : formatLocaleNumber(stats.employeeCount)}
           sublabel={
             stats?.hasEmployeeData
-              ? `${formatArabicNumber(stats.saudiCount)} سعودي · ${formatArabicNumber(stats.nonSaudiCount)} غير سعودي`
-              : "لا يوجد موظفون بعد"
+              ? `${formatLocaleNumber(stats.saudiCount)} ${t("pages.home.saudi")} · ${formatLocaleNumber(stats.nonSaudiCount)} ${t("pages.home.nonSaudi")}`
+              : t("pages.home.noEmployeesYet")
           }
         />
         <MiniStatCard
-          label="متوسط الأقدمية"
+          label={t("pages.home.avgTenure")}
           value={
             isLoading || !stats
               ? "—"
@@ -577,15 +590,15 @@ export default function HomePage() {
                 ? stats.tenureLabel
                 : "—"
           }
-          sublabel={stats?.hasTenureData ? null : "لا توجد تواريخ تعيين"}
+          sublabel={stats?.hasTenureData ? null : t("pages.home.noHireDates")}
         />
         <MiniStatCard
-          label="طلبات الشهر"
+          label={t("pages.home.monthlyRequests")}
           value={
-            isLoading || !stats ? "0" : formatArabicNumber(stats.monthlyRequestsCount)
+            isLoading || !stats ? "0" : formatLocaleNumber(stats.monthlyRequestsCount)
           }
           sublabel={
-            stats?.hasMonthlyRequestsData ? null : "لم يُسجّل طلب هذا الشهر"
+            stats?.hasMonthlyRequestsData ? null : t("pages.home.noRequestsMonth")
           }
           sparkline={stats?.monthlyRequestsSparkline}
         />
@@ -593,9 +606,11 @@ export default function HomePage() {
 
       {/* ─── 5. أدوات سريعة ─── */}
       <section className="space-y-4">
-        <h2 className="text-[16px] font-medium text-[#0F172A]">أدوات سريعة</h2>
+        <h2 className="text-[16px] font-medium text-[#0F172A]">
+          {t("pages.home.quickTools")}
+        </h2>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
-          {QUICK_ACTIONS.map((action) => (
+          {quickActions.map((action) => (
             <Link
               key={action.id}
               to={action.href}
@@ -613,7 +628,9 @@ export default function HomePage() {
         <section className="mt-10 space-y-4">
           <div className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-[#4F46E5]" aria-hidden />
-            <h2 className="text-[16px] font-medium text-[#0F172A]">المهام الذكية</h2>
+            <h2 className="text-[16px] font-medium text-[#0F172A]">
+              {t("pages.home.smartTasks")}
+            </h2>
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {SMART_TOOLS.map((task) => {

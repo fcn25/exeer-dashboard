@@ -52,7 +52,21 @@ Deno.serve(async (req) => {
       console.error("6. Error:", error.message, error.status);
       throw error;
     }
-    console.log("7. Success:", data.user?.id);
+
+    const invitedUserId = data.user?.id;
+    const employeeId = body.employee_id;
+    if (invitedUserId && employeeId != null && employeeId !== "") {
+      const { error: linkError } = await adminClient
+        .from("employees")
+        .update({ auth_user_id: invitedUserId })
+        .eq("id", Number(employeeId));
+
+      if (linkError) {
+        console.error("8. auth_user_id link error:", linkError.message);
+      }
+    }
+
+    console.log("7. Success:", invitedUserId);
     return jsonResponse({ user: data.user });
   } catch (error) {
     const message =

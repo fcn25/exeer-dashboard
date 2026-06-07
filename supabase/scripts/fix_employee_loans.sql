@@ -107,11 +107,35 @@ alter table public.employee_loans enable row level security;
 
 drop policy if exists employee_loans_company_all on public.employee_loans;
 drop policy if exists "Tenant isolation" on public.employee_loans;
+drop policy if exists employee_loans_select on public.employee_loans;
+drop policy if exists employee_loans_manage on public.employee_loans;
 
-create policy employee_loans_company_all
+create policy employee_loans_select
+  on public.employee_loans for select to authenticated
+  using (
+    company_id = public.get_my_company_id()
+    and (
+      public.is_hr_staff()
+      or public.is_company_manager()
+      or exists (
+        select 1
+        from public.employees e
+        where e.id = employee_loans.employee_id
+          and e.auth_user_id = auth.uid()
+      )
+    )
+  );
+
+create policy employee_loans_manage
   on public.employee_loans for all to authenticated
-  using (company_id = public.get_my_company_id())
-  with check (company_id = public.get_my_company_id());
+  using (
+    company_id = public.get_my_company_id()
+    and (public.is_hr_staff() or public.is_company_manager())
+  )
+  with check (
+    company_id = public.get_my_company_id()
+    and (public.is_hr_staff() or public.is_company_manager())
+  );
 
 grant all on table public.employee_loans to anon, authenticated, service_role;
 

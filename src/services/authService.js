@@ -21,8 +21,13 @@ export async function signInWithEmail(email, password) {
   return data;
 }
 
-async function createAdminEmployeeRecord(companyId, adminFullName, adminEmail) {
-  const { error: employeeError } = await supabase.from("employees").insert({
+async function createAdminEmployeeRecord(
+  companyId,
+  adminFullName,
+  adminEmail,
+  authUserId = null,
+) {
+  const payload = {
     company_id: companyId,
     full_name: adminFullName.trim(),
     email: adminEmail.trim().toLowerCase(),
@@ -32,7 +37,13 @@ async function createAdminEmployeeRecord(companyId, adminFullName, adminEmail) {
     department: "الإدارة",
     job_title_name: "مدير النظام",
     hire_date: new Date().toISOString().slice(0, 10),
-  });
+  };
+
+  if (authUserId) {
+    payload.auth_user_id = authUserId;
+  }
+
+  const { error: employeeError } = await supabase.from("employees").insert(payload);
 
   if (employeeError) {
     if (employeeError.code === "PGRST205") {
@@ -85,7 +96,6 @@ export async function signUpCompany({
     }
 
     companyId = company.id;
-    await createAdminEmployeeRecord(companyId, trimmedName, trimmedEmail);
 
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: trimmedEmail,
@@ -102,6 +112,26 @@ export async function signUpCompany({
 
     if (authError) {
       throw new Error(mapAuthError(authError));
+    }
+    const authUserId = authData.user?.id ?? null;
+    await createAdminEmployeeRecord(
+      companyId,
+      trimmedName,
+      trimmedEmail,
+      authUserId,
+    );
+
+    if (authUserId) {
+      const { error: linkError } = await supabase
+        .from("employees")
+        .update({ auth_user_id: authUserId })
+        .eq("company_id", companyId)
+        .eq("email", trimmedEmail)
+        .is("auth_user_id", null);
+
+      if (linkError) {
+        console.warn("auth_user_id link after signup:", linkError.message);
+      }
     }
 
     return {

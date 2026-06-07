@@ -4,11 +4,13 @@ import {
   AlertTriangle,
   Briefcase,
   CalendarClock,
+  CalendarDays,
   Check,
   ClipboardList,
   Download,
   FileText,
   GraduationCap,
+  LogOut,
   MessageSquare,
   Sparkles,
   Star,
@@ -20,7 +22,8 @@ import { canAccessStrategicAI, canViewPayroll } from "../utils/rbac.js";
 import { SMART_TOOLS } from "../constants/smartTools.js";
 import { useSmartToolsModals } from "../hooks/useSmartToolsModals.js";
 import SmartToolsModals from "../components/smart-tools/SmartToolsModals.jsx";
-import { getUserDisplay } from "../utils/mobileAuth.js";
+import { getUserDisplay, signOut } from "../utils/mobileAuth.js";
+import SystemCalendarPanel from "../components/calendar/SystemCalendarPanel.jsx";
 import { fetchHomeDashboardData } from "../services/homeDashboardService.js";
 import EmergencyAlertsPanel from "../components/home/EmergencyAlertsPanel.jsx";
 import PendingRequestCard from "../components/requests/PendingRequestCard.jsx";
@@ -32,9 +35,17 @@ import ProbationDecisionModal from "../components/home/ProbationDecisionModal.js
 import SparkLine from "../components/home/SparkLine.jsx";
 import {
   HOME_BTN,
+  HOME_BTN_PRIMARY,
+  HOME_BTN_SECONDARY,
   HOME_CARD,
+  HOME_ICON_BTN,
   HOME_SHELL,
   HOME_SURFACE,
+  HOME_TEXT_BODY,
+  HOME_TEXT_HEADING,
+  HOME_TEXT_HINT,
+  HOME_TEXT_LABEL,
+  HOME_TEXT_TITLE,
   PRIORITY_ICON_STYLES,
 } from "../components/home/homeStyles.js";
 import { useAppLocale } from "../i18n/useAppLocale.js";
@@ -107,7 +118,7 @@ function PayrollSubMetric({ label, value, color, isLoading = false, currencyLabe
 
   return (
     <div className="min-w-0 flex-1">
-      <p className="text-[13px] font-normal text-[#64748B]">{label}</p>
+      <p className={`text-[13px] font-normal ${HOME_TEXT_LABEL}`}>{label}</p>
       <p
         className="mt-1 text-[18px] font-semibold tabular-nums"
         style={{ color }}
@@ -143,9 +154,9 @@ function SplitMoneyValue({ value, suffix, isLoading = false }) {
   if (isLoading) {
     return (
       <p className="tabular-nums">
-        <span className="text-[34px] font-semibold text-[#0F172A]">0</span>
-        <span className="text-[20px] font-normal text-[#94A3B8]">.00</span>
-        <span className="ms-1 text-[16px] font-normal text-[#64748B]">{suffix}</span>
+        <span className={`text-[34px] font-semibold ${HOME_TEXT_TITLE}`}>0</span>
+        <span className={`text-[20px] font-normal ${HOME_TEXT_HINT}`}>.00</span>
+        <span className={`ms-1 text-[16px] font-normal ${HOME_TEXT_LABEL}`}>{suffix}</span>
       </p>
     );
   }
@@ -153,9 +164,9 @@ function SplitMoneyValue({ value, suffix, isLoading = false }) {
   const { integer, decimal } = splitMoneyParts(value);
   return (
     <p className="tabular-nums">
-      <span className="text-[34px] font-semibold text-[#0F172A]">{integer}</span>
-      <span className="text-[20px] font-normal text-[#94A3B8]">{decimal}</span>
-      <span className="ms-1 text-[16px] font-normal text-[#64748B]">{suffix}</span>
+      <span className={`text-[34px] font-semibold ${HOME_TEXT_TITLE}`}>{integer}</span>
+      <span className={`text-[20px] font-normal ${HOME_TEXT_HINT}`}>{decimal}</span>
+      <span className={`ms-1 text-[16px] font-normal ${HOME_TEXT_LABEL}`}>{suffix}</span>
     </p>
   );
 }
@@ -202,14 +213,14 @@ function ActionItemRow({
           <Icon className="h-4 w-4" aria-hidden />
         </span>
         <div className="min-w-0 text-start">
-          <p className="text-[14px] font-medium text-[#0F172A]">{item.title}</p>
-          <p className="mt-0.5 text-[13px] font-normal text-[#64748B]">{item.detail}</p>
+          <p className={`text-[14px] font-medium ${HOME_TEXT_BODY}`}>{item.title}</p>
+          <p className={`mt-0.5 text-[13px] font-normal ${HOME_TEXT_LABEL}`}>{item.detail}</p>
         </div>
       </div>
       <button
         type="button"
         onClick={() => onAction(item)}
-        className={`${HOME_BTN} shrink-0 rounded-full bg-[#0F172A] px-4 py-2 text-[13px] font-medium text-white hover:opacity-90`}
+        className={`${HOME_BTN} ${HOME_BTN_PRIMARY} shrink-0`}
       >
         {item.actionLabel}
       </button>
@@ -220,10 +231,10 @@ function ActionItemRow({
 function MiniStatCard({ label, value, sublabel, sparkline }) {
   return (
     <article className={`${HOME_SURFACE} p-4`}>
-      <p className="text-[12px] font-normal text-[#64748B]">{label}</p>
-      <p className="mt-1 text-[22px] font-semibold tabular-nums text-[#0F172A]">{value}</p>
+      <p className={`text-[12px] font-normal ${HOME_TEXT_LABEL}`}>{label}</p>
+      <p className={`mt-1 text-[22px] font-semibold tabular-nums ${HOME_TEXT_TITLE}`}>{value}</p>
       {sublabel ? (
-        <p className="mt-0.5 text-[11px] font-normal text-[#94A3B8]">{sublabel}</p>
+        <p className={`mt-0.5 text-[11px] font-normal ${HOME_TEXT_HINT}`}>{sublabel}</p>
       ) : null}
       <SparkLine data={sparkline} height={40} className="mt-2" />
     </article>
@@ -244,6 +255,7 @@ export default function HomePage() {
   const [probationModal, setProbationModal] = useState(null);
   const [actingRequestId, setActingRequestId] = useState(null);
   const [requestActionError, setRequestActionError] = useState("");
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const loadDashboard = useCallback(async () => {
     setIsLoading(true);
@@ -293,6 +305,11 @@ export default function HomePage() {
     } finally {
       setActingRequestId(null);
     }
+  };
+
+  const handleLogout = async () => {
+    await signOut();
+    window.location.href = "/login";
   };
 
   const handleActionItem = (item) => {
@@ -359,18 +376,40 @@ export default function HomePage() {
   );
 
   return (
-    <div className="-mx-6 -my-8 flex flex-col gap-5 bg-[#FFFFFF] px-6 py-8 md:-mx-8 md:px-8">
+    <div className="-mx-6 -my-8 flex min-h-[calc(100dvh-4rem)] md:-mx-8">
+      <div className="flex min-w-0 flex-1 flex-col gap-5 overflow-y-auto bg-[#FFFFFF] px-6 py-8 dark:bg-slate-950 md:px-8">
       {/* ─── 1. ترويسة ─── */}
       <header className={`${HOME_SHELL} p-6`}>
         <div className="flex flex-col gap-4">
-          <div className="flex flex-wrap justify-end gap-2">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setIsCalendarOpen((open) => !open)}
+                className={`${HOME_ICON_BTN} ${isCalendarOpen ? "border-slate-900 bg-slate-900 text-white dark:border-white dark:bg-white dark:text-slate-900" : ""}`}
+                aria-label={t("pages.home.openCalendar")}
+                aria-pressed={isCalendarOpen}
+              >
+                <CalendarDays className="h-[18px] w-[18px] stroke-[1.75]" aria-hidden />
+              </button>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className={HOME_ICON_BTN}
+                aria-label={t("pages.home.logout")}
+              >
+                <LogOut className="h-[18px] w-[18px] stroke-[1.75]" aria-hidden />
+              </button>
+            </div>
+
+            <div className="flex flex-wrap justify-end gap-2">
             {headerActions.map((action) =>
               action.primary ? (
                 <button
                   key={action.id}
                   type="button"
                   onClick={() => navigate(action.href)}
-                  className={`${HOME_BTN} rounded-full bg-[#0F172A] px-4 py-2 text-[13px] font-medium text-white hover:opacity-90`}
+                  className={`${HOME_BTN} ${HOME_BTN_PRIMARY}`}
                 >
                   {action.label}
                 </button>
@@ -379,7 +418,7 @@ export default function HomePage() {
                   key={action.id}
                   type="button"
                   onClick={() => navigate(action.href)}
-                  className={`${HOME_BTN} inline-flex items-center gap-1.5 rounded-full border border-[#E2E8F0] bg-white px-4 py-2 text-[13px] font-medium text-[#0F172A] hover:bg-[#F8FAFC]`}
+                  className={`${HOME_BTN} ${HOME_BTN_SECONDARY}`}
                 >
                   {action.id === "export" ? (
                     <Download className="h-4 w-4" aria-hidden />
@@ -388,13 +427,14 @@ export default function HomePage() {
                 </button>
               ),
             )}
+            </div>
           </div>
 
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-1 text-start">
-              <p className="text-[13px] font-normal text-[#64748B]">{getGreeting(t)}</p>
-              <h1 className="text-[24px] font-medium text-[#0F172A]">{user.name}</h1>
-              <p className="text-[12px] font-normal text-[#94A3B8]">{headerDate}</p>
+              <p className={`text-[13px] font-normal ${HOME_TEXT_LABEL}`}>{getGreeting(t)}</p>
+              <h1 className={`text-[24px] font-medium ${HOME_TEXT_TITLE}`}>{user.name}</h1>
+              <p className={`text-[12px] font-normal ${HOME_TEXT_HINT}`}>{headerDate}</p>
             </div>
 
             <div className="flex flex-wrap gap-2 sm:shrink-0">
@@ -445,7 +485,7 @@ export default function HomePage() {
       {/* ─── 2. صف هيرو 60/40 ─── */}
       <section className="grid grid-cols-1 gap-5 lg:grid-cols-[3fr_2fr]">
         <article className={`${HOME_SHELL} p-6`}>
-          <p className="text-[14px] font-normal text-[#64748B]">
+          <p className={`text-[14px] font-normal ${HOME_TEXT_LABEL}`}>
             {t("pages.home.payrollTotal", { month: payrollMonthLabel })}
           </p>
 
@@ -458,7 +498,7 @@ export default function HomePage() {
           </div>
 
           {!isLoading && !payrollHero?.hasData ? (
-            <p className="mt-1 text-[12px] font-normal text-[#94A3B8]">
+            <p className={`mt-1 text-[12px] font-normal ${HOME_TEXT_HINT}`}>
               {t("pages.home.noPayrollYet")}
             </p>
           ) : null}
@@ -466,7 +506,7 @@ export default function HomePage() {
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <DeltaBadge value={payrollHero?.percentChange ?? null} />
             {payrollHero?.percentChange != null ? (
-              <span className="text-[12px] font-normal text-[#94A3B8]">
+              <span className={`text-[12px] font-normal ${HOME_TEXT_HINT}`}>
                 {t("pages.home.vsLastMonth")}
               </span>
             ) : null}
@@ -491,10 +531,10 @@ export default function HomePage() {
         </article>
 
         <article className={`${HOME_SHELL} p-6`}>
-          <h2 className="text-[16px] font-medium text-[#0F172A]">
+          <h2 className={`text-[16px] font-medium ${HOME_TEXT_HEADING}`}>
             {t("pages.home.workforceTitle")}
           </h2>
-          <p className="mt-1 text-[12px] font-normal text-[#94A3B8]">
+          <p className={`mt-1 text-[12px] font-normal ${HOME_TEXT_HINT}`}>
             {isLoading
               ? t("common.loading")
               : stats?.hasEmployeeData
@@ -506,17 +546,17 @@ export default function HomePage() {
 
           <ul className="mt-5 space-y-4">
             <li className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2 text-[13px] font-medium text-[#0F172A]">
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#ECFDF5] text-[#047857]">
+              <div className={`flex items-center gap-2 text-[13px] font-medium ${HOME_TEXT_BODY}`}>
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#ECFDF5] text-[#047857] dark:bg-emerald-950/50 dark:text-emerald-300">
                   <Users className="h-4 w-4" aria-hidden />
                 </span>
                 {t("pages.home.saudi")}
               </div>
               <div className="text-end">
-                <p className="text-[14px] font-semibold tabular-nums text-[#0F172A]">
+                <p className={`text-[14px] font-semibold tabular-nums ${HOME_TEXT_TITLE}`}>
                   {formatLocaleNumber(saudiPercent)}%
                 </p>
-                <p className="text-[12px] font-normal text-[#64748B]">
+                <p className={`text-[12px] font-normal ${HOME_TEXT_LABEL}`}>
                   {t("pages.home.employeeCount", {
                     count: formatLocaleNumber(saudiCount),
                   })}
@@ -524,17 +564,17 @@ export default function HomePage() {
               </div>
             </li>
             <li className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2 text-[13px] font-medium text-[#0F172A]">
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F1F5F9] text-[#475569]">
+              <div className={`flex items-center gap-2 text-[13px] font-medium ${HOME_TEXT_BODY}`}>
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F1F5F9] text-[#475569] dark:bg-slate-800 dark:text-white">
                   <Users className="h-4 w-4" aria-hidden />
                 </span>
                 {t("pages.home.nonSaudi")}
               </div>
               <div className="text-end">
-                <p className="text-[14px] font-semibold tabular-nums text-[#0F172A]">
+                <p className={`text-[14px] font-semibold tabular-nums ${HOME_TEXT_TITLE}`}>
                   {formatLocaleNumber(nonSaudiPercent)}%
                 </p>
-                <p className="text-[12px] font-normal text-[#64748B]">
+                <p className={`text-[12px] font-normal ${HOME_TEXT_LABEL}`}>
                   {t("pages.home.employeeCount", {
                     count: formatLocaleNumber(nonSaudiCount),
                   })}
@@ -543,14 +583,14 @@ export default function HomePage() {
             </li>
           </ul>
 
-          <div className="mt-6 h-2 overflow-hidden rounded-full bg-[#F1F5F9]">
+          <div className="mt-6 h-2 overflow-hidden rounded-full bg-[#F1F5F9] dark:bg-slate-800">
             <div className="flex h-full w-full">
               <div
-                className="h-full bg-[#0F172A]"
+                className="h-full bg-[#0F172A] dark:bg-white"
                 style={{ width: `${saudiPercent}%` }}
               />
               <div
-                className="h-full bg-[#94A3B8]"
+                className="h-full bg-[#94A3B8] dark:bg-slate-500"
                 style={{ width: `${nonSaudiPercent}%` }}
               />
             </div>
@@ -559,9 +599,9 @@ export default function HomePage() {
       </section>
 
       {/* ─── 3. يحتاج اهتمامك ─── */}
-      <section className={`${HOME_SHELL} border-r-[3px] border-r-[#0F172A] p-6`}>
+      <section className={`${HOME_SHELL} border-r-[3px] border-r-[#0F172A] p-6 dark:border-r-white`}>
         <div className="mb-4 flex items-center justify-between gap-3">
-          <h2 className="text-[18px] font-medium text-[#0F172A]">
+          <h2 className={`text-[18px] font-medium ${HOME_TEXT_HEADING}`}>
             {t("pages.home.needsAttention")}
           </h2>
           {!isLoading && actionItems.length > 0 ? (
@@ -575,20 +615,20 @@ export default function HomePage() {
         </div>
 
         {isLoading ? (
-          <p className="py-6 text-center text-[13px] font-normal text-[#94A3B8]">
+          <p className={`py-6 text-center text-[13px] font-normal ${HOME_TEXT_HINT}`}>
             {t("common.loading")}
           </p>
         ) : actionItems.length === 0 ? (
           <div className="flex flex-col items-center gap-3 py-8 text-center">
-            <Check className="h-10 w-10 text-[#10B981]" aria-hidden />
-            <p className="text-[14px] font-normal text-[#64748B]">
+            <Check className="h-10 w-10 text-[#10B981] dark:text-emerald-400" aria-hidden />
+            <p className={`text-[14px] font-normal ${HOME_TEXT_LABEL}`}>
               {t("pages.home.allClear")}
             </p>
           </div>
         ) : (
           <div className="flex flex-col gap-3">
             {requestActionError ? (
-              <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+              <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
                 {requestActionError}
               </p>
             ) : null}
@@ -597,7 +637,7 @@ export default function HomePage() {
                 key={item.id}
                 className={
                   index < actionItems.length - 1
-                    ? "border-b border-[#F1F5F9] pb-3"
+                    ? "border-b border-[#F1F5F9] pb-3 dark:border-slate-800"
                     : ""
                 }
               >
@@ -665,7 +705,7 @@ export default function HomePage() {
 
       {/* ─── 5. أدوات سريعة ─── */}
       <section className="space-y-4">
-        <h2 className="text-[16px] font-medium text-[#0F172A]">
+        <h2 className={`text-[16px] font-medium ${HOME_TEXT_HEADING}`}>
           {t("pages.home.quickTools")}
         </h2>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
@@ -673,7 +713,7 @@ export default function HomePage() {
             <Link
               key={action.id}
               to={action.href}
-              className={`${HOME_BTN} flex items-center gap-2 border border-[#E2E8F0] bg-white px-4 py-3 text-[13px] font-medium text-[#0F172A] hover:bg-[#F8FAFC] [&_svg]:h-5 [&_svg]:w-5 [&_svg]:text-[#0F172A]`}
+              className={`${HOME_BTN} ${HOME_BTN_SECONDARY} flex items-center gap-2 px-4 py-3 [&_svg]:h-5 [&_svg]:w-5`}
             >
               <action.icon className="shrink-0" aria-hidden />
               <span>{action.label}</span>
@@ -687,7 +727,7 @@ export default function HomePage() {
         <section className="mt-10 space-y-4">
           <div className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-[#4F46E5]" aria-hidden />
-            <h2 className="text-[16px] font-medium text-[#0F172A]">
+            <h2 className={`text-[16px] font-medium ${HOME_TEXT_HEADING}`}>
               {t("pages.home.smartTasks")}
             </h2>
           </div>
@@ -700,17 +740,17 @@ export default function HomePage() {
                   type="button"
                   onClick={onClick}
                   disabled={!onClick}
-                  className={`${HOME_CARD} relative flex min-h-[128px] flex-col items-start gap-3 p-5 text-start hover:bg-[#F8FAFC] disabled:cursor-not-allowed disabled:opacity-50`}
+                  className={`${HOME_CARD} relative flex min-h-[128px] flex-col items-start gap-3 p-5 text-start hover:bg-[#F8FAFC] disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-slate-800`}
                 >
-                  <span className="inline-flex items-center rounded-full bg-[#EEF2FF] px-2 py-0.5 text-[11px] font-medium text-[#4F46E5]">
+                  <span className="inline-flex items-center rounded-full bg-[#EEF2FF] px-2 py-0.5 text-[11px] font-medium text-[#4F46E5] dark:bg-indigo-950/50 dark:text-indigo-300">
                     ✨ AI
                   </span>
-                  <task.icon className="h-5 w-5 text-[#0F172A]" aria-hidden />
+                  <task.icon className={`h-5 w-5 ${HOME_TEXT_BODY}`} aria-hidden />
                   <span className="min-w-0">
-                    <span className="block text-[14px] font-medium text-[#0F172A]">
+                    <span className={`block text-[14px] font-medium ${HOME_TEXT_BODY}`}>
                       {task.label}
                     </span>
-                    <span className="mt-1 block text-[12px] font-normal leading-relaxed text-[#64748B]">
+                    <span className={`mt-1 block text-[12px] font-normal leading-relaxed ${HOME_TEXT_LABEL}`}>
                       {task.description}
                     </span>
                   </span>
@@ -731,6 +771,11 @@ export default function HomePage() {
       />
 
       <SmartToolsModals {...modalProps} />
+      </div>
+
+      {isCalendarOpen ? (
+        <SystemCalendarPanel onClose={() => setIsCalendarOpen(false)} />
+      ) : null}
     </div>
   );
 }

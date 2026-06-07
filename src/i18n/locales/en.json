@@ -141,7 +141,9 @@
       "probationEmpty": "No probation periods ending soon",
       "viewEmployee": "View employee",
       "probationDecision": "Make decision",
-      "checkingAlerts": "Checking employee alerts..."
+      "checkingAlerts": "Checking employee alerts...",
+      "openCalendar": "Open calendar",
+      "logout": "Sign out"
     },
     "tasks": {
       "title": "Tasks",
@@ -367,6 +369,28 @@
       "monthly": "Monthly",
       "quarterly": "Quarterly",
       "yearly": "Yearly"
+    }
+  },
+  "calendar": {
+    "title": "System calendar",
+    "subtitle": "Your appointments, events, tasks, and key HR dates",
+    "prevMonth": "Previous month",
+    "nextMonth": "Next month",
+    "noEventsDay": "No events on this day",
+    "addAppointment": "Add appointment",
+    "appointmentTitle": "Appointment title",
+    "appointmentNotes": "Notes (optional)",
+    "saveAppointment": "Save appointment",
+    "loadError": "Could not load calendar",
+    "saveError": "Could not save appointment",
+    "deleteError": "Could not delete appointment",
+    "types": {
+      "appointment": "Appointment",
+      "event": "Event",
+      "task": "Task",
+      "contract": "Contract",
+      "iqama": "Iqama",
+      "probation": "Probation"
     }
   }
 }

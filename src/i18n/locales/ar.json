@@ -141,7 +141,9 @@
       "probationEmpty": "لا فترات تجربة تنتهي قريباً",
       "viewEmployee": "عرض الموظف",
       "probationDecision": "اتخاذ قرار",
-      "checkingAlerts": "جاري فحص التنبيهات..."
+      "checkingAlerts": "جاري فحص التنبيهات...",
+      "openCalendar": "فتح التقويم",
+      "logout": "تسجيل الخروج"
     },
     "tasks": {
       "title": "إدارة المهام",
@@ -367,6 +369,28 @@
       "monthly": "شهري",
       "quarterly": "ربعي",
       "yearly": "سنوي"
+    }
+  },
+  "calendar": {
+    "title": "تقويم النظام",
+    "subtitle": "مواعيدك وفعاليات المنشأة والمهام والتواريخ المهمة",
+    "prevMonth": "الشهر السابق",
+    "nextMonth": "الشهر التالي",
+    "noEventsDay": "لا توجد أحداث في هذا اليوم",
+    "addAppointment": "إضافة موعد",
+    "appointmentTitle": "عنوان الموعد",
+    "appointmentNotes": "ملاحظات (اختياري)",
+    "saveAppointment": "حفظ الموعد",
+    "loadError": "تعذّر تحميل التقويم",
+    "saveError": "تعذّر حفظ الموعد",
+    "deleteError": "تعذّر حذف الموعد",
+    "types": {
+      "appointment": "موعد",
+      "event": "فعالية",
+      "task": "مهمة",
+      "contract": "عقد",
+      "iqama": "إقامة",
+      "probation": "تجربة"
     }
   }
 }

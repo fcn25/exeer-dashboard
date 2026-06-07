@@ -339,11 +339,11 @@ span {
   --color-md-outline: #334155;
   --color-md-outline-variant: #334155;
   --color-md-on-surface: #f8fafc;
-  --color-md-on-surface-variant: #94a3b8;
+  --color-md-on-surface-variant: #e2e8f0;
   --color-exeer-bg: #020617;
   --color-exeer-surface: #0f172a;
-  --color-exeer-primary: #f8fafc;
-  --color-exeer-muted: #94a3b8;
+  --color-exeer-primary: #ffffff;
+  --color-exeer-muted: #e2e8f0;
   --color-exeer-border: #334155;
   --color-exeer-hover: #1e293b;
 }
@@ -382,8 +382,32 @@ span {
 
 .dark .md-theme-segment-btn-active {
   background: #1e293b;
-  color: #f1f5f9;
+  color: #ffffff;
   border-color: #334155;
+  font-weight: 600;
+}
+
+.dark .text-exeer-primary {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.dark .text-exeer-muted {
+  color: #e2e8f0;
+  font-weight: 400;
+}
+
+.dark .md-label {
+  color: #ffffff;
+  font-weight: 500;
+}
+
+.dark .md-theme-segment-btn {
+  color: #cbd5e1;
+}
+
+.dark .md-theme-segment-btn-active {
+  color: #ffffff;
 }
 
 /* Eradicate all box shadows (utilities + arbitrary) */

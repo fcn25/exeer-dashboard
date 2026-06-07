@@ -21,6 +21,8 @@
     "@capacitor/geolocation": "^8.2.0",
     "@capacitor/keyboard": "^8.0.3",
     "@google/generative-ai": "^0.24.1",
+    "@sentry/capacitor": "^4.0.0",
+    "@sentry/react": "^10.43.0",
     "@supabase/supabase-js": "^2.106.2",
     "date-fns": "^4.4.0",
     "i18next": "^26.3.0",

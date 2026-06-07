@@ -77,7 +77,7 @@ export default function ManagerLayout() {
       .then((note) => {
         if (cancelled) return;
         const hasContent = Boolean(String(note?.content ?? "").trim());
-        if (note?.is_visible !== false && hasContent) {
+        if (note?.is_pinned && hasContent) {
           setIsStickyNoteOpen(true);
         }
       })

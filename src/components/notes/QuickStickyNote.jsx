@@ -47,14 +47,14 @@ export default function QuickStickyNote({ isOpen, onClose }) {
   }, [isOpen, loadNote]);
 
   const persistNote = useCallback(
-    async (nextContent, nextColor, visible = true) => {
+    async (nextContent, nextColor, pinned = true) => {
       setIsSaving(true);
       setError("");
       try {
         await upsertMyQuickNote({
           content: nextContent,
           color: nextColor,
-          is_visible: visible,
+          is_pinned: pinned,
         });
       } catch (err) {
         setError(err.message || t("quickNote.saveError"));
@@ -87,7 +87,7 @@ export default function QuickStickyNote({ isOpen, onClose }) {
   const handleClose = async () => {
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     try {
-      await upsertMyQuickNote({ content, color, is_visible: false });
+      await upsertMyQuickNote({ content, color, is_pinned: false });
     } catch {
       // keep UI closable even if save fails
     }

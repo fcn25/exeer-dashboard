@@ -1,5 +1,5 @@
 import { supabase } from "../utils/supabaseClient.js";
-import { getAuthUserId, getCompanyId } from "../utils/mobileAuth.js";
+import { getCompanyId, getEmployeeId } from "../utils/mobileAuth.js";
 
 const NOTE_COLORS = new Set(["amber", "mint", "sky", "rose"]);
 
@@ -11,12 +11,12 @@ function mapDbError(error) {
   return error.message || "تعذّر حفظ الملاحظة.";
 }
 
-function requireAuthUserId() {
-  const userId = getAuthUserId();
-  if (!userId) {
-    throw new Error("يجب تسجيل الدخول لحفظ الملاحظة.");
+function requireEmployeeId() {
+  const employeeId = getEmployeeId();
+  if (!employeeId) {
+    throw new Error("يجب ربط حسابك بسجل موظف (auth_user_id) لحفظ الملاحظة.");
   }
-  return userId;
+  return employeeId;
 }
 
 export function normalizeNoteColor(color) {
@@ -26,37 +26,37 @@ export function normalizeNoteColor(color) {
 
 export async function getMyQuickNote() {
   const companyId = getCompanyId();
-  const userId = getAuthUserId();
-  if (!userId) return null;
+  const employeeId = getEmployeeId();
+  if (!employeeId) return null;
 
   const { data, error } = await supabase
     .from("user_quick_notes")
-    .select("id, content, color, is_visible, updated_at")
+    .select("id, content, color, is_pinned, updated_at")
     .eq("company_id", companyId)
-    .eq("user_id", userId)
+    .eq("employee_id", employeeId)
     .maybeSingle();
 
   if (error) throw new Error(mapDbError(error));
   return data;
 }
 
-export async function upsertMyQuickNote({ content, color, is_visible }) {
+export async function upsertMyQuickNote({ content, color, is_pinned }) {
   const companyId = getCompanyId();
-  const userId = requireAuthUserId();
+  const employeeId = requireEmployeeId();
 
   const payload = {
     company_id: companyId,
-    user_id: userId,
+    employee_id: employeeId,
     content: String(content ?? ""),
     color: normalizeNoteColor(color),
-    is_visible: is_visible !== false,
+    is_pinned: is_pinned !== false,
     updated_at: new Date().toISOString(),
   };
 
   const { data, error } = await supabase
     .from("user_quick_notes")
-    .upsert(payload, { onConflict: "user_id" })
-    .select("id, content, color, is_visible, updated_at")
+    .upsert(payload, { onConflict: "employee_id" })
+    .select("id, content, color, is_pinned, updated_at")
     .single();
 
   if (error) throw new Error(mapDbError(error));

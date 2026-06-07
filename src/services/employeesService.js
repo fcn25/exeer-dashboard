@@ -231,30 +231,30 @@ export async function bulkCreateEmployees(rows, { sendInvites = false } = {}) {
   const payload = rows
     .map((row, index) => ({
       company_id: companyId,
-      full_name: String(row.full_name ?? "").trim(),
-      email: String(row.email ?? "").trim().toLowerCase() || null,
-      phone_number: String(row.phone_number ?? "").trim() || null,
-      gender: row.gender || "ذكر",
-      date_of_birth: row.date_of_birth || null,
-      nationality: String(row.nationality ?? "").trim() || null,
-      id_number: row.id_number ? Number(row.id_number) : null,
-      national_address: String(row.national_address ?? "").trim() || null,
+      full_name: row.full_name,
+      email: row.email ?? null,
+      phone_number: row.phone_number ?? null,
+      gender: row.gender ?? null,
+      date_of_birth: row.date_of_birth ?? null,
+      nationality: row.nationality ?? null,
+      id_number: row.id_number ?? null,
+      national_address: row.national_address ?? null,
       employee_number:
-        String(row.employee_number ?? "").trim() ||
+        row.employee_number ||
         `EMP-${String(lastNum + index + 1).padStart(3, "0")}`,
-      hire_date: row.hire_date || null,
-      contract_type: row.contract_type || "دوام كامل",
-      employment_status: row.employment_status || "نشط",
-      role: "Employee",
-      direct_manager_name: String(row.direct_manager_name ?? "").trim() || null,
-      job_title_name: String(row.job_title_name ?? "").trim() || null,
-      department: String(row.department ?? "").trim() || null,
+      hire_date: row.hire_date ?? null,
+      contract_type: row.contract_type ?? null,
+      employment_status: row.employment_status ?? null,
+      role: row.role ?? "Employee",
+      direct_manager_name: row.direct_manager_name ?? null,
+      job_title_name: row.job_title_name ?? null,
+      department: row.department ?? null,
       basic_salary: Number(row.basic_salary) || 0,
       housing_allowance: Number(row.housing_allowance) || 0,
       transport_allowance: Number(row.transport_allowance) || 0,
       other_allowance: Number(row.other_allowance) || 0,
-      bank_name: String(row.bank_name ?? "").trim() || null,
-      iban: String(row.iban ?? "").trim() || null,
+      bank_name: row.bank_name ?? null,
+      iban: row.iban ?? null,
     }))
     .filter((row) => row.full_name);
 
@@ -273,11 +273,12 @@ export async function bulkCreateEmployees(rows, { sendInvites = false } = {}) {
     invitesSkippedNoEmail = data.length - emailsToInvite.length;
 
     for (const emp of emailsToInvite) {
+      const sourceRow = rows.find((row) => row.email === emp.email);
       try {
         await inviteEmployeeByEmail({
           email: emp.email,
           fullName: emp.full_name,
-          role: "Employee",
+          role: sourceRow?.role ?? "Employee",
           companyId,
           employeeId: emp.id,
         });

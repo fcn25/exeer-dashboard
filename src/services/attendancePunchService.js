@@ -70,6 +70,19 @@ async function verifyGeofenceViaRpc(latitude, longitude) {
   };
 }
 
+export async function fetchEmployeeWorkBranchInfo(employeeId) {
+  const resolvedEmployeeId = Number(employeeId);
+  if (!Number.isFinite(resolvedEmployeeId) || resolvedEmployeeId <= 0) {
+    throw new Error("لم يتم ربط حسابك بسجل موظف.");
+  }
+
+  const { branch } = await fetchEmployeeWorkBranch(resolvedEmployeeId);
+  return {
+    branchName: branch.name,
+    branchId: branch.id,
+  };
+}
+
 async function fetchEmployeeWorkBranch(employeeId) {
   const companyId = requireCompanyId("تسجيل الحضور");
 

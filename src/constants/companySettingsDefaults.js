@@ -16,6 +16,8 @@ export const DEFAULT_COMPANY_SETTINGS = [
   { key: "performance_review_enabled", value: true },
   { key: "performance_review_cycle", value: "quarterly" },
   { key: "attendance_mode", value: "gps" },
+  { key: "work_start_time", value: "08:00" },
+  { key: "work_end_time", value: "17:00" },
   { key: "calendar_type", value: "hijri" },
 ];
 

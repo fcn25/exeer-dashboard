@@ -1,19 +1,31 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { ChevronLeft, Fingerprint, MapPin, Settings2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import AttendancePunchButton from "../../attendance/mobile/AttendancePunchButton.jsx";
+import AttendancePunchCamera from "../../attendance/mobile/AttendancePunchCamera.jsx";
 import BiometricEnrollmentSection from "../../attendance/mobile/BiometricEnrollmentSection.jsx";
 import AttendanceOperationsSection from "../../attendance/mobile/AttendanceOperationsSection.jsx";
 import AttendanceMonthlyReportSection from "../../attendance/mobile/AttendanceMonthlyReportSection.jsx";
-import AttendancePunchSelfieModal from "../../attendance/mobile/AttendancePunchSelfieModal.jsx";
 import {
   fetchEmployeeMonthlyAttendanceReport,
   fetchRecentAttendanceLogsForEmployee,
   fetchTodayAttendanceForEmployee,
 } from "../../../services/attendanceService.js";
-import { performAttendancePunch } from "../../../services/attendancePunchService.js";
-import { isFaceEnrolled } from "../../../services/faceEnrollmentService.js";
+import {
+  fetchEmployeeWorkBranchInfo,
+  performAttendancePunch,
+} from "../../../services/attendancePunchService.js";
+import {
+  isFaceEnrolled,
+  saveLatestPunchSelfie,
+} from "../../../services/faceEnrollmentService.js";
+import { useCompanySettings } from "../../../context/CompanySettingsContext.jsx";
+import {
+  canPunchOutNow,
+  formatWorkTimeLabel,
+  normalizeWorkTime,
+} from "../../../utils/attendance/workHours.js";
 import { canManageAttendanceSettings } from "../../../utils/rbac.js";
 
 function AdminAttendanceSettingsSection() {
@@ -78,6 +90,7 @@ function AdminAttendanceSettingsSection() {
 
 export default function MobileManagerAttendanceTab({ employeeId }) {
   const { t } = useTranslation();
+  const { getSetting } = useCompanySettings();
   const [todayData, setTodayData] = useState(null);
   const [operationLogs, setOperationLogs] = useState([]);
   const [monthlyReport, setMonthlyReport] = useState(null);
@@ -86,8 +99,28 @@ export default function MobileManagerAttendanceTab({ employeeId }) {
   const [actionError, setActionError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [isEnrolled, setIsEnrolled] = useState(false);
-  const [isPunchSelfieOpen, setIsPunchSelfieOpen] = useState(false);
+  const [isPunchCameraOpen, setIsPunchCameraOpen] = useState(false);
+  const [punchBranchName, setPunchBranchName] = useState("—");
   const [isPunching, setIsPunching] = useState(false);
+  const [clockTick, setClockTick] = useState(Date.now());
+
+  const workEndTime = normalizeWorkTime(getSetting("work_end_time"), "17:00");
+  const workEndLabel = formatWorkTimeLabel(workEndTime);
+
+  const punchMode = useMemo(() => {
+    if (todayData?.nextPunchType === "check_out") return "check_out";
+    if (todayData?.nextPunchType === "complete") return "complete";
+    return "check_in";
+  }, [todayData?.nextPunchType]);
+
+  const isCheckIn = punchMode === "check_in";
+  const isCheckOut = punchMode === "check_out";
+  const punchOutAllowed = canPunchOutNow(workEndTime);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setClockTick(Date.now()), 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   const loadAttendance = useCallback(async () => {
     if (!employeeId) {
@@ -126,12 +159,15 @@ export default function MobileManagerAttendanceTab({ employeeId }) {
     loadAttendance();
   }, [loadAttendance]);
 
-  const executePunch = async () => {
+  const executePunch = async (selfieDataUrl = null) => {
     setActionError("");
     setIsPunching(true);
 
     try {
       const result = await performAttendancePunch(employeeId);
+      if (selfieDataUrl) {
+        saveLatestPunchSelfie(employeeId, selfieDataUrl, result.punchType);
+      }
       setTodayData(result.summary);
       setSuccessMessage(
         result.punchType === "In"
@@ -147,33 +183,59 @@ export default function MobileManagerAttendanceTab({ employeeId }) {
       setActionError(err.message || t("pages.mobile.attendance.punchError"));
     } finally {
       setIsPunching(false);
-      setIsPunchSelfieOpen(false);
+      setIsPunchCameraOpen(false);
     }
   };
 
-  const handlePunchRequest = () => {
+  const handlePunchRequest = async () => {
     setActionError("");
     setSuccessMessage("");
 
-    if (!isEnrolled) {
-      setActionError(t("pages.mobile.attendance.enrollmentRequired"));
+    if (isCheckIn) {
+      if (!isEnrolled) {
+        setActionError(t("pages.mobile.attendance.enrollmentRequired"));
+        return;
+      }
+
+      try {
+        const branch = await fetchEmployeeWorkBranchInfo(employeeId);
+        setPunchBranchName(branch.branchName);
+        setIsPunchCameraOpen(true);
+      } catch (err) {
+        setActionError(err.message || t("pages.mobile.attendance.punchError"));
+      }
       return;
     }
 
-    setIsPunchSelfieOpen(true);
+    if (isCheckOut) {
+      if (!punchOutAllowed) return;
+      await executePunch();
+    }
   };
 
-  const handlePunchSelfieConfirm = async () => {
-    await executePunch();
+  const handlePunchSelfieCapture = async (selfieDataUrl) => {
+    await executePunch(selfieDataUrl);
   };
 
-  const punchLabel = todayData?.nextPunchLabel ?? t("pages.mobile.attendance.punchIn");
+  const punchLabel =
+    todayData?.nextPunchLabel ??
+    (isCheckOut
+      ? t("pages.mobile.attendance.punchOut")
+      : t("pages.mobile.attendance.punchIn"));
+
+  const disabledHint = isCheckOut && !punchOutAllowed
+    ? t("pages.mobile.attendance.punchOutLocked", { time: workEndLabel })
+    : "";
+
   const canPunch =
-    todayData?.canPunch !== false &&
     !isLoading &&
     !loadError &&
-    isEnrolled &&
-    !isPunching;
+    !isPunching &&
+    todayData?.canPunch !== false &&
+    punchMode !== "complete" &&
+    (isCheckIn ? isEnrolled : punchOutAllowed);
+
+  void clockTick;
 
   return (
     <div className="space-y-4">
@@ -203,10 +265,18 @@ export default function MobileManagerAttendanceTab({ employeeId }) {
           label={punchLabel}
           onPunch={handlePunchRequest}
           disabled={!canPunch}
+          isProcessing={isPunching && !isPunchCameraOpen}
+          mode={punchMode}
+          disabledHint={disabledHint}
         />
-        {!isEnrolled && !isLoading ? (
+        {!isEnrolled && isCheckIn && !isLoading ? (
           <p className="mt-2 text-center text-xs text-amber-700 dark:text-amber-300">
             {t("pages.mobile.attendance.enrollmentRequired")}
+          </p>
+        ) : null}
+        {isCheckOut && !punchOutAllowed && !isLoading ? (
+          <p className="mt-2 text-center text-xs text-exeer-muted dark:text-[var(--text-secondary)]">
+            {disabledHint}
           </p>
         ) : null}
       </section>
@@ -217,13 +287,14 @@ export default function MobileManagerAttendanceTab({ employeeId }) {
 
       <AdminAttendanceSettingsSection />
 
-      <AttendancePunchSelfieModal
-        isOpen={isPunchSelfieOpen}
+      <AttendancePunchCamera
+        isOpen={isPunchCameraOpen}
+        branchName={punchBranchName}
+        onCapture={handlePunchSelfieCapture}
         onClose={() => {
-          if (!isPunching) setIsPunchSelfieOpen(false);
+          if (!isPunching) setIsPunchCameraOpen(false);
         }}
-        onConfirm={handlePunchSelfieConfirm}
-        isVerifying={isPunching}
+        isProcessing={isPunching}
       />
     </div>
   );

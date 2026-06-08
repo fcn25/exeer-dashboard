@@ -48,3 +48,26 @@ export function clearFaceEnrollment(employeeId) {
   if (!employeeId) return;
   localStorage.removeItem(storageKey(employeeId));
 }
+
+const PUNCH_SELFIE_PREFIX = "exeer_punch_selfie";
+
+function punchSelfieStorageKey(employeeId) {
+  return `${PUNCH_SELFIE_PREFIX}_${getCompanyId()}_${Number(employeeId)}`;
+}
+
+export function saveLatestPunchSelfie(employeeId, previewDataUrl, punchType) {
+  const resolvedEmployeeId = Number(employeeId);
+  if (!Number.isFinite(resolvedEmployeeId) || resolvedEmployeeId <= 0) return;
+
+  const trimmedPreview = String(previewDataUrl ?? "").trim();
+  if (!trimmedPreview.startsWith("data:image/")) return;
+
+  localStorage.setItem(
+    punchSelfieStorageKey(resolvedEmployeeId),
+    JSON.stringify({
+      punchType,
+      capturedAt: new Date().toISOString(),
+      previewDataUrl: trimmedPreview,
+    }),
+  );
+}

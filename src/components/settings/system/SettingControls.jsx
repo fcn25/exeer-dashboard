@@ -33,6 +33,23 @@ export function SettingNumberInput({
   );
 }
 
+export function SettingTimeInput({
+  value,
+  onChange,
+  disabled = false,
+  fullWidth = false,
+}) {
+  return (
+    <input
+      type="time"
+      value={String(value ?? "08:00")}
+      disabled={disabled}
+      onChange={(event) => onChange(event.target.value)}
+      className={`md-input disabled:opacity-60 ${fullWidth ? "w-full" : "w-full max-w-xs"}`}
+    />
+  );
+}
+
 export function SettingSelect({
   value,
   onChange,

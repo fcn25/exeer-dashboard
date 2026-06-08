@@ -3,6 +3,7 @@ import {
   SettingField,
   SettingNumberInput,
   SettingSelect,
+  SettingTimeInput,
   SettingToggle,
 } from "./SettingControls.jsx";
 
@@ -217,6 +218,22 @@ export default function SystemCustomizationPanels({
                 label: t("systemCustomization.options.manual"),
               },
             ]}
+          />
+        </SettingField>
+
+        <SettingField label={t("systemCustomization.fields.workStartTime")}>
+          <SettingTimeInput
+            fullWidth={fullWidth}
+            value={draft.work_start_time}
+            onChange={(v) => updateDraft("work_start_time", v)}
+          />
+        </SettingField>
+
+        <SettingField label={t("systemCustomization.fields.workEndTime")}>
+          <SettingTimeInput
+            fullWidth={fullWidth}
+            value={draft.work_end_time}
+            onChange={(v) => updateDraft("work_end_time", v)}
           />
         </SettingField>
 

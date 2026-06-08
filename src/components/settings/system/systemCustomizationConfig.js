@@ -29,6 +29,12 @@ export const SYSTEM_CUSTOMIZATION_TAB_KEYS = {
     "transport_allowance_enabled",
     "housing_allowance_enabled",
   ],
-  attendance: ["attendance_mode", "late_tolerance_minutes", "overtime_rate"],
+  attendance: [
+    "attendance_mode",
+    "work_start_time",
+    "work_end_time",
+    "late_tolerance_minutes",
+    "overtime_rate",
+  ],
   performance: ["performance_review_enabled", "performance_review_cycle"],
 };

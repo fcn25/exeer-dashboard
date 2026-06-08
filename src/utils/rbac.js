@@ -25,11 +25,28 @@ export function canAccessMyTeam(role = getCurrentUserRole()) {
   );
 }
 
-export function getCurrentUserRole() {
-  const cachedRole = getCurrentEmployeeCache()?.role;
-  if (cachedRole) return normalizeAppRole(cachedRole);
+function getPrimarySubscriberEmployeeNumber() {
+  const cached = getCurrentEmployeeCache()?.employee?.employee_number;
+  if (cached) return String(cached).trim();
+
   const user = getAuthUser();
-  return normalizeAppRole(user?.role);
+  return String(user?.employee_number ?? "").trim();
+}
+
+export function isPrimarySubscriber() {
+  return getPrimarySubscriberEmployeeNumber() === "EMP-001";
+}
+
+export function getCurrentUserRole() {
+  const authRole = normalizeAppRole(getAuthUser()?.role);
+  const cachedRole = normalizeAppRole(getCurrentEmployeeCache()?.role);
+
+  if (isOwnerRole(authRole) || isOwnerRole(cachedRole) || isPrimarySubscriber()) {
+    return "owner";
+  }
+
+  if (getCurrentEmployeeCache()?.role) return cachedRole;
+  return authRole;
 }
 
 export function getCurrentPermissions() {
@@ -38,7 +55,12 @@ export function getCurrentPermissions() {
 }
 
 export function isOwner() {
-  return isOwnerRole(getCurrentUserRole());
+  return isOwnerRole(getCurrentUserRole()) || isPrimarySubscriber();
+}
+
+/** Company owner / primary subscriber — full access to system customization. */
+export function canAccessSystemCustomization() {
+  return isOwner();
 }
 
 export function hasPermission(key) {

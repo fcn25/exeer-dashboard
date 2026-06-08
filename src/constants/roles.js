@@ -78,6 +78,8 @@ export const PERMISSION_DEFINITIONS = [
 const ROLE_ALIASES = {
   admin: "owner",
   owner: "owner",
+  "مدير": "owner",
+  "مدير النظام": "owner",
   executive: "Executive",
   executive_manager: "Executive",
   hr_manager: "HR_Manager",
@@ -151,13 +153,18 @@ export function normalizeAssignedEmployeeIds(value) {
   ].sort((a, b) => a - b);
 }
 
+function lookupRoleAlias(trimmed) {
+  const lower = trimmed.toLowerCase();
+  return ROLE_ALIASES[lower] ?? ROLE_ALIASES[trimmed] ?? null;
+}
+
 export function normalizeAppRole(role) {
   const trimmed = String(role ?? "").trim();
   if (!trimmed) return "Employee";
 
   if (trimmed === "Admin") return "owner";
 
-  const alias = ROLE_ALIASES[trimmed.toLowerCase()];
+  const alias = lookupRoleAlias(trimmed);
   if (alias) return alias;
 
   if (DASHBOARD_ROLES.has(trimmed) || PORTAL_ROLES.has(trimmed)) {

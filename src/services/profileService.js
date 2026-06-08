@@ -79,6 +79,7 @@ export async function resolveAuthProfile(sessionUser) {
     role,
     company_id: companyId,
     employee_id: current?.employeeId ?? null,
+    employee_number: employeeRow?.employee_number ?? null,
     department: current?.department ?? null,
     job_title: current?.jobTitle ?? null,
     permissions: resolvePermissionsForRole(role, permissions),

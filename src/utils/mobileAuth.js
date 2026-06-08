@@ -43,6 +43,11 @@ export function persistAuthSession(session, profile) {
     const permissions = resolvePermissionsForRole(role, user.permissions);
     const authUserId = user.id ?? user.auth_user_id ?? null;
     const employeeId = user.employee_id ?? user.employeeId ?? null;
+    const employeeNumber =
+      user.employee_number ??
+      user.employeeNumber ??
+      getCurrentEmployeeCache()?.employee?.employee_number ??
+      null;
 
     localStorage.setItem(
       "auth_user",
@@ -58,6 +63,7 @@ export function persistAuthSession(session, profile) {
           user.email,
         company_id: companyId,
         employee_id: employeeId,
+        employee_number: employeeNumber,
         department: user.department ?? null,
         job_title: user.job_title ?? null,
         role,
@@ -147,6 +153,8 @@ export function getAuthUser() {
       id: user.auth_user_id ?? user.id,
       auth_user_id: user.auth_user_id ?? user.id,
       employee_id: cached?.employeeId ?? user.employee_id ?? null,
+      employee_number:
+        cached?.employee?.employee_number ?? user.employee_number ?? null,
       company_id: cached?.companyId ?? user.company_id ?? null,
       role: normalizeAppRole(cached?.role ?? user.role),
       permissions: resolvePermissionsForRole(
@@ -170,7 +178,13 @@ export function repairStoredAuthProfile() {
     const user = getAuthUser();
     if (!user) return null;
 
-    const role = normalizeAppRole(user.role);
+    const employeeNumber = String(
+      user.employee_number ??
+        getCurrentEmployeeCache()?.employee?.employee_number ??
+        "",
+    ).trim();
+    const role =
+      employeeNumber === "EMP-001" ? "owner" : normalizeAppRole(user.role);
     const permissions = resolvePermissionsForRole(role, user.permissions);
     const needsRoleRepair = user.role !== role;
     const needsPermissionRepair = JSON.stringify(user.permissions) !== JSON.stringify(permissions);

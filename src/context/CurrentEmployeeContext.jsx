@@ -27,6 +27,7 @@ function syncEmployeeToAuthStorage(current, authUser) {
     role,
     company_id: current.companyId,
     employee_id: current.employeeId,
+    employee_number: current.employee?.employee_number ?? null,
     department: current.department,
     job_title: current.jobTitle,
     permissions: resolvePermissionsForRole(role, authUser.permissions),

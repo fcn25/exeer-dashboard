@@ -23,6 +23,7 @@ import {
   persistAuthSession,
   repairStoredAuthProfile,
 } from "../utils/mobileAuth.js";
+import { isPrimarySubscriber } from "../utils/rbac.js";
 
 const AuthContext = createContext(null);
 const BOOTSTRAP_TIMEOUT_MS = 12000;
@@ -188,8 +189,8 @@ export function AuthProvider({ children, onSignedOut }) {
       role,
       company_id,
       permissions,
-      isOwner: isOwnerRole(role),
-      isAdmin: isOwnerRole(role),
+      isOwner: isOwnerRole(role) || isPrimarySubscriber(),
+      isAdmin: isOwnerRole(role) || isPrimarySubscriber(),
       isDashboardUser: isDashboardRole(role),
       homePath: getAuthenticatedHomePath(role, isMobile),
       isMobile,

@@ -331,23 +331,24 @@ span {
   cursor: not-allowed;
 }
 
-/* Dark mode — minimal slate inversion of the light theme (#0F172A identity) */
+/* Dark mode — neutral Gemini-like palette (no blue/navy tint) */
 .dark {
   color-scheme: dark;
 
-  /* Surfaces — slate family only */
-  --bg-main: #0f172a;
-  --bg-surface: #1e293b;
-  --bg-surface-hover: #334155;
-  --text-primary: #f1f5f9;
-  --text-secondary: #94a3b8;
-  --border-color: rgba(255, 255, 255, 0.07);
-  --border-hairline: 1px solid rgba(255, 255, 255, 0.07);
+  /* Surfaces — pure neutral grays */
+  --bg-main: #131314;
+  --bg-surface: #1e1f20;
+  --bg-elevated: #282a2c;
+  --bg-surface-hover: color-mix(in srgb, #ffffff 5%, var(--bg-surface));
+  --text-primary: #e3e3e3;
+  --text-secondary: #9aa0a6;
+  --border-color: rgba(255, 255, 255, 0.1);
+  --border-hairline: 1px solid rgba(255, 255, 255, 0.1);
 
-  /* Same accent as light theme */
+  /* Same accent as light theme (#0F172A) — inverted fill for legibility */
   --accent-color: #0f172a;
-  --accent-on-dark-bg: #f1f5f9;
-  --accent-on-dark-hover: #e2e8f0;
+  --accent-on-dark-bg: #e3e3e3;
+  --accent-on-dark-hover: #ebebeb;
 
   /* Status — same semantics as light, tuned for dark legibility */
   --color-success-text: #6ee7b7;
@@ -360,39 +361,39 @@ span {
   --color-error-surface: rgba(239, 68, 68, 0.1);
   --color-error-border: rgba(248, 113, 113, 0.22);
 
-  /* Tailwind slate scale — cohesive dark palette */
+  /* Tailwind scales — remapped to neutral tokens (not blue slate) */
   --color-slate-50: var(--bg-surface);
   --color-slate-100: var(--text-primary);
-  --color-slate-200: #e2e8f0;
-  --color-slate-300: #cbd5e1;
+  --color-slate-200: #c4c7c5;
+  --color-slate-300: #9aa0a6;
   --color-slate-400: var(--text-secondary);
-  --color-slate-500: #64748b;
-  --color-slate-600: #475569;
-  --color-slate-700: var(--bg-surface-hover);
+  --color-slate-500: #80868b;
+  --color-slate-600: #5f6368;
+  --color-slate-700: var(--bg-elevated);
   --color-slate-800: var(--bg-surface);
   --color-slate-900: var(--bg-main);
-  --color-slate-950: #020617;
+  --color-slate-950: #131314;
 
   --color-gray-50: var(--bg-surface);
-  --color-gray-100: var(--bg-surface-hover);
-  --color-gray-200: var(--bg-surface-hover);
+  --color-gray-100: var(--bg-elevated);
+  --color-gray-200: var(--bg-elevated);
   --color-gray-300: var(--text-secondary);
   --color-gray-400: var(--text-secondary);
-  --color-gray-500: #64748b;
-  --color-gray-600: #475569;
-  --color-gray-700: var(--bg-surface-hover);
+  --color-gray-500: #80868b;
+  --color-gray-600: #5f6368;
+  --color-gray-700: var(--bg-elevated);
   --color-gray-800: var(--bg-surface);
   --color-gray-900: var(--bg-main);
-  --color-gray-950: #020617;
+  --color-gray-950: #131314;
 
   --color-md-primary: var(--accent-color);
   --color-md-on-primary: #ffffff;
-  --color-md-primary-container: var(--bg-surface-hover);
+  --color-md-primary-container: var(--bg-elevated);
   --color-md-on-primary-container: var(--text-primary);
   --color-md-surface: var(--bg-surface);
   --color-md-surface-dim: var(--bg-main);
   --color-md-surface-container: var(--bg-surface);
-  --color-md-surface-container-high: var(--bg-surface-hover);
+  --color-md-surface-container-high: var(--bg-elevated);
   --color-md-outline: var(--border-color);
   --color-md-outline-variant: var(--border-color);
   --color-md-on-surface: var(--text-primary);
@@ -426,7 +427,7 @@ span {
 }
 
 .dark .md-input:focus {
-  border-color: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.16);
 }
 
 .dark .md-btn-primary {
@@ -508,7 +509,7 @@ span {
     box-shadow: none !important;
   }
 
-  /* ── Dark theme: slate inversion, hairline borders ── */
+  /* ── Dark theme: neutral surfaces, light hairline borders ── */
 
   /* Global hairlines — tables, cards, dividers, inputs */
   .dark table,
@@ -580,7 +581,7 @@ span {
 
   .dark .bg-\[\#F1F5F9\],
   .dark .bg-\[\#E2E8F0\] {
-    background-color: var(--bg-surface-hover) !important;
+    background-color: var(--bg-elevated) !important;
   }
 
   .dark .hover\:bg-\[\#F8FAFC\]:hover {
@@ -589,7 +590,7 @@ span {
 
   .dark .dark\:bg-\[\#1e293b\],
   .dark .dark\:bg-\[\#334155\] {
-    background-color: var(--bg-surface) !important;
+    background-color: var(--bg-elevated) !important;
   }
 
   .dark .dark\:bg-\[\#1e3a5f\],
@@ -649,7 +650,15 @@ span {
     border-color: var(--border-color) !important;
   }
 
-  /* Semantic tints → subtle slate surfaces + hairline borders */
+  /* Modals / menus — elevated neutral surface */
+  .dark .fixed.z-50 .bg-white,
+  .dark .fixed.z-50 .md-surface,
+  .dark [role="dialog"] .bg-white,
+  .dark [role="dialog"] .md-surface {
+    background-color: var(--bg-elevated) !important;
+  }
+
+  /* Semantic tints → subtle neutral surfaces + hairline borders */
   .dark .bg-red-50,
   .dark .bg-amber-50,
   .dark .bg-blue-50,
@@ -713,7 +722,7 @@ span {
     background-color: var(--color-warning-surface) !important;
   }
 
-  /* Primary actions — inverted slate (same #0F172A identity as light) */
+  /* Primary actions — inverted (same #0F172A accent as light) */
   .dark button.bg-slate-900,
   .dark a.bg-slate-900,
   .dark .bg-slate-900.text-white,
@@ -743,12 +752,13 @@ span {
   .dark .bg-slate-900\/45,
   .dark .bg-slate-900\/40,
   .dark .bg-slate-900\/50 {
-    background-color: rgba(2, 6, 23, 0.72) !important;
+    background-color: rgba(19, 19, 20, 0.72) !important;
   }
 
   .dark .dark\:bg-slate-900,
-  .dark .dark\:bg-slate-900\/40 {
-    background-color: var(--bg-surface) !important;
+  .dark .dark\:bg-slate-900\/40,
+  .dark .dark\:hover\:bg-slate-900:hover {
+    background-color: var(--bg-elevated) !important;
   }
 
   .dark .from-white,

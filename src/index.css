@@ -331,17 +331,25 @@ span {
   cursor: not-allowed;
 }
 
-/* Dark mode — Google-inspired neutral palette */
+/* Dark mode — Exeer brand: near-black base, gold accent, phosphoric green success */
 .dark {
   color-scheme: dark;
 
-  --bg-main: #131314;
-  --bg-surface: #1e1f20;
-  --bg-surface-hover: #282a2c;
-  --text-primary: #e3e3e3;
-  --text-secondary: #c4c7c5;
-  --border-color: #444746;
-  --accent-color: #a8c7fa;
+  --bg-main: #08090c;
+  --bg-surface: #101218;
+  --bg-surface-hover: #181b24;
+  --text-primary: #ececec;
+  --text-secondary: #a8adb8;
+  --border-color: #5a5f6b;
+  --border-color-strong: #8b919e;
+  --border-width-card: 2px;
+  --accent-color: #b89a5e;
+  --accent-color-hover: #d4b87a;
+  --accent-muted: color-mix(in srgb, #b89a5e 16%, var(--bg-surface));
+  --color-success: #2ee6a6;
+  --color-success-bright: #39ff14;
+  --color-success-muted: color-mix(in srgb, #2ee6a6 12%, var(--bg-surface));
+  --color-success-border: color-mix(in srgb, #2ee6a6 48%, var(--border-color-strong));
   --text-error: #fde047;
 
   /* Tailwind slate/gray — surfaces only, never white/light for backgrounds */
@@ -388,6 +396,43 @@ span {
   --color-exeer-muted: var(--text-secondary);
   --color-exeer-border: var(--border-color);
   --color-exeer-hover: var(--bg-surface-hover);
+
+  /* Remap Tailwind semantic scales — no blue/navy accents in dark mode */
+  --color-blue-50: var(--bg-surface-hover);
+  --color-blue-100: var(--bg-surface-hover);
+  --color-blue-200: color-mix(in srgb, var(--accent-color) 30%, var(--border-color-strong));
+  --color-blue-300: var(--accent-color-hover);
+  --color-blue-400: var(--accent-color);
+  --color-blue-500: var(--accent-color);
+  --color-blue-600: var(--accent-color);
+  --color-blue-700: var(--accent-color);
+  --color-blue-800: var(--accent-color-hover);
+  --color-blue-900: var(--text-primary);
+  --color-blue-950: var(--bg-main);
+
+  --color-indigo-50: var(--bg-surface-hover);
+  --color-indigo-100: var(--bg-surface-hover);
+  --color-indigo-200: color-mix(in srgb, var(--accent-color) 32%, var(--border-color-strong));
+  --color-indigo-300: var(--accent-color-hover);
+  --color-indigo-400: var(--accent-color);
+  --color-indigo-500: var(--accent-color);
+  --color-indigo-600: var(--accent-color);
+  --color-indigo-700: var(--accent-color);
+  --color-indigo-800: var(--accent-color-hover);
+  --color-indigo-900: var(--text-primary);
+  --color-indigo-950: var(--bg-main);
+
+  --color-emerald-50: var(--color-success-muted);
+  --color-emerald-100: var(--color-success-muted);
+  --color-emerald-200: var(--color-success-border);
+  --color-emerald-300: var(--color-success);
+  --color-emerald-400: var(--color-success);
+  --color-emerald-500: var(--color-success);
+  --color-emerald-600: var(--color-success);
+  --color-emerald-700: var(--color-success-muted);
+  --color-emerald-800: var(--color-success-border);
+  --color-emerald-900: var(--color-success-border);
+  --color-emerald-950: var(--bg-main);
 }
 
 .dark body,
@@ -399,13 +444,13 @@ span {
 .dark .md-surface,
 .dark .md-surface-muted {
   background: var(--bg-surface);
-  border-color: var(--border-color);
+  border: var(--border-width-card) solid var(--border-color-strong);
   box-shadow: none;
 }
 
 .dark .md-input {
   background: var(--bg-surface);
-  border-color: var(--border-color);
+  border: var(--border-width-card) solid var(--border-color-strong);
   color: var(--text-primary);
 }
 
@@ -415,17 +460,19 @@ span {
 
 .dark .md-btn-primary {
   background: var(--accent-color);
-  color: #131314;
-  border-color: var(--accent-color);
+  color: #08090c;
+  border: var(--border-width-card) solid var(--accent-color);
+  font-weight: 600;
 }
 
 .dark .md-btn-primary:hover {
-  filter: brightness(1.06);
+  background: var(--accent-color-hover);
+  border-color: var(--accent-color-hover);
 }
 
 .dark .md-btn-tonal {
   background: var(--bg-surface);
-  border-color: var(--border-color);
+  border: var(--border-width-card) solid var(--border-color-strong);
   color: var(--text-primary);
 }
 
@@ -441,13 +488,13 @@ span {
 
 .dark .md-theme-segment {
   background: var(--bg-main);
-  border-color: var(--border-color);
+  border: var(--border-width-card) solid var(--border-color-strong);
 }
 
 .dark .md-theme-segment-btn-active {
   background: var(--bg-surface-hover);
   color: var(--text-primary);
-  border-color: var(--border-color);
+  border: 2px solid var(--accent-color);
   font-weight: 600;
 }
 
@@ -603,13 +650,22 @@ span {
     color: var(--text-primary) !important;
   }
 
-  /* Borders & divider lines */
+  /* Borders & divider lines — bold strokes, not light fills */
   .dark .border-gray-100,
   .dark .border-gray-200,
+  .dark .border-slate-200,
+  .dark .border-slate-700,
+  .dark .border-slate-800,
+  .dark .border-exeer-border,
   .dark .border-\[\#E2E8F0\],
   .dark .border-\[\#F1F5F9\],
   .dark .border-\[\#CBD5E1\] {
-    border-color: var(--border-color) !important;
+    border-color: var(--border-color-strong) !important;
+  }
+
+  .dark .dark\:border-slate-700,
+  .dark .dark\:border-slate-800 {
+    border-color: var(--border-color-strong) !important;
   }
 
   .dark .dark\:border-white,
@@ -622,22 +678,187 @@ span {
     border-color: var(--border-color) !important;
   }
 
-  /* Light semantic tints → dark muted surfaces (not white) */
+  /* Light semantic tints → dark surfaces with border differentiation (not pale fills) */
   .dark .bg-red-50,
-  .dark .bg-emerald-50,
   .dark .bg-amber-50,
-  .dark .bg-blue-50,
-  .dark .bg-indigo-50,
   .dark .bg-slate-100 {
-    background-color: var(--bg-surface-hover) !important;
+    background-color: var(--bg-surface) !important;
   }
 
+  .dark .bg-emerald-50,
+  .dark .bg-emerald-700,
+  .dark .bg-emerald-800,
+  .dark .dark\:bg-emerald-950\/30,
+  .dark .dark\:bg-emerald-950\/40,
+  .dark .dark\:bg-emerald-950\/50,
+  .dark .dark\:bg-emerald-950\/60,
+  .dark .dark\:bg-emerald-900\/50 {
+    background-color: var(--color-success-muted) !important;
+    border-color: var(--color-success-border) !important;
+  }
+
+  .dark .bg-blue-50,
+  .dark .bg-indigo-50,
+  .dark .bg-indigo-100,
+  .dark .hover\:bg-indigo-100:hover,
   .dark .bg-\[\#EEF2FF\],
-  .dark .bg-\[\#ECFDF5\],
-  .dark .bg-\[\#FEE2E2\],
-  .dark .bg-\[\#FEF3C7\],
   .dark .bg-\[\#DBEAFE\] {
-    background-color: var(--bg-surface-hover) !important;
+    background-color: var(--accent-muted) !important;
+    border-color: color-mix(in srgb, var(--accent-color) 45%, var(--border-color-strong)) !important;
+  }
+
+  .dark .bg-\[\#ECFDF5\] {
+    background-color: var(--color-success-muted) !important;
+    border-color: var(--color-success-border) !important;
+  }
+
+  .dark .bg-\[\#FEE2E2\],
+  .dark .bg-\[\#FEF3C7\] {
+    background-color: var(--bg-surface) !important;
+  }
+
+  /* Success / locked — phosphoric green text */
+  .dark .text-emerald-300,
+  .dark .text-emerald-400,
+  .dark .text-emerald-500,
+  .dark .text-emerald-600,
+  .dark .text-emerald-700,
+  .dark .text-emerald-800,
+  .dark .text-emerald-900,
+  .dark .text-emerald-950,
+  .dark .dark\:text-emerald-200,
+  .dark .dark\:text-emerald-300,
+  .dark .text-emerald-800\/80 {
+    color: var(--color-success) !important;
+  }
+
+  .dark .border-emerald-200,
+  .dark .border-emerald-700,
+  .dark .border-emerald-800,
+  .dark .border-emerald-900,
+  .dark .dark\:border-emerald-900,
+  .dark .ring-emerald-300,
+  .dark .dark\:ring-emerald-800 {
+    border-color: var(--color-success) !important;
+  }
+
+  .dark .hover\:bg-emerald-100:hover,
+  .dark .hover\:bg-emerald-800:hover,
+  .dark .dark\:hover\:bg-emerald-950\/60:hover {
+    background-color: color-mix(in srgb, var(--color-success) 18%, var(--bg-surface)) !important;
+  }
+
+  /* Blue / navy / indigo accents → gold brand accent */
+  .dark .text-indigo-300,
+  .dark .text-indigo-400,
+  .dark .text-indigo-500,
+  .dark .text-indigo-600,
+  .dark .text-indigo-700,
+  .dark .text-indigo-800,
+  .dark .text-indigo-900,
+  .dark .text-indigo-950,
+  .dark .dark\:text-indigo-200,
+  .dark .dark\:text-indigo-300,
+  .dark .text-blue-300,
+  .dark .text-blue-400,
+  .dark .text-blue-500,
+  .dark .text-blue-600,
+  .dark .text-blue-700,
+  .dark .text-blue-800,
+  .dark .text-blue-900,
+  .dark .dark\:text-blue-200,
+  .dark .dark\:text-blue-300,
+  .dark .dark\:text-\[\#93c5fd\] {
+    color: var(--accent-color) !important;
+  }
+
+  .dark .border-indigo-200,
+  .dark .border-indigo-300,
+  .dark .border-indigo-700,
+  .dark .border-indigo-800,
+  .dark .border-indigo-900,
+  .dark .border-blue-200,
+  .dark .border-blue-300,
+  .dark .border-blue-700,
+  .dark .border-blue-800,
+  .dark .border-blue-900,
+  .dark .dark\:border-indigo-900 {
+    border-color: color-mix(in srgb, var(--accent-color) 55%, var(--border-color-strong)) !important;
+  }
+
+  .dark button.bg-slate-900,
+  .dark a.bg-slate-900,
+  .dark .bg-slate-900.text-white,
+  .dark .bg-indigo-700,
+  .dark .bg-indigo-800,
+  .dark .bg-blue-700,
+  .dark .bg-blue-800 {
+    background-color: var(--accent-color) !important;
+    color: #08090c !important;
+    border-color: var(--accent-color) !important;
+  }
+
+  .dark .bg-slate-900\/45,
+  .dark .bg-slate-900\/40,
+  .dark .bg-slate-900\/50 {
+    background-color: color-mix(in srgb, var(--bg-main) 62%, transparent) !important;
+  }
+
+  .dark .dark\:bg-slate-900,
+  .dark .dark\:bg-slate-900\/40 {
+    background-color: var(--bg-surface) !important;
+  }
+
+  .dark .from-white,
+  .dark .from-slate-50,
+  .dark .to-slate-50\/80,
+  .dark .to-blue-50\/60,
+  .dark .dark\:from-slate-900,
+  .dark .dark\:to-slate-800\/60,
+  .dark .dark\:to-slate-800\/80,
+  .dark .dark\:to-indigo-950\/25,
+  .dark .dark\:to-sky-950\/25,
+  .dark .dark\:to-violet-950\/25 {
+    --tw-gradient-from: var(--bg-surface) !important;
+    --tw-gradient-to: var(--bg-main) !important;
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+  }
+
+  .dark .dark\:to-emerald-950\/25 {
+    --tw-gradient-from: var(--bg-surface) !important;
+    --tw-gradient-to: var(--color-success-muted) !important;
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+  }
+
+  .dark .hover\:bg-indigo-800:hover,
+  .dark .hover\:bg-slate-800:hover,
+  .dark .hover\:bg-blue-800:hover,
+  .dark button.bg-slate-900:hover,
+  .dark a.bg-slate-900:hover,
+  .dark .bg-slate-900.text-white:hover {
+    background-color: var(--accent-color-hover) !important;
+  }
+
+  /* homeStyles semantic chips */
+  .dark .dark\:bg-blue-950\/50,
+  .dark .dark\:text-blue-300 {
+    background-color: var(--accent-muted) !important;
+    color: var(--accent-color) !important;
+  }
+
+  .dark .dark\:bg-blue-900\/30 {
+    background-color: var(--accent-muted) !important;
+  }
+
+  .dark .before\:bg-slate-900::before {
+    background-color: var(--accent-color) !important;
+  }
+
+  .dark .text-violet-600,
+  .dark .text-sky-600,
+  .dark .text-violet-300,
+  .dark .text-sky-300 {
+    color: var(--accent-color) !important;
   }
 
   /* Red text → yellow in dark mode (errors, warnings, required markers) */

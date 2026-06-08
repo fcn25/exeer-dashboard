@@ -16,10 +16,7 @@ function ExeerFormHeader({ subtitle }) {
         إكسير
       </p>
       <div className="relative space-y-2">
-        <ExeerLogo
-          onLightBackground
-          className="mx-auto h-9 w-auto object-contain opacity-90"
-        />
+        <ExeerLogo className="mx-auto h-9 w-auto object-contain opacity-90" />
         {subtitle ? (
           <p className="pt-1 text-xs leading-relaxed text-exeer-muted">{subtitle}</p>
         ) : null}

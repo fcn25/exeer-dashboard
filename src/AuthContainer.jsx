@@ -45,7 +45,7 @@ export default function AuthContainer() {
       </div>
 
       <div className="mb-8 flex w-full max-w-md flex-col items-center">
-        <ExeerLogo onLightBackground className="h-14 w-auto object-contain" />
+        <ExeerLogo className="h-14 w-auto object-contain" />
       </div>
 
       <div className="w-full max-w-md rounded-md border border-gray-200 bg-white p-8 shadow-none dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)]">

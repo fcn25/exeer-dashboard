@@ -123,7 +123,7 @@ export default function UpdatePasswordPage() {
   return (
     <LocaleShell className="flex min-h-screen flex-col items-center justify-center bg-white px-4 py-10 font-sans dark:bg-[var(--bg-main)] dark:text-[var(--text-primary)]">
       <div className="mb-8 flex w-full max-w-md flex-col items-center">
-        <ExeerLogo onLightBackground className="h-14 w-auto object-contain" />
+        <ExeerLogo className="h-14 w-auto object-contain" />
       </div>
 
       <div className="w-full max-w-md rounded-md border border-gray-200 bg-white p-8 shadow-none dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)]">

@@ -1,4 +1,5 @@
 import { SIGNUP_OWNER_DB_ROLE } from "../constants/roles.js";
+import { linkEmployeeAuthUserByEmail } from "./currentEmployeeService.js";
 import { supabase } from "../utils/supabaseClient.js";
 import { formatErrorMessage } from "../utils/formatErrorMessage.js";
 
@@ -18,6 +19,12 @@ export async function signInWithEmail(email, password) {
   });
 
   if (error) throw new Error(mapAuthError(error));
+
+  const authUserId = data.user?.id;
+  if (authUserId) {
+    await linkEmployeeAuthUserByEmail(authUserId, data.user?.email ?? email);
+  }
+
   return data;
 }
 
@@ -120,6 +127,20 @@ export async function signUpCompany({
       trimmedEmail,
       authUserId,
     );
+
+    if (authUserId) {
+      const { error: linkError } = await supabase
+        .from("employees")
+        .update({ auth_user_id: authUserId })
+        .eq("company_id", companyId)
+        .eq("employee_number", "EMP-001")
+        .ilike("email", trimmedEmail)
+        .is("auth_user_id", null);
+
+      if (linkError) {
+        console.warn("Owner auth_user_id link after signup:", linkError.message);
+      }
+    }
 
     return {
       auth: authData,

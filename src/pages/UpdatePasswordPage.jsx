@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ExeerLogo from "../components/brand/ExeerLogo.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
+import { linkEmployeeAuthUserByEmail } from "../services/currentEmployeeService.js";
 import { supabase } from "../utils/supabaseClient.js";
 import { getAuthenticatedHomePath } from "../constants/roles.js";
 import { detectIsMobile } from "../hooks/useIsMobile.js";
@@ -97,6 +98,14 @@ export default function UpdatePasswordPage() {
 
       if (updateError) {
         throw updateError;
+      }
+
+      const {
+        data: { user: authUser },
+      } = await supabase.auth.getUser();
+
+      if (authUser?.id) {
+        await linkEmployeeAuthUserByEmail(authUser.id, authUser.email);
       }
 
       const isMobile = detectIsMobile();

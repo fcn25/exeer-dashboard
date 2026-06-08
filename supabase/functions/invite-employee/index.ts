@@ -56,25 +56,44 @@ Deno.serve(async (req) => {
     const invitedUserId = data.user?.id;
     const employeeId = body.employee_id;
     if (invitedUserId) {
+      let linked = false;
+      let linkError: { message: string } | null = null;
+
       if (employeeId != null && employeeId !== "") {
-        const { error: linkError } = await adminClient
+        const { data: updatedRow, error } = await adminClient
           .from("employees")
           .update({ auth_user_id: invitedUserId })
-          .eq("id", Number(employeeId));
+          .eq("id", Number(employeeId))
+          .is("auth_user_id", null)
+          .select("id")
+          .maybeSingle();
 
-        if (linkError) {
-          console.error("8. auth_user_id link error:", linkError.message);
+        if (error) {
+          linkError = error;
+        } else if (updatedRow?.id) {
+          linked = true;
         }
-      } else if (email) {
-        const { error: linkByEmailError } = await adminClient
+      }
+
+      if (!linked && email) {
+        const { data: updatedRows, error } = await adminClient
           .from("employees")
           .update({ auth_user_id: invitedUserId })
           .ilike("email", email)
-          .is("auth_user_id", null);
+          .is("auth_user_id", null)
+          .select("id");
 
-        if (linkByEmailError) {
-          console.error("8b. auth_user_id email link error:", linkByEmailError.message);
+        if (error) {
+          linkError = error;
+        } else if ((updatedRows ?? []).length > 0) {
+          linked = true;
         }
+      }
+
+      if (linkError) {
+        console.error("8. auth_user_id link error:", linkError.message);
+      } else if (!linked) {
+        console.warn("8. No unlinked employee row matched for auth_user_id binding.");
       }
     }
 

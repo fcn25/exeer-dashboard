@@ -1,6 +1,7 @@
 import { supabase } from "../utils/supabaseClient.js";
 import {
   fetchEmployeeRowByAuthUserId,
+  linkEmployeeAuthUserByEmail,
   normalizeCurrentEmployee,
   setCurrentEmployeeCache,
 } from "./currentEmployeeService.js";
@@ -42,7 +43,15 @@ export async function resolveAuthProfile(sessionUser) {
     throw new Error("جلسة الدخول غير صالحة.");
   }
 
-  const employeeRow = await fetchEmployeeRowByAuthUserId(authUserId);
+  let employeeRow = await fetchEmployeeRowByAuthUserId(authUserId);
+
+  if (!employeeRow?.id) {
+    employeeRow = await linkEmployeeAuthUserByEmail(
+      authUserId,
+      sessionUser?.email,
+    );
+  }
+
   const current = normalizeCurrentEmployee(employeeRow, authUserId);
   setCurrentEmployeeCache(current);
 

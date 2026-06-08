@@ -57,6 +57,57 @@ export async function fetchEmployeeRowByAuthUserId(authUserId) {
 }
 
 /**
+ * Links employees.auth_user_id to the logged-in auth user when emails match
+ * (case-insensitive) and the employee row is still unlinked.
+ * Uses security-definer RPC when available; falls back to direct update.
+ */
+export async function linkEmployeeAuthUserByEmail(authUserId, email) {
+  if (!authUserId) return null;
+
+  const existing = await fetchEmployeeRowByAuthUserId(authUserId);
+  if (existing) return existing;
+
+  const normalizedEmail = String(email ?? "").trim().toLowerCase();
+  if (!normalizedEmail) return null;
+
+  const { data: linkedId, error: rpcError } = await supabase.rpc(
+    "link_employee_auth_user_by_email",
+  );
+
+  if (!rpcError && linkedId) {
+    return fetchEmployeeRowByAuthUserId(authUserId);
+  }
+
+  if (rpcError && rpcError.code !== "PGRST202") {
+    console.warn("link_employee_auth_user_by_email RPC failed:", rpcError.message);
+  }
+
+  const { data: candidate, error: findError } = await supabase
+    .from("employees")
+    .select("id")
+    .ilike("email", normalizedEmail)
+    .is("auth_user_id", null)
+    .limit(1)
+    .maybeSingle();
+
+  if (findError) throw new Error(mapDbError(findError));
+  if (!candidate?.id) return null;
+
+  const { error: updateError } = await supabase
+    .from("employees")
+    .update({ auth_user_id: authUserId })
+    .eq("id", candidate.id)
+    .is("auth_user_id", null);
+
+  if (updateError) {
+    console.warn("Direct auth_user_id link failed:", updateError.message);
+    return null;
+  }
+
+  return fetchEmployeeRowByAuthUserId(authUserId);
+}
+
+/**
  * Resolves the logged-in employee via auth_user_id = auth.users.id.
  * Result is cached for the session unless force=true.
  */
@@ -79,7 +130,12 @@ export async function fetchCurrentEmployee({ force = false } = {}) {
     }
   }
 
-  const row = await fetchEmployeeRowByAuthUserId(user.id);
+  let row = await fetchEmployeeRowByAuthUserId(user.id);
+
+  if (!row?.id) {
+    row = await linkEmployeeAuthUserByEmail(user.id, user.email);
+  }
+
   const normalized = normalizeCurrentEmployee(row, user.id);
   setCurrentEmployeeCache(normalized);
   return normalized;
@@ -112,17 +168,29 @@ export async function resolveEmployeeContextFromSession(context = "العملي�
     throw new Error(`يجب تسجيل الدخول لإكمال ${context}.`);
   }
 
-  const { data: emp, error: employeeError } = await supabase
+  let emp = null;
+  let employeeError = null;
+
+  ({ data: emp, error: employeeError } = await supabase
     .from("employees")
     .select("id, company_id")
     .eq("auth_user_id", user.id)
-    .single();
+    .maybeSingle());
+
+  if (!emp?.id) {
+    const linked = await linkEmployeeAuthUserByEmail(user.id, user.email);
+    if (linked?.id) {
+      emp = { id: linked.id, company_id: linked.company_id };
+      employeeError = null;
+    }
+  }
 
   if (employeeError) {
-    if (employeeError.code === "PGRST116") {
-      throw new Error("لم يتم العثور على سجل موظف مرتبط بـ auth_user_id لهذا الحساب.");
-    }
     throw new Error(mapDbError(employeeError));
+  }
+
+  if (!emp?.id) {
+    throw new Error("لم يتم العثور على سجل موظف مرتبط بـ auth_user_id لهذا الحساب.");
   }
 
   const employeeId = Number(emp?.id);

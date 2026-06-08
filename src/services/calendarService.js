@@ -7,7 +7,7 @@ import {
 } from "../constants/appointmentTypes.js";
 import { getSaudiPublicHolidaysInRange } from "../constants/saudiPublicHolidays.js";
 import { supabase } from "../utils/supabaseClient.js";
-import { getAuthUserId, getCompanyId } from "../utils/mobileAuth.js";
+import { resolveEmployeeContextFromSession } from "./currentEmployeeService.js";
 import { eventDateFromTimestamp, getMonthRange, isDateInRange } from "../utils/calendarDates.js";
 
 export const CALENDAR_LEGEND_TYPES = {
@@ -32,14 +32,6 @@ function mapDbError(error) {
     return "جدول التقويم غير جاهز. نفّذ migration calendar_appointments في Supabase.";
   }
   return error.message || "تعذّر إكمال العملية.";
-}
-
-function requireAuthUserId() {
-  const userId = getAuthUserId();
-  if (!userId) {
-    throw new Error("يجب تسجيل الدخول لحفظ المواعيد الشخصية.");
-  }
-  return userId;
 }
 
 function currentLang() {
@@ -67,9 +59,15 @@ function sortEntries(entries) {
 }
 
 export async function listCalendarAppointments(year, month) {
-  const companyId = getCompanyId();
-  const userId = getAuthUserId();
-  if (!userId) return [];
+  let employeeId;
+  let companyId;
+  try {
+    ({ employeeId, companyId } = await resolveEmployeeContextFromSession(
+      "عرض المواعيد",
+    ));
+  } catch {
+    return [];
+  }
 
   const { start, end } = getMonthRange(year, month);
 
@@ -77,7 +75,7 @@ export async function listCalendarAppointments(year, month) {
     .from("calendar_appointments")
     .select("*")
     .eq("company_id", companyId)
-    .eq("created_by", userId)
+    .eq("created_by", employeeId)
     .gte("appointment_date", start)
     .lte("appointment_date", end)
     .order("appointment_date", { ascending: true });
@@ -87,8 +85,9 @@ export async function listCalendarAppointments(year, month) {
 }
 
 export async function createCalendarAppointment(payload) {
-  const companyId = getCompanyId();
-  const userId = requireAuthUserId();
+  const { employeeId, companyId } = await resolveEmployeeContextFromSession(
+    "حفظ الموعد",
+  );
   const appointmentType = isValidUserAppointmentType(payload.appointment_type)
     ? payload.appointment_type
     : DEFAULT_APPOINTMENT_TYPE;
@@ -97,7 +96,7 @@ export async function createCalendarAppointment(payload) {
     .from("calendar_appointments")
     .insert({
       company_id: companyId,
-      created_by: userId,
+      created_by: employeeId,
       title: payload.title?.trim(),
       description: payload.description?.trim() || null,
       appointment_date: payload.appointment_date,
@@ -112,21 +111,28 @@ export async function createCalendarAppointment(payload) {
 }
 
 export async function deleteCalendarAppointment(id) {
-  const companyId = getCompanyId();
-  const userId = requireAuthUserId();
+  const { employeeId, companyId } = await resolveEmployeeContextFromSession(
+    "حذف الموعد",
+  );
 
   const { error } = await supabase
     .from("calendar_appointments")
     .delete()
     .eq("id", id)
     .eq("company_id", companyId)
-    .eq("created_by", userId);
+    .eq("created_by", employeeId);
 
   if (error) throw new Error(mapDbError(error));
 }
 
 async function fetchCompanyEventsInMonth(year, month) {
-  const companyId = getCompanyId();
+  let companyId;
+  try {
+    ({ companyId } = await resolveEmployeeContextFromSession("عرض الفعاليات"));
+  } catch {
+    return [];
+  }
+
   const { start, end } = getMonthRange(year, month);
 
   const { data, error } = await supabase

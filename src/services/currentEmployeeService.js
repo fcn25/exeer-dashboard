@@ -94,3 +94,57 @@ export function requireCurrentEmployee(context = "العملية") {
   }
   return cached;
 }
+
+/**
+ * Live session lookup: auth user → employees.auth_user_id → bigint id + company_id.
+ * Never use auth UUID for employee_id / created_by / company_id columns.
+ */
+export async function resolveEmployeeContextFromSession(context = "العملية") {
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError) {
+    throw new Error(authError.message || "تعذّر التحقق من الجلسة.");
+  }
+  if (!user?.id) {
+    throw new Error(`يجب تسجيل الدخول لإكمال ${context}.`);
+  }
+
+  const { data: emp, error: employeeError } = await supabase
+    .from("employees")
+    .select("id, company_id")
+    .eq("auth_user_id", user.id)
+    .single();
+
+  if (employeeError) {
+    if (employeeError.code === "PGRST116") {
+      throw new Error("لم يتم العثور على سجل موظف مرتبط بـ auth_user_id لهذا الحساب.");
+    }
+    throw new Error(mapDbError(employeeError));
+  }
+
+  const employeeId = Number(emp?.id);
+  const companyId = Number(emp?.company_id);
+
+  if (
+    !Number.isFinite(employeeId) ||
+    employeeId <= 0 ||
+    !Number.isFinite(companyId) ||
+    companyId <= 0
+  ) {
+    throw new Error(
+      `يجب ربط حسابك بسجل موظف (auth_user_id) لإكمال ${context}.`,
+    );
+  }
+
+  setCurrentEmployeeCache(
+    normalizeCurrentEmployee(
+      { id: employeeId, company_id: companyId },
+      user.id,
+    ),
+  );
+
+  return { employeeId, companyId, authUserId: user.id };
+}

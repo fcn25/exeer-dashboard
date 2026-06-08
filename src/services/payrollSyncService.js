@@ -88,7 +88,7 @@ async function fetchEmployeesCompensation(companyId, employeeIds) {
     supabase
       .from("employees")
       .select(
-        "id, full_name, basic_salary, housing_allowance, other_allowance, nationality, employment_status",
+        "id, full_name, basic_salary, housing_allowance, other_allowance, nationality, is_saudi, employment_status",
       )
       .in("id", employeeIds),
     companyId,

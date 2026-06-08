@@ -3,6 +3,9 @@
  * Reference date: last day of the payroll month.
  */
 
+/** Official GOSI contribution ceiling (SAR) */
+const GOSI_BASE_CAP = 45000;
+
 const GOSI_SCHEDULE = [
   { start: new Date("2028-07-01T00:00:00"), rate: 0.11 },
   { start: new Date("2027-07-01T00:00:00"), rate: 0.105 },
@@ -67,11 +70,17 @@ export function calculateGosiDeduction({
   payrollMonth,
   referenceDate,
 }) {
-  if (!isSaudiNational(employee)) {
+  const isEligible =
+    employee?.is_saudi != null
+      ? employee.is_saudi === true
+      : isSaudiNational(employee);
+
+  if (!isEligible) {
     return { amount: 0, rate: 0, applicable: false };
   }
 
-  const base = Number(basicSalary) + Number(housingAllowance);
+  const rawBase = Number(basicSalary) + Number(housingAllowance);
+  const base = Math.min(rawBase, GOSI_BASE_CAP);
   const rate = referenceDate
     ? getGosiRateForDate(referenceDate)
     : getGosiRateForPayrollMonth(payrollMonth);

@@ -9,7 +9,13 @@ import {
 } from "../utils/payroll/calculations.js";
 import { getMonthBoundsFromPicker } from "../utils/payroll/period.js";
 import { calculatePayrollNetSalary } from "../utils/payroll/netSalary.js";
-import { ensureActiveEmployeesInPayroll } from "./payrollService.js";
+import {
+  assertPayrollRunEditable,
+  ensureActiveEmployeesInPayroll,
+  fetchPayrollRunForMonth,
+  PAYROLL_RUN_LOCKED_MESSAGE,
+  refreshPayrollRunTotals,
+} from "./payrollService.js";
 import {
   fetchDueLoanInstallmentsByEmployee,
   markLoanInstallmentsDeducted,
@@ -19,7 +25,11 @@ function mapDbError(error) {
   if (error.code === "PGRST205") {
     return "جدول غير موجود. نفّذ migrations الخاصة بالمسير والقروض في Supabase.";
   }
-  return error.message || "تعذّر مزامنة المسير.";
+  const message = String(error.message ?? "");
+  if (message.includes("المسير مقفل")) {
+    return PAYROLL_RUN_LOCKED_MESSAGE;
+  }
+  return message || "تعذّر مزامنة المسير.";
 }
 
 function parsePayrollPeriod(pickerValue) {
@@ -138,6 +148,9 @@ export async function syncPayrollDeductionsForMonth(pickerValue) {
   }
 
   const companyId = requireCompanyId("تحديث أرقام المسير");
+  const run = await fetchPayrollRunForMonth(companyId, period.payrollMonth);
+  assertPayrollRunEditable(run);
+
   let payrollRows = await fetchPayrollRecordsRaw(companyId, period);
   if (payrollRows.length === 0) {
     throw new Error(
@@ -255,6 +268,8 @@ export async function syncPayrollDeductionsForMonth(pickerValue) {
   if (dueLoans.length) {
     await markLoanInstallmentsDeducted(companyId, dueLoans, period.payrollMonth);
   }
+
+  await refreshPayrollRunTotals(companyId, period.payrollMonth);
 
   return {
     updatedCount,

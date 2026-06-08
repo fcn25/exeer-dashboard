@@ -6,6 +6,9 @@ import {
   exportPayrollMonth,
   fetchPayrollForMonth,
   generatePayrollForMonth,
+  PAYROLL_RUN_LOCKED_MESSAGE,
+  PAYROLL_RUN_STATUSES,
+  updatePayrollRunStatus,
 } from "./services/payrollService.js";
 import {
   fetchPayrollAccountingRows,
@@ -39,6 +42,18 @@ function getCurrentMonthValue() {
   return `${now.getFullYear()}-${month}`;
 }
 
+function formatLockedDate(iso) {
+  if (!iso) return "";
+  try {
+    return new Date(iso).toLocaleString("ar-SA", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    });
+  } catch {
+    return String(iso);
+  }
+}
+
 function StatCard({ label, value }) {
   return (
     <article className={CARD_CLASS}>
@@ -54,6 +69,7 @@ export default function PayrollPage() {
   const { t } = useAppLocale();
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonthValue);
   const [rows, setRows] = useState([]);
+  const [payrollRun, setPayrollRun] = useState(null);
   const [isExported, setIsExported] = useState(false);
   const [hasExistingPayroll, setHasExistingPayroll] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -65,6 +81,10 @@ export default function PayrollPage() {
 
   const payrollMonthLabel = formatPayrollMonthFromPicker(selectedMonth);
   const stats = useMemo(() => computePayrollStats(rows), [rows]);
+  const runStatus = payrollRun?.status ?? null;
+  const isRunLocked = runStatus === PAYROLL_RUN_STATUSES.LOCKED;
+  const isRunCancelled = runStatus === PAYROLL_RUN_STATUSES.CANCELLED;
+  const canEditPayroll = !isRunLocked && !isRunCancelled;
 
   const loadPayroll = useCallback(async () => {
     if (!selectedMonth) return;
@@ -76,6 +96,7 @@ export default function PayrollPage() {
     try {
       const result = await fetchPayrollForMonth(selectedMonth);
       setRows(result.rows);
+      setPayrollRun(result.run ?? null);
       setIsExported(result.isExported);
       setHasExistingPayroll(result.hasRecords);
       setSchemaWarning(result.schemaWarning ?? "");
@@ -83,6 +104,7 @@ export default function PayrollPage() {
     } catch (err) {
       setError(err.message || "تعذّر تحميل المسير.");
       setRows([]);
+      setPayrollRun(null);
       setIsExported(false);
       setHasExistingPayroll(false);
       setHasLoaded(true);
@@ -101,8 +123,26 @@ export default function PayrollPage() {
     return () => clearTimeout(timer);
   }, [successMessage]);
 
+  const showLockedToast = useCallback(() => {
+    setSuccessMessage("");
+    setError(PAYROLL_RUN_LOCKED_MESSAGE);
+  }, []);
+
+  const applyPayrollResult = useCallback((result) => {
+    setRows(result.rows);
+    setPayrollRun(result.run ?? null);
+    setIsExported(result.isExported);
+    setHasExistingPayroll(result.hasRecords);
+    setSchemaWarning(result.schemaWarning ?? "");
+    setHasLoaded(true);
+  }, []);
+
   const handleGeneratePayroll = async () => {
     if (!selectedMonth || hasExistingPayroll) return;
+    if (isRunLocked) {
+      showLockedToast();
+      return;
+    }
 
     setIsLoading(true);
     setError("");
@@ -110,11 +150,7 @@ export default function PayrollPage() {
 
     try {
       const result = await generatePayrollForMonth(selectedMonth);
-      setRows(result.rows);
-      setIsExported(result.isExported);
-      setHasExistingPayroll(result.hasRecords);
-      setSchemaWarning(result.schemaWarning ?? "");
-      setHasLoaded(true);
+      applyPayrollResult(result);
       setSuccessMessage("تم إنشاء مسير الشهر بنجاح");
     } catch (err) {
       setError(err.message || "تعذّر إنشاء المسير.");
@@ -125,6 +161,10 @@ export default function PayrollPage() {
 
   const handleSyncDeductions = async () => {
     if (!selectedMonth || rows.length === 0) return;
+    if (isRunLocked) {
+      showLockedToast();
+      return;
+    }
 
     setIsLoading(true);
     setError("");
@@ -147,6 +187,74 @@ export default function PayrollPage() {
     }
   };
 
+  const handleSubmitForReview = async () => {
+    if (!selectedMonth || !hasExistingPayroll || isRunLocked) return;
+
+    setIsLoading(true);
+    setError("");
+    setSuccessMessage("");
+
+    try {
+      const result = await updatePayrollRunStatus(
+        selectedMonth,
+        PAYROLL_RUN_STATUSES.UNDER_REVIEW,
+      );
+      applyPayrollResult(result);
+      setSuccessMessage("تم إرسال المسير للمراجعة");
+    } catch (err) {
+      setError(err.message || "تعذّر إرسال المسير للمراجعة.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleReturnToDraft = async () => {
+    if (!selectedMonth || isRunLocked) return;
+
+    setIsLoading(true);
+    setError("");
+    setSuccessMessage("");
+
+    try {
+      const result = await updatePayrollRunStatus(
+        selectedMonth,
+        PAYROLL_RUN_STATUSES.DRAFT,
+      );
+      applyPayrollResult(result);
+      setSuccessMessage("تم إرجاع المسير كمسودة");
+    } catch (err) {
+      setError(err.message || "تعذّر إرجاع المسير كمسودة.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleLockRun = async () => {
+    if (!selectedMonth || isRunLocked) return;
+    if (
+      !window.confirm("بعد القفل لا يمكن تعديل الأرقام. متابعة؟")
+    ) {
+      return;
+    }
+
+    setIsLoading(true);
+    setError("");
+    setSuccessMessage("");
+
+    try {
+      const result = await updatePayrollRunStatus(
+        selectedMonth,
+        PAYROLL_RUN_STATUSES.LOCKED,
+      );
+      applyPayrollResult(result);
+      setSuccessMessage("تم اعتماد وقفل المسير");
+    } catch (err) {
+      setError(err.message || "تعذّر قفل المسير.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleExportAccounting = async () => {
     if (!selectedMonth || rows.length === 0) return;
 
@@ -157,9 +265,15 @@ export default function PayrollPage() {
     try {
       const records = await fetchPayrollAccountingRows(selectedMonth);
       downloadPayrollAccountingExcel(records, payrollMonthLabel);
-      await exportPayrollMonth(selectedMonth);
-      await loadPayroll();
-      setSuccessMessage("تم تصدير ملف المحاسبة وتحديث حالة المسير إلى exported");
+      if (!isRunLocked) {
+        await exportPayrollMonth(selectedMonth);
+        await loadPayroll();
+        setSuccessMessage(
+          "تم تصدير ملف المحاسبة وتحديث حالة المسير إلى exported",
+        );
+      } else {
+        setSuccessMessage("تم تصدير ملف المحاسبة");
+      }
     } catch (err) {
       setError(err.message || "تعذّر تصدير ملف المحاسبة.");
     } finally {
@@ -189,7 +303,25 @@ export default function PayrollPage() {
       </header>
 
       <div className="payroll-no-print space-y-4">
-        {isExported ? (
+        {isRunLocked ? (
+          <div className="flex flex-wrap items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900 shadow-none">
+            <Lock className="h-4 w-4 shrink-0" aria-hidden />
+            <span>مقفل</span>
+            {payrollRun?.lockedAt ? (
+              <span className="text-emerald-800/80">
+                — {formatLockedDate(payrollRun.lockedAt)}
+              </span>
+            ) : null}
+          </div>
+        ) : null}
+
+        {isRunCancelled ? (
+          <div className="rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700 shadow-none">
+            ملغى
+          </div>
+        ) : null}
+
+        {isExported && !isRunLocked ? (
           <div className="flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 shadow-none">
             <Lock className="h-4 w-4 shrink-0" aria-hidden />
             {t("pages.payroll.exportedNote", { month: payrollMonthLabel })}
@@ -227,30 +359,72 @@ export default function PayrollPage() {
               className="min-w-[220px]"
             />
 
-            <div className="flex flex-col gap-1">
+            {canEditPayroll ? (
+              <>
+                <div className="flex flex-col gap-1">
+                  <button
+                    type="button"
+                    onClick={handleGeneratePayroll}
+                    disabled={
+                      isLoading || !selectedMonth || hasExistingPayroll
+                    }
+                    className="md-btn-primary shadow-none"
+                  >
+                    {isLoading
+                      ? t("common.loading")
+                      : t("pages.payroll.generate")}
+                  </button>
+                  {hasExistingPayroll ? (
+                    <p className="text-xs text-slate-500">
+                      تم إنشاء مسير هذا الشهر
+                    </p>
+                  ) : null}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleSyncDeductions}
+                  disabled={isLoading || !selectedMonth || rows.length === 0}
+                  className="inline-flex items-center gap-2 rounded-md border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 shadow-none hover:bg-gray-50 disabled:opacity-50"
+                  title="مزامنة التأخيرات والجزاءات والقروض للشهر المعروض"
+                >
+                  <RefreshCw className="h-4 w-4" aria-hidden />
+                  {t("pages.payroll.sync")}
+                </button>
+              </>
+            ) : null}
+
+            {runStatus === PAYROLL_RUN_STATUSES.DRAFT && hasExistingPayroll ? (
               <button
                 type="button"
-                onClick={handleGeneratePayroll}
-                disabled={isLoading || !selectedMonth || hasExistingPayroll}
-                className="md-btn-primary shadow-none"
+                onClick={handleSubmitForReview}
+                disabled={isLoading || !selectedMonth}
+                className="inline-flex items-center gap-2 rounded-md border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-sm font-medium text-indigo-900 shadow-none hover:bg-indigo-100 disabled:opacity-50"
               >
-                {isLoading ? t("common.loading") : t("pages.payroll.generate")}
+                إرسال للمراجعة
               </button>
-              {hasExistingPayroll ? (
-                <p className="text-xs text-slate-500">تم إنشاء مسير هذا الشهر</p>
-              ) : null}
-            </div>
+            ) : null}
 
-            <button
-              type="button"
-              onClick={handleSyncDeductions}
-              disabled={isLoading || !selectedMonth || rows.length === 0}
-              className="inline-flex items-center gap-2 rounded-md border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 shadow-none hover:bg-gray-50 disabled:opacity-50"
-              title="مزامنة التأخيرات والجزاءات والقروض للشهر المعروض"
-            >
-              <RefreshCw className="h-4 w-4" aria-hidden />
-              {t("pages.payroll.sync")}
-            </button>
+            {runStatus === PAYROLL_RUN_STATUSES.UNDER_REVIEW ? (
+              <>
+                <button
+                  type="button"
+                  onClick={handleReturnToDraft}
+                  disabled={isLoading || !selectedMonth}
+                  className="inline-flex items-center gap-2 rounded-md border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 shadow-none hover:bg-gray-50 disabled:opacity-50"
+                >
+                  إرجاع كمسودة
+                </button>
+                <button
+                  type="button"
+                  onClick={handleLockRun}
+                  disabled={isLoading || !selectedMonth}
+                  className="inline-flex items-center gap-2 rounded-md border border-emerald-700 bg-emerald-700 px-4 py-2.5 text-sm font-medium text-white shadow-none hover:bg-emerald-800 disabled:opacity-50"
+                >
+                  اعتماد وقفل المسير
+                </button>
+              </>
+            ) : null}
           </div>
 
           <div className="flex flex-wrap gap-3">

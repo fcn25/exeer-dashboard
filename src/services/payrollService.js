@@ -1,5 +1,9 @@
 import { supabase } from "../utils/supabaseClient.js";
-import { requireCompanyId, scopeQueryByCompany } from "../utils/tenantScope.js";
+import {
+  requireCompanyId,
+  requireEmployeeId,
+  scopeQueryByCompany,
+} from "../utils/tenantScope.js";
 import { isMissingColumnError } from "../utils/supabaseErrors.js";
 import { listActiveEmployees } from "./employeesService.js";
 import {
@@ -11,6 +15,15 @@ import { fetchDueLoanInstallmentsByEmployee } from "./payrollLoanService.js";
 
 export const PAYROLL_SCHEMA_FIX_HINT =
   "نفّذ ملف supabase/migrations/20250624000000_payroll_records_columns.sql أو supabase/scripts/fix_payroll_records_schema.sql في Supabase SQL Editor ثم أعد تحميل Schema Cache.";
+
+export const PAYROLL_RUN_LOCKED_MESSAGE = "المسير مقفل";
+
+export const PAYROLL_RUN_STATUSES = {
+  DRAFT: "draft",
+  UNDER_REVIEW: "under_review",
+  LOCKED: "locked",
+  CANCELLED: "cancelled",
+};
 
 const PAYROLL_EMPLOYEE_FK_HINT =
   "نفّذ SQL ربط payroll_records.employee_id → employees.id (ملف 20250603000001_payroll_employee_fk.sql) ثم حدّث Schema Cache.";
@@ -41,7 +54,11 @@ function mapDbError(error) {
   if (error.code === "23505") {
     return "سجل المسير موجود مسبقاً لهذا الموظف في نفس الشهر.";
   }
-  return error.message || "تعذّر إكمال العملية.";
+  const message = String(error.message ?? "");
+  if (message.includes("المسير مقفل")) {
+    return PAYROLL_RUN_LOCKED_MESSAGE;
+  }
+  return message || "تعذّر إكمال العملية.";
 }
 
 function parsePayrollPeriod(pickerValue) {
@@ -54,7 +71,13 @@ function parsePayrollPeriod(pickerValue) {
   return { payrollMonth, month, year };
 }
 
-function buildPayrollRecordPayload(companyId, draft, period, includePayrollMonth) {
+function buildPayrollRecordPayload(
+  companyId,
+  draft,
+  period,
+  includePayrollMonth,
+  runId = null,
+) {
   const payload = {
     company_id: companyId,
     employee_id: draft.employee_id,
@@ -82,6 +105,10 @@ function buildPayrollRecordPayload(companyId, draft, period, includePayrollMonth
 
   if (includePayrollMonth) {
     payload.payroll_month = draft.payroll_month;
+  }
+
+  if (runId) {
+    payload.run_id = runId;
   }
 
   return payload;
@@ -177,13 +204,15 @@ export async function fetchPayrollForMonth(pickerValue) {
   }
 
   const companyId = requireCompanyId("تحميل المسير");
-  const { data, usedFallback, mode } = await queryPayrollRecordsForMonth(
-    companyId,
-    period,
-  );
+  const [recordsResult, run] = await Promise.all([
+    queryPayrollRecordsForMonth(companyId, period),
+    fetchPayrollRunForMonth(companyId, period.payrollMonth),
+  ]);
+  const { data, usedFallback, mode } = recordsResult;
 
   const rows = data.map(mapPayrollRecordRow).filter(Boolean);
   const isExported = rows.some((row) => row.status === "exported");
+  const isRunLocked = isPayrollRunLocked(run);
 
   let schemaWarning = null;
   if (usedFallback && mode === "payroll_month") {
@@ -196,6 +225,9 @@ export async function fetchPayrollForMonth(pickerValue) {
   return {
     rows,
     payrollMonth: period.payrollMonth,
+    run,
+    runStatus: run?.status ?? null,
+    isRunLocked,
     isExported,
     hasRecords: rows.length > 0,
     schemaWarning,
@@ -210,14 +242,17 @@ export async function ensureActiveEmployeesInPayroll(pickerValue) {
   if (!period) return { addedCount: 0, payrollMonth: "" };
 
   const companyId = requireCompanyId("تحديث المسير");
-  const { data: payrollRows, mode } = await queryPayrollRecordsForMonth(
-    companyId,
-    period,
-  );
+  const [recordsResult, run] = await Promise.all([
+    queryPayrollRecordsForMonth(companyId, period),
+    fetchPayrollRunForMonth(companyId, period.payrollMonth),
+  ]);
+  const { data: payrollRows, mode } = recordsResult;
 
   if (!payrollRows.length) {
     return { addedCount: 0, payrollMonth: period.payrollMonth };
   }
+
+  assertPayrollRunEditable(run);
 
   const isExported = payrollRows.some(
     (row) => String(row.status ?? "").trim().toLowerCase() === "exported",
@@ -225,6 +260,8 @@ export async function ensureActiveEmployeesInPayroll(pickerValue) {
   if (isExported) {
     return { addedCount: 0, payrollMonth: period.payrollMonth };
   }
+
+  const runId = run?.id ?? null;
 
   const employees = await listActiveEmployees();
   const existingIds = new Set(
@@ -254,6 +291,7 @@ export async function ensureActiveEmployeesInPayroll(pickerValue) {
       draft,
       period,
       includePayrollMonth,
+      runId,
     );
 
     let { error } = await supabase.from("payroll_records").insert(payload);
@@ -264,7 +302,13 @@ export async function ensureActiveEmployeesInPayroll(pickerValue) {
       (isMissingPayrollMonthColumn(error) || isMissingColumnError(error))
     ) {
       includePayrollMonth = false;
-      payload = buildPayrollRecordPayload(companyId, draft, period, false);
+      payload = buildPayrollRecordPayload(
+        companyId,
+        draft,
+        period,
+        false,
+        runId,
+      );
       ({ error } = await supabase.from("payroll_records").insert(payload));
     }
 
@@ -280,6 +324,10 @@ export async function ensureActiveEmployeesInPayroll(pickerValue) {
     throw new Error(mapDbError(upsertError));
   }
 
+  if (addedCount > 0) {
+    await refreshPayrollRunTotals(companyId, period.payrollMonth);
+  }
+
   return { addedCount, payrollMonth: period.payrollMonth };
 }
 
@@ -290,11 +338,23 @@ export async function generatePayrollForMonth(pickerValue) {
   }
 
   const companyId = requireCompanyId("إنشاء المسير الشهري");
+  const employeeId = requireEmployeeId("إنشاء المسير الشهري");
   const existing = await fetchPayrollForMonth(pickerValue);
+
+  if (existing.isRunLocked) {
+    throw new Error(PAYROLL_RUN_LOCKED_MESSAGE);
+  }
 
   if (existing.hasRecords) {
     throw new Error("تم إنشاء مسير هذا الشهر بالفعل.");
   }
+
+  const payrollRun = await upsertPayrollRunDraft(
+    companyId,
+    period.payrollMonth,
+    employeeId,
+  );
+  const runId = payrollRun.id;
 
   const employees = await listActiveEmployees();
   if (employees.length === 0) {
@@ -324,6 +384,7 @@ export async function generatePayrollForMonth(pickerValue) {
       draft,
       period,
       includePayrollMonth,
+      runId,
     );
 
     let existingRow = await findExistingRecord(
@@ -352,7 +413,13 @@ export async function generatePayrollForMonth(pickerValue) {
       (isMissingPayrollMonthColumn(error) || isMissingColumnError(error))
     ) {
       includePayrollMonth = false;
-      payload = buildPayrollRecordPayload(companyId, draft, period, false);
+      payload = buildPayrollRecordPayload(
+        companyId,
+        draft,
+        period,
+        false,
+        runId,
+      );
       existingRow = await findExistingRecord(companyId, period, employee.id, false);
       if (existingRow?.status === "exported") continue;
       if (existingRow?.id) {
@@ -369,6 +436,8 @@ export async function generatePayrollForMonth(pickerValue) {
   }
 
   if (upsertError) throw new Error(mapDbError(upsertError));
+
+  await refreshPayrollRunTotals(companyId, period.payrollMonth);
 
   return fetchPayrollForMonth(pickerValue);
 }
@@ -419,6 +488,197 @@ export async function exportPayrollMonth(pickerValue) {
 
 function roundMoney(value) {
   return Math.round((Number(value) + Number.EPSILON) * 100) / 100;
+}
+
+function mapPayrollRunRow(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    companyId: row.company_id,
+    payrollMonth: row.payroll_month,
+    status: String(row.status ?? PAYROLL_RUN_STATUSES.DRAFT).trim().toLowerCase(),
+    employeeCount: Number(row.employee_count) || 0,
+    totalGross: Number(row.total_gross) || 0,
+    totalDeductions: Number(row.total_deductions) || 0,
+    totalNet: Number(row.total_net) || 0,
+    lockedAt: row.locked_at ?? null,
+    lockedBy: row.locked_by ?? null,
+    createdBy: row.created_by ?? null,
+    createdAt: row.created_at ?? null,
+    updatedAt: row.updated_at ?? null,
+  };
+}
+
+export function isPayrollRunLocked(run) {
+  return run?.status === PAYROLL_RUN_STATUSES.LOCKED;
+}
+
+export function assertPayrollRunEditable(run) {
+  if (isPayrollRunLocked(run)) {
+    throw new Error(PAYROLL_RUN_LOCKED_MESSAGE);
+  }
+}
+
+function computeRunTotalsFromRecords(records) {
+  let employeeCount = 0;
+  let totalGross = 0;
+  let totalDeductions = 0;
+  let totalNet = 0;
+
+  for (const row of records ?? []) {
+    employeeCount += 1;
+    const basic = Number(row.basic_salary ?? row.basic) || 0;
+    const housing = Number(row.housing_allowance ?? row.housing) || 0;
+    const allowances = Number(row.other_allowances ?? row.allowances) || 0;
+    const commissions = Number(row.commissions) || 0;
+    const additional = Number(row.additional) || 0;
+    totalGross += basic + housing + allowances + commissions + additional;
+
+    const penalties = Number(row.penalty_deductions ?? row.penalties) || 0;
+    const lateness =
+      Number(row.delay_deductions ?? row.lateness_deduction ?? row.lateness) ||
+      0;
+    const loans = Number(row.loan_deductions ?? row.loans) || 0;
+    const gosi = Number(row.gosi_deduction ?? row.gosi) || 0;
+    totalDeductions += penalties + lateness + loans + gosi;
+    totalNet += Number(row.net_salary ?? row.net) || 0;
+  }
+
+  return {
+    employee_count: employeeCount,
+    total_gross: roundMoney(totalGross),
+    total_deductions: roundMoney(totalDeductions),
+    total_net: roundMoney(totalNet),
+  };
+}
+
+export async function fetchPayrollRunForMonth(companyId, payrollMonth) {
+  const { data, error } = await scopeQueryByCompany(
+    supabase
+      .from("payroll_runs")
+      .select("*")
+      .eq("payroll_month", payrollMonth),
+    companyId,
+  ).maybeSingle();
+
+  if (error) throw new Error(mapDbError(error));
+  return mapPayrollRunRow(data);
+}
+
+async function upsertPayrollRunDraft(companyId, payrollMonth, createdBy) {
+  const existing = await fetchPayrollRunForMonth(companyId, payrollMonth);
+  if (existing) {
+    assertPayrollRunEditable(existing);
+    return existing;
+  }
+
+  const { data, error } = await supabase
+    .from("payroll_runs")
+    .insert({
+      company_id: companyId,
+      payroll_month: payrollMonth,
+      status: PAYROLL_RUN_STATUSES.DRAFT,
+      created_by: createdBy,
+    })
+    .select("*")
+    .single();
+
+  if (error) throw new Error(mapDbError(error));
+  return mapPayrollRunRow(data);
+}
+
+export async function refreshPayrollRunTotals(companyId, payrollMonth) {
+  const period = {
+    payrollMonth,
+    month: Number(payrollMonth.split("/")[0]),
+    year: Number(payrollMonth.split("/")[1]),
+  };
+  const { data } = await queryPayrollRecordsForMonth(companyId, period);
+  const totals = computeRunTotalsFromRecords(data ?? []);
+
+  const run = await fetchPayrollRunForMonth(companyId, payrollMonth);
+  if (!run?.id) return null;
+
+  const { data: updated, error } = await scopeQueryByCompany(
+    supabase
+      .from("payroll_runs")
+      .update({
+        ...totals,
+        updated_at: new Date().toISOString(),
+      }),
+    companyId,
+  )
+    .eq("id", run.id)
+    .select("*")
+    .single();
+
+  if (error) throw new Error(mapDbError(error));
+  return mapPayrollRunRow(updated);
+}
+
+export async function updatePayrollRunStatus(pickerValue, nextStatus) {
+  const period = parsePayrollPeriod(pickerValue);
+  if (!period) throw new Error("يرجى اختيار شهر صالح.");
+
+  const companyId = requireCompanyId("تحديث حالة المسير");
+  const employeeId = requireEmployeeId("تحديث حالة المسير");
+  const run = await fetchPayrollRunForMonth(companyId, period.payrollMonth);
+
+  if (!run) {
+    throw new Error("لا يوجد مسير لهذا الشهر.");
+  }
+
+  const current = run.status;
+  const target = String(nextStatus ?? "").trim().toLowerCase();
+
+  if (current === PAYROLL_RUN_STATUSES.LOCKED) {
+    throw new Error(PAYROLL_RUN_LOCKED_MESSAGE);
+  }
+
+  if (
+    target === PAYROLL_RUN_STATUSES.UNDER_REVIEW &&
+    current !== PAYROLL_RUN_STATUSES.DRAFT
+  ) {
+    throw new Error("لا يمكن إرسال المسير للمراجعة إلا من حالة مسودة.");
+  }
+
+  if (
+    target === PAYROLL_RUN_STATUSES.DRAFT &&
+    current !== PAYROLL_RUN_STATUSES.UNDER_REVIEW
+  ) {
+    throw new Error("لا يمكن إرجاع المسير كمسودة إلا من حالة المراجعة.");
+  }
+
+  if (
+    target === PAYROLL_RUN_STATUSES.LOCKED &&
+    current !== PAYROLL_RUN_STATUSES.UNDER_REVIEW
+  ) {
+    throw new Error("لا يمكن قفل المسير إلا بعد المراجعة.");
+  }
+
+  const payload = {
+    status: target,
+    updated_at: new Date().toISOString(),
+  };
+
+  if (target === PAYROLL_RUN_STATUSES.LOCKED) {
+    payload.locked_at = new Date().toISOString();
+    payload.locked_by = employeeId;
+  }
+
+  if (target === PAYROLL_RUN_STATUSES.DRAFT) {
+    payload.locked_at = null;
+    payload.locked_by = null;
+  }
+
+  const { error } = await scopeQueryByCompany(
+    supabase.from("payroll_runs").update(payload),
+    companyId,
+  ).eq("id", run.id);
+
+  if (error) throw new Error(mapDbError(error));
+
+  return fetchPayrollForMonth(pickerValue);
 }
 
 function resolveRecordPeriod(row) {

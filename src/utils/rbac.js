@@ -4,7 +4,9 @@ import {
   isManagementRole,
   isOwnerRole,
   normalizeAppRole,
+  resolvePermissionsForRole,
 } from "../constants/roles.js";
+import { ADMINISTRATIVE_MASTER_LOG_ROLES } from "../constants/administrativeActions.js";
 
 export function isDirectManager(role = getCurrentUserRole()) {
   const normalized = normalizeAppRole(role);
@@ -22,7 +24,6 @@ export function canAccessMyTeam(role = getCurrentUserRole()) {
     isDirectManager(normalized)
   );
 }
-import { ADMINISTRATIVE_MASTER_LOG_ROLES } from "../constants/administrativeActions.js";
 
 export function getCurrentUserRole() {
   const cachedRole = getCurrentEmployeeCache()?.role;
@@ -32,7 +33,8 @@ export function getCurrentUserRole() {
 }
 
 export function getCurrentPermissions() {
-  return getUserPermissions();
+  const role = getCurrentUserRole();
+  return resolvePermissionsForRole(role, getUserPermissions());
 }
 
 export function isOwner() {
@@ -61,7 +63,7 @@ export function canAccessEmployeeProfile() {
 }
 
 export function canViewPayroll() {
-  return isOwner() || hasPermission("can_view_payroll");
+  return hasPermission("can_view_payroll");
 }
 
 export function canManageEvents() {
@@ -92,6 +94,7 @@ export function canAccessPerformance() {
 
 /** Master log + issue actions: owner, Executive, HR — not Direct Manager */
 export function canManageAdministrativeActions() {
+  if (isOwner()) return true;
   return ADMINISTRATIVE_MASTER_LOG_ROLES.has(getCurrentUserRole());
 }
 
@@ -104,12 +107,13 @@ export function isAdmin() {
   return isOwner();
 }
 
-/** Biometric & geofencing settings — owner / legacy Admin only */
+/** Biometric & geofencing settings — company owner only */
 export function canManageAttendanceSettings() {
   return isOwner();
 }
 
 /** Strategic AI assistant & smart management tools */
 export function canAccessStrategicAI() {
+  if (isOwner()) return true;
   return isManagementRole(getCurrentUserRole());
 }

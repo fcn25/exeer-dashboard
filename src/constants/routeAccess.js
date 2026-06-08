@@ -29,9 +29,11 @@ export function resolveDashboardRouteRule(pathname) {
 }
 
 export function canAccessDashboardRoute(pathname, { permissions, isOwner }) {
+  if (isOwner) return true;
+
   const rule = resolveDashboardRouteRule(pathname);
   if (!rule) return true;
-  if (rule.ownerOnly) return Boolean(isOwner);
+  if (rule.ownerOnly) return false;
   if (rule.permission) return Boolean(permissions?.[rule.permission]);
   if (rule.permissionAny?.length) {
     return rule.permissionAny.some((key) => Boolean(permissions?.[key]));

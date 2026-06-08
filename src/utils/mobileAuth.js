@@ -3,7 +3,10 @@ import {
   getCurrentEmployeeCache,
 } from "../services/currentEmployeeService.js";
 import { supabase } from "./supabaseClient.js";
-import { normalizeAppRole, normalizePermissions } from "../constants/roles.js";
+import {
+  normalizeAppRole,
+  resolvePermissionsForRole,
+} from "../constants/roles.js";
 
 export function getAuthToken() {
   return localStorage.getItem("authToken");
@@ -37,7 +40,7 @@ export function persistAuthSession(session, profile) {
         "Employee",
     );
 
-    const permissions = normalizePermissions(user.permissions);
+    const permissions = resolvePermissionsForRole(role, user.permissions);
     const authUserId = user.id ?? user.auth_user_id ?? null;
     const employeeId = user.employee_id ?? user.employeeId ?? null;
 
@@ -143,8 +146,11 @@ export function getAuthUser() {
       auth_user_id: user.auth_user_id ?? user.id,
       employee_id: cached?.employeeId ?? user.employee_id ?? null,
       company_id: cached?.companyId ?? user.company_id ?? null,
-      role: cached?.role ?? user.role,
-      permissions: normalizePermissions(user.permissions),
+      role: normalizeAppRole(cached?.role ?? user.role),
+      permissions: resolvePermissionsForRole(
+        normalizeAppRole(cached?.role ?? user.role),
+        user.permissions,
+      ),
     };
   } catch {
     return null;
@@ -152,7 +158,8 @@ export function getAuthUser() {
 }
 
 export function getUserPermissions() {
-  return normalizePermissions(getAuthUser()?.permissions);
+  const user = getAuthUser();
+  return resolvePermissionsForRole(user?.role, user?.permissions);
 }
 
 export function getUserDisplay() {

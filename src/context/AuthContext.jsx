@@ -13,7 +13,7 @@ import {
   isDashboardRole,
   isOwnerRole,
   normalizeAppRole,
-  normalizePermissions,
+  resolvePermissionsForRole,
 } from "../constants/roles.js";
 import { useIsMobile } from "../hooks/useIsMobile.js";
 import { resolveAuthProfile } from "../services/profileService.js";
@@ -68,7 +68,9 @@ export function AuthProvider({ children, onSignedOut }) {
           employee_id: null,
           department: null,
           job_title: null,
-          permissions: normalizePermissions(null),
+          permissions: resolvePermissionsForRole(
+            normalizeAppRole(session.user.user_metadata?.role ?? "Employee"),
+          ),
         };
         persistAuthSession(session, fallbackProfile);
         setUser(fallbackProfile);
@@ -170,7 +172,8 @@ export function AuthProvider({ children, onSignedOut }) {
     const role = normalizeAppRole(
       user?.role ?? getAuthUser()?.role ?? "Employee",
     );
-    const permissions = normalizePermissions(
+    const permissions = resolvePermissionsForRole(
+      role,
       user?.permissions ?? getAuthUser()?.permissions,
     );
     const company_id =

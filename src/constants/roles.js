@@ -12,7 +12,7 @@ export const STANDARD_ROLES = [
  * - Legacy DB: "Admin" (20250608000000_rbac_roles_permissions.sql)
  * - After 20250619000000_owner_role.sql: use "owner" instead
  */
-export const SIGNUP_OWNER_DB_ROLE = "Admin";
+export const SIGNUP_OWNER_DB_ROLE = "owner";
 
 export const CONFIGURABLE_ROLES = [
   "Executive",
@@ -130,6 +130,14 @@ export function normalizePermissions(value) {
     can_approve_general: Boolean(source.can_approve_general),
     can_access_employee_profile: Boolean(source.can_access_employee_profile),
   };
+}
+
+/** Owner / legacy Admin always receives full tenant permissions. */
+export function resolvePermissionsForRole(role, storedPermissions = null) {
+  if (isOwnerRole(role)) {
+    return { ...OWNER_PERMISSIONS };
+  }
+  return normalizePermissions(storedPermissions);
 }
 
 export function normalizeAssignedEmployeeIds(value) {

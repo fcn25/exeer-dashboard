@@ -6,9 +6,10 @@ import {
 } from "./currentEmployeeService.js";
 import {
   DEFAULT_PERMISSIONS,
+  isOwnerRole,
   normalizeAppRole,
   normalizePermissions,
-  OWNER_PERMISSIONS,
+  resolvePermissionsForRole,
 } from "../constants/roles.js";
 import { fetchPermissionsForRole } from "./permissionsService.js";
 
@@ -52,8 +53,8 @@ export async function resolveAuthProfile(sessionUser) {
     current?.companyId ?? sessionUser?.user_metadata?.company_id ?? null;
 
   let permissions = { ...DEFAULT_PERMISSIONS };
-  if (role === "owner") {
-    permissions = { ...OWNER_PERMISSIONS };
+  if (isOwnerRole(role)) {
+    permissions = resolvePermissionsForRole(role);
   } else if (
     companyId &&
     ["Executive", "HR_Manager", "HR_Assistant", "Direct_Manager"].includes(role)
@@ -80,6 +81,6 @@ export async function resolveAuthProfile(sessionUser) {
     employee_id: current?.employeeId ?? null,
     department: current?.department ?? null,
     job_title: current?.jobTitle ?? null,
-    permissions: normalizePermissions(permissions),
+    permissions: resolvePermissionsForRole(role, permissions),
   };
 }

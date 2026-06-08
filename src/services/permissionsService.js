@@ -3,6 +3,7 @@ import { getCompanyId } from "../utils/mobileAuth.js";
 import {
   CONFIGURABLE_ROLES,
   DEFAULT_PERMISSIONS,
+  isOwnerRole,
   normalizeAssignedEmployeeIds,
   normalizePermissions,
   OWNER_PERMISSIONS,
@@ -31,7 +32,7 @@ export async function fetchRolePermissionsForCompany(companyId = getCompanyId())
 }
 
 export async function fetchPermissionsForRole(roleName, companyId = getCompanyId()) {
-  if (roleName === "owner" || roleName === "Admin") return { ...OWNER_PERMISSIONS };
+  if (isOwnerRole(roleName)) return { ...OWNER_PERMISSIONS };
 
   const { data, error } = await supabase
     .from("role_permissions")

@@ -24,6 +24,7 @@ export const DEFAULT_COMPANY_SETTINGS = [
   { key: "work_day_hours", value: 8 },
   { key: "week_start_day", value: "sunday" },
   { key: "salary_pay_day", value: 27 },
+  { key: "wps_net_gross_warning_ratio", value: 0.5 },
   { key: "gosi_employer_rate", value: 9 },
   { key: "overtime_rate", value: 1.5 },
   { key: "late_tolerance_minutes", value: 15 },

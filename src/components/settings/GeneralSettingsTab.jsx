@@ -8,10 +8,13 @@ import {
   getCompanyProfile,
   updateCompanyIndustry,
 } from "../../services/companyService.js";
+import CompanyWpsBankSection from "./CompanyWpsBankSection.jsx";
+import { isOwner } from "../../utils/rbac.js";
 
 
 export default function GeneralSettingsTab() {
   const { t, i18n } = useTranslation();
+  const showWpsBankSettings = isOwner();
   const [industry, setIndustry] = useState(DEFAULT_INDUSTRY);
   const [isIndustryLoading, setIsIndustryLoading] = useState(true);
   const [isIndustrySaving, setIsIndustrySaving] = useState(false);
@@ -127,6 +130,8 @@ export default function GeneralSettingsTab() {
           <p className="text-xs text-red-700 dark:text-red-300">{industryError}</p>
         ) : null}
       </div>
+
+      {showWpsBankSettings ? <CompanyWpsBankSection /> : null}
     </div>
   );
 }

@@ -185,6 +185,21 @@ export default function SystemCustomizationPanels({
             labelOff={t("common.disabled")}
           />
         </SettingField>
+
+        <SettingField
+          label="حد تحذير صافي/إجمالي لـ WPS"
+          hint="تحذير فقط (لا يمنع التصدير): إذا كان صافي الموظف أقل من هذه النسبة من إجمالي مستحقاته."
+        >
+          <SettingNumberInput
+            fullWidth={fullWidth}
+            value={Math.round(Number(draft.wps_net_gross_warning_ratio ?? 0.5) * 100)}
+            min={10}
+            max={90}
+            onChange={(v) =>
+              updateDraft("wps_net_gross_warning_ratio", Number(v) / 100)
+            }
+          />
+        </SettingField>
       </div>
     );
   }

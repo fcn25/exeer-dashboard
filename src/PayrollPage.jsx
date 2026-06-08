@@ -3,10 +3,12 @@ import { useLocation, useNavigate } from "react-router-dom";
 import {
   ClipboardList,
   FileSpreadsheet,
+  FileText,
   History,
   Lock,
   Printer,
   RefreshCw,
+  ShieldCheck,
 } from "lucide-react";
 import PayrollChangeLogModal from "./components/payroll/PayrollChangeLogModal.jsx";
 import PayrollChangeLogPanel from "./components/payroll/PayrollChangeLogPanel.jsx";
@@ -14,6 +16,7 @@ import PayrollEditableCell from "./components/payroll/PayrollEditableCell.jsx";
 import PayrollTransitionConfirmDialog from "./components/payroll/PayrollTransitionConfirmDialog.jsx";
 import PayrollUnsavedEditsDialog from "./components/payroll/PayrollUnsavedEditsDialog.jsx";
 import PayrollHistoryModal from "./components/payroll/PayrollHistoryModal.jsx";
+import PayrollWpsReadinessPanel from "./components/payroll/PayrollWpsReadinessPanel.jsx";
 import { MonthInput } from "./components/ui/DateInput.jsx";
 import {
   exportPayrollMonth,
@@ -36,6 +39,12 @@ import {
   formatPayrollMonthFromPicker,
 } from "./utils/payroll/calculations.js";
 import { downloadPayrollAccountingExcel } from "./utils/payroll/exportPayrollAccountingExcel.js";
+import { downloadPayrollWpsExcel } from "./utils/payroll/exportPayrollWpsExcel.js";
+import { downloadWpsSifFile } from "./utils/payroll/buildWpsSif.js";
+import {
+  checkPayrollWpsReadiness,
+  fetchPayrollWpsRows,
+} from "./services/payrollWpsService.js";
 import {
   ACCOUNTANT_EDITABLE_COLUMN_KEYS,
   buildPayrollDetailColumns,
@@ -162,6 +171,10 @@ export default function PayrollPage() {
   const [isTransitionSubmitting, setIsTransitionSubmitting] = useState(false);
   const [unsavedDialog, setUnsavedDialog] = useState(null);
   const [isUnsavedDialogSaving, setIsUnsavedDialogSaving] = useState(false);
+  const [wpsReadiness, setWpsReadiness] = useState(null);
+  const [isWpsChecking, setIsWpsChecking] = useState(false);
+  const [wpsCheckError, setWpsCheckError] = useState("");
+  const [isWpsExporting, setIsWpsExporting] = useState(false);
 
   const { getSetting } = useCompanySettings();
   const showTransportColumn = Boolean(getSetting("transport_allowance_enabled"));
@@ -204,6 +217,8 @@ export default function PayrollPage() {
   const isSavingAnyCell =
     Boolean(savingCellKey) || isUnsavedDialogSaving || saveStatus === "saving";
   const hasChangeLogEntries = changeLogEntries.length > 0;
+  const canExportWps = isHrPayroll && isRunLocked;
+  const isWpsReady = Boolean(wpsReadiness?.isReady);
   const statusBadgeLabel = runStatus
     ? (PAYROLL_RUN_STATUS_LABELS[runStatus] ?? null)
     : null;
@@ -750,6 +765,77 @@ export default function PayrollPage() {
     window.print();
   };
 
+  const runWpsReadinessCheck = useCallback(async () => {
+    if (!canExportWps || !selectedMonth || rows.length === 0) return;
+
+    setIsWpsChecking(true);
+    setWpsCheckError("");
+
+    try {
+      const report = await checkPayrollWpsReadiness(selectedMonth);
+      setWpsReadiness(report);
+    } catch (err) {
+      setWpsReadiness(null);
+      setWpsCheckError(err.message || "تعذّر فحص جاهزية WPS.");
+    } finally {
+      setIsWpsChecking(false);
+    }
+  }, [canExportWps, rows.length, selectedMonth]);
+
+  useEffect(() => {
+    setWpsReadiness(null);
+    setWpsCheckError("");
+  }, [selectedMonth]);
+
+  useEffect(() => {
+    if (!canExportWps || !hasLoaded || rows.length === 0) return;
+    runWpsReadinessCheck();
+  }, [canExportWps, hasLoaded, rows.length, runWpsReadinessCheck, selectedMonth]);
+
+  const handleWpsSifExport = async () => {
+    if (!isWpsReady || !selectedMonth) return;
+
+    setIsWpsExporting(true);
+    setError("");
+
+    try {
+      const records =
+        wpsReadiness?.records ?? (await fetchPayrollWpsRows(selectedMonth));
+      const company = wpsReadiness?.company;
+      downloadWpsSifFile({
+        company,
+        records,
+        payrollMonth: wpsReadiness?.payrollMonth ?? payrollMonthLabel,
+      });
+      setSuccessMessage("تم تصدير ملف WPS (SIF)");
+    } catch (err) {
+      setError(err.message || "تعذّر تصدير ملف WPS.");
+    } finally {
+      setIsWpsExporting(false);
+    }
+  };
+
+  const handleWpsExcelExport = async () => {
+    if (!isWpsReady || !selectedMonth) return;
+
+    setIsWpsExporting(true);
+    setError("");
+
+    try {
+      const records =
+        wpsReadiness?.records ?? (await fetchPayrollWpsRows(selectedMonth));
+      downloadPayrollWpsExcel(
+        records,
+        wpsReadiness?.payrollMonth ?? payrollMonthLabel,
+      );
+      setSuccessMessage("تم تصدير ملف WPS (Excel للمراجعة)");
+    } catch (err) {
+      setError(err.message || "تعذّر تصدير ملف WPS.");
+    } finally {
+      setIsWpsExporting(false);
+    }
+  };
+
   const statsReady = hasLoaded && !isLoading;
 
   return (
@@ -784,6 +870,75 @@ export default function PayrollPage() {
               </span>
             ) : null}
           </div>
+        ) : null}
+
+        {canExportWps ? (
+          <section className="space-y-3 rounded-md border border-indigo-200 bg-indigo-50/60 p-4 shadow-none">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="text-sm font-semibold text-indigo-950">
+                  تصدير WPS (حماية الأجور)
+                </h2>
+                <p className="mt-1 text-xs text-indigo-800">
+                  متاح لمالك المنشأة وموارد البشرية بعد قفل المسير. التصدير
+                  للقراءة فقط ولا يعدّل سجلات الرواتب.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={runWpsReadinessCheck}
+                disabled={isWpsChecking || isLoading || rows.length === 0}
+                className="inline-flex items-center gap-2 rounded-md border border-indigo-300 bg-white px-4 py-2.5 text-sm font-medium text-indigo-900 shadow-none hover:bg-indigo-100 disabled:opacity-50"
+              >
+                <ShieldCheck className="h-4 w-4" aria-hidden />
+                فحص جاهزية WPS
+              </button>
+            </div>
+
+            <PayrollWpsReadinessPanel
+              report={wpsReadiness}
+              isLoading={isWpsChecking}
+              error={wpsCheckError}
+            />
+
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={handleWpsSifExport}
+                disabled={
+                  !isWpsReady ||
+                  isWpsExporting ||
+                  isWpsChecking ||
+                  isLoading ||
+                  rows.length === 0
+                }
+                className="inline-flex items-center gap-2 rounded-md border border-indigo-700 bg-indigo-700 px-4 py-2.5 text-sm font-medium text-white shadow-none hover:bg-indigo-800 disabled:opacity-50"
+                title={
+                  isWpsReady
+                    ? "تصدير ملف WPS بصيغة SIF"
+                    : "أكمل فحص الجاهزية وأصلح البيانات الناقصة أولاً"
+                }
+              >
+                <FileText className="h-4 w-4" aria-hidden />
+                تصدير ملف WPS (SIF)
+              </button>
+              <button
+                type="button"
+                onClick={handleWpsExcelExport}
+                disabled={
+                  !isWpsReady ||
+                  isWpsExporting ||
+                  isWpsChecking ||
+                  isLoading ||
+                  rows.length === 0
+                }
+                className="inline-flex items-center gap-2 rounded-md border border-indigo-200 bg-white px-4 py-2.5 text-sm font-medium text-indigo-900 shadow-none hover:bg-indigo-100 disabled:opacity-50"
+              >
+                <FileSpreadsheet className="h-4 w-4" aria-hidden />
+                تصدير WPS (Excel للمراجعة)
+              </button>
+            </div>
+          </section>
         ) : null}
 
         {isAccountant && !isUnderReview && !isRunLocked && runStatus ? (

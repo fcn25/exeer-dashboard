@@ -28,6 +28,7 @@ export const SYSTEM_CUSTOMIZATION_TAB_KEYS = {
     "loan_max_percentage",
     "transport_allowance_enabled",
     "housing_allowance_enabled",
+    "wps_net_gross_warning_ratio",
   ],
   attendance: [
     "attendance_mode",

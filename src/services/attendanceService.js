@@ -241,6 +241,145 @@ export async function fetchRecentAttendanceHistory(employeeId, limit = 14) {
   return (data ?? []).map(mapHistoryRow);
 }
 
+function mapEmployeeAttendanceLogRow(row) {
+  if (!row) return null;
+
+  const branch = row.company_branches ?? null;
+
+  return {
+    id: row.id,
+    punchType: row.punch_type ?? null,
+    punchTypeLabel: formatPunchTypeLabel(row.punch_type),
+    punchedAt: row.punched_at ?? null,
+    punchedAtLabel: formatPunchedAt(row.punched_at),
+    branchName: branch?.name ?? "—",
+    gpsCoordinates: formatGpsCoordinates(row.latitude, row.longitude),
+  };
+}
+
+export async function fetchRecentAttendanceLogsForEmployee(
+  employeeId,
+  limit = 20,
+) {
+  const companyId = requireCompanyId("تحميل عمليات البصمة");
+  const resolvedEmployeeId = Number(employeeId);
+  if (!Number.isFinite(resolvedEmployeeId) || resolvedEmployeeId <= 0) {
+    return [];
+  }
+
+  const { data, error } = await scopeQueryByCompany(
+    supabase
+      .from("attendance_logs")
+      .select(
+        `
+        id,
+        punch_type,
+        punched_at,
+        latitude,
+        longitude,
+        company_branches (
+          id,
+          name
+        )
+      `,
+      )
+      .eq("employee_id", resolvedEmployeeId)
+      .order("punched_at", { ascending: false })
+      .limit(limit),
+    companyId,
+  );
+
+  if (error) {
+    if (isMissingAttendanceLogsTable(error) || isMissingBranchRelationship(error)) {
+      const { data: fallback, error: fallbackError } = await scopeQueryByCompany(
+        supabase
+          .from("attendance_logs")
+          .select("id, punch_type, punched_at, latitude, longitude")
+          .eq("employee_id", resolvedEmployeeId)
+          .order("punched_at", { ascending: false })
+          .limit(limit),
+        companyId,
+      );
+
+      if (fallbackError && !isMissingAttendanceLogsTable(fallbackError)) {
+        throw new Error(mapDbError(fallbackError));
+      }
+
+      return (fallback ?? []).map((row) =>
+        mapEmployeeAttendanceLogRow({ ...row, company_branches: null }),
+      );
+    }
+
+    if (!isMissingAttendanceLogsTable(error)) {
+      throw new Error(mapDbError(error));
+    }
+
+    return [];
+  }
+
+  return (data ?? []).map(mapEmployeeAttendanceLogRow).filter(Boolean);
+}
+
+export async function fetchEmployeeMonthlyAttendanceReport(employeeId) {
+  const companyId = requireCompanyId("تحميل تقرير البصمة");
+  const resolvedEmployeeId = Number(employeeId);
+  if (!Number.isFinite(resolvedEmployeeId) || resolvedEmployeeId <= 0) {
+    return {
+      presentCount: 0,
+      absentCount: 0,
+      leaveCount: 0,
+      totalDelay: 0,
+      recordCount: 0,
+      monthLabel: "",
+      isEmpty: true,
+    };
+  }
+
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const dateFrom = `${year}-${month}-01`;
+  const dateTo = todayIsoDate();
+
+  const { data, error } = await scopeQueryByCompany(
+    supabase
+      .from("attendance_records")
+      .select("status, delay_minutes, record_date")
+      .eq("employee_id", resolvedEmployeeId)
+      .gte("record_date", dateFrom)
+      .lte("record_date", dateTo),
+    companyId,
+  );
+
+  if (error && !isMissingAttendanceTable(error)) {
+    throw new Error(mapDbError(error));
+  }
+
+  const rows = data ?? [];
+  const presentCount = rows.filter((row) => row.status === "حضور").length;
+  const absentCount = rows.filter((row) => row.status === "غياب").length;
+  const leaveCount = rows.filter((row) => row.status === "إجازة").length;
+  const totalDelay = rows.reduce(
+    (sum, row) => sum + (Number(row.delay_minutes) || 0),
+    0,
+  );
+
+  const monthLabel = new Intl.DateTimeFormat(getAppDateLocale(), {
+    month: "long",
+    year: "numeric",
+  }).format(now);
+
+  return {
+    presentCount,
+    absentCount,
+    leaveCount,
+    totalDelay,
+    recordCount: rows.length,
+    monthLabel,
+    isEmpty: rows.length === 0,
+  };
+}
+
 export async function fetchTodayAttendanceForEmployee(employeeId) {
   const companyId = requireCompanyId("تحميل حضور اليوم");
   const resolvedEmployeeId = Number(employeeId);

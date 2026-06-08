@@ -3,14 +3,19 @@ import { Link } from "react-router-dom";
 import { ChevronLeft, Fingerprint, MapPin, Settings2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import AttendancePunchButton from "../../attendance/mobile/AttendancePunchButton.jsx";
-import AttendanceTodaySummary from "../../attendance/mobile/AttendanceTodaySummary.jsx";
-import AttendanceHistorySection from "../../attendance/mobile/AttendanceHistorySection.jsx";
+import BiometricEnrollmentSection from "../../attendance/mobile/BiometricEnrollmentSection.jsx";
+import AttendanceOperationsSection from "../../attendance/mobile/AttendanceOperationsSection.jsx";
+import AttendanceMonthlyReportSection from "../../attendance/mobile/AttendanceMonthlyReportSection.jsx";
+import AttendancePunchSelfieModal from "../../attendance/mobile/AttendancePunchSelfieModal.jsx";
 import {
-  fetchRecentAttendanceHistory,
+  fetchEmployeeMonthlyAttendanceReport,
+  fetchRecentAttendanceLogsForEmployee,
   fetchTodayAttendanceForEmployee,
 } from "../../../services/attendanceService.js";
 import { performAttendancePunch } from "../../../services/attendancePunchService.js";
+import { isFaceEnrolled } from "../../../services/faceEnrollmentService.js";
 import { canManageAttendanceSettings } from "../../../utils/rbac.js";
+
 function AdminAttendanceSettingsSection() {
   const { t } = useTranslation();
 
@@ -72,18 +77,24 @@ function AdminAttendanceSettingsSection() {
 }
 
 export default function MobileManagerAttendanceTab({ employeeId }) {
+  const { t } = useTranslation();
   const [todayData, setTodayData] = useState(null);
-  const [historyRecords, setHistoryRecords] = useState([]);
+  const [operationLogs, setOperationLogs] = useState([]);
+  const [monthlyReport, setMonthlyReport] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [actionError, setActionError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [isEnrolled, setIsEnrolled] = useState(false);
+  const [isPunchSelfieOpen, setIsPunchSelfieOpen] = useState(false);
+  const [isPunching, setIsPunching] = useState(false);
 
   const loadAttendance = useCallback(async () => {
     if (!employeeId) {
-      setLoadError("لم يتم ربط حسابك بسجل موظف. تواصل مع الموارد البشرية.");
+      setLoadError(t("pages.mobile.attendance.noEmployee"));
       setTodayData(null);
-      setHistoryRecords([]);
+      setOperationLogs([]);
+      setMonthlyReport(null);
       setIsLoading(false);
       return;
     }
@@ -92,40 +103,77 @@ export default function MobileManagerAttendanceTab({ employeeId }) {
     setLoadError("");
 
     try {
-      const [today, history] = await Promise.all([
+      const [today, logs, report] = await Promise.all([
         fetchTodayAttendanceForEmployee(employeeId),
-        fetchRecentAttendanceHistory(employeeId),
+        fetchRecentAttendanceLogsForEmployee(employeeId),
+        fetchEmployeeMonthlyAttendanceReport(employeeId),
       ]);
       setTodayData(today);
-      setHistoryRecords(history);
+      setOperationLogs(logs);
+      setMonthlyReport(report);
+      setIsEnrolled(isFaceEnrolled(employeeId));
     } catch (err) {
-      setLoadError(err.message || "تعذّر تحميل بيانات الحضور.");
+      setLoadError(err.message || t("pages.mobile.attendance.loadError"));
       setTodayData(null);
-      setHistoryRecords([]);
+      setOperationLogs([]);
+      setMonthlyReport(null);
     } finally {
       setIsLoading(false);
     }
-  }, [employeeId]);
+  }, [employeeId, t]);
 
   useEffect(() => {
     loadAttendance();
   }, [loadAttendance]);
 
-  const handlePunch = async () => {
+  const executePunch = async () => {
     setActionError("");
+    setIsPunching(true);
+
     try {
       const result = await performAttendancePunch(employeeId);
       setTodayData(result.summary);
       setSuccessMessage(
         result.punchType === "In"
-          ? `تم تسجيل الحضور — ${result.branchName}`
-          : `تم تسجيل الانصراف — ${result.branchName}`,
+          ? t("pages.mobile.attendance.punchInSuccess", {
+              branch: result.branchName,
+            })
+          : t("pages.mobile.attendance.punchOutSuccess", {
+              branch: result.branchName,
+            }),
       );
       await loadAttendance();
     } catch (err) {
-      setActionError(err.message || "تعذّر إتمام التسجيل.");
+      setActionError(err.message || t("pages.mobile.attendance.punchError"));
+    } finally {
+      setIsPunching(false);
+      setIsPunchSelfieOpen(false);
     }
   };
+
+  const handlePunchRequest = () => {
+    setActionError("");
+    setSuccessMessage("");
+
+    if (!isEnrolled) {
+      setActionError(t("pages.mobile.attendance.enrollmentRequired"));
+      return;
+    }
+
+    setIsPunchSelfieOpen(true);
+  };
+
+  const handlePunchSelfieConfirm = async () => {
+    await executePunch();
+  };
+
+  const punchLabel = todayData?.nextPunchLabel ?? t("pages.mobile.attendance.punchIn");
+  const canPunch =
+    todayData?.canPunch !== false &&
+    !isLoading &&
+    !loadError &&
+    isEnrolled &&
+    !isPunching;
 
   return (
     <div className="space-y-4">
@@ -145,16 +193,38 @@ export default function MobileManagerAttendanceTab({ employeeId }) {
         </p>
       ) : null}
 
-      <AttendanceTodaySummary attendance={todayData} isLoading={isLoading} />
-      <div className="flex justify-center py-2">
+      <BiometricEnrollmentSection
+        employeeId={employeeId}
+        onEnrollmentChange={(value) => setIsEnrolled(value)}
+      />
+
+      <section className="rounded-3xl border border-exeer-border bg-gradient-to-b from-white to-slate-50/80 px-5 py-6 shadow-sm dark:border-[var(--border-color)] dark:from-[var(--bg-surface)] dark:to-[var(--bg-main)]">
         <AttendancePunchButton
-          attendance={todayData}
-          isLoading={isLoading}
-          onPunch={handlePunch}
+          label={punchLabel}
+          onPunch={handlePunchRequest}
+          disabled={!canPunch}
         />
-      </div>
-      <AttendanceHistorySection records={historyRecords} isLoading={isLoading} />
+        {!isEnrolled && !isLoading ? (
+          <p className="mt-2 text-center text-xs text-amber-700 dark:text-amber-300">
+            {t("pages.mobile.attendance.enrollmentRequired")}
+          </p>
+        ) : null}
+      </section>
+
+      <AttendanceOperationsSection logs={operationLogs} isLoading={isLoading} />
+
+      <AttendanceMonthlyReportSection report={monthlyReport} isLoading={isLoading} />
+
       <AdminAttendanceSettingsSection />
+
+      <AttendancePunchSelfieModal
+        isOpen={isPunchSelfieOpen}
+        onClose={() => {
+          if (!isPunching) setIsPunchSelfieOpen(false);
+        }}
+        onConfirm={handlePunchSelfieConfirm}
+        isVerifying={isPunching}
+      />
     </div>
   );
 }

@@ -37,6 +37,7 @@ import AppLoadingScreen from "./components/ui/AppLoadingScreen.jsx";
 import SentryErrorFallback from "./components/ui/SentryErrorFallback.jsx";
 import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
 import { CurrentEmployeeProvider } from "./context/CurrentEmployeeContext.jsx";
+import MobileOrientationController from "./components/mobile/MobileOrientationController.jsx";
 
 // 💡 إضافة Sentry هنا
 import * as SentryReact from "@sentry/react";
@@ -212,7 +213,9 @@ function AppRoutes() {
   }
 
   return (
-    <Routes>
+    <>
+      <MobileOrientationController />
+      <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/update-password" element={<UpdatePasswordPage />} />
       <Route
@@ -361,6 +364,7 @@ function AppRoutes() {
         }
       />
     </Routes>
+    </>
   );
 }
 

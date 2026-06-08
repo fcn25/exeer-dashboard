@@ -15,6 +15,7 @@ let package = Package(
         .package(name: "AparajitaCapacitorBiometricAuth", path: "../../../node_modules/@aparajita/capacitor-biometric-auth"),
         .package(name: "CapacitorGeolocation", path: "../../../node_modules/@capacitor/geolocation"),
         .package(name: "CapacitorKeyboard", path: "../../../node_modules/@capacitor/keyboard"),
+        .package(name: "CapacitorScreenOrientation", path: "../../../node_modules/@capacitor/screen-orientation"),
         .package(name: "SentryCapacitor", path: "../../../node_modules/@sentry/capacitor")
     ],
     targets: [
@@ -26,6 +27,7 @@ let package = Package(
                 .product(name: "AparajitaCapacitorBiometricAuth", package: "AparajitaCapacitorBiometricAuth"),
                 .product(name: "CapacitorGeolocation", package: "CapacitorGeolocation"),
                 .product(name: "CapacitorKeyboard", package: "CapacitorKeyboard"),
+                .product(name: "CapacitorScreenOrientation", package: "CapacitorScreenOrientation"),
                 .product(name: "SentryCapacitor", package: "SentryCapacitor")
             ]
         )

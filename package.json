@@ -20,6 +20,7 @@
     "@capacitor/core": "^8.4.0",
     "@capacitor/geolocation": "^8.2.0",
     "@capacitor/keyboard": "^8.0.3",
+    "@capacitor/screen-orientation": "^8.0.1",
     "@google/generative-ai": "^0.24.1",
     "@sentry/capacitor": "^4.0.0",
     "@sentry/react": "^10.43.0",

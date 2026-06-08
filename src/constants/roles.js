@@ -3,6 +3,7 @@ export const STANDARD_ROLES = [
   "Executive",
   "HR_Manager",
   "HR_Assistant",
+  "Accountant",
   "Direct_Manager",
   "Employee",
 ];
@@ -18,6 +19,7 @@ export const CONFIGURABLE_ROLES = [
   "Executive",
   "HR_Manager",
   "HR_Assistant",
+  "Accountant",
   "Direct_Manager",
 ];
 
@@ -26,8 +28,11 @@ export const DASHBOARD_ROLES = new Set([
   "Executive",
   "HR_Manager",
   "HR_Assistant",
+  "Accountant",
   "Direct_Manager",
 ]);
+
+export const PAYROLL_ONLY_ROLES = new Set(["Accountant"]);
 
 export const PORTAL_ROLES = new Set(["Employee"]);
 
@@ -37,6 +42,7 @@ export const ROLE_LABELS = {
   Executive: "تنفيذي",
   HR_Manager: "مدير موارد بشرية",
   HR_Assistant: "مساعد موارد بشرية",
+  Accountant: "محاسب",
   Direct_Manager: "مدير مباشر",
   Employee: "موظف",
 };
@@ -84,6 +90,8 @@ const ROLE_ALIASES = {
   executive_manager: "Executive",
   hr_manager: "HR_Manager",
   hr_assistant: "HR_Assistant",
+  accountant: "Accountant",
+  محاسب: "Accountant",
   direct_manager: "Direct_Manager",
   employee: "Employee",
 };
@@ -107,8 +115,20 @@ export function getHomePathForRole(role) {
 /**
  * Post-login redirect (Rule A: management → /dashboard or /mobile; Rule B: employee → /employee-portal).
  */
+export function isAccountantRole(role) {
+  return normalizeAppRole(role) === "Accountant";
+}
+
+export function isPayrollOnlyRole(role) {
+  return PAYROLL_ONLY_ROLES.has(normalizeAppRole(role));
+}
+
 export function getAuthenticatedHomePath(role, isMobile = false) {
   const normalizedRole = normalizeAppRole(role);
+
+  if (isAccountantRole(normalizedRole)) {
+    return "/dashboard/payroll";
+  }
 
   if (isManagementRole(normalizedRole)) {
     return isMobile ? "/mobile" : "/dashboard";

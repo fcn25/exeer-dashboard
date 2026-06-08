@@ -7,7 +7,10 @@ export const DASHBOARD_ROUTE_ACCESS = {
   "/dashboard/tasks": null,
   "/dashboard/employees": { permission: "can_edit_employees" },
   "/dashboard/events": { permission: "can_manage_events" },
-  "/dashboard/payroll": { ownerOnly: true },
+  "/dashboard/payroll": {
+    permission: "can_view_payroll",
+    roles: ["Accountant"],
+  },
   "/dashboard/performance": {
     permissionAny: ["can_edit_employees", "can_view_payroll"],
   },
@@ -28,12 +31,19 @@ export function resolveDashboardRouteRule(pathname) {
   return null;
 }
 
-export function canAccessDashboardRoute(pathname, { permissions, isOwner }) {
+export function canAccessDashboardRoute(
+  pathname,
+  { permissions, isOwner, role },
+) {
   if (isOwner) return true;
 
   const rule = resolveDashboardRouteRule(pathname);
   if (!rule) return true;
   if (rule.ownerOnly) return false;
+
+  const normalizedRole = String(role ?? "").trim();
+  if (rule.roles?.includes(normalizedRole)) return true;
+
   if (rule.permission) return Boolean(permissions?.[rule.permission]);
   if (rule.permissionAny?.length) {
     return rule.permissionAny.some((key) => Boolean(permissions?.[key]));

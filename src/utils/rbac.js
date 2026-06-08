@@ -1,6 +1,7 @@
 import { getCurrentEmployeeCache } from "../services/currentEmployeeService.js";
 import { getAuthUser, getUserPermissions } from "./mobileAuth.js";
 import {
+  isAccountantRole as isAccountantRoleConstant,
   isManagementRole,
   isOwnerRole,
   normalizeAppRole,
@@ -84,8 +85,22 @@ export function canAccessEmployeeProfile() {
   );
 }
 
+export function isAccountantRole(role = getCurrentUserRole()) {
+  return isAccountantRoleConstant(role);
+}
+
+/** Owner + HR roles that manage the payroll workflow (not Accountant). */
+export function isHrPayrollStaff(role = getCurrentUserRole()) {
+  const normalized = normalizeAppRole(role);
+  return (
+    isOwnerRole(normalized) ||
+    normalized === "HR_Manager" ||
+    normalized === "HR_Assistant"
+  );
+}
+
 export function canViewPayroll() {
-  return hasPermission("can_view_payroll");
+  return isAccountantRole() || hasPermission("can_view_payroll");
 }
 
 export function canManageEvents() {

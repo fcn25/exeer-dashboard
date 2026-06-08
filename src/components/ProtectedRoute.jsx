@@ -1,7 +1,7 @@
 import { Navigate, useLocation } from "react-router-dom";
 import AppLoadingScreen from "./ui/AppLoadingScreen.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
-import { normalizeAppRole } from "../constants/roles.js";
+import { isAccountantRole, normalizeAppRole } from "../constants/roles.js";
 
 function normalizeRequiredRoles(requiredRole) {
   if (!requiredRole) return [];
@@ -50,7 +50,9 @@ export function ProtectedRoute({
 
   if (requiredPermission) {
     const allowed =
-      isOwner || Boolean(permissions?.[requiredPermission]);
+      isOwner ||
+      Boolean(permissions?.[requiredPermission]) ||
+      (requiredPermission === "can_view_payroll" && isAccountantRole(role));
     if (!allowed) {
       return <Navigate to="/unauthorized" replace state={{ from: location }} />;
     }
@@ -84,7 +86,10 @@ export function PermissionGate({
   }
 
   if (permission) {
-    const allowed = isOwner || Boolean(permissions?.[permission]);
+    const allowed =
+      isOwner ||
+      Boolean(permissions?.[permission]) ||
+      (permission === "can_view_payroll" && isAccountantRole(role));
     if (!allowed) return fallback;
   }
 

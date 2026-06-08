@@ -12,17 +12,31 @@ import {
   mapPayrollRecordRow,
 } from "../utils/payroll/calculations.js";
 import { fetchDueLoanInstallmentsByEmployee } from "./payrollLoanService.js";
+import {
+  getCurrentUserRole,
+  isAccountantRole,
+  isHrPayrollStaff,
+} from "../utils/rbac.js";
 
 export const PAYROLL_SCHEMA_FIX_HINT =
   "نفّذ ملف supabase/migrations/20250624000000_payroll_records_columns.sql أو supabase/scripts/fix_payroll_records_schema.sql في Supabase SQL Editor ثم أعد تحميل Schema Cache.";
 
 export const PAYROLL_RUN_LOCKED_MESSAGE = "المسير مقفل";
+export const PAYROLL_RUN_EDIT_BLOCKED_MESSAGE = "لا يمكن التعديل في هذه الحالة";
 
 export const PAYROLL_RUN_STATUSES = {
   DRAFT: "draft",
   UNDER_REVIEW: "under_review",
+  PENDING_APPROVAL: "pending_approval",
   LOCKED: "locked",
   CANCELLED: "cancelled",
+};
+
+export const PAYROLL_RUN_STATUS_LABELS = {
+  [PAYROLL_RUN_STATUSES.UNDER_REVIEW]: "قيد المراجعة (المحاسب)",
+  [PAYROLL_RUN_STATUSES.PENDING_APPROVAL]: "بانتظار اعتماد الموارد البشرية",
+  [PAYROLL_RUN_STATUSES.LOCKED]: "مقفل",
+  [PAYROLL_RUN_STATUSES.CANCELLED]: "ملغى",
 };
 
 const PAYROLL_EMPLOYEE_FK_HINT =
@@ -57,6 +71,9 @@ function mapDbError(error) {
   const message = String(error.message ?? "");
   if (message.includes("المسير مقفل")) {
     return PAYROLL_RUN_LOCKED_MESSAGE;
+  }
+  if (message.includes("لا يمكن التعديل في هذه الحالة")) {
+    return PAYROLL_RUN_EDIT_BLOCKED_MESSAGE;
   }
   return message || "تعذّر إكمال العملية.";
 }
@@ -252,7 +269,7 @@ export async function ensureActiveEmployeesInPayroll(pickerValue) {
     return { addedCount: 0, payrollMonth: period.payrollMonth };
   }
 
-  assertPayrollRunEditable(run);
+  assertPayrollRecordsEditable(run);
 
   const isExported = payrollRows.some(
     (row) => String(row.status ?? "").trim().toLowerCase() === "exported",
@@ -339,10 +356,19 @@ export async function generatePayrollForMonth(pickerValue) {
 
   const companyId = requireCompanyId("إنشاء المسير الشهري");
   const employeeId = requireEmployeeId("إنشاء المسير الشهري");
+
+  if (isAccountantRole()) {
+    throw new Error(PAYROLL_RUN_EDIT_BLOCKED_MESSAGE);
+  }
+
   const existing = await fetchPayrollForMonth(pickerValue);
 
   if (existing.isRunLocked) {
     throw new Error(PAYROLL_RUN_LOCKED_MESSAGE);
+  }
+
+  if (existing.run) {
+    assertHrCanSyncPayroll(existing.run);
   }
 
   if (existing.hasRecords) {
@@ -517,6 +543,39 @@ export function assertPayrollRunEditable(run) {
   if (isPayrollRunLocked(run)) {
     throw new Error(PAYROLL_RUN_LOCKED_MESSAGE);
   }
+  if (run?.status === PAYROLL_RUN_STATUSES.CANCELLED) {
+    throw new Error(PAYROLL_RUN_EDIT_BLOCKED_MESSAGE);
+  }
+}
+
+export function assertAccountantCanEditPayroll(run) {
+  assertPayrollRunEditable(run);
+  if (run?.status !== PAYROLL_RUN_STATUSES.UNDER_REVIEW) {
+    throw new Error(PAYROLL_RUN_EDIT_BLOCKED_MESSAGE);
+  }
+}
+
+export function assertHrCanSyncPayroll(run) {
+  assertPayrollRunEditable(run);
+  const status = run?.status;
+  if (
+    status !== PAYROLL_RUN_STATUSES.DRAFT &&
+    status !== PAYROLL_RUN_STATUSES.UNDER_REVIEW
+  ) {
+    throw new Error(PAYROLL_RUN_EDIT_BLOCKED_MESSAGE);
+  }
+}
+
+export function assertPayrollRecordsEditable(run, role = getCurrentUserRole()) {
+  if (isAccountantRole(role)) {
+    assertAccountantCanEditPayroll(run);
+    return;
+  }
+  if (isHrPayrollStaff(role)) {
+    assertHrCanSyncPayroll(run);
+    return;
+  }
+  assertPayrollRunEditable(run);
 }
 
 function computeRunTotalsFromRecords(records) {
@@ -635,25 +694,40 @@ export async function updatePayrollRunStatus(pickerValue, nextStatus) {
     throw new Error(PAYROLL_RUN_LOCKED_MESSAGE);
   }
 
-  if (
-    target === PAYROLL_RUN_STATUSES.UNDER_REVIEW &&
-    current !== PAYROLL_RUN_STATUSES.DRAFT
-  ) {
-    throw new Error("لا يمكن إرسال المسير للمراجعة إلا من حالة مسودة.");
-  }
+  const allowedTransitions = {
+    [PAYROLL_RUN_STATUSES.DRAFT]: [PAYROLL_RUN_STATUSES.UNDER_REVIEW],
+    [PAYROLL_RUN_STATUSES.UNDER_REVIEW]: [
+      PAYROLL_RUN_STATUSES.DRAFT,
+      PAYROLL_RUN_STATUSES.PENDING_APPROVAL,
+    ],
+    [PAYROLL_RUN_STATUSES.PENDING_APPROVAL]: [
+      PAYROLL_RUN_STATUSES.LOCKED,
+      PAYROLL_RUN_STATUSES.DRAFT,
+      PAYROLL_RUN_STATUSES.UNDER_REVIEW,
+    ],
+  };
 
-  if (
-    target === PAYROLL_RUN_STATUSES.DRAFT &&
-    current !== PAYROLL_RUN_STATUSES.UNDER_REVIEW
-  ) {
-    throw new Error("لا يمكن إرجاع المسير كمسودة إلا من حالة المراجعة.");
-  }
-
-  if (
-    target === PAYROLL_RUN_STATUSES.LOCKED &&
-    current !== PAYROLL_RUN_STATUSES.UNDER_REVIEW
-  ) {
-    throw new Error("لا يمكن قفل المسير إلا بعد المراجعة.");
+  const allowed = allowedTransitions[current] ?? [];
+  if (!allowed.includes(target)) {
+    if (target === PAYROLL_RUN_STATUSES.UNDER_REVIEW) {
+      throw new Error("لا يمكن إرسال المسير للمراجعة إلا من حالة مسودة.");
+    }
+    if (target === PAYROLL_RUN_STATUSES.PENDING_APPROVAL) {
+      throw new Error(
+        "لا يمكن إرسال المسير للموارد البشرية إلا أثناء مراجعة المحاسب.",
+      );
+    }
+    if (target === PAYROLL_RUN_STATUSES.DRAFT) {
+      throw new Error(
+        "لا يمكن إرجاع المسير كمسودة إلا من المراجعة أو بانتظار الاعتماد.",
+      );
+    }
+    if (target === PAYROLL_RUN_STATUSES.LOCKED) {
+      throw new Error(
+        "لا يمكن قفل المسير إلا بعد اعتماد الموارد البشرية.",
+      );
+    }
+    throw new Error("انتقال حالة المسير غير مسموح.");
   }
 
   const payload = {

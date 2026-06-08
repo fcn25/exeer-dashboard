@@ -10,9 +10,10 @@ import {
 import { getMonthBoundsFromPicker } from "../utils/payroll/period.js";
 import { calculatePayrollNetSalary } from "../utils/payroll/netSalary.js";
 import {
-  assertPayrollRunEditable,
+  assertPayrollRecordsEditable,
   ensureActiveEmployeesInPayroll,
   fetchPayrollRunForMonth,
+  PAYROLL_RUN_EDIT_BLOCKED_MESSAGE,
   PAYROLL_RUN_LOCKED_MESSAGE,
   refreshPayrollRunTotals,
 } from "./payrollService.js";
@@ -28,6 +29,9 @@ function mapDbError(error) {
   const message = String(error.message ?? "");
   if (message.includes("المسير مقفل")) {
     return PAYROLL_RUN_LOCKED_MESSAGE;
+  }
+  if (message.includes("لا يمكن التعديل في هذه الحالة")) {
+    return PAYROLL_RUN_EDIT_BLOCKED_MESSAGE;
   }
   return message || "تعذّر مزامنة المسير.";
 }
@@ -149,7 +153,7 @@ export async function syncPayrollDeductionsForMonth(pickerValue) {
 
   const companyId = requireCompanyId("تحديث أرقام المسير");
   const run = await fetchPayrollRunForMonth(companyId, period.payrollMonth);
-  assertPayrollRunEditable(run);
+  assertPayrollRecordsEditable(run);
 
   let payrollRows = await fetchPayrollRecordsRaw(companyId, period);
   if (payrollRows.length === 0) {

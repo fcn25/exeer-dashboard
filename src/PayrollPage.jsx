@@ -6,8 +6,10 @@ import {
   exportPayrollMonth,
   fetchPayrollForMonth,
   generatePayrollForMonth,
+  PAYROLL_RUN_EDIT_BLOCKED_MESSAGE,
   PAYROLL_RUN_LOCKED_MESSAGE,
   PAYROLL_RUN_STATUSES,
+  PAYROLL_RUN_STATUS_LABELS,
   updatePayrollRunStatus,
 } from "./services/payrollService.js";
 import {
@@ -27,7 +29,9 @@ import {
   safePayrollAmount,
 } from "./utils/payroll/payrollTableConfig.js";
 import ExeerEmptyState from "./components/brand/ExeerEmptyState.jsx";
+import { useAuth } from "./context/AuthContext.jsx";
 import { useAppLocale } from "./i18n/useAppLocale.js";
+import { isAccountantRole, isHrPayrollStaff } from "./utils/rbac.js";
 
 const CARD_CLASS =
   "rounded-md border border-gray-200 bg-white p-6 shadow-none dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)]";
@@ -67,6 +71,9 @@ function StatCard({ label, value }) {
 
 export default function PayrollPage() {
   const { t } = useAppLocale();
+  const { role } = useAuth();
+  const isAccountant = isAccountantRole(role);
+  const isHrPayroll = isHrPayrollStaff(role);
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonthValue);
   const [rows, setRows] = useState([]);
   const [payrollRun, setPayrollRun] = useState(null);
@@ -84,7 +91,19 @@ export default function PayrollPage() {
   const runStatus = payrollRun?.status ?? null;
   const isRunLocked = runStatus === PAYROLL_RUN_STATUSES.LOCKED;
   const isRunCancelled = runStatus === PAYROLL_RUN_STATUSES.CANCELLED;
-  const canEditPayroll = !isRunLocked && !isRunCancelled;
+  const isUnderReview = runStatus === PAYROLL_RUN_STATUSES.UNDER_REVIEW;
+  const isPendingApproval = runStatus === PAYROLL_RUN_STATUSES.PENDING_APPROVAL;
+  const isDraftRun = runStatus === PAYROLL_RUN_STATUSES.DRAFT;
+  const canHrSync =
+    isHrPayroll &&
+    !isRunLocked &&
+    !isRunCancelled &&
+    (isDraftRun || isUnderReview);
+  const canAccountantSync =
+    isAccountant && isUnderReview && !isRunLocked && !isRunCancelled;
+  const statusBadgeLabel = runStatus
+    ? (PAYROLL_RUN_STATUS_LABELS[runStatus] ?? null)
+    : null;
 
   const loadPayroll = useCallback(async () => {
     if (!selectedMonth) return;
@@ -128,6 +147,11 @@ export default function PayrollPage() {
     setError(PAYROLL_RUN_LOCKED_MESSAGE);
   }, []);
 
+  const showEditBlockedToast = useCallback(() => {
+    setSuccessMessage("");
+    setError(PAYROLL_RUN_EDIT_BLOCKED_MESSAGE);
+  }, []);
+
   const applyPayrollResult = useCallback((result) => {
     setRows(result.rows);
     setPayrollRun(result.run ?? null);
@@ -138,9 +162,13 @@ export default function PayrollPage() {
   }, []);
 
   const handleGeneratePayroll = async () => {
-    if (!selectedMonth || hasExistingPayroll) return;
+    if (!selectedMonth || hasExistingPayroll || !isHrPayroll) return;
     if (isRunLocked) {
       showLockedToast();
+      return;
+    }
+    if (!canHrSync) {
+      showEditBlockedToast();
       return;
     }
 
@@ -163,6 +191,18 @@ export default function PayrollPage() {
     if (!selectedMonth || rows.length === 0) return;
     if (isRunLocked) {
       showLockedToast();
+      return;
+    }
+    if (isAccountant && !canAccountantSync) {
+      showEditBlockedToast();
+      return;
+    }
+    if (isHrPayroll && !canHrSync) {
+      showEditBlockedToast();
+      return;
+    }
+    if (!isAccountant && !isHrPayroll) {
+      showEditBlockedToast();
       return;
     }
 
@@ -188,7 +228,9 @@ export default function PayrollPage() {
   };
 
   const handleSubmitForReview = async () => {
-    if (!selectedMonth || !hasExistingPayroll || isRunLocked) return;
+    if (!selectedMonth || !hasExistingPayroll || !isHrPayroll || isRunLocked) {
+      return;
+    }
 
     setIsLoading(true);
     setError("");
@@ -208,8 +250,31 @@ export default function PayrollPage() {
     }
   };
 
+  const handleSubmitToHr = async () => {
+    if (!selectedMonth || !hasExistingPayroll || !isAccountant || !isUnderReview) {
+      return;
+    }
+
+    setIsLoading(true);
+    setError("");
+    setSuccessMessage("");
+
+    try {
+      const result = await updatePayrollRunStatus(
+        selectedMonth,
+        PAYROLL_RUN_STATUSES.PENDING_APPROVAL,
+      );
+      applyPayrollResult(result);
+      setSuccessMessage("تم إرسال المسير للموارد البشرية");
+    } catch (err) {
+      setError(err.message || "تعذّر إرسال المسير للموارد البشرية.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleReturnToDraft = async () => {
-    if (!selectedMonth || isRunLocked) return;
+    if (!selectedMonth || isRunLocked || !isHrPayroll) return;
 
     setIsLoading(true);
     setError("");
@@ -229,8 +294,33 @@ export default function PayrollPage() {
     }
   };
 
+  const handleReturnToAccountant = async () => {
+    if (!selectedMonth || isRunLocked || !isHrPayroll || !isPendingApproval) {
+      return;
+    }
+
+    setIsLoading(true);
+    setError("");
+    setSuccessMessage("");
+
+    try {
+      const result = await updatePayrollRunStatus(
+        selectedMonth,
+        PAYROLL_RUN_STATUSES.UNDER_REVIEW,
+      );
+      applyPayrollResult(result);
+      setSuccessMessage("تم إعادة المسير للمحاسب");
+    } catch (err) {
+      setError(err.message || "تعذّر إعادة المسير للمحاسب.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleLockRun = async () => {
-    if (!selectedMonth || isRunLocked) return;
+    if (!selectedMonth || isRunLocked || !isHrPayroll || !isPendingApproval) {
+      return;
+    }
     if (
       !window.confirm("بعد القفل لا يمكن تعديل الأرقام. متابعة؟")
     ) {
@@ -303,10 +393,24 @@ export default function PayrollPage() {
       </header>
 
       <div className="payroll-no-print space-y-4">
+        {statusBadgeLabel && !isRunLocked ? (
+          <div
+            className={`rounded-md border px-4 py-3 text-sm font-medium shadow-none ${
+              isPendingApproval
+                ? "border-indigo-200 bg-indigo-50 text-indigo-900"
+                : isUnderReview
+                  ? "border-amber-200 bg-amber-50 text-amber-900"
+                  : "border-slate-200 bg-slate-50 text-slate-700"
+            }`}
+          >
+            {statusBadgeLabel}
+          </div>
+        ) : null}
+
         {isRunLocked ? (
           <div className="flex flex-wrap items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900 shadow-none">
             <Lock className="h-4 w-4 shrink-0" aria-hidden />
-            <span>مقفل</span>
+            <span>{PAYROLL_RUN_STATUS_LABELS[PAYROLL_RUN_STATUSES.LOCKED]}</span>
             {payrollRun?.lockedAt ? (
               <span className="text-emerald-800/80">
                 — {formatLockedDate(payrollRun.lockedAt)}
@@ -315,9 +419,13 @@ export default function PayrollPage() {
           </div>
         ) : null}
 
-        {isRunCancelled ? (
-          <div className="rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700 shadow-none">
-            ملغى
+        {isAccountant && !isUnderReview && !isRunLocked && runStatus ? (
+          <div className="rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600 shadow-none">
+            {isPendingApproval
+              ? PAYROLL_RUN_STATUS_LABELS[PAYROLL_RUN_STATUSES.PENDING_APPROVAL]
+              : isDraftRun
+                ? "مسودة — بانتظار إرسال الموارد البشرية للمحاسب"
+                : statusBadgeLabel ?? "عرض للقراءة فقط"}
           </div>
         ) : null}
 
@@ -359,27 +467,29 @@ export default function PayrollPage() {
               className="min-w-[220px]"
             />
 
-            {canEditPayroll ? (
+            {isHrPayroll && canHrSync ? (
               <>
-                <div className="flex flex-col gap-1">
-                  <button
-                    type="button"
-                    onClick={handleGeneratePayroll}
-                    disabled={
-                      isLoading || !selectedMonth || hasExistingPayroll
-                    }
-                    className="md-btn-primary shadow-none"
-                  >
-                    {isLoading
-                      ? t("common.loading")
-                      : t("pages.payroll.generate")}
-                  </button>
-                  {hasExistingPayroll ? (
-                    <p className="text-xs text-slate-500">
-                      تم إنشاء مسير هذا الشهر
-                    </p>
-                  ) : null}
-                </div>
+                {isDraftRun ? (
+                  <div className="flex flex-col gap-1">
+                    <button
+                      type="button"
+                      onClick={handleGeneratePayroll}
+                      disabled={
+                        isLoading || !selectedMonth || hasExistingPayroll
+                      }
+                      className="md-btn-primary shadow-none"
+                    >
+                      {isLoading
+                        ? t("common.loading")
+                        : t("pages.payroll.generate")}
+                    </button>
+                    {hasExistingPayroll ? (
+                      <p className="text-xs text-slate-500">
+                        تم إنشاء مسير هذا الشهر
+                      </p>
+                    ) : null}
+                  </div>
+                ) : null}
 
                 <button
                   type="button"
@@ -394,7 +504,34 @@ export default function PayrollPage() {
               </>
             ) : null}
 
-            {runStatus === PAYROLL_RUN_STATUSES.DRAFT && hasExistingPayroll ? (
+            {isAccountant && canAccountantSync ? (
+              <>
+                <button
+                  type="button"
+                  onClick={handleSyncDeductions}
+                  disabled={isLoading || !selectedMonth || rows.length === 0}
+                  className="inline-flex items-center gap-2 rounded-md border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 shadow-none hover:bg-gray-50 disabled:opacity-50"
+                  title="مزامنة التأخيرات والجزاءات والقروض للشهر المعروض"
+                >
+                  <RefreshCw className="h-4 w-4" aria-hidden />
+                  {t("pages.payroll.sync")}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSubmitToHr}
+                  disabled={isLoading || !selectedMonth || rows.length === 0}
+                  className="inline-flex items-center gap-2 rounded-md border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-sm font-medium text-indigo-900 shadow-none hover:bg-indigo-100 disabled:opacity-50"
+                >
+                  إرسال للموارد البشرية
+                </button>
+              </>
+            ) : null}
+
+            {isHrPayroll &&
+            isDraftRun &&
+            hasExistingPayroll &&
+            !isRunLocked &&
+            !isRunCancelled ? (
               <button
                 type="button"
                 onClick={handleSubmitForReview}
@@ -405,7 +542,18 @@ export default function PayrollPage() {
               </button>
             ) : null}
 
-            {runStatus === PAYROLL_RUN_STATUSES.UNDER_REVIEW ? (
+            {isHrPayroll && isUnderReview ? (
+              <button
+                type="button"
+                onClick={handleReturnToDraft}
+                disabled={isLoading || !selectedMonth}
+                className="inline-flex items-center gap-2 rounded-md border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 shadow-none hover:bg-gray-50 disabled:opacity-50"
+              >
+                إرجاع كمسودة
+              </button>
+            ) : null}
+
+            {isHrPayroll && isPendingApproval ? (
               <>
                 <button
                   type="button"
@@ -414,6 +562,14 @@ export default function PayrollPage() {
                   className="inline-flex items-center gap-2 rounded-md border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 shadow-none hover:bg-gray-50 disabled:opacity-50"
                 >
                   إرجاع كمسودة
+                </button>
+                <button
+                  type="button"
+                  onClick={handleReturnToAccountant}
+                  disabled={isLoading || !selectedMonth}
+                  className="inline-flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm font-medium text-amber-900 shadow-none hover:bg-amber-100 disabled:opacity-50"
+                >
+                  إعادة للمحاسب
                 </button>
                 <button
                   type="button"

@@ -64,7 +64,11 @@
     "notifications": "Notifications",
     "toggleTheme": "Toggle theme",
     "toggleLanguage": "Change language",
-    "quickNote": "Quick note"
+    "quickNote": "Quick note",
+    "calendar": "Calendar",
+    "fingerprint": "Punch",
+    "fingerprintSettings": "Attendance settings",
+    "managerMenu": "Menu"
   },
   "auth": {
     "welcome": "Welcome back",
@@ -222,6 +226,72 @@
     "portal": {
       "title": "Employee portal",
       "subtitle": "Your tasks, requests, and performance."
+    },
+    "mobile": {
+      "attendance": {
+        "adminSettingsTitle": "Fingerprint settings",
+        "adminSettingsHint": "For authorized admins — branches, geofences, and employee assignments.",
+        "geofenceBranches": "Locations & branches",
+        "geofenceNote": "Define allowed work locations for geo-based clock-in and clock-out."
+      },
+      "recognition": {
+        "title": "Employee recognition",
+        "subtitle": "Log team achievements and browse the recognition archive",
+        "teamSection": "Your team",
+        "addAchievement": "Recognize",
+        "archiveTitle": "Achievements log",
+        "archiveEmpty": "No achievements recorded yet",
+        "success": "Achievement saved successfully",
+        "loadError": "Could not load recognition data"
+      },
+      "training": {
+        "title": "Training",
+        "subtitle": "Training requests, course history, and skills",
+        "tabsLabel": "Training sections",
+        "tabs": {
+          "new": "New request",
+          "courses": "Course log",
+          "skills": "Skills & talents"
+        },
+        "employeeLabel": "Employee",
+        "employeeOptional": "Optional — general team request",
+        "detailsLabel": "Training request details",
+        "detailsPlaceholder": "Describe training type, duration, and goals...",
+        "submit": "Send to HR",
+        "sending": "Sending...",
+        "submitSuccess": "Training request sent successfully",
+        "submitError": "Could not send training request",
+        "loadError": "Could not load training data",
+        "coursesEmpty": "No training requests yet",
+        "unknownEmployee": "Employee",
+        "addSkillTitle": "Add skill or talent",
+        "skillLabel": "Skill",
+        "skillPlaceholder": "e.g. Project management",
+        "talentLabel": "Talent / note",
+        "talentPlaceholder": "Describe strengths or additional talents...",
+        "saveSkill": "Save",
+        "skillSuccess": "Skill/talent saved",
+        "skillError": "Could not save",
+        "skillsListTitle": "Skills & talents log",
+        "skillsEmpty": "No skills or talents recorded yet"
+      },
+      "promotion": {
+        "title": "Promotion request",
+        "subtitle": "Send an HR manager request to promote an employee",
+        "employeeLabel": "Employee to promote",
+        "selectEmployee": "Select employee",
+        "reasonsLabel": "Promotion reasons",
+        "reasonsPlaceholder": "Explain performance and achievements that justify promotion...",
+        "evaluationsLabel": "Evaluation results supporting promotion",
+        "evaluationsPlaceholder": "Evaluation summary or enter results manually...",
+        "evaluationsHint": "Auto-filled from completed evaluations — you can edit before sending.",
+        "loadingEvaluations": "Loading evaluations...",
+        "submit": "Send to HR manager",
+        "sending": "Sending...",
+        "submitSuccess": "Promotion request sent successfully",
+        "submitError": "Could not send promotion request",
+        "loadTeamError": "Could not load team list"
+      }
     }
   },
   "settings": {
@@ -408,6 +478,7 @@
     "placeholder": "Write what you must not forget…",
     "loadError": "Could not load note",
     "saveError": "Could not save note",
+    "hasContent": "Saved content available",
     "colors": {
       "amber": "Yellow",
       "mint": "Green",

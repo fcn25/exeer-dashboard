@@ -64,7 +64,11 @@
     "notifications": "الإشعارات",
     "toggleTheme": "تغيير المظهر",
     "toggleLanguage": "تغيير اللغة",
-    "quickNote": "ملاحظة سريعة"
+    "quickNote": "ملاحظة سريعة",
+    "calendar": "التقويم",
+    "fingerprint": "البصمة",
+    "fingerprintSettings": "إعدادات البصمة",
+    "managerMenu": "القائمة"
   },
   "auth": {
     "welcome": "مرحباً بك",
@@ -222,6 +226,72 @@
     "portal": {
       "title": "بوابة الموظف",
       "subtitle": "مهامك وطلباتك وأداؤك."
+    },
+    "mobile": {
+      "attendance": {
+        "adminSettingsTitle": "إعدادات البصمة",
+        "adminSettingsHint": "للمديرين المخوّلين — ضبط الفروع والنطاقات الجغرافية وربط الموظفين.",
+        "geofenceBranches": "تحديد المواقع والفروع",
+        "geofenceNote": "حدّد مواقع العمل المسموح بها لتسجيل الحضور والانصراف عبر البصمة الجغرافية."
+      },
+      "recognition": {
+        "title": "تقدير الموظفين",
+        "subtitle": "سجّل إنجازات فريقك واطّلع على أرشيف التقدير",
+        "teamSection": "فريقك",
+        "addAchievement": "تقدير",
+        "archiveTitle": "سجل الإنجازات",
+        "archiveEmpty": "لا توجد إنجازات مسجّلة بعد",
+        "success": "تم تسجيل الإنجاز بنجاح",
+        "loadError": "تعذّر تحميل بيانات التقدير"
+      },
+      "training": {
+        "title": "التدريب",
+        "subtitle": "طلبات التدريب وسجل الدورات والمهارات",
+        "tabsLabel": "أقسام التدريب",
+        "tabs": {
+          "new": "طلب جديد",
+          "courses": "سجل الدورات",
+          "skills": "مهارات ومواهب"
+        },
+        "employeeLabel": "الموظف",
+        "employeeOptional": "اختياري — لطلب عام للفريق",
+        "detailsLabel": "تفاصيل طلب التدريب",
+        "detailsPlaceholder": "اذكر نوع التدريب، المدة، والهدف منه...",
+        "submit": "إرسال للموارد البشرية",
+        "sending": "جاري الإرسال...",
+        "submitSuccess": "تم إرسال طلب التدريب بنجاح",
+        "submitError": "تعذّر إرسال طلب التدريب",
+        "loadError": "تعذّر تحميل بيانات التدريب",
+        "coursesEmpty": "لا توجد طلبات تدريب مسجّلة بعد",
+        "unknownEmployee": "موظف",
+        "addSkillTitle": "إضافة مهارة أو موهبة",
+        "skillLabel": "المهارة",
+        "skillPlaceholder": "مثال: إدارة المشاريع",
+        "talentLabel": "الموهبة / الملاحظة",
+        "talentPlaceholder": "صف نقاط القوة أو المواهب الإضافية...",
+        "saveSkill": "حفظ",
+        "skillSuccess": "تم حفظ المهارة/الموهبة",
+        "skillError": "تعذّر الحفظ",
+        "skillsListTitle": "سجل المهارات والمواهب",
+        "skillsEmpty": "لم تُسجّل مهارات أو مواهب بعد"
+      },
+      "promotion": {
+        "title": "طلب ترقية",
+        "subtitle": "إرسال طلب لمدير الموارد البشرية بترقية موظف",
+        "employeeLabel": "الموظف المراد ترقيته",
+        "selectEmployee": "اختر موظفاً",
+        "reasonsLabel": "أسباب الترقية",
+        "reasonsPlaceholder": "اشرح الأداء والإنجازات التي تستحق الترقية...",
+        "evaluationsLabel": "نتائج التقييمات المساعدة على الترقية",
+        "evaluationsPlaceholder": "ملخص التقييمات أو أدخل نتائجاً يدوياً...",
+        "evaluationsHint": "يُعبَّأ تلقائياً من التقييمات المكتملة — يمكنك التعديل قبل الإرسال.",
+        "loadingEvaluations": "جاري تحميل التقييمات...",
+        "submit": "إرسال لمدير الموارد البشرية",
+        "sending": "جاري الإرسال...",
+        "submitSuccess": "تم إرسال طلب الترقية بنجاح",
+        "submitError": "تعذّر إرسال طلب الترقية",
+        "loadTeamError": "تعذّر تحميل قائمة الفريق"
+      }
     }
   },
   "settings": {
@@ -408,6 +478,7 @@
     "placeholder": "اكتب ما لا تريد نسيانه…",
     "loadError": "تعذّر تحميل الملاحظة",
     "saveError": "تعذّر حفظ الملاحظة",
+    "hasContent": "يوجد محتوى محفوظ",
     "colors": {
       "amber": "أصفر",
       "mint": "أخضر",

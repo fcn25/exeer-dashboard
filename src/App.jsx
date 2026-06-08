@@ -21,6 +21,8 @@ import AdministrativeActionsPage from "./pages/AdministrativeActionsPage.jsx";
 import MyTeamDashboard from "./pages/MyTeamDashboard.jsx";
 import MobileAdministrativeActionsPage from "./pages/mobile/MobileAdministrativeActionsPage.jsx";
 import MobilePerformancePage from "./pages/mobile/MobilePerformancePage.jsx";
+import MobileRecognitionPage from "./pages/mobile/MobileRecognitionPage.jsx";
+import MobileTrainingPage from "./pages/mobile/MobileTrainingPage.jsx";
 import MobileAttendancePage from "./pages/mobile/MobileAttendancePage.jsx";
 import MobileAttendanceSettingsPage from "./pages/mobile/MobileAttendanceSettingsPage.jsx";
 import MobileSystemCustomizationPage from "./pages/mobile/MobileSystemCustomizationPage.jsx";
@@ -272,6 +274,26 @@ function AppRoutes() {
                 <MobilePerformancePage />
               </MobileRoute>
             </PerformanceGate>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/mobile/recognition"
+        element={
+          <ProtectedRoute allowPortal>
+            <MobileRoute>
+              <MobileRecognitionPage />
+            </MobileRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/mobile/training"
+        element={
+          <ProtectedRoute allowPortal>
+            <MobileRoute>
+              <MobileTrainingPage />
+            </MobileRoute>
           </ProtectedRoute>
         }
       />

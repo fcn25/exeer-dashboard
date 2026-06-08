@@ -1,29 +1,24 @@
-import { useEffect, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { BarChart3, ChevronLeft, Fingerprint, Gavel, SlidersHorizontal } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { MoreHorizontal } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { ROLE_LABELS } from "../../../constants/roles.js";
 import { useAuth } from "../../../context/AuthContext.jsx";
-import {
-  canAccessPerformance,
-  canAccessStrategicAI,
-  canManageAdministrativeActions,
-  canManageAttendanceSettings,
-  isOwner,
-} from "../../../utils/rbac.js";
-import MobileSmartToolsGrid from "./MobileSmartToolsGrid.jsx";
+import { useCurrentEmployee } from "../../../hooks/useCurrentEmployee.js";
+import { countUnreadNotifications } from "../../../services/notificationsService.js";
+import { getMyQuickNote } from "../../../services/quickNotesService.js";
+import { signOut } from "../../../utils/mobileAuth.js";
+import SystemCalendarPanel from "../../calendar/SystemCalendarPanel.jsx";
+import QuickStickyNote from "../../notes/QuickStickyNote.jsx";
+import NotificationsDrawer from "../NotificationsDrawer.jsx";
+import MobileSettingsDrawer from "../MobileSettingsDrawer.jsx";
 import SuccessToast from "../../ui/SuccessToast.jsx";
 import ErrorToast from "../../ui/ErrorToast.jsx";
 import CompactMobileAppBar from "./CompactMobileAppBar.jsx";
-import AttendanceHorizontalWidget from "./AttendanceHorizontalWidget.jsx";
-import BentoStatGrid from "./BentoStatGrid.jsx";
-import MobileTabBar from "./MobileTabBar.jsx";
-import MobileTabPanels from "./MobileTabPanels.jsx";
-import MobileFab from "./MobileFab.jsx";
-import {
-  ADMIN_FAB_ACTIONS,
-  ADMIN_TABS,
-} from "./mobileDashboardConfig.js";
+import MobileManagerBottomNav from "./MobileManagerBottomNav.jsx";
+import MobileManagerHomeContent from "./MobileManagerHomeContent.jsx";
+import MobileManagerMenuSheet from "./MobileManagerMenuSheet.jsx";
+import MobileManagerAttendanceTab from "./MobileManagerAttendanceTab.jsx";
 
 export default function AdminMobileDashboard({
   employeeName,
@@ -32,18 +27,56 @@ export default function AdminMobileDashboard({
   dashboardData,
   isLoading,
   error,
+  onRefresh,
 }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { i18n } = useTranslation();
   const { user } = useAuth();
+  const { employeeId, authUserId } = useCurrentEmployee();
   const pageDir = i18n.language?.startsWith("en") ? "ltr" : "rtl";
   const pageLang = i18n.language?.startsWith("en") ? "en" : "ar";
 
-  const [activeTab, setActiveTab] = useState("requests");
-  const [isFabOpen, setIsFabOpen] = useState(false);
+  const [activeNav, setActiveNav] = useState("home");
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [isStickyNoteOpen, setIsStickyNoteOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [hasQuickNote, setHasQuickNote] = useState(false);
   const [successToast, setSuccessToast] = useState("");
   const [errorToast, setErrorToast] = useState("");
+
+  const resolvedRole = dashboardData?.employee?.role ?? role ?? user?.role;
+  const roleLabel = ROLE_LABELS[resolvedRole] ?? resolvedRole ?? "مدير النظام";
+  const displayName =
+    dashboardData?.employee?.full_name ?? employeeName ?? user?.name ?? "مدير";
+
+  const refreshUnreadCount = useCallback(async () => {
+    if (!authUserId) {
+      setUnreadCount(0);
+      return;
+    }
+    try {
+      setUnreadCount(await countUnreadNotifications(authUserId));
+    } catch {
+      // silent
+    }
+  }, [authUserId]);
+
+  const refreshQuickNoteState = useCallback(async () => {
+    try {
+      const note = await getMyQuickNote();
+      setHasQuickNote(Boolean(String(note?.content ?? "").trim()));
+    } catch {
+      // silent
+    }
+  }, []);
+
+  useEffect(() => {
+    refreshUnreadCount();
+    refreshQuickNoteState();
+  }, [refreshUnreadCount, refreshQuickNoteState]);
 
   useEffect(() => {
     const message = location.state?.unauthorizedToast;
@@ -52,154 +85,113 @@ export default function AdminMobileDashboard({
     navigate(location.pathname, { replace: true, state: {} });
   }, [location.pathname, location.state, navigate]);
 
-  const resolvedRole = dashboardData?.employee?.role ?? role ?? user?.role;
-  const roleLabel = ROLE_LABELS[resolvedRole] ?? resolvedRole ?? "مدير النظام";
-  const displayName =
-    dashboardData?.employee?.full_name ?? employeeName ?? user?.name ?? "مدير";
+  const handleNavChange = (id) => {
+    if (id === "settings") {
+      setIsSettingsOpen(true);
+      return;
+    }
+    setActiveNav(id);
+  };
 
-  const handleFabAction = (actionId) => {
-    if (actionId === "admin-action") {
-      navigate("/mobile/administrative-actions");
-      return;
-    }
-    if (actionId === "launch-eval") {
-      navigate("/mobile/performance");
-      return;
-    }
-    const labels = {
-      "new-request": "فتح نموذج طلب جديد",
-      "add-task": "فتح نموذج إضافة مهمة",
-    };
-    setSuccessToast(labels[actionId] ?? "تم اختيار الإجراء");
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/login", { replace: true });
+  };
+
+  const handleRefreshHome = async () => {
+    await onRefresh?.();
+    await refreshQuickNoteState();
   };
 
   return (
     <div
       dir={pageDir}
       lang={pageLang}
-      className="native-mobile-shell native-mobile-shell--tabbed mx-auto min-h-screen w-full max-w-[480px] bg-gray-50/80 font-sans text-exeer-primary"
+      className="native-mobile-shell native-mobile-shell--bottom-nav mx-auto min-h-screen w-full max-w-[480px] bg-md-surface-dim font-sans text-exeer-primary dark:bg-[var(--bg-main)] dark:text-[var(--text-primary)]"
     >
       <CompactMobileAppBar
+        variant="manager"
         employeeName={displayName}
         roleLabel={roleLabel}
         profileImageUrl={profileImageUrl}
+        menuButton={
+          <button
+            type="button"
+            onClick={() => setIsMenuOpen(true)}
+            aria-label={i18n.t("nav.managerMenu")}
+            className="flex h-9 w-9 items-center justify-center rounded-full text-exeer-primary transition-colors hover:bg-exeer-hover dark:text-[var(--text-primary)] dark:hover:bg-[var(--bg-surface-hover)]"
+          >
+            <MoreHorizontal className="h-5 w-5 stroke-[1.75]" aria-hidden />
+          </button>
+        }
       />
 
       <main className="space-y-4 px-4 py-4">
         {error ? (
-          <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
             {error}
           </p>
         ) : null}
 
-        <AttendanceHorizontalWidget
-          attendance={dashboardData?.attendance}
-          isLoading={isLoading}
-        />
-        <BentoStatGrid stats={dashboardData?.bentoStats} isLoading={isLoading} />
+        {activeNav === "home" ? (
+          <MobileManagerHomeContent
+            homeEssentials={dashboardData?.homeEssentials}
+            isLoading={isLoading}
+            onRefresh={handleRefreshHome}
+          />
+        ) : null}
 
-        {canAccessStrategicAI() ? <MobileSmartToolsGrid /> : null}
-
-        {(isOwner() ||
-          canManageAttendanceSettings() ||
-          canManageAdministrativeActions() ||
-          canAccessPerformance()) ? (
-          <div className="grid grid-cols-2 gap-3">
-            {isOwner() ? (
-              <Link
-                to="/mobile/settings/system"
-                className="col-span-2 flex items-center gap-2.5 rounded-2xl border border-gray-100 bg-white p-3.5 shadow-sm transition-colors hover:bg-gray-50"
-              >
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 text-exeer-primary">
-                  <SlidersHorizontal className="h-4 w-4" aria-hidden />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-xs font-bold">
-                    {i18n.t("nav.systemCustomization")}
-                  </span>
-                  <span className="block text-[11px] text-exeer-muted">
-                    {i18n.t("systemCustomization.subtitle")}
-                  </span>
-                </span>
-                <ChevronLeft className="h-3.5 w-3.5 shrink-0 text-exeer-muted" aria-hidden />
-              </Link>
-            ) : null}
-            {canManageAttendanceSettings() ? (
-              <Link
-                to="/mobile/attendance/settings"
-                className="col-span-2 flex items-center gap-2.5 rounded-2xl border border-gray-100 bg-white p-3.5 shadow-sm transition-colors hover:bg-gray-50"
-              >
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 text-exeer-primary">
-                  <Fingerprint className="h-4 w-4" aria-hidden />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-xs font-bold">إعدادات البصمة والمواقع</span>
-                  <span className="block text-[11px] text-exeer-muted">
-                    الفروع، النطاقات، وربط الموظفين
-                  </span>
-                </span>
-                <ChevronLeft className="h-3.5 w-3.5 shrink-0 text-exeer-muted" aria-hidden />
-              </Link>
-            ) : null}
-            {canManageAdministrativeActions() ? (
-              <Link
-                to="/mobile/administrative-actions"
-                className="flex items-center gap-2.5 rounded-2xl border border-gray-100 bg-white p-3.5 shadow-sm transition-colors hover:bg-gray-50"
-              >
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 text-exeer-primary">
-                  <Gavel className="h-4 w-4" aria-hidden />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-xs font-bold">إجراءات إدارية</span>
-                </span>
-                <ChevronLeft className="h-3.5 w-3.5 shrink-0 text-exeer-muted" aria-hidden />
-              </Link>
-            ) : null}
-            {canAccessPerformance() ? (
-              <Link
-                to="/mobile/performance"
-                className="flex items-center gap-2.5 rounded-2xl border border-gray-100 bg-white p-3.5 shadow-sm transition-colors hover:bg-gray-50"
-              >
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 text-exeer-primary">
-                  <BarChart3 className="h-4 w-4" aria-hidden />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-xs font-bold">قياس الأداء</span>
-                </span>
-                <ChevronLeft className="h-3.5 w-3.5 shrink-0 text-exeer-muted" aria-hidden />
-              </Link>
-            ) : null}
+        {activeNav === "calendar" ? (
+          <div className="-mx-4 overflow-hidden rounded-2xl border border-exeer-border dark:border-[var(--border-color)]">
+            <SystemCalendarPanel embedded onClose={() => setActiveNav("home")} />
           </div>
         ) : null}
 
-        <MobileTabBar
-          tabs={ADMIN_TABS}
-          activeTab={activeTab}
-          onChange={setActiveTab}
-        />
-
-        <MobileTabPanels
-          activeTab={activeTab}
-          data={dashboardData?.tabData}
-          isLoading={isLoading}
-        />
+        {activeNav === "attendance" ? (
+          <MobileManagerAttendanceTab employeeId={employeeId} />
+        ) : null}
       </main>
 
-      <MobileFab
-        isOpen={isFabOpen}
-        onToggle={() => setIsFabOpen((open) => !open)}
-        actions={ADMIN_FAB_ACTIONS}
-        onAction={handleFabAction}
+      <MobileManagerBottomNav
+        activeId={isSettingsOpen ? "settings" : activeNav}
+        onChange={handleNavChange}
       />
 
-      <SuccessToast
-        message={successToast}
-        onDismiss={() => setSuccessToast("")}
+      <MobileManagerMenuSheet
+        isOpen={isMenuOpen}
+        onClose={() => setIsMenuOpen(false)}
+        unreadCount={unreadCount}
+        hasQuickNote={hasQuickNote}
+        onOpenNotifications={() => setIsNotificationsOpen(true)}
+        onOpenQuickNote={() => setIsStickyNoteOpen(true)}
+        onLogout={handleSignOut}
       />
-      <ErrorToast
-        message={errorToast}
-        onDismiss={() => setErrorToast("")}
+
+      <NotificationsDrawer
+        isOpen={isNotificationsOpen}
+        onClose={() => setIsNotificationsOpen(false)}
+        userId={authUserId}
+        onUnreadChange={setUnreadCount}
       />
+
+      <MobileSettingsDrawer
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        employeeId={employeeId}
+        fullName={displayName}
+        imageUrl={profileImageUrl}
+      />
+
+      <QuickStickyNote
+        isOpen={isStickyNoteOpen}
+        onClose={() => {
+          setIsStickyNoteOpen(false);
+          refreshQuickNoteState();
+        }}
+      />
+
+      <SuccessToast message={successToast} onDismiss={() => setSuccessToast("")} />
+      <ErrorToast message={errorToast} onDismiss={() => setErrorToast("")} />
     </div>
   );
 }

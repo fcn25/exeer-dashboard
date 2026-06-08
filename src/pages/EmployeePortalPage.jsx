@@ -312,7 +312,10 @@ export default function EmployeePortalPage() {
     return (
       <>
         {isDashboardUser ? (
-          <AdminMobileDashboard {...dashboardProps} />
+          <AdminMobileDashboard
+            {...dashboardProps}
+            onRefresh={loadMobileDashboard}
+          />
         ) : (
           <EmployeeMobileDashboard
             {...dashboardProps}

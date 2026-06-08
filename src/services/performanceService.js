@@ -667,6 +667,77 @@ function mapCompletedEvaluationRow(row, employeeLookup) {
   };
 }
 
+export async function listCompletedEvaluationSummariesForEmployee(employeeId) {
+  const companyId = getCompanyId();
+  const empId = Number(employeeId);
+  if (!empId) return "";
+
+  const lines = [];
+
+  const { data: responses, error: responsesError } = await supabase
+    .from("evaluation_responses")
+    .select(
+      `
+      id,
+      answers,
+      completed_at,
+      evaluation_cycles ( name )
+    `,
+    )
+    .eq("company_id", companyId)
+    .eq("employee_id", empId)
+    .eq("status", "completed")
+    .order("completed_at", { ascending: false })
+    .limit(5);
+
+  if (!responsesError && responses?.length) {
+    responses.forEach((row, index) => {
+      const answers =
+        row.answers && typeof row.answers === "object" ? row.answers : {};
+      const cycleName = row.evaluation_cycles?.name ?? "دورة تقييم";
+      const score =
+        calculateDynamicEvaluationScore(getLegacyDefaultQuestions(), answers) ??
+        calculateEvaluationScore(answers);
+      const comments = String(answers.general_comments ?? "").trim();
+
+      lines.push(`${index + 1}. ${cycleName}`);
+      if (score != null) lines.push(`   المتوسط: ${score} / 5`);
+      if (comments) lines.push(`   ملاحظات: ${comments}`);
+    });
+  }
+
+  const { data: legacyRows, error: legacyError } = await supabase
+    .from("employee_evaluations")
+    .select(
+      "id, score, answers, updated_at, evaluation_cycles ( name )",
+    )
+    .eq("company_id", companyId)
+    .eq("evaluated_employee_id", empId)
+    .eq("status", "Completed")
+    .order("updated_at", { ascending: false })
+    .limit(5);
+
+  if (!legacyError && legacyRows?.length) {
+    legacyRows.forEach((row, index) => {
+      const answers =
+        row.answers && typeof row.answers === "object" ? row.answers : {};
+      const cycleName = row.evaluation_cycles?.name ?? "تقييم سابق";
+      const comments = String(answers.general_comments ?? "").trim();
+      const offset = lines.length;
+
+      lines.push(`${offset + index + 1}. ${cycleName} (سجل قديم)`);
+      if (row.score != null) lines.push(`   المتوسط: ${Number(row.score)} / 5`);
+      if (comments) lines.push(`   ملاحظات: ${comments}`);
+    });
+  }
+
+  if (!lines.length) {
+    return "لا توجد تقييمات مكتملة لهذا الموظف — يمكنك إدخال ملخص يدوياً.";
+  }
+
+  return lines.join("\n");
+}
+
 export async function fetchCompletedEvaluationsForCycle(cycleId) {
   const responses = await fetchCompletedResponsesForCycle(cycleId);
   if (responses.length > 0) return responses;

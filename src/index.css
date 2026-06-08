@@ -93,9 +93,14 @@ body {
   min-height: calc(100dvh - var(--safe-top) - var(--safe-bottom));
 }
 
-.cap-native .native-mobile-shell--tabbed {
-  /* Tab bar clearance; #root already applies --safe-bottom for the home indicator */
-  padding-bottom: 7rem;
+.cap-native .native-mobile-shell--tabbed,
+.cap-native .native-mobile-shell--bottom-nav {
+  /* Bottom nav clearance; #root already applies --safe-bottom for the home indicator */
+  padding-bottom: 5.5rem;
+}
+
+.native-mobile-shell--bottom-nav {
+  padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
 }
 
 .cap-native header.sticky,

@@ -23,6 +23,7 @@ import {
 } from "./performanceService.js";
 import { fetchAdministrativeActionsMasterLog } from "./administrativeActionsService.js";
 import { fetchEmployeeProfileById } from "./employeeProfileService.js";
+import { fetchHomeDashboardData } from "./homeDashboardService.js";
 
 const PENDING_REQUEST_STATUSES = ["Pending", "In_Review"];
 
@@ -215,42 +216,21 @@ export async function fetchEmployeeMobileDashboard(employeeId) {
 }
 
 export async function fetchAdminMobileDashboard(employeeId) {
-  const [
-    bentoStats,
-    requests,
-    tasks,
-    evaluations,
-    logs,
-    attendance,
-    employee,
-  ] = await Promise.all([
-    fetchAdminBentoStats(),
-    listCompanyRequests({ limit: 50 }),
-    listTasks(),
-    listCompanyPendingEvaluations({ limit: 50 }),
-    fetchAdministrativeActionsMasterLog(),
-    employeeId
-      ? fetchTodayAttendanceForEmployee(employeeId)
-      : Promise.resolve(buildTodayAttendanceSummary(null)),
+  const [homeEssentialsRaw, employee] = await Promise.all([
+    fetchHomeDashboardData({ includePayroll: false }).catch(() => null),
     employeeId
       ? fetchEmployeeProfileById(employeeId)
       : Promise.resolve(null),
   ]);
 
-  const pendingTasks = ensureArray(tasks).filter((task) =>
-    isPendingTask(task.status),
-  );
-
   return {
     employee,
-    attendance,
-    bentoStats,
-    tabData: {
-      requests: requests.map((row) => mapRequestRow(row)),
-      tasks: pendingTasks.slice(0, 50).map(mapTaskRow),
-      evaluations: evaluations.map(mapEvaluationRow),
-      logs: logs.slice(0, 50).map(mapLogRow),
-    },
+    homeEssentials: homeEssentialsRaw
+      ? {
+          actionItems: homeEssentialsRaw.actionItems ?? [],
+          emergencyAlerts: homeEssentialsRaw.emergencyAlerts ?? null,
+        }
+      : { actionItems: [], emergencyAlerts: null },
   };
 }
 

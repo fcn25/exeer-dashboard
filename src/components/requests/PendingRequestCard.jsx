@@ -28,10 +28,10 @@ export default function PendingRequestCard({
           <ClipboardList className="h-4 w-4" aria-hidden />
         </span>
         <div className="min-w-0 text-start">
-          <p className="text-[14px] font-medium text-[#0F172A]">
+          <p className="text-[14px] font-medium text-[#0F172A] dark:text-[var(--text-primary)]">
             {employeeName ?? "موظف"} — {typeLabel}
           </p>
-          <p className="mt-0.5 text-[12px] text-[#94A3B8]">
+          <p className="mt-0.5 text-[12px] text-[#94A3B8] dark:text-[var(--text-secondary)]">
             {formatLocaleDate(request.created_at, {
               year: "numeric",
               month: "short",
@@ -40,7 +40,7 @@ export default function PendingRequestCard({
               minute: "2-digit",
             })}
           </p>
-          <pre className="mt-2 whitespace-pre-wrap font-sans text-[13px] leading-relaxed text-[#334155]">
+          <pre className="mt-2 whitespace-pre-wrap font-sans text-[13px] leading-relaxed text-[#334155] dark:text-[var(--text-primary)]">
             {summary}
           </pre>
         </div>
@@ -61,7 +61,7 @@ export default function PendingRequestCard({
             type="button"
             disabled={isActing}
             onClick={() => onReject?.(request.id)}
-            className={`${HOME_BTN} inline-flex items-center gap-1.5 rounded-full border border-[#E2E8F0] bg-white px-4 py-2 text-[13px] font-medium text-[#0F172A] hover:bg-[#F8FAFC] disabled:opacity-50`}
+            className={`${HOME_BTN} inline-flex items-center gap-1.5 rounded-full border border-[#E2E8F0] bg-white px-4 py-2 text-[13px] font-medium text-[#0F172A] hover:bg-[#F8FAFC] disabled:opacity-50 dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)] dark:text-[var(--text-primary)] dark:hover:bg-[var(--bg-surface-hover)]`}
           >
             <X className="h-4 w-4" aria-hidden />
             رفض

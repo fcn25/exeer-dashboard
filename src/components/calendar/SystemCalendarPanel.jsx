@@ -89,7 +89,7 @@ function DayCell({ date, isSelected, isToday, events, onSelect }) {
   );
 }
 
-export default function SystemCalendarPanel({ onClose }) {
+export default function SystemCalendarPanel({ onClose, embedded = false }) {
   const { t, dir } = useAppLocale();
   const today = todayIsoDate();
 
@@ -206,29 +206,37 @@ export default function SystemCalendarPanel({ onClose }) {
   return (
     <aside
       dir={dir}
-      className="sticky top-0 flex w-full max-w-[420px] shrink-0 self-stretch flex-col border-s border-exeer-border bg-md-surface dark:border-slate-700 dark:bg-slate-900"
+      className={`flex w-full flex-col bg-md-surface dark:bg-[var(--bg-surface)] ${
+        embedded
+          ? "max-w-none border-0"
+          : "sticky top-0 max-w-[420px] shrink-0 self-stretch border-s border-exeer-border dark:border-[var(--border-color)]"
+      }`}
       aria-label={t("calendar.title")}
     >
-      <div className="flex items-center justify-between gap-3 border-b border-exeer-border px-4 py-3 dark:border-slate-700">
+      <div className="flex items-center justify-between gap-3 border-b border-exeer-border px-4 py-3 dark:border-[var(--border-color)]">
         <div className="flex min-w-0 items-center gap-2">
-          <span className="flex h-9 w-9 items-center justify-center rounded-md bg-exeer-surface dark:bg-slate-800">
-            <CalendarDays className="h-5 w-5 text-exeer-primary" aria-hidden />
+          <span className="flex h-9 w-9 items-center justify-center rounded-md bg-exeer-surface dark:bg-[var(--bg-surface-hover)]">
+            <CalendarDays className="h-5 w-5 text-exeer-primary dark:text-[var(--text-primary)]" aria-hidden />
           </span>
           <div className="min-w-0">
-            <h2 className="truncate text-sm font-bold text-exeer-primary">
+            <h2 className="truncate text-sm font-bold text-exeer-primary dark:text-[var(--text-primary)]">
               {t("calendar.title")}
             </h2>
-            <p className="truncate text-xs text-exeer-muted">{t("calendar.subtitle")}</p>
+            <p className="truncate text-xs text-exeer-muted dark:text-[var(--text-secondary)]">
+              {t("calendar.subtitle")}
+            </p>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={onClose}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-exeer-border text-exeer-muted transition-colors hover:bg-exeer-hover dark:border-slate-600"
-          aria-label={t("common.close")}
-        >
-          <X className="h-4 w-4" aria-hidden />
-        </button>
+        {!embedded ? (
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-exeer-border text-exeer-muted transition-colors hover:bg-exeer-hover dark:border-[var(--border-color)] dark:text-[var(--text-secondary)] dark:hover:bg-[var(--bg-surface-hover)]"
+            aria-label={t("common.close")}
+          >
+            <X className="h-4 w-4" aria-hidden />
+          </button>
+        ) : null}
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-4">

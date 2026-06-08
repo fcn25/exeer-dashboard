@@ -145,4 +145,72 @@ export async function submitManagerHrRequest({
   });
 }
 
+function resolveHrRequestKindLabel(requestKind) {
+  return (
+    MANAGER_HR_REQUEST_TYPES.find((item) => item.id === requestKind)?.label ??
+    requestKind
+  );
+}
+
+export async function listManagerHrRequestsByKind(requestKind, { limit = 50 } = {}) {
+  const companyId = getCompanyId();
+  const kindLabel = resolveHrRequestKindLabel(requestKind);
+  const marker = `[${kindLabel}]`;
+
+  const { data, error } = await supabase
+    .from("requests")
+    .select(
+      "id, employee_id, details, status, created_at, employees ( full_name )",
+    )
+    .eq("company_id", companyId)
+    .ilike("details", `${marker}%`)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    const { data: fallback, error: fallbackError } = await supabase
+      .from("requests")
+      .select("id, employee_id, details, status, created_at")
+      .eq("company_id", companyId)
+      .ilike("details", `${marker}%`)
+      .order("created_at", { ascending: false })
+      .limit(limit);
+
+    if (fallbackError) throw new Error(mapDbError(fallbackError));
+    return fallback ?? [];
+  }
+
+  return data ?? [];
+}
+
+export async function submitPromotionRequest({
+  employeeId,
+  employeeName,
+  promotionReasons,
+  evaluationResults,
+}) {
+  const trimmedReasons = String(promotionReasons ?? "").trim();
+  const trimmedEvaluations = String(evaluationResults ?? "").trim();
+  const resolvedName = String(employeeName ?? "").trim() || "موظف";
+
+  if (!employeeId) throw new Error("اختر الموظف المراد ترقيته.");
+  if (!trimmedReasons) throw new Error("أسباب الترقية مطلوبة.");
+
+  const details = [
+    `الموظف: ${resolvedName}`,
+    "",
+    "أسباب الترقية:",
+    trimmedReasons,
+    "",
+    "نتائج التقييمات المساعدة على الترقية:",
+    trimmedEvaluations || "—",
+  ].join("\n");
+
+  return submitManagerHrRequest({
+    requestKind: "promotion",
+    details,
+    employeeId,
+  });
+}
+
 export { REQUEST_STATUS_LABELS };

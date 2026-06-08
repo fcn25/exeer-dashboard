@@ -74,6 +74,8 @@
     "welcome": "Welcome back",
     "email": "Email",
     "password": "Password",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
     "forgotPassword": "Forgot password?",
     "signIn": "Sign in",
     "signingIn": "Signing in...",

@@ -33,7 +33,7 @@ export const HOME_TEXT_HINT =
   "text-[#94A3B8] dark:text-[var(--text-secondary)] dark:font-normal";
 
 export const HOME_BTN_PRIMARY =
-  "rounded-full bg-[#0F172A] px-4 py-2 text-[13px] font-medium text-white hover:opacity-90 dark:bg-[var(--accent-color)] dark:text-[#131314] dark:font-semibold dark:hover:brightness-105";
+  "rounded-full bg-[#0F172A] px-4 py-2 text-[13px] font-medium text-white hover:opacity-90 dark:bg-[var(--accent-on-dark-bg)] dark:text-[var(--text-primary)] dark:font-semibold dark:hover:brightness-105";
 
 export const HOME_BTN_SECONDARY =
   "inline-flex items-center gap-1.5 rounded-full border border-[#E2E8F0] bg-white px-4 py-2 text-[13px] font-medium text-[#0F172A] hover:bg-[#F8FAFC] dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)] dark:text-[var(--text-primary)] dark:font-medium dark:hover:bg-[var(--bg-surface-hover)]";

@@ -7,6 +7,7 @@ import { signInWithEmail, signUpCompany, SIGNUP_SUCCESS_MESSAGE } from "./servic
 import { formatErrorMessage } from "./utils/formatErrorMessage.js";
 import ExeerLogo from "./components/brand/ExeerLogo.jsx";
 import AuthLanguageToggle from "./components/auth/AuthLanguageToggle.jsx";
+import PasswordInput from "./components/auth/PasswordInput.jsx";
 import { useAppLocale } from "./i18n/useAppLocale.js";
 
 const INPUT_CLASS = "md-input";
@@ -166,9 +167,8 @@ function LoginView({
           >
             {t("auth.password")}
           </label>
-          <input
+          <PasswordInput
             id="login-password"
-            type="password"
             autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -329,9 +329,8 @@ function SignupView({ onLogin }) {
           >
             {t("auth.password")}
           </label>
-          <input
+          <PasswordInput
             id="signup-password"
-            type="password"
             autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}

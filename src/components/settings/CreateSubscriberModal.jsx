@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Plus, X } from "lucide-react";
 import { signUpCompany, SIGNUP_SUCCESS_MESSAGE } from "../../services/authService.js";
 import { formatErrorMessage } from "../../utils/formatErrorMessage.js";
+import PasswordInput from "../auth/PasswordInput.jsx";
 
 const EMPTY_FORM = {
   companyName: "",
@@ -144,16 +145,14 @@ export default function CreateSubscriberModal({ isOpen, onClose }) {
                 <label htmlFor="subscriber-password" className="md-label block">
                   كلمة المرور
                 </label>
-                <input
+                <PasswordInput
                   id="subscriber-password"
-                  type="password"
                   autoComplete="new-password"
                   value={form.password}
                   onChange={(e) =>
                     setForm((prev) => ({ ...prev, password: e.target.value }))
                   }
                   disabled={isSaving}
-                  required
                   minLength={6}
                   className="md-input"
                 />

@@ -96,7 +96,8 @@ export function mapPayrollRecordRow(row) {
     payrollMonth: row.payroll_month,
     basic: Number(row.basic_salary) || 0,
     housing: Number(row.housing_allowance) || 0,
-    allowances: Number(row.other_allowances) || 0,
+    transport: Number(row.transport_allowance) || 0,
+    allowances: Number(row.other_allowances ?? row.allowances) || 0,
     commissions: Number(row.commissions) || 0,
     additional: Number(row.additional) || 0,
     penalties:
@@ -109,6 +110,10 @@ export function mapPayrollRecordRow(row) {
     loans: Number(row.loan_deductions) || 0,
     net: Number(row.net_salary ?? row.net) || 0,
     status: normalizePayrollStatus(row.status),
+    employeeMeta: {
+      is_saudi: row.employees?.is_saudi ?? null,
+      nationality: row.employees?.nationality ?? null,
+    },
   };
 }
 

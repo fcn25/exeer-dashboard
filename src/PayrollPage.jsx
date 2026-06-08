@@ -1,11 +1,23 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { FileSpreadsheet, History, Lock, Printer, RefreshCw } from "lucide-react";
+import {
+  ClipboardList,
+  FileSpreadsheet,
+  History,
+  Lock,
+  Printer,
+  RefreshCw,
+} from "lucide-react";
+import PayrollChangeLogModal from "./components/payroll/PayrollChangeLogModal.jsx";
+import PayrollChangeLogPanel from "./components/payroll/PayrollChangeLogPanel.jsx";
+import PayrollEditableCell from "./components/payroll/PayrollEditableCell.jsx";
 import PayrollHistoryModal from "./components/payroll/PayrollHistoryModal.jsx";
 import { MonthInput } from "./components/ui/DateInput.jsx";
 import {
   exportPayrollMonth,
+  fetchPayrollChangeLogForRun,
   fetchPayrollForMonth,
   generatePayrollForMonth,
+  saveAccountantPayrollRecordField,
   PAYROLL_RUN_EDIT_BLOCKED_MESSAGE,
   PAYROLL_RUN_LOCKED_MESSAGE,
   PAYROLL_RUN_STATUSES,
@@ -22,13 +34,15 @@ import {
 } from "./utils/payroll/calculations.js";
 import { downloadPayrollAccountingExcel } from "./utils/payroll/exportPayrollAccountingExcel.js";
 import {
+  ACCOUNTANT_EDITABLE_COLUMN_KEYS,
+  buildPayrollDetailColumns,
   formatPayrollCurrency,
   PAYROLL_DEDUCTION_KEYS,
-  PAYROLL_DETAIL_COLUMNS,
   PAYROLL_HEADER_TONE_CLASS,
   safePayrollAmount,
 } from "./utils/payroll/payrollTableConfig.js";
 import ExeerEmptyState from "./components/brand/ExeerEmptyState.jsx";
+import { useCompanySettings } from "./context/CompanySettingsContext.jsx";
 import { useAuth } from "./context/AuthContext.jsx";
 import { useAppLocale } from "./i18n/useAppLocale.js";
 import { isAccountantRole, isHrPayrollStaff } from "./utils/rbac.js";
@@ -85,6 +99,18 @@ export default function PayrollPage() {
   const [successMessage, setSuccessMessage] = useState("");
   const [hasLoaded, setHasLoaded] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isChangeLogOpen, setIsChangeLogOpen] = useState(false);
+  const [changeLogEntries, setChangeLogEntries] = useState([]);
+  const [isChangeLogLoading, setIsChangeLogLoading] = useState(false);
+  const [changeLogError, setChangeLogError] = useState("");
+  const [savingCellKey, setSavingCellKey] = useState("");
+
+  const { getSetting } = useCompanySettings();
+  const showTransportColumn = Boolean(getSetting("transport_allowance_enabled"));
+  const detailColumns = useMemo(
+    () => buildPayrollDetailColumns({ showTransport: showTransportColumn }),
+    [showTransportColumn],
+  );
 
   const payrollMonthLabel = formatPayrollMonthFromPicker(selectedMonth);
   const stats = useMemo(() => computePayrollStats(rows), [rows]);
@@ -114,6 +140,8 @@ export default function PayrollPage() {
     (isDraftRun || isUnderReview);
   const canAccountantSync =
     isAccountant && isUnderReview && !isRunLocked && !isRunCancelled;
+  const canAccountantEditInline = canAccountantSync;
+  const hasChangeLogEntries = changeLogEntries.length > 0;
   const statusBadgeLabel = runStatus
     ? (PAYROLL_RUN_STATUS_LABELS[runStatus] ?? null)
     : null;
@@ -148,6 +176,61 @@ export default function PayrollPage() {
   useEffect(() => {
     loadPayroll();
   }, [loadPayroll]);
+
+  const loadChangeLog = useCallback(async () => {
+    if (!payrollRun?.id) {
+      setChangeLogEntries([]);
+      setChangeLogError("");
+      return;
+    }
+
+    setIsChangeLogLoading(true);
+    setChangeLogError("");
+
+    try {
+      const entries = await fetchPayrollChangeLogForRun(payrollRun.id);
+      setChangeLogEntries(entries);
+    } catch (err) {
+      setChangeLogEntries([]);
+      setChangeLogError(err.message || "تعذّر تحميل سجل التعديلات.");
+    } finally {
+      setIsChangeLogLoading(false);
+    }
+  }, [payrollRun?.id]);
+
+  useEffect(() => {
+    loadChangeLog();
+  }, [loadChangeLog]);
+
+  const handleCellSave = async (row, columnKey, nextValue) => {
+    if (!canAccountantEditInline) {
+      showEditBlockedToast();
+      return;
+    }
+
+    const cellKey = `${row.id}:${columnKey}`;
+    setSavingCellKey(cellKey);
+    setError("");
+
+    try {
+      const updatedRow = await saveAccountantPayrollRecordField({
+        pickerValue: selectedMonth,
+        recordId: row.id,
+        fieldKey: columnKey,
+        value: nextValue,
+      });
+
+      setRows((current) =>
+        current.map((item) => (item.id === row.id ? updatedRow : item)),
+      );
+      await loadChangeLog();
+      setSuccessMessage("تم حفظ التعديل وإعادة احتساب GOSI والصافي");
+    } catch (err) {
+      setError(err.message || "تعذّر حفظ التعديل.");
+    } finally {
+      setSavingCellKey("");
+    }
+  };
 
   useEffect(() => {
     if (!successMessage) return undefined;
@@ -593,6 +676,16 @@ export default function PayrollPage() {
           </div>
 
           <div className="flex flex-wrap gap-3">
+            {isHrPayroll && hasChangeLogEntries ? (
+              <button
+                type="button"
+                onClick={() => setIsChangeLogOpen(true)}
+                className="inline-flex items-center gap-2 rounded-md border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-sm font-medium text-indigo-900 shadow-none hover:bg-indigo-100"
+              >
+                <ClipboardList className="h-4 w-4" aria-hidden />
+                سجل التعديلات
+              </button>
+            ) : null}
             <button
               type="button"
               onClick={() => setIsHistoryOpen(true)}
@@ -625,6 +718,23 @@ export default function PayrollPage() {
       </div>
 
       <div id="payroll-print-area" className="space-y-6">
+        {isHrPayroll && isPendingApproval ? (
+          <div className="payroll-no-print">
+            <PayrollChangeLogPanel
+              entries={changeLogEntries}
+              isLoading={isChangeLogLoading}
+              error={changeLogError}
+            />
+          </div>
+        ) : null}
+
+        {canAccountantEditInline ? (
+          <p className="payroll-no-print rounded-md border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-900 shadow-none">
+            يمكنك تعديل السكن والبدلات والعمولات والإضافي والجزاءات مباشرة —
+            يُعاد احتساب GOSI والصافي تلقائياً عند الحفظ.
+          </p>
+        ) : null}
+
         <section
           className="payroll-no-print grid grid-cols-1 gap-5 sm:grid-cols-3"
           aria-label="ملخص المسير"
@@ -650,7 +760,7 @@ export default function PayrollPage() {
             <table className="payroll-table w-full min-w-[1100px] border-collapse text-sm shadow-none">
               <thead>
                 <tr>
-                  {PAYROLL_DETAIL_COLUMNS.map((column) => (
+                  {detailColumns.map((column) => (
                     <th
                       key={column.key}
                       className={`border-b border-gray-200 px-4 py-3 text-center text-xs font-semibold shadow-none ${PAYROLL_HEADER_TONE_CLASS[column.tone]}`}
@@ -664,7 +774,7 @@ export default function PayrollPage() {
                 {isLoading ? (
                   <tr>
                     <td
-                      colSpan={PAYROLL_DETAIL_COLUMNS.length}
+                      colSpan={detailColumns.length}
                       className="px-4 py-16 text-center text-slate-500"
                     >
                       جاري التحميل...
@@ -672,7 +782,7 @@ export default function PayrollPage() {
                   </tr>
                 ) : !hasLoaded || rows.length === 0 ? (
                   <tr>
-                    <td colSpan={PAYROLL_DETAIL_COLUMNS.length} className="p-0">
+                    <td colSpan={detailColumns.length} className="p-0">
                       <ExeerEmptyState
                         message={
                           hasLoaded
@@ -688,20 +798,39 @@ export default function PayrollPage() {
                       key={row.id}
                       className="border-b border-gray-200 hover:bg-gray-50/80"
                     >
-                      {PAYROLL_DETAIL_COLUMNS.map((column) => (
-                        <td
-                          key={column.key}
-                          className={`px-4 py-3 text-center tabular-nums ${
-                            PAYROLL_DEDUCTION_KEYS.has(column.key)
-                              ? "font-medium text-red-700"
-                              : "text-slate-800"
-                          }`}
-                        >
-                          {column.key === "employeeName"
-                            ? row.employeeName
-                            : formatPayrollCurrency(row[column.key])}
-                        </td>
-                      ))}
+                      {detailColumns.map((column) => {
+                        const isEditable =
+                          canAccountantEditInline &&
+                          ACCOUNTANT_EDITABLE_COLUMN_KEYS.has(column.key) &&
+                          (column.key !== "transport" || showTransportColumn);
+                        const cellKey = `${row.id}:${column.key}`;
+                        const isSavingCell = savingCellKey === cellKey;
+
+                        return (
+                          <td
+                            key={column.key}
+                            className={`px-4 py-3 text-center tabular-nums ${
+                              PAYROLL_DEDUCTION_KEYS.has(column.key)
+                                ? "font-medium text-red-700"
+                                : "text-slate-800"
+                            }`}
+                          >
+                            {column.key === "employeeName" ? (
+                              row.employeeName
+                            ) : isEditable ? (
+                              <PayrollEditableCell
+                                value={row[column.key]}
+                                isSaving={isSavingCell}
+                                onSave={(nextValue) =>
+                                  handleCellSave(row, column.key, nextValue)
+                                }
+                              />
+                            ) : (
+                              formatPayrollCurrency(row[column.key])
+                            )}
+                          </td>
+                        );
+                      })}
                     </tr>
                   ))
                 )}
@@ -714,6 +843,14 @@ export default function PayrollPage() {
       <PayrollHistoryModal
         isOpen={isHistoryOpen}
         onClose={() => setIsHistoryOpen(false)}
+      />
+
+      <PayrollChangeLogModal
+        isOpen={isChangeLogOpen}
+        onClose={() => setIsChangeLogOpen(false)}
+        entries={changeLogEntries}
+        isLoading={isChangeLogLoading}
+        error={changeLogError}
       />
 
       <style>{`

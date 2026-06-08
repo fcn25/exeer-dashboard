@@ -11,6 +11,8 @@ import {
   formatPayrollMonthFromPicker,
   mapPayrollRecordRow,
 } from "../utils/payroll/calculations.js";
+import { calculateGosiDeduction } from "../utils/payroll/gosi.js";
+import { calculatePayrollNetSalary } from "../utils/payroll/netSalary.js";
 import { fetchDueLoanInstallmentsByEmployee } from "./payrollLoanService.js";
 import {
   getCurrentUserRole,
@@ -135,7 +137,7 @@ async function queryPayrollByPayrollMonth(companyId, payrollMonth) {
   const { data, error } = await scopeQueryByCompany(
     supabase
       .from("payroll_records")
-      .select("*, employees ( id, full_name )")
+      .select("*, employees ( id, full_name, nationality, is_saudi )")
       .eq("payroll_month", payrollMonth),
     companyId,
   ).order("employee_name", { ascending: true });
@@ -591,7 +593,8 @@ function computeRunTotalsFromRecords(records) {
     const allowances = Number(row.other_allowances ?? row.allowances) || 0;
     const commissions = Number(row.commissions) || 0;
     const additional = Number(row.additional) || 0;
-    totalGross += basic + housing + allowances + commissions + additional;
+    const transport = Number(row.transport_allowance ?? row.transport) || 0;
+    totalGross += basic + housing + transport + allowances + commissions + additional;
 
     const penalties = Number(row.penalty_deductions ?? row.penalties) || 0;
     const lateness =
@@ -854,4 +857,206 @@ export async function fetchPayrollHistoryYears() {
   return [...new Set(summaries.map((item) => item.year))].sort(
     (a, b) => b - a,
   );
+}
+
+const ACCOUNTANT_UI_FIELD_TO_DB = {
+  housing: "housing_allowance",
+  transport: "transport_allowance",
+  allowances: "other_allowances",
+  commissions: "commissions",
+  additional: "additional",
+  penalties: "penalty_deductions",
+};
+
+function mapPayrollChangeLogRow(row) {
+  if (!row) return null;
+
+  const changedByEmployee = row.changed_by_employee ?? row.employee_changed_by;
+  const changedByName =
+    row.changed_by_name ??
+    changedByEmployee?.full_name ??
+    (row.changed_by != null ? `#${row.changed_by}` : "—");
+
+  return {
+    id: row.id,
+    runId: row.run_id,
+    payrollRecordId: row.payroll_record_id ?? row.record_id,
+    employeeId: row.employee_id,
+    employeeName: row.employee_name ?? row.employee?.full_name ?? "—",
+    fieldName: row.field_name ?? row.column_name ?? row.field,
+    oldValue: row.old_value,
+    newValue: row.new_value,
+    changedBy: changedByName,
+    changedAt: row.changed_at ?? row.created_at,
+  };
+}
+
+export async function fetchPayrollChangeLogForRun(runId) {
+  if (!runId) return [];
+
+  const companyId = requireCompanyId("سجل تعديلات المسير");
+  const { data, error } = await scopeQueryByCompany(
+    supabase
+      .from("payroll_change_log")
+      .select(
+        "*, employee:employees!payroll_change_log_employee_id_fkey ( full_name ), changed_by_employee:employees!payroll_change_log_changed_by_fkey ( full_name )",
+      )
+      .eq("run_id", runId)
+      .order("changed_at", { ascending: true }),
+    companyId,
+  );
+
+  if (error) {
+    const fallback = await scopeQueryByCompany(
+      supabase
+        .from("payroll_change_log")
+        .select("*")
+        .eq("run_id", runId)
+        .order("changed_at", { ascending: true }),
+      companyId,
+    );
+    if (fallback.error) throw new Error(mapDbError(fallback.error));
+    return (fallback.data ?? []).map(mapPayrollChangeLogRow).filter(Boolean);
+  }
+
+  return (data ?? []).map(mapPayrollChangeLogRow).filter(Boolean);
+}
+
+export async function payrollChangeLogHasEntries(runId) {
+  if (!runId) return false;
+  const entries = await fetchPayrollChangeLogForRun(runId);
+  return entries.length > 0;
+}
+
+export function groupPayrollChangeLogByEmployee(entries) {
+  const groups = new Map();
+
+  for (const entry of entries ?? []) {
+    const key = String(entry.employeeId ?? entry.employeeName ?? entry.id);
+    if (!groups.has(key)) {
+      groups.set(key, {
+        employeeId: entry.employeeId,
+        employeeName: entry.employeeName,
+        changes: [],
+      });
+    }
+    groups.get(key).changes.push(entry);
+  }
+
+  return [...groups.values()];
+}
+
+export async function saveAccountantPayrollRecordField({
+  pickerValue,
+  recordId,
+  fieldKey,
+  value,
+}) {
+  const period = parsePayrollPeriod(pickerValue);
+  if (!period) throw new Error("يرجى اختيار شهر صالح.");
+
+  const dbField = ACCOUNTANT_UI_FIELD_TO_DB[fieldKey];
+  if (!dbField) {
+    throw new Error("حقل غير قابل للتعديل.");
+  }
+
+  if (!isAccountantRole()) {
+    throw new Error(PAYROLL_RUN_EDIT_BLOCKED_MESSAGE);
+  }
+
+  const companyId = requireCompanyId("تعديل المسير");
+  const run = await fetchPayrollRunForMonth(companyId, period.payrollMonth);
+  assertAccountantCanEditPayroll(run);
+
+  const { data: raw, error: fetchError } = await scopeQueryByCompany(
+    supabase
+      .from("payroll_records")
+      .select("*, employees ( nationality, is_saudi )")
+      .eq("id", recordId),
+    companyId,
+  ).single();
+
+  if (fetchError) throw new Error(mapDbError(fetchError));
+
+  const numericValue = roundMoney(value);
+  const currentValue = roundMoney(raw?.[dbField] ?? 0);
+  if (numericValue === currentValue) {
+    return mapPayrollRecordRow(raw);
+  }
+
+  const housingAllowance =
+    fieldKey === "housing"
+      ? numericValue
+      : roundMoney(raw.housing_allowance);
+  const transportAllowance =
+    fieldKey === "transport"
+      ? numericValue
+      : roundMoney(raw.transport_allowance ?? 0);
+  const otherAllowances =
+    fieldKey === "allowances"
+      ? numericValue
+      : roundMoney(raw.other_allowances ?? raw.allowances ?? 0);
+  const commissions =
+    fieldKey === "commissions" ? numericValue : roundMoney(raw.commissions);
+  const additional =
+    fieldKey === "additional" ? numericValue : roundMoney(raw.additional);
+  const penaltyDeductions =
+    fieldKey === "penalties"
+      ? numericValue
+      : roundMoney(raw.penalty_deductions ?? raw.penalties ?? 0);
+
+  const { amount: gosiDeduction } = calculateGosiDeduction({
+    basicSalary: raw.basic_salary,
+    housingAllowance,
+    employee: raw.employees ?? {
+      is_saudi: null,
+      nationality: null,
+    },
+    payrollMonth: period.payrollMonth,
+  });
+
+  const merged = {
+    ...raw,
+    housing_allowance: housingAllowance,
+    transport_allowance: transportAllowance,
+    other_allowances: otherAllowances,
+    allowances: otherAllowances,
+    commissions,
+    additional,
+    penalty_deductions: penaltyDeductions,
+    penalties: penaltyDeductions,
+    gosi_deduction: gosiDeduction,
+    gosi: gosiDeduction,
+  };
+  const netSalary = calculatePayrollNetSalary(merged);
+
+  const payload = {
+    [dbField]: numericValue,
+    housing_allowance: housingAllowance,
+    transport_allowance: transportAllowance,
+    other_allowances: otherAllowances,
+    allowances: otherAllowances,
+    commissions,
+    additional,
+    penalty_deductions: penaltyDeductions,
+    penalties: penaltyDeductions,
+    gosi_deduction: gosiDeduction,
+    gosi: gosiDeduction,
+    net_salary: netSalary,
+    net: netSalary,
+  };
+
+  const { data: updated, error: updateError } = await scopeQueryByCompany(
+    supabase.from("payroll_records").update(payload),
+    companyId,
+  )
+    .eq("id", recordId)
+    .select("*, employees ( id, full_name, nationality, is_saudi )")
+    .single();
+
+  if (updateError) throw new Error(mapDbError(updateError));
+
+  await refreshPayrollRunTotals(companyId, period.payrollMonth);
+
+  return mapPayrollRecordRow(updated);
 }

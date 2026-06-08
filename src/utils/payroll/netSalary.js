@@ -30,6 +30,7 @@ export function calculatePayrollNetSalary(record) {
   const gross =
     safeAmount(record.basic_salary) +
     safeAmount(record.housing_allowance) +
+    safeAmount(record.transport_allowance) +
     safeAmount(record.other_allowances ?? record.allowances) +
     safeAmount(record.commissions) +
     safeAmount(record.additional);

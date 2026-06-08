@@ -1,7 +1,14 @@
+export const PAYROLL_TRANSPORT_COLUMN = {
+  key: "transport",
+  label: "نقل",
+  tone: "addition",
+};
+
 export const PAYROLL_DETAIL_COLUMNS = [
   { key: "employeeName", label: "اسم الموظف", tone: "neutral" },
   { key: "basic", label: "الأساسي", tone: "neutral" },
   { key: "housing", label: "السكن", tone: "neutral" },
+  { key: "transport", label: "نقل", tone: "addition" },
   { key: "allowances", label: "البدلات", tone: "addition" },
   { key: "commissions", label: "العمولات", tone: "addition" },
   { key: "additional", label: "الإضافي", tone: "addition" },
@@ -24,6 +31,39 @@ export const PAYROLL_DEDUCTION_KEYS = new Set([
   "lateness",
   "loans",
 ]);
+
+/** UI column keys the accountant may edit while run is under_review */
+export const ACCOUNTANT_EDITABLE_COLUMN_KEYS = new Set([
+  "housing",
+  "transport",
+  "allowances",
+  "commissions",
+  "additional",
+  "penalties",
+]);
+
+export const PAYROLL_CHANGE_LOG_FIELD_LABELS = {
+  housing_allowance: "السكن",
+  transport_allowance: "نقل",
+  other_allowances: "البدلات",
+  allowances: "البدلات",
+  commissions: "العمولات",
+  additional: "الإضافي",
+  penalty_deductions: "الجزاءات",
+  penalties: "الجزاءات",
+  gosi_deduction: "GOSI",
+  gosi: "GOSI",
+  net_salary: "الصافي",
+  net: "الصافي",
+  basic_salary: "الأساسي",
+  delay_deductions: "التأخيرات",
+  loan_deductions: "السلف",
+};
+
+export function buildPayrollDetailColumns({ showTransport = false } = {}) {
+  if (showTransport) return PAYROLL_DETAIL_COLUMNS;
+  return PAYROLL_DETAIL_COLUMNS.filter((column) => column.key !== "transport");
+}
 
 export const ARABIC_MONTHS = [
   { value: "", label: "كل الأشهر" },

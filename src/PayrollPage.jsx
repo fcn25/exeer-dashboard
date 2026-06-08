@@ -94,6 +94,19 @@ export default function PayrollPage() {
   const isUnderReview = runStatus === PAYROLL_RUN_STATUSES.UNDER_REVIEW;
   const isPendingApproval = runStatus === PAYROLL_RUN_STATUSES.PENDING_APPROVAL;
   const isDraftRun = runStatus === PAYROLL_RUN_STATUSES.DRAFT;
+  const isCreatableMonth =
+    isHrPayroll &&
+    !payrollRun &&
+    !hasExistingPayroll &&
+    !isRunLocked &&
+    !isRunCancelled;
+  const canHrGenerate =
+    isCreatableMonth ||
+    (isHrPayroll &&
+      isDraftRun &&
+      !hasExistingPayroll &&
+      !isRunLocked &&
+      !isRunCancelled);
   const canHrSync =
     isHrPayroll &&
     !isRunLocked &&
@@ -167,7 +180,7 @@ export default function PayrollPage() {
       showLockedToast();
       return;
     }
-    if (!canHrSync) {
+    if (!canHrGenerate) {
       showEditBlockedToast();
       return;
     }
@@ -467,41 +480,37 @@ export default function PayrollPage() {
               className="min-w-[220px]"
             />
 
-            {isHrPayroll && canHrSync ? (
-              <>
-                {isDraftRun ? (
-                  <div className="flex flex-col gap-1">
-                    <button
-                      type="button"
-                      onClick={handleGeneratePayroll}
-                      disabled={
-                        isLoading || !selectedMonth || hasExistingPayroll
-                      }
-                      className="md-btn-primary shadow-none"
-                    >
-                      {isLoading
-                        ? t("common.loading")
-                        : t("pages.payroll.generate")}
-                    </button>
-                    {hasExistingPayroll ? (
-                      <p className="text-xs text-slate-500">
-                        تم إنشاء مسير هذا الشهر
-                      </p>
-                    ) : null}
-                  </div>
-                ) : null}
-
+            {isHrPayroll && canHrGenerate ? (
+              <div className="flex flex-col gap-1">
                 <button
                   type="button"
-                  onClick={handleSyncDeductions}
-                  disabled={isLoading || !selectedMonth || rows.length === 0}
-                  className="inline-flex items-center gap-2 rounded-md border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 shadow-none hover:bg-gray-50 disabled:opacity-50"
-                  title="مزامنة التأخيرات والجزاءات والقروض للشهر المعروض"
+                  onClick={handleGeneratePayroll}
+                  disabled={isLoading || !selectedMonth || hasExistingPayroll}
+                  className="md-btn-primary shadow-none"
                 >
-                  <RefreshCw className="h-4 w-4" aria-hidden />
-                  {t("pages.payroll.sync")}
+                  {isLoading
+                    ? t("common.loading")
+                    : t("pages.payroll.generate")}
                 </button>
-              </>
+                {hasExistingPayroll ? (
+                  <p className="text-xs text-slate-500">
+                    تم إنشاء مسير هذا الشهر
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
+
+            {isHrPayroll && canHrSync ? (
+              <button
+                type="button"
+                onClick={handleSyncDeductions}
+                disabled={isLoading || !selectedMonth || rows.length === 0}
+                className="inline-flex items-center gap-2 rounded-md border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 shadow-none hover:bg-gray-50 disabled:opacity-50"
+                title="مزامنة التأخيرات والجزاءات والقروض للشهر المعروض"
+              >
+                <RefreshCw className="h-4 w-4" aria-hidden />
+                {t("pages.payroll.sync")}
+              </button>
             ) : null}
 
             {isAccountant && canAccountantSync ? (

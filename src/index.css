@@ -331,54 +331,62 @@ span {
   cursor: not-allowed;
 }
 
-/* Dark mode — Exeer brand: near-black base, gold accent, phosphoric green success */
+/* Dark mode — minimal slate inversion of the light theme (#0F172A identity) */
 .dark {
   color-scheme: dark;
 
-  --bg-main: #08090c;
-  --bg-surface: #101218;
-  --bg-surface-hover: #181b24;
-  --text-primary: #ececec;
-  --text-secondary: #a8adb8;
-  --border-color: #5a5f6b;
-  --border-color-strong: #8b919e;
-  --border-width-card: 2px;
-  --accent-color: #b89a5e;
-  --accent-color-hover: #d4b87a;
-  --accent-muted: color-mix(in srgb, #b89a5e 16%, var(--bg-surface));
-  --color-success: #2ee6a6;
-  --color-success-bright: #39ff14;
-  --color-success-muted: color-mix(in srgb, #2ee6a6 12%, var(--bg-surface));
-  --color-success-border: color-mix(in srgb, #2ee6a6 48%, var(--border-color-strong));
-  --text-error: #fde047;
+  /* Surfaces — slate family only */
+  --bg-main: #0f172a;
+  --bg-surface: #1e293b;
+  --bg-surface-hover: #334155;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --border-color: rgba(255, 255, 255, 0.07);
+  --border-hairline: 1px solid rgba(255, 255, 255, 0.07);
 
-  /* Tailwind slate/gray — surfaces only, never white/light for backgrounds */
+  /* Same accent as light theme */
+  --accent-color: #0f172a;
+  --accent-on-dark-bg: #f1f5f9;
+  --accent-on-dark-hover: #e2e8f0;
+
+  /* Status — same semantics as light, tuned for dark legibility */
+  --color-success-text: #6ee7b7;
+  --color-success-surface: rgba(16, 185, 129, 0.1);
+  --color-success-border: rgba(52, 211, 153, 0.22);
+  --color-warning-text: #fcd34d;
+  --color-warning-surface: rgba(245, 158, 11, 0.1);
+  --color-warning-border: rgba(251, 191, 36, 0.22);
+  --color-error-text: #f87171;
+  --color-error-surface: rgba(239, 68, 68, 0.1);
+  --color-error-border: rgba(248, 113, 113, 0.22);
+
+  /* Tailwind slate scale — cohesive dark palette */
   --color-slate-50: var(--bg-surface);
-  --color-slate-100: var(--bg-surface-hover);
-  --color-slate-200: var(--bg-surface-hover);
-  --color-slate-300: var(--text-secondary);
+  --color-slate-100: var(--text-primary);
+  --color-slate-200: #e2e8f0;
+  --color-slate-300: #cbd5e1;
   --color-slate-400: var(--text-secondary);
-  --color-slate-500: #5a5d5b;
-  --color-slate-600: var(--border-color);
-  --color-slate-700: var(--border-color);
-  --color-slate-800: var(--bg-surface-hover);
-  --color-slate-900: var(--bg-surface);
-  --color-slate-950: var(--bg-main);
+  --color-slate-500: #64748b;
+  --color-slate-600: #475569;
+  --color-slate-700: var(--bg-surface-hover);
+  --color-slate-800: var(--bg-surface);
+  --color-slate-900: var(--bg-main);
+  --color-slate-950: #020617;
 
   --color-gray-50: var(--bg-surface);
   --color-gray-100: var(--bg-surface-hover);
   --color-gray-200: var(--bg-surface-hover);
   --color-gray-300: var(--text-secondary);
   --color-gray-400: var(--text-secondary);
-  --color-gray-500: #5a5d5b;
-  --color-gray-600: var(--border-color);
-  --color-gray-700: var(--border-color);
-  --color-gray-800: var(--bg-surface-hover);
-  --color-gray-900: var(--bg-surface);
-  --color-gray-950: var(--bg-main);
+  --color-gray-500: #64748b;
+  --color-gray-600: #475569;
+  --color-gray-700: var(--bg-surface-hover);
+  --color-gray-800: var(--bg-surface);
+  --color-gray-900: var(--bg-main);
+  --color-gray-950: #020617;
 
   --color-md-primary: var(--accent-color);
-  --color-md-on-primary: #131314;
+  --color-md-on-primary: #ffffff;
   --color-md-primary-container: var(--bg-surface-hover);
   --color-md-on-primary-container: var(--text-primary);
   --color-md-surface: var(--bg-surface);
@@ -396,43 +404,6 @@ span {
   --color-exeer-muted: var(--text-secondary);
   --color-exeer-border: var(--border-color);
   --color-exeer-hover: var(--bg-surface-hover);
-
-  /* Remap Tailwind semantic scales — no blue/navy accents in dark mode */
-  --color-blue-50: var(--bg-surface-hover);
-  --color-blue-100: var(--bg-surface-hover);
-  --color-blue-200: color-mix(in srgb, var(--accent-color) 30%, var(--border-color-strong));
-  --color-blue-300: var(--accent-color-hover);
-  --color-blue-400: var(--accent-color);
-  --color-blue-500: var(--accent-color);
-  --color-blue-600: var(--accent-color);
-  --color-blue-700: var(--accent-color);
-  --color-blue-800: var(--accent-color-hover);
-  --color-blue-900: var(--text-primary);
-  --color-blue-950: var(--bg-main);
-
-  --color-indigo-50: var(--bg-surface-hover);
-  --color-indigo-100: var(--bg-surface-hover);
-  --color-indigo-200: color-mix(in srgb, var(--accent-color) 32%, var(--border-color-strong));
-  --color-indigo-300: var(--accent-color-hover);
-  --color-indigo-400: var(--accent-color);
-  --color-indigo-500: var(--accent-color);
-  --color-indigo-600: var(--accent-color);
-  --color-indigo-700: var(--accent-color);
-  --color-indigo-800: var(--accent-color-hover);
-  --color-indigo-900: var(--text-primary);
-  --color-indigo-950: var(--bg-main);
-
-  --color-emerald-50: var(--color-success-muted);
-  --color-emerald-100: var(--color-success-muted);
-  --color-emerald-200: var(--color-success-border);
-  --color-emerald-300: var(--color-success);
-  --color-emerald-400: var(--color-success);
-  --color-emerald-500: var(--color-success);
-  --color-emerald-600: var(--color-success);
-  --color-emerald-700: var(--color-success-muted);
-  --color-emerald-800: var(--color-success-border);
-  --color-emerald-900: var(--color-success-border);
-  --color-emerald-950: var(--bg-main);
 }
 
 .dark body,
@@ -444,35 +415,34 @@ span {
 .dark .md-surface,
 .dark .md-surface-muted {
   background: var(--bg-surface);
-  border: var(--border-width-card) solid var(--border-color-strong);
+  border: var(--border-hairline);
   box-shadow: none;
 }
 
 .dark .md-input {
   background: var(--bg-surface);
-  border: var(--border-width-card) solid var(--border-color-strong);
+  border: var(--border-hairline);
   color: var(--text-primary);
 }
 
 .dark .md-input:focus {
-  border-color: var(--accent-color);
+  border-color: rgba(255, 255, 255, 0.14);
 }
 
 .dark .md-btn-primary {
-  background: var(--accent-color);
-  color: #08090c;
-  border: var(--border-width-card) solid var(--accent-color);
-  font-weight: 600;
+  background: var(--accent-on-dark-bg);
+  color: var(--accent-color);
+  border: var(--border-hairline);
+  font-weight: 500;
 }
 
 .dark .md-btn-primary:hover {
-  background: var(--accent-color-hover);
-  border-color: var(--accent-color-hover);
+  background: var(--accent-on-dark-hover);
 }
 
 .dark .md-btn-tonal {
   background: var(--bg-surface);
-  border: var(--border-width-card) solid var(--border-color-strong);
+  border: var(--border-hairline);
   color: var(--text-primary);
 }
 
@@ -488,13 +458,13 @@ span {
 
 .dark .md-theme-segment {
   background: var(--bg-main);
-  border: var(--border-width-card) solid var(--border-color-strong);
+  border: var(--border-hairline);
 }
 
 .dark .md-theme-segment-btn-active {
   background: var(--bg-surface-hover);
   color: var(--text-primary);
-  border: 2px solid var(--accent-color);
+  border: var(--border-hairline);
   font-weight: 600;
 }
 
@@ -538,7 +508,28 @@ span {
     box-shadow: none !important;
   }
 
-  /* ── Dark theme: black surfaces only, white/gray text only ── */
+  /* ── Dark theme: slate inversion, hairline borders ── */
+
+  /* Global hairlines — tables, cards, dividers, inputs */
+  .dark table,
+  .dark th,
+  .dark td,
+  .dark tr {
+    border-color: var(--border-color) !important;
+  }
+
+  .dark .border,
+  .dark .border-b,
+  .dark .border-t,
+  .dark .border-e,
+  .dark .border-s,
+  .dark .border-x,
+  .dark .border-y,
+  .dark [class*="border-gray"],
+  .dark [class*="border-slate"],
+  .dark [class*="border-exeer"] {
+    border-color: var(--border-color) !important;
+  }
 
   /* Surfaces — never white or light gray backgrounds */
   .dark .bg-white,
@@ -606,12 +597,12 @@ span {
   .dark .dark\:bg-\[\#1e3a5f\]\/25,
   .dark .dark\:bg-\[\#1e3a5f\]\/30,
   .dark .dark\:bg-\[\#1e3a5f\]\/60 {
-    background-color: var(--bg-surface-hover) !important;
+    background-color: var(--bg-surface) !important;
   }
 
   .dark .dark\:bg-slate-950\/60,
   .dark .dark\:bg-slate-900\/40 {
-    background-color: color-mix(in srgb, var(--bg-surface) 90%, transparent) !important;
+    background-color: color-mix(in srgb, var(--bg-surface) 88%, transparent) !important;
   }
 
   /* Text — white & gray only (slate text scale remapped for readability) */
@@ -645,32 +636,12 @@ span {
   }
 
   .dark .dark\:text-\[\#e2e8f0\],
-  .dark .dark\:text-\[\#f1f5f9\],
-  .dark .dark\:text-\[\#93c5fd\] {
+  .dark .dark\:text-\[\#f1f5f9\] {
     color: var(--text-primary) !important;
   }
 
-  /* Borders & divider lines — bold strokes, not light fills */
-  .dark .border-gray-100,
-  .dark .border-gray-200,
-  .dark .border-slate-200,
-  .dark .border-slate-700,
-  .dark .border-slate-800,
-  .dark .border-exeer-border,
-  .dark .border-\[\#E2E8F0\],
-  .dark .border-\[\#F1F5F9\],
-  .dark .border-\[\#CBD5E1\] {
-    border-color: var(--border-color-strong) !important;
-  }
-
-  .dark .dark\:border-slate-700,
-  .dark .dark\:border-slate-800 {
-    border-color: var(--border-color-strong) !important;
-  }
-
-  .dark .dark\:border-white,
-  .dark .dark\:border-r-white {
-    border-color: var(--text-primary) !important;
+  .dark .dark\:text-\[\#93c5fd\] {
+    color: var(--text-secondary) !important;
   }
 
   .dark .divide-gray-200 > :not(:last-child),
@@ -678,130 +649,101 @@ span {
     border-color: var(--border-color) !important;
   }
 
-  /* Light semantic tints → dark surfaces with border differentiation (not pale fills) */
+  /* Semantic tints → subtle slate surfaces + hairline borders */
   .dark .bg-red-50,
   .dark .bg-amber-50,
-  .dark .bg-slate-100 {
+  .dark .bg-blue-50,
+  .dark .bg-indigo-50,
+  .dark .bg-indigo-100,
+  .dark .bg-slate-100,
+  .dark .bg-\[\#EEF2FF\],
+  .dark .bg-\[\#DBEAFE\],
+  .dark .bg-\[\#FEE2E2\],
+  .dark .bg-\[\#FEF3C7\] {
     background-color: var(--bg-surface) !important;
   }
 
   .dark .bg-emerald-50,
   .dark .bg-emerald-700,
   .dark .bg-emerald-800,
+  .dark .bg-\[\#ECFDF5\],
   .dark .dark\:bg-emerald-950\/30,
   .dark .dark\:bg-emerald-950\/40,
   .dark .dark\:bg-emerald-950\/50,
   .dark .dark\:bg-emerald-950\/60,
   .dark .dark\:bg-emerald-900\/50 {
-    background-color: var(--color-success-muted) !important;
+    background-color: var(--color-success-surface) !important;
     border-color: var(--color-success-border) !important;
   }
 
-  .dark .bg-blue-50,
-  .dark .bg-indigo-50,
-  .dark .bg-indigo-100,
-  .dark .hover\:bg-indigo-100:hover,
-  .dark .bg-\[\#EEF2FF\],
-  .dark .bg-\[\#DBEAFE\] {
-    background-color: var(--accent-muted) !important;
-    border-color: color-mix(in srgb, var(--accent-color) 45%, var(--border-color-strong)) !important;
-  }
-
-  .dark .bg-\[\#ECFDF5\] {
-    background-color: var(--color-success-muted) !important;
-    border-color: var(--color-success-border) !important;
-  }
-
-  .dark .bg-\[\#FEE2E2\],
-  .dark .bg-\[\#FEF3C7\] {
-    background-color: var(--bg-surface) !important;
-  }
-
-  /* Success / locked — phosphoric green text */
-  .dark .text-emerald-300,
-  .dark .text-emerald-400,
-  .dark .text-emerald-500,
-  .dark .text-emerald-600,
   .dark .text-emerald-700,
   .dark .text-emerald-800,
   .dark .text-emerald-900,
-  .dark .text-emerald-950,
   .dark .dark\:text-emerald-200,
   .dark .dark\:text-emerald-300,
   .dark .text-emerald-800\/80 {
-    color: var(--color-success) !important;
+    color: var(--color-success-text) !important;
   }
 
   .dark .border-emerald-200,
   .dark .border-emerald-700,
   .dark .border-emerald-800,
   .dark .border-emerald-900,
-  .dark .dark\:border-emerald-900,
-  .dark .ring-emerald-300,
-  .dark .dark\:ring-emerald-800 {
-    border-color: var(--color-success) !important;
+  .dark .dark\:border-emerald-900 {
+    border-color: var(--color-success-border) !important;
   }
 
-  .dark .hover\:bg-emerald-100:hover,
-  .dark .hover\:bg-emerald-800:hover,
-  .dark .dark\:hover\:bg-emerald-950\/60:hover {
-    background-color: color-mix(in srgb, var(--color-success) 18%, var(--bg-surface)) !important;
+  .dark .text-amber-700,
+  .dark .text-amber-800,
+  .dark .text-amber-900,
+  .dark .dark\:text-amber-200,
+  .dark .dark\:text-amber-300 {
+    color: var(--color-warning-text) !important;
   }
 
-  /* Blue / navy / indigo accents → gold brand accent */
-  .dark .text-indigo-300,
-  .dark .text-indigo-400,
-  .dark .text-indigo-500,
-  .dark .text-indigo-600,
-  .dark .text-indigo-700,
-  .dark .text-indigo-800,
-  .dark .text-indigo-900,
-  .dark .text-indigo-950,
-  .dark .dark\:text-indigo-200,
-  .dark .dark\:text-indigo-300,
-  .dark .text-blue-300,
-  .dark .text-blue-400,
-  .dark .text-blue-500,
-  .dark .text-blue-600,
-  .dark .text-blue-700,
-  .dark .text-blue-800,
-  .dark .text-blue-900,
-  .dark .dark\:text-blue-200,
-  .dark .dark\:text-blue-300,
-  .dark .dark\:text-\[\#93c5fd\] {
-    color: var(--accent-color) !important;
+  .dark .border-amber-200,
+  .dark .border-amber-900,
+  .dark .dark\:border-amber-900 {
+    border-color: var(--color-warning-border) !important;
   }
 
-  .dark .border-indigo-200,
-  .dark .border-indigo-300,
-  .dark .border-indigo-700,
-  .dark .border-indigo-800,
-  .dark .border-indigo-900,
-  .dark .border-blue-200,
-  .dark .border-blue-300,
-  .dark .border-blue-700,
-  .dark .border-blue-800,
-  .dark .border-blue-900,
-  .dark .dark\:border-indigo-900 {
-    border-color: color-mix(in srgb, var(--accent-color) 55%, var(--border-color-strong)) !important;
+  .dark .bg-amber-50,
+  .dark .dark\:bg-amber-950\/40,
+  .dark .dark\:bg-amber-950\/50 {
+    background-color: var(--color-warning-surface) !important;
   }
 
+  /* Primary actions — inverted slate (same #0F172A identity as light) */
   .dark button.bg-slate-900,
   .dark a.bg-slate-900,
   .dark .bg-slate-900.text-white,
   .dark .bg-indigo-700,
   .dark .bg-indigo-800,
   .dark .bg-blue-700,
-  .dark .bg-blue-800 {
-    background-color: var(--accent-color) !important;
-    color: #08090c !important;
-    border-color: var(--accent-color) !important;
+  .dark .bg-blue-800,
+  .dark .border-slate-900.bg-slate-900 {
+    background-color: var(--accent-on-dark-bg) !important;
+    color: var(--accent-color) !important;
+    border-color: var(--border-color) !important;
+  }
+
+  .dark .hover\:bg-indigo-800:hover,
+  .dark .hover\:bg-slate-800:hover,
+  .dark .hover\:bg-blue-800:hover,
+  .dark button.bg-slate-900:hover,
+  .dark a.bg-slate-900:hover,
+  .dark .bg-slate-900.text-white:hover {
+    background-color: var(--accent-on-dark-hover) !important;
+  }
+
+  .dark .before\:bg-slate-900::before {
+    background-color: var(--accent-on-dark-bg) !important;
   }
 
   .dark .bg-slate-900\/45,
   .dark .bg-slate-900\/40,
   .dark .bg-slate-900\/50 {
-    background-color: color-mix(in srgb, var(--bg-main) 62%, transparent) !important;
+    background-color: rgba(2, 6, 23, 0.72) !important;
   }
 
   .dark .dark\:bg-slate-900,
@@ -818,50 +760,39 @@ span {
   .dark .dark\:to-slate-800\/80,
   .dark .dark\:to-indigo-950\/25,
   .dark .dark\:to-sky-950\/25,
-  .dark .dark\:to-violet-950\/25 {
+  .dark .dark\:to-violet-950\/25,
+  .dark .dark\:to-emerald-950\/25 {
     --tw-gradient-from: var(--bg-surface) !important;
     --tw-gradient-to: var(--bg-main) !important;
     --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
   }
 
-  .dark .dark\:to-emerald-950\/25 {
-    --tw-gradient-from: var(--bg-surface) !important;
-    --tw-gradient-to: var(--color-success-muted) !important;
-    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
-  }
-
-  .dark .hover\:bg-indigo-800:hover,
-  .dark .hover\:bg-slate-800:hover,
-  .dark .hover\:bg-blue-800:hover,
-  .dark button.bg-slate-900:hover,
-  .dark a.bg-slate-900:hover,
-  .dark .bg-slate-900.text-white:hover {
-    background-color: var(--accent-color-hover) !important;
-  }
-
-  /* homeStyles semantic chips */
   .dark .dark\:bg-blue-950\/50,
-  .dark .dark\:text-blue-300 {
-    background-color: var(--accent-muted) !important;
-    color: var(--accent-color) !important;
-  }
-
   .dark .dark\:bg-blue-900\/30 {
-    background-color: var(--accent-muted) !important;
+    background-color: var(--bg-surface) !important;
   }
 
-  .dark .before\:bg-slate-900::before {
-    background-color: var(--accent-color) !important;
+  .dark .dark\:text-blue-300,
+  .dark .text-indigo-700,
+  .dark .text-indigo-800,
+  .dark .text-indigo-900,
+  .dark .dark\:text-indigo-200,
+  .dark .dark\:text-indigo-300 {
+    color: var(--text-primary) !important;
   }
 
-  .dark .text-violet-600,
-  .dark .text-sky-600,
-  .dark .text-violet-300,
-  .dark .text-sky-300 {
-    color: var(--accent-color) !important;
+  .dark .border-indigo-200,
+  .dark .border-indigo-700,
+  .dark .border-indigo-800,
+  .dark .dark\:border-indigo-900 {
+    border-color: var(--border-color) !important;
   }
 
-  /* Red text → yellow in dark mode (errors, warnings, required markers) */
+  .dark .hover\:bg-indigo-100:hover {
+    background-color: var(--bg-surface-hover) !important;
+  }
+
+  /* Errors — same red semantic, legible on dark */
   .dark .text-red-300,
   .dark .text-red-400,
   .dark .text-red-500,
@@ -878,12 +809,24 @@ span {
   .dark .text-\[\#EF4444\],
   .dark .text-\[\#DC2626\],
   .dark .text-\[\#991B1B\] {
-    color: var(--text-error) !important;
+    color: var(--color-error-text) !important;
+  }
+
+  .dark .bg-red-50,
+  .dark .dark\:bg-red-950\/40 {
+    background-color: var(--color-error-surface) !important;
+    border-color: var(--color-error-border) !important;
+  }
+
+  .dark .border-red-200,
+  .dark .border-red-900,
+  .dark .dark\:border-red-900 {
+    border-color: var(--color-error-border) !important;
   }
 
   .dark .hover\:text-red-700:hover,
   .dark .hover\:text-red-800:hover,
   .dark .dark\:hover\:text-red-200:hover {
-    color: var(--text-error) !important;
+    color: var(--color-error-text) !important;
   }
 }

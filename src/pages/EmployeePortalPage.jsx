@@ -31,6 +31,7 @@ import {
   updateTaskStatus,
 } from "../services/tasksService.js";
 import { useAuth } from "../context/AuthContext.jsx";
+import { isAccountantRole } from "../utils/rbac.js";
 import { useCurrentEmployee } from "../hooks/useCurrentEmployee.js";
 import EmployeeAdministrativeInbox from "../components/administrative/EmployeeAdministrativeInbox.jsx";
 import { formatDisplayValue } from "../utils/displayValue.js";
@@ -366,14 +367,25 @@ export default function EmployeePortalPage() {
               {greeting}، {employeeName}
             </h1>
           </div>
-          <button
-            type="button"
-            onClick={handleSignOut}
-            className="md-btn-tonal inline-flex items-center gap-2"
-          >
-            <LogOut className="h-4 w-4" aria-hidden />
-            تسجيل الخروج
-          </button>
+          <div className="flex flex-wrap items-center gap-3">
+            {isAccountantRole(role) ? (
+              <button
+                type="button"
+                onClick={() => navigate("/dashboard/payroll")}
+                className="md-btn-primary inline-flex items-center gap-2"
+              >
+                مسير الرواتب
+              </button>
+            ) : null}
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="md-btn-tonal inline-flex items-center gap-2"
+            >
+              <LogOut className="h-4 w-4" aria-hidden />
+              تسجيل الخروج
+            </button>
+          </div>
         </div>
       </header>
 

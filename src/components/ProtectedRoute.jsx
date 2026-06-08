@@ -62,7 +62,12 @@ export function ProtectedRoute({
     return <Navigate to="/mobile" replace state={{ from: location }} />;
   }
 
-  if (allowDashboard && !isDashboardUser) {
+  const isAccountantPayrollRoute =
+    isAccountantRole(role) &&
+    (location.pathname === "/dashboard/payroll" ||
+      location.pathname.startsWith("/dashboard/payroll/"));
+
+  if (allowDashboard && !isDashboardUser && !isAccountantPayrollRoute) {
     return <Navigate to="/employee-portal" replace state={{ from: location }} />;
   }
 

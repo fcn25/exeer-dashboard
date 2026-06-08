@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from "react-router-dom";
+import { isAccountantRole } from "./constants/roles.js";
 import AuthContainer from "./AuthContainer.jsx";
 import ManagerLayout from "./layouts/ManagerLayout.jsx";
 import HomePage from "./pages/HomePage.jsx";
@@ -64,6 +65,24 @@ function RootRedirect() {
 }
 
 function DashboardRoutes() {
+  const { role } = useAuth();
+
+  if (isAccountantRole(role)) {
+    return (
+      <Routes>
+        <Route
+          path="payroll"
+          element={
+            <ProtectedRoute requiredPermission="can_view_payroll">
+              <PayrollPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="*" element={<Navigate to="/employee-portal" replace />} />
+      </Routes>
+    );
+  }
+
   return (
     <ProtectedRoute allowDashboard>
       <Routes>

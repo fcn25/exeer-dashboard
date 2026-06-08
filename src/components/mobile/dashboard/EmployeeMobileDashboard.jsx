@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ROLE_LABELS } from "../../../constants/roles.js";
 import { useAuth } from "../../../context/AuthContext.jsx";
@@ -17,6 +18,7 @@ import {
   EMPLOYEE_FAB_ACTIONS,
   EMPLOYEE_TABS,
 } from "./mobileDashboardConfig.js";
+import { isAccountantRole } from "../../../utils/rbac.js";
 
 export default function EmployeeMobileDashboard({
   employeeName,
@@ -30,7 +32,11 @@ export default function EmployeeMobileDashboard({
   onDashboardRefresh,
 }) {
   const { i18n } = useTranslation();
-  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { user, role: authRole } = useAuth();
+  const showPayrollNav = isAccountantRole(
+    dashboardData?.employee?.role ?? role ?? authRole,
+  );
   const { employeeId } = useCurrentEmployee();
   const pageDir = i18n.language?.startsWith("en") ? "ltr" : "rtl";
   const pageLang = i18n.language?.startsWith("en") ? "en" : "ar";
@@ -136,6 +142,16 @@ export default function EmployeeMobileDashboard({
           <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
             {error}
           </p>
+        ) : null}
+
+        {showPayrollNav ? (
+          <button
+            type="button"
+            onClick={() => navigate("/dashboard/payroll")}
+            className="md-btn-primary w-full py-3.5 text-base font-semibold shadow-none"
+          >
+            مسير الرواتب
+          </button>
         ) : null}
 
         <AttendanceHorizontalWidget

@@ -28,13 +28,10 @@ export const DASHBOARD_ROLES = new Set([
   "Executive",
   "HR_Manager",
   "HR_Assistant",
-  "Accountant",
   "Direct_Manager",
 ]);
 
-export const PAYROLL_ONLY_ROLES = new Set(["Accountant"]);
-
-export const PORTAL_ROLES = new Set(["Employee"]);
+export const PORTAL_ROLES = new Set(["Employee", "Accountant"]);
 
 export const ROLE_LABELS = {
   owner: "مالك المنشأة",
@@ -119,19 +116,20 @@ export function isAccountantRole(role) {
   return normalizeAppRole(role) === "Accountant";
 }
 
-export function isPayrollOnlyRole(role) {
-  return PAYROLL_ONLY_ROLES.has(normalizeAppRole(role));
+export function isPortalEmployeeRole(role) {
+  const normalized = normalizeAppRole(role);
+  return PORTAL_ROLES.has(normalized);
 }
 
 export function getAuthenticatedHomePath(role, isMobile = false) {
   const normalizedRole = normalizeAppRole(role);
 
-  if (isAccountantRole(normalizedRole)) {
-    return "/dashboard/payroll";
-  }
-
   if (isManagementRole(normalizedRole)) {
     return isMobile ? "/mobile" : "/dashboard";
+  }
+
+  if (isMobile && isPortalEmployeeRole(normalizedRole)) {
+    return "/mobile";
   }
 
   return "/employee-portal";

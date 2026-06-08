@@ -34,7 +34,6 @@ import {
   canManageEvents,
   canManageAdministrativeActions,
   canViewPayroll,
-  isAccountantRole,
   isDirectManager,
   isOwner,
 } from "../utils/rbac.js";
@@ -98,23 +97,7 @@ export default function ManagerLayout() {
     navigate(location.pathname, { replace: true, state: {} });
   }, [location.pathname, location.state, navigate]);
 
-  useEffect(() => {
-    if (!isAccountantRole(role)) return;
-    if (location.pathname.startsWith("/dashboard/payroll")) return;
-    navigate("/dashboard/payroll", { replace: true });
-  }, [location.pathname, navigate, role]);
-
   const navItems = useMemo(() => {
-    if (isAccountantRole(role)) {
-      return [
-        {
-          to: "/dashboard/payroll",
-          label: t("nav.payroll"),
-          icon: Banknote,
-        },
-      ];
-    }
-
     const managerOnly = isDirectManager(role);
     const items = [
       { to: "/dashboard", label: t("nav.home"), icon: Home, end: true },

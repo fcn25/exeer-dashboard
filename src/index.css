@@ -3,6 +3,15 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Light theme surface tokens */
+:root {
+  --color-bg-page: #f5f5f7;
+  --color-bg-surface: #ffffff;
+  --color-bg-subtle: #f0f0f5;
+  --color-border: rgba(0, 0, 0, 0.06);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
 /* Ultra-minimal SaaS tokens — Notion / Attio / Stripe inspired */
 @theme {
   --color-md-primary: #0f172a;
@@ -40,7 +49,7 @@ html {
 body {
   margin: 0;
   font-family: inherit;
-  background: #f5f5f7;
+  background: var(--color-bg-page);
   color: var(--color-md-on-surface);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -133,19 +142,19 @@ span {
   font-family: inherit;
 }
 
-/* Light theme panels — white / nested gray with subtle elevation */
+/* Light theme panels — surface tokens */
 .md-surface {
-  background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.06);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md-md);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-card);
 }
 
 .md-surface-muted {
-  background: #f0f0f5;
-  border: 1px solid rgba(0, 0, 0, 0.06);
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md-md);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-card);
 }
 
 .md-elevated {
@@ -331,29 +340,34 @@ span {
   cursor: not-allowed;
 }
 
-/* Light theme — page shell & Tailwind card surfaces (dark theme untouched) */
+/* Light theme — apply surface tokens (dark theme untouched) */
 html:not(.dark) body,
 html:not(.dark) #root {
-  background-color: #f5f5f7;
+  background-color: var(--color-bg-page);
 }
 
 html:not(.dark) .min-h-screen.bg-white,
-html:not(.dark) .h-screen.bg-white {
-  background-color: #f5f5f7;
+html:not(.dark) .h-screen.bg-white,
+html:not(.dark) .bg-gray-50\/50 {
+  background-color: var(--color-bg-page);
 }
 
-html:not(.dark) .border-\[\#E2E8F0\].bg-white {
-  background-color: #ffffff;
-  border-color: rgba(0, 0, 0, 0.06);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+/* Sidebar */
+html:not(.dark) aside.border-e.border-gray-200.bg-white {
+  background-color: var(--color-bg-surface);
+  border-color: var(--color-border);
 }
 
-html:not(.dark) .border-\[\#E2E8F0\].bg-\[\#F8FAFC\] {
-  background-color: #f0f0f5;
-  border-color: rgba(0, 0, 0, 0.06);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+/* Top bar */
+html:not(.dark) .sticky.top-0.z-30.border-b.border-exeer-border {
+  background-color: var(--color-bg-surface);
+  border-bottom-color: var(--color-border);
 }
 
+/* Main cards */
+html:not(.dark) .card,
+html:not(.dark) [class*="card"],
+html:not(.dark) .border-\[\#E2E8F0\].bg-white,
 html:not(.dark) section.rounded-md.border.border-gray-200.bg-white,
 html:not(.dark) article.rounded-md.border.border-gray-200.bg-white,
 html:not(.dark) .rounded-md.border.border-gray-200.bg-white.p-4,
@@ -369,18 +383,19 @@ html:not(.dark) .bg-md-surface.border.rounded-md,
 html:not(.dark) .bg-md-surface.border.rounded-2xl,
 html:not(.dark) .bg-md-surface.border.rounded-\[12px\],
 html:not(.dark) .bg-md-surface.border.rounded-\[16px\] {
-  background-color: #ffffff;
-  border-color: rgba(0, 0, 0, 0.06);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  background-color: var(--color-bg-surface);
+  border-color: var(--color-border);
+  box-shadow: var(--shadow-card);
 }
 
+/* Nested cards */
+html:not(.dark) .border-\[\#E2E8F0\].bg-\[\#F8FAFC\],
 html:not(.dark) .md-surface .bg-exeer-surface,
-html:not(.dark) .md-surface-muted,
 html:not(.dark) .md-surface .md-surface-muted,
 html:not(.dark) .bg-md-surface .bg-exeer-surface,
 html:not(.dark) .rounded-md.border.border-exeer-border.bg-exeer-surface,
 html:not(.dark) .rounded-\[12px\].border.border-\[\#E2E8F0\].bg-exeer-surface {
-  background-color: #f0f0f5;
+  background-color: var(--color-bg-subtle);
 }
 
 /* Dark mode — neutral Gemini-like palette (no blue/navy tint) */

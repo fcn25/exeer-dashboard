@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useBlocker } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   ClipboardList,
   FileSpreadsheet,
@@ -99,9 +99,43 @@ function StatCard({ label, value }) {
   );
 }
 
+function isInternalNavigationHref(href, currentHref) {
+  if (
+    !href ||
+    href.startsWith("#") ||
+    href.startsWith("mailto:") ||
+    href.startsWith("tel:") ||
+    href.startsWith("javascript:")
+  ) {
+    return null;
+  }
+
+  try {
+    const targetUrl = new URL(href, currentHref);
+    const currentUrl = new URL(currentHref);
+
+    if (targetUrl.origin !== currentUrl.origin) {
+      return null;
+    }
+
+    const targetPath = `${targetUrl.pathname}${targetUrl.search}${targetUrl.hash}`;
+    const currentPath = `${currentUrl.pathname}${currentUrl.search}${currentUrl.hash}`;
+
+    if (targetPath === currentPath) {
+      return null;
+    }
+
+    return targetPath;
+  } catch {
+    return null;
+  }
+}
+
 export default function PayrollPage() {
   const { t } = useAppLocale();
   const { role } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   const isAccountant = isAccountantRole(role);
   const isHrPayroll = isHrPayrollStaff(role);
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonthValue);
@@ -166,6 +200,7 @@ export default function PayrollPage() {
     isAccountant && isUnderReview && !isRunLocked && !isRunCancelled;
   const canAccountantEditInline = canAccountantSync;
   const hasUnsavedEdits = pendingEdits.size > 0;
+  const hasPendingUnsaved = hasUnsavedEdits || Boolean(savingCellKey);
   const isSavingAnyCell =
     Boolean(savingCellKey) || isUnsavedDialogSaving || saveStatus === "saving";
   const hasChangeLogEntries = changeLogEntries.length > 0;
@@ -332,42 +367,43 @@ export default function PayrollPage() {
     }
   }, [transitionConfirm]);
 
+  const openNavigationGuard = useCallback((targetPath) => {
+    setUnsavedDialog({ type: "navigation", targetPath });
+  }, []);
+
   const handleMonthChange = useCallback(
     (nextMonth) => {
       if (!nextMonth || nextMonth === selectedMonth) return;
-      if (hasUnsavedEdits || savingCellKey) {
+      if (hasPendingUnsaved) {
         setUnsavedDialog({ type: "month", targetMonth: nextMonth });
         return;
       }
       setSelectedMonth(nextMonth);
     },
-    [hasUnsavedEdits, savingCellKey, selectedMonth],
+    [hasPendingUnsaved, selectedMonth],
   );
 
   const closeUnsavedDialog = useCallback(() => {
     if (isUnsavedDialogSaving) return;
-    if (unsavedDialog?.type === "navigation") {
-      unsavedDialog.reset?.();
-    }
     setUnsavedDialog(null);
-  }, [isUnsavedDialogSaving, unsavedDialog]);
+  }, [isUnsavedDialogSaving]);
 
   const continueAfterUnsavedDialog = useCallback(() => {
     const dialog = unsavedDialog;
     setUnsavedDialog(null);
+    setPendingEdits(new Map());
+    setFailedCellKeys(new Set());
+    setSaveStatus("idle");
 
     if (dialog?.type === "month" && dialog.targetMonth) {
-      setPendingEdits(new Map());
-      setFailedCellKeys(new Set());
-      setSaveStatus("idle");
       setSelectedMonth(dialog.targetMonth);
       return;
     }
 
-    if (dialog?.type === "navigation") {
-      dialog.proceed?.();
+    if (dialog?.type === "navigation" && dialog.targetPath) {
+      navigate(dialog.targetPath);
     }
-  }, [unsavedDialog]);
+  }, [navigate, unsavedDialog]);
 
   const handleUnsavedSaveAndContinue = useCallback(async () => {
     setIsUnsavedDialogSaving(true);
@@ -380,20 +416,30 @@ export default function PayrollPage() {
     }
   }, [continueAfterUnsavedDialog, saveAllPendingEdits]);
 
-  const blocker = useBlocker(
-    ({ currentLocation, nextLocation }) =>
-      hasUnsavedEdits &&
-      currentLocation.pathname !== nextLocation.pathname,
-  );
-
   useEffect(() => {
-    if (blocker.state !== "blocked" || unsavedDialog) return;
-    setUnsavedDialog({
-      type: "navigation",
-      proceed: () => blocker.proceed?.(),
-      reset: () => blocker.reset?.(),
-    });
-  }, [blocker, unsavedDialog]);
+    if (!hasPendingUnsaved) return undefined;
+
+    const handleDocumentClick = (event) => {
+      const anchor = event.target.closest("a[href]");
+      if (!anchor || anchor.target === "_blank" || anchor.hasAttribute("download")) {
+        return;
+      }
+      if (event.defaultPrevented) return;
+
+      const targetPath = isInternalNavigationHref(
+        anchor.getAttribute("href"),
+        window.location.href,
+      );
+      if (!targetPath) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      openNavigationGuard(targetPath);
+    };
+
+    document.addEventListener("click", handleDocumentClick, true);
+    return () => document.removeEventListener("click", handleDocumentClick, true);
+  }, [hasPendingUnsaved, location.pathname, openNavigationGuard]);
 
   useEffect(() => {
     const handleBeforeUnload = (event) => {

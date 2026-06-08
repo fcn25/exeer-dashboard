@@ -25,8 +25,9 @@ import {
   rejectEmployeeRequest,
 } from "../../../services/requestApprovalService.js";
 import { useAppLocale } from "../../../i18n/useAppLocale.js";
+import { useAuth } from "../../../context/AuthContext.jsx";
 import MobileManagerQuickTools from "./MobileManagerQuickTools.jsx";
-import { canAccessStrategicAI } from "../../../utils/rbac.js";
+import { canAccessStrategicAI, isAccountantRole } from "../../../utils/rbac.js";
 
 const ACTION_ICONS = {
   iqama: AlertTriangle,
@@ -88,7 +89,9 @@ export default function MobileManagerHomeContent({
   onRefresh,
 }) {
   const { t } = useAppLocale();
+  const { role } = useAuth();
   const navigate = useNavigate();
+  const showPayrollNav = isAccountantRole(role);
   const [actingRequestId, setActingRequestId] = useState(null);
   const [requestActionError, setRequestActionError] = useState("");
   const [probationModal, setProbationModal] = useState(null);
@@ -154,6 +157,18 @@ export default function MobileManagerHomeContent({
 
   return (
     <div className="space-y-5">
+      {showPayrollNav ? (
+        <section className={`${HOME_SHELL} p-4`}>
+          <button
+            type="button"
+            onClick={() => navigate("/dashboard/payroll")}
+            className="md-btn-primary w-full py-3.5 text-base font-semibold shadow-none"
+          >
+            الذهاب إلى مسير الرواتب
+          </button>
+        </section>
+      ) : null}
+
       {successMessage ? (
         <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200">
           {successMessage}

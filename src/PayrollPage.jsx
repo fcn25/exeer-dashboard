@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useBlocker } from "react-router-dom";
 import {
   ClipboardList,
   FileSpreadsheet,
@@ -10,6 +11,8 @@ import {
 import PayrollChangeLogModal from "./components/payroll/PayrollChangeLogModal.jsx";
 import PayrollChangeLogPanel from "./components/payroll/PayrollChangeLogPanel.jsx";
 import PayrollEditableCell from "./components/payroll/PayrollEditableCell.jsx";
+import PayrollTransitionConfirmDialog from "./components/payroll/PayrollTransitionConfirmDialog.jsx";
+import PayrollUnsavedEditsDialog from "./components/payroll/PayrollUnsavedEditsDialog.jsx";
 import PayrollHistoryModal from "./components/payroll/PayrollHistoryModal.jsx";
 import { MonthInput } from "./components/ui/DateInput.jsx";
 import {
@@ -72,6 +75,19 @@ function formatLockedDate(iso) {
   }
 }
 
+function formatSaveTimestamp(date) {
+  if (!date) return "";
+  try {
+    return date.toLocaleString("ar-SA", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
+  } catch {
+    return "";
+  }
+}
+
 function StatCard({ label, value }) {
   return (
     <article className={CARD_CLASS}>
@@ -104,6 +120,14 @@ export default function PayrollPage() {
   const [isChangeLogLoading, setIsChangeLogLoading] = useState(false);
   const [changeLogError, setChangeLogError] = useState("");
   const [savingCellKey, setSavingCellKey] = useState("");
+  const [saveStatus, setSaveStatus] = useState("idle");
+  const [lastSavedAt, setLastSavedAt] = useState(null);
+  const [failedCellKeys, setFailedCellKeys] = useState(() => new Set());
+  const [pendingEdits, setPendingEdits] = useState(() => new Map());
+  const [transitionConfirm, setTransitionConfirm] = useState(null);
+  const [isTransitionSubmitting, setIsTransitionSubmitting] = useState(false);
+  const [unsavedDialog, setUnsavedDialog] = useState(null);
+  const [isUnsavedDialogSaving, setIsUnsavedDialogSaving] = useState(false);
 
   const { getSetting } = useCompanySettings();
   const showTransportColumn = Boolean(getSetting("transport_allowance_enabled"));
@@ -141,6 +165,9 @@ export default function PayrollPage() {
   const canAccountantSync =
     isAccountant && isUnderReview && !isRunLocked && !isRunCancelled;
   const canAccountantEditInline = canAccountantSync;
+  const hasUnsavedEdits = pendingEdits.size > 0;
+  const isSavingAnyCell =
+    Boolean(savingCellKey) || isUnsavedDialogSaving || saveStatus === "saving";
   const hasChangeLogEntries = changeLogEntries.length > 0;
   const statusBadgeLabel = runStatus
     ? (PAYROLL_RUN_STATUS_LABELS[runStatus] ?? null)
@@ -202,42 +229,6 @@ export default function PayrollPage() {
     loadChangeLog();
   }, [loadChangeLog]);
 
-  const handleCellSave = async (row, columnKey, nextValue) => {
-    if (!canAccountantEditInline) {
-      showEditBlockedToast();
-      return;
-    }
-
-    const cellKey = `${row.id}:${columnKey}`;
-    setSavingCellKey(cellKey);
-    setError("");
-
-    try {
-      const updatedRow = await saveAccountantPayrollRecordField({
-        pickerValue: selectedMonth,
-        recordId: row.id,
-        fieldKey: columnKey,
-        value: nextValue,
-      });
-
-      setRows((current) =>
-        current.map((item) => (item.id === row.id ? updatedRow : item)),
-      );
-      await loadChangeLog();
-      setSuccessMessage("تم حفظ التعديل وإعادة احتساب GOSI والصافي");
-    } catch (err) {
-      setError(err.message || "تعذّر حفظ التعديل.");
-    } finally {
-      setSavingCellKey("");
-    }
-  };
-
-  useEffect(() => {
-    if (!successMessage) return undefined;
-    const timer = setTimeout(() => setSuccessMessage(""), 4000);
-    return () => clearTimeout(timer);
-  }, [successMessage]);
-
   const showLockedToast = useCallback(() => {
     setSuccessMessage("");
     setError(PAYROLL_RUN_LOCKED_MESSAGE);
@@ -247,6 +238,179 @@ export default function PayrollPage() {
     setSuccessMessage("");
     setError(PAYROLL_RUN_EDIT_BLOCKED_MESSAGE);
   }, []);
+
+  const handleCellSave = useCallback(
+    async (row, columnKey, nextValue) => {
+      if (!canAccountantEditInline) {
+        showEditBlockedToast();
+        return false;
+      }
+
+      const cellKey = `${row.id}:${columnKey}`;
+      setSavingCellKey(cellKey);
+      setSaveStatus("saving");
+      setError("");
+
+      try {
+        const updatedRow = await saveAccountantPayrollRecordField({
+          pickerValue: selectedMonth,
+          recordId: row.id,
+          fieldKey: columnKey,
+          value: nextValue,
+        });
+
+        setRows((current) =>
+          current.map((item) => (item.id === row.id ? updatedRow : item)),
+        );
+        setPendingEdits((current) => {
+          const next = new Map(current);
+          next.delete(cellKey);
+          return next;
+        });
+        setFailedCellKeys((current) => {
+          const next = new Set(current);
+          next.delete(cellKey);
+          return next;
+        });
+        setLastSavedAt(new Date());
+        setSaveStatus("saved");
+        await loadChangeLog();
+        return true;
+      } catch (err) {
+        setFailedCellKeys((current) => new Set(current).add(cellKey));
+        setSaveStatus("error");
+        setError(err.message || "تعذّر حفظ التعديل.");
+        return false;
+      } finally {
+        setSavingCellKey("");
+      }
+    },
+    [
+      canAccountantEditInline,
+      loadChangeLog,
+      selectedMonth,
+      showEditBlockedToast,
+    ],
+  );
+
+  const saveAllPendingEdits = useCallback(async () => {
+    const edits = Array.from(pendingEdits.values());
+    if (edits.length === 0) return true;
+
+    let allSaved = true;
+    for (const edit of edits) {
+      const saved = await handleCellSave(edit.row, edit.columnKey, edit.value);
+      if (!saved) allSaved = false;
+    }
+    return allSaved;
+  }, [handleCellSave, pendingEdits]);
+
+  const openTransitionConfirm = useCallback((config) => {
+    setTransitionConfirm(config);
+  }, []);
+
+  const closeTransitionConfirm = useCallback(() => {
+    if (!isTransitionSubmitting) {
+      setTransitionConfirm(null);
+    }
+  }, [isTransitionSubmitting]);
+
+  const runTransitionConfirm = useCallback(async () => {
+    if (!transitionConfirm?.execute) return;
+
+    setIsTransitionSubmitting(true);
+    setError("");
+    setSuccessMessage("");
+
+    try {
+      await transitionConfirm.execute();
+      setTransitionConfirm(null);
+    } catch (err) {
+      setError(err.message || "تعذّر تنفيذ الإجراء.");
+    } finally {
+      setIsTransitionSubmitting(false);
+    }
+  }, [transitionConfirm]);
+
+  const handleMonthChange = useCallback(
+    (nextMonth) => {
+      if (!nextMonth || nextMonth === selectedMonth) return;
+      if (hasUnsavedEdits || savingCellKey) {
+        setUnsavedDialog({ type: "month", targetMonth: nextMonth });
+        return;
+      }
+      setSelectedMonth(nextMonth);
+    },
+    [hasUnsavedEdits, savingCellKey, selectedMonth],
+  );
+
+  const closeUnsavedDialog = useCallback(() => {
+    if (isUnsavedDialogSaving) return;
+    if (unsavedDialog?.type === "navigation") {
+      unsavedDialog.reset?.();
+    }
+    setUnsavedDialog(null);
+  }, [isUnsavedDialogSaving, unsavedDialog]);
+
+  const continueAfterUnsavedDialog = useCallback(() => {
+    const dialog = unsavedDialog;
+    setUnsavedDialog(null);
+
+    if (dialog?.type === "month" && dialog.targetMonth) {
+      setPendingEdits(new Map());
+      setFailedCellKeys(new Set());
+      setSaveStatus("idle");
+      setSelectedMonth(dialog.targetMonth);
+      return;
+    }
+
+    if (dialog?.type === "navigation") {
+      dialog.proceed?.();
+    }
+  }, [unsavedDialog]);
+
+  const handleUnsavedSaveAndContinue = useCallback(async () => {
+    setIsUnsavedDialogSaving(true);
+    try {
+      const saved = await saveAllPendingEdits();
+      if (!saved) return;
+      continueAfterUnsavedDialog();
+    } finally {
+      setIsUnsavedDialogSaving(false);
+    }
+  }, [continueAfterUnsavedDialog, saveAllPendingEdits]);
+
+  const blocker = useBlocker(
+    ({ currentLocation, nextLocation }) =>
+      hasUnsavedEdits &&
+      currentLocation.pathname !== nextLocation.pathname,
+  );
+
+  useEffect(() => {
+    if (blocker.state !== "blocked" || unsavedDialog) return;
+    setUnsavedDialog({
+      type: "navigation",
+      proceed: () => blocker.proceed?.(),
+      reset: () => blocker.reset?.(),
+    });
+  }, [blocker, unsavedDialog]);
+
+  useEffect(() => {
+    const handleBeforeUnload = (event) => {
+      if (!hasUnsavedEdits) return;
+      event.preventDefault();
+      event.returnValue = "";
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [hasUnsavedEdits]);
+
+  useEffect(() => {
+    if (!successMessage) return undefined;
+    const timer = setTimeout(() => setSuccessMessage(""), 4000);
+    return () => clearTimeout(timer);
+  }, [successMessage]);
 
   const applyPayrollResult = useCallback((result) => {
     setRows(result.rows);
@@ -323,15 +487,12 @@ export default function PayrollPage() {
     }
   };
 
-  const handleSubmitForReview = async () => {
+  const executeSubmitForReview = useCallback(async () => {
     if (!selectedMonth || !hasExistingPayroll || !isHrPayroll || isRunLocked) {
       return;
     }
 
     setIsLoading(true);
-    setError("");
-    setSuccessMessage("");
-
     try {
       const result = await updatePayrollRunStatus(
         selectedMonth,
@@ -341,20 +502,38 @@ export default function PayrollPage() {
       setSuccessMessage("تم إرسال المسير للمراجعة");
     } catch (err) {
       setError(err.message || "تعذّر إرسال المسير للمراجعة.");
+      throw err;
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [
+    applyPayrollResult,
+    hasExistingPayroll,
+    isHrPayroll,
+    isRunLocked,
+    selectedMonth,
+  ]);
 
-  const handleSubmitToHr = async () => {
-    if (!selectedMonth || !hasExistingPayroll || !isAccountant || !isUnderReview) {
+  const requestSubmitForReview = useCallback(() => {
+    openTransitionConfirm({
+      variant: "simple",
+      title: "إرسال للمراجعة",
+      message: "سيتم إرسال المسير للمحاسب للمراجعة. متابعة؟",
+      execute: executeSubmitForReview,
+    });
+  }, [executeSubmitForReview, openTransitionConfirm]);
+
+  const executeSubmitToHr = useCallback(async () => {
+    if (
+      !selectedMonth ||
+      !hasExistingPayroll ||
+      !isAccountant ||
+      !isUnderReview
+    ) {
       return;
     }
 
     setIsLoading(true);
-    setError("");
-    setSuccessMessage("");
-
     try {
       const result = await updatePayrollRunStatus(
         selectedMonth,
@@ -364,18 +543,32 @@ export default function PayrollPage() {
       setSuccessMessage("تم إرسال المسير للموارد البشرية");
     } catch (err) {
       setError(err.message || "تعذّر إرسال المسير للموارد البشرية.");
+      throw err;
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [
+    applyPayrollResult,
+    hasExistingPayroll,
+    isAccountant,
+    isUnderReview,
+    selectedMonth,
+  ]);
 
-  const handleReturnToDraft = async () => {
+  const requestSubmitToHr = useCallback(() => {
+    openTransitionConfirm({
+      variant: "simple",
+      title: "إرسال للموارد البشرية",
+      message:
+        "هل أكملت جميع تعديلاتك؟ سيُرسل المسير للموارد البشرية للاعتماد. متابعة؟",
+      execute: executeSubmitToHr,
+    });
+  }, [executeSubmitToHr, openTransitionConfirm]);
+
+  const executeReturnToDraft = useCallback(async () => {
     if (!selectedMonth || isRunLocked || !isHrPayroll) return;
 
     setIsLoading(true);
-    setError("");
-    setSuccessMessage("");
-
     try {
       const result = await updatePayrollRunStatus(
         selectedMonth,
@@ -385,20 +578,27 @@ export default function PayrollPage() {
       setSuccessMessage("تم إرجاع المسير كمسودة");
     } catch (err) {
       setError(err.message || "تعذّر إرجاع المسير كمسودة.");
+      throw err;
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [applyPayrollResult, isHrPayroll, isRunLocked, selectedMonth]);
 
-  const handleReturnToAccountant = async () => {
+  const requestReturnToDraft = useCallback(() => {
+    openTransitionConfirm({
+      variant: "simple",
+      title: "إرجاع كمسودة",
+      message: "سيُعاد المسير إلى مسودة. متابعة؟",
+      execute: executeReturnToDraft,
+    });
+  }, [executeReturnToDraft, openTransitionConfirm]);
+
+  const executeReturnToAccountant = useCallback(async () => {
     if (!selectedMonth || isRunLocked || !isHrPayroll || !isPendingApproval) {
       return;
     }
 
     setIsLoading(true);
-    setError("");
-    setSuccessMessage("");
-
     try {
       const result = await updatePayrollRunStatus(
         selectedMonth,
@@ -408,25 +608,33 @@ export default function PayrollPage() {
       setSuccessMessage("تم إعادة المسير للمحاسب");
     } catch (err) {
       setError(err.message || "تعذّر إعادة المسير للمحاسب.");
+      throw err;
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [
+    applyPayrollResult,
+    isHrPayroll,
+    isPendingApproval,
+    isRunLocked,
+    selectedMonth,
+  ]);
 
-  const handleLockRun = async () => {
+  const requestReturnToAccountant = useCallback(() => {
+    openTransitionConfirm({
+      variant: "simple",
+      title: "إعادة للمحاسب",
+      message: "سيُعاد المسير للمحاسب للتعديل. متابعة؟",
+      execute: executeReturnToAccountant,
+    });
+  }, [executeReturnToAccountant, openTransitionConfirm]);
+
+  const executeLockRun = useCallback(async () => {
     if (!selectedMonth || isRunLocked || !isHrPayroll || !isPendingApproval) {
-      return;
-    }
-    if (
-      !window.confirm("بعد القفل لا يمكن تعديل الأرقام. متابعة؟")
-    ) {
       return;
     }
 
     setIsLoading(true);
-    setError("");
-    setSuccessMessage("");
-
     try {
       const result = await updatePayrollRunStatus(
         selectedMonth,
@@ -436,10 +644,27 @@ export default function PayrollPage() {
       setSuccessMessage("تم اعتماد وقفل المسير");
     } catch (err) {
       setError(err.message || "تعذّر قفل المسير.");
+      throw err;
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [
+    applyPayrollResult,
+    isHrPayroll,
+    isPendingApproval,
+    isRunLocked,
+    selectedMonth,
+  ]);
+
+  const requestLockRun = useCallback(() => {
+    openTransitionConfirm({
+      variant: "lock",
+      title: "اعتماد وقفل المسير",
+      message:
+        "سيتم اعتماد المسير وقفله نهائياً. لن تتمكن من تعديل الأرقام أو إرجاع المسير بعد ذلك.",
+      execute: executeLockRun,
+    });
+  }, [executeLockRun, openTransitionConfirm]);
 
   const handleExportAccounting = async () => {
     if (!selectedMonth || rows.length === 0) return;
@@ -558,7 +783,7 @@ export default function PayrollPage() {
               id="payroll-month"
               label={t("pages.payroll.selectMonth")}
               value={selectedMonth}
-              onChange={(e) => setSelectedMonth(e.target.value)}
+              onChange={(e) => handleMonthChange(e.target.value)}
               disabled={isLoading}
               className="min-w-[220px]"
             />
@@ -608,14 +833,25 @@ export default function PayrollPage() {
                   <RefreshCw className="h-4 w-4" aria-hidden />
                   {t("pages.payroll.sync")}
                 </button>
-                <button
-                  type="button"
-                  onClick={handleSubmitToHr}
-                  disabled={isLoading || !selectedMonth || rows.length === 0}
-                  className="inline-flex items-center gap-2 rounded-md border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-sm font-medium text-indigo-900 shadow-none hover:bg-indigo-100 disabled:opacity-50"
-                >
-                  إرسال للموارد البشرية
-                </button>
+                <div className="flex flex-col gap-1">
+                  <button
+                    type="button"
+                    onClick={requestSubmitToHr}
+                    disabled={
+                      isLoading ||
+                      isSavingAnyCell ||
+                      !selectedMonth ||
+                      rows.length === 0
+                    }
+                    className="inline-flex items-center gap-2 rounded-md border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-sm font-medium text-indigo-900 shadow-none hover:bg-indigo-100 disabled:opacity-50"
+                  >
+                    إرسال للموارد البشرية
+                  </button>
+                  <p className="max-w-xs text-xs text-indigo-700">
+                    التعديلات تُحفظ تلقائياً عند الخروج من كل حقل. الإرسال
+                    للموارد البشرية يغيّر الحالة فقط ولا يحفظ التعديلات.
+                  </p>
+                </div>
               </>
             ) : null}
 
@@ -626,7 +862,7 @@ export default function PayrollPage() {
             !isRunCancelled ? (
               <button
                 type="button"
-                onClick={handleSubmitForReview}
+                onClick={requestSubmitForReview}
                 disabled={isLoading || !selectedMonth}
                 className="inline-flex items-center gap-2 rounded-md border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-sm font-medium text-indigo-900 shadow-none hover:bg-indigo-100 disabled:opacity-50"
               >
@@ -637,7 +873,7 @@ export default function PayrollPage() {
             {isHrPayroll && isUnderReview ? (
               <button
                 type="button"
-                onClick={handleReturnToDraft}
+                onClick={requestReturnToDraft}
                 disabled={isLoading || !selectedMonth}
                 className="inline-flex items-center gap-2 rounded-md border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 shadow-none hover:bg-gray-50 disabled:opacity-50"
               >
@@ -649,7 +885,7 @@ export default function PayrollPage() {
               <>
                 <button
                   type="button"
-                  onClick={handleReturnToDraft}
+                  onClick={requestReturnToDraft}
                   disabled={isLoading || !selectedMonth}
                   className="inline-flex items-center gap-2 rounded-md border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 shadow-none hover:bg-gray-50 disabled:opacity-50"
                 >
@@ -657,7 +893,7 @@ export default function PayrollPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={handleReturnToAccountant}
+                  onClick={requestReturnToAccountant}
                   disabled={isLoading || !selectedMonth}
                   className="inline-flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm font-medium text-amber-900 shadow-none hover:bg-amber-100 disabled:opacity-50"
                 >
@@ -665,7 +901,7 @@ export default function PayrollPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={handleLockRun}
+                  onClick={requestLockRun}
                   disabled={isLoading || !selectedMonth}
                   className="inline-flex items-center gap-2 rounded-md border border-emerald-700 bg-emerald-700 px-4 py-2.5 text-sm font-medium text-white shadow-none hover:bg-emerald-800 disabled:opacity-50"
                 >
@@ -729,10 +965,36 @@ export default function PayrollPage() {
         ) : null}
 
         {canAccountantEditInline ? (
-          <p className="payroll-no-print rounded-md border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-900 shadow-none">
-            يمكنك تعديل السكن والبدلات والعمولات والإضافي والجزاءات مباشرة —
-            يُعاد احتساب GOSI والصافي تلقائياً عند الحفظ.
-          </p>
+          <div className="payroll-no-print space-y-2">
+            <p className="rounded-md border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-900 shadow-none">
+              يمكنك تعديل السكن والبدلات والعمولات والإضافي والجزاءات مباشرة —
+              يُحفظ كل حقل تلقائياً عند الخروج منه ويُعاد احتساب GOSI والصافي.
+              «إرسال للموارد البشرية» خطوة منفصلة لتغيير الحالة فقط.
+            </p>
+            <div
+              className="flex flex-wrap items-center gap-2 rounded-md border border-gray-200 bg-white px-4 py-2.5 text-sm shadow-none"
+              aria-live="polite"
+            >
+              {isSavingAnyCell ? (
+                <span className="font-medium text-indigo-700">جارٍ الحفظ...</span>
+              ) : saveStatus === "saved" && lastSavedAt ? (
+                <span className="font-medium text-emerald-700">
+                  تم الحفظ ✓ — {formatSaveTimestamp(lastSavedAt)}
+                </span>
+              ) : saveStatus === "error" ? (
+                <span className="font-medium text-red-700">لم يتم الحفظ</span>
+              ) : (
+                <span className="text-slate-500">
+                  التعديلات تُحفظ تلقائياً عند الخروج من الحقل
+                </span>
+              )}
+              {hasUnsavedEdits ? (
+                <span className="text-xs text-amber-700">
+                  ({pendingEdits.size} حقل غير محفوظ)
+                </span>
+              ) : null}
+            </div>
+          </div>
         ) : null}
 
         <section
@@ -821,7 +1083,23 @@ export default function PayrollPage() {
                               <PayrollEditableCell
                                 value={row[column.key]}
                                 isSaving={isSavingCell}
-                                onSave={(nextValue) =>
+                                saveFailed={failedCellKeys.has(cellKey)}
+                                onDirtyChange={(isDirty, draftValue) => {
+                                  setPendingEdits((current) => {
+                                    const next = new Map(current);
+                                    if (isDirty) {
+                                      next.set(cellKey, {
+                                        row,
+                                        columnKey: column.key,
+                                        value: draftValue,
+                                      });
+                                    } else {
+                                      next.delete(cellKey);
+                                    }
+                                    return next;
+                                  });
+                                }}
+                                onSave={async (nextValue) =>
                                   handleCellSave(row, column.key, nextValue)
                                 }
                               />
@@ -851,6 +1129,24 @@ export default function PayrollPage() {
         entries={changeLogEntries}
         isLoading={isChangeLogLoading}
         error={changeLogError}
+      />
+
+      <PayrollTransitionConfirmDialog
+        isOpen={Boolean(transitionConfirm)}
+        variant={transitionConfirm?.variant ?? "simple"}
+        title={transitionConfirm?.title ?? ""}
+        message={transitionConfirm?.message ?? ""}
+        isSubmitting={isTransitionSubmitting || isLoading}
+        onConfirm={runTransitionConfirm}
+        onClose={closeTransitionConfirm}
+      />
+
+      <PayrollUnsavedEditsDialog
+        isOpen={Boolean(unsavedDialog)}
+        isSaving={isUnsavedDialogSaving}
+        onSaveAndContinue={handleUnsavedSaveAndContinue}
+        onDiscardAndContinue={continueAfterUnsavedDialog}
+        onCancel={closeUnsavedDialog}
       />
 
       <style>{`

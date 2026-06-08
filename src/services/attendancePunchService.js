@@ -9,6 +9,10 @@ import {
   buildTodayAttendanceSummary,
   resolveNextPunch,
 } from "../utils/attendance/summary.js";
+import {
+  fetchEmployeeAttendanceScheduleFromDb,
+  toAttendanceScheduleContext,
+} from "./employeeWorkScheduleService.js";
 
 function mapDbError(error) {
   if (!error) return "حدث خطأ غير متوقع.";
@@ -222,8 +226,12 @@ export async function performAttendancePunch(employeeId) {
     throw new Error(GEOFENCE_OUT_OF_RANGE_MESSAGE);
   }
 
-  const todayRecord = await fetchTodayRecord(companyId, resolvedEmployeeId);
-  const nextPunch = resolveNextPunch(todayRecord);
+  const [todayRecord, schedule] = await Promise.all([
+    fetchTodayRecord(companyId, resolvedEmployeeId),
+    fetchEmployeeAttendanceScheduleFromDb(resolvedEmployeeId),
+  ]);
+  const scheduleContext = toAttendanceScheduleContext(schedule);
+  const nextPunch = resolveNextPunch(todayRecord, scheduleContext);
 
   if (!nextPunch.canPunch) {
     throw new Error("اكتمل تسجيل الحضور والانصراف لهذا اليوم.");
@@ -249,8 +257,8 @@ export async function performAttendancePunch(employeeId) {
   });
 
   const updatedRecord = await fetchTodayRecord(companyId, resolvedEmployeeId);
-  const summary = buildTodayAttendanceSummary(updatedRecord);
-  const next = resolveNextPunch(updatedRecord);
+  const summary = buildTodayAttendanceSummary(updatedRecord, scheduleContext);
+  const next = resolveNextPunch(updatedRecord, scheduleContext);
 
   return {
     summary,

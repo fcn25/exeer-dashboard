@@ -265,7 +265,8 @@
         "punchOutSuccess": "Clocked out — {{branch}}",
         "punchError": "Could not complete punch",
         "loadError": "Could not load fingerprint data",
-        "noEmployee": "Your account is not linked to an employee record."
+        "noEmployee": "Your account is not linked to an employee record.",
+        "scheduleHint": "Your work schedule: {{schedule}}"
       },
       "recognition": {
         "title": "Employee recognition",
@@ -466,6 +467,15 @@
     "sections": {
       "payrollHint": "Payroll, GOSI, allowances, and employee loans",
       "loansTitle": "Employee loans"
+    },
+    "workPeriods": {
+      "title": "Work schedule",
+      "hint": "Define one or two daily periods with clear names, then assign each employee in their profile.",
+      "dualShift": "Enable two work periods per day",
+      "dualShiftHint": "e.g. morning and evening shifts on the same day",
+      "periodLabel": "Period {{index}}",
+      "name": "Period name",
+      "namePlaceholder": "e.g. Morning shift"
     },
     "options": {
       "saturday": "Saturday",

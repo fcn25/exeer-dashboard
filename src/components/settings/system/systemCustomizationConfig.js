@@ -31,6 +31,7 @@ export const SYSTEM_CUSTOMIZATION_TAB_KEYS = {
   ],
   attendance: [
     "attendance_mode",
+    "work_periods",
     "work_start_time",
     "work_end_time",
     "late_tolerance_minutes",

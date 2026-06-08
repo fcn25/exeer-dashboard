@@ -1,7 +1,69 @@
 import { ChevronDown } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ROLE_LABELS, STANDARD_ROLES } from "../../constants/roles.js";
+import { useCompanySettings } from "../../context/CompanySettingsContext.jsx";
+import {
+  getActiveCompanyPeriods,
+  normalizeEmployeeWorkPeriodIds,
+  parseWorkPeriodsSetting,
+} from "../../utils/attendance/workSchedules.js";
 import { DateInput } from "../ui/DateInput.jsx";
+function WorkPeriodAssignmentField({ form, update, disabled }) {
+  const { getSetting } = useCompanySettings();
+  const periods = useMemo(
+    () => getActiveCompanyPeriods(parseWorkPeriodsSetting(getSetting)),
+    [getSetting],
+  );
+  const selected = normalizeEmployeeWorkPeriodIds(form.work_period_ids, periods);
+
+  const togglePeriod = (periodId) => {
+    const next = selected.includes(periodId)
+      ? selected.filter((id) => id !== periodId)
+      : [...selected, periodId].sort();
+    if (!next.length) return;
+    update("work_period_ids", next);
+  };
+
+  if (periods.length <= 1) {
+    const period = periods[0];
+    return (
+      <p className="rounded-md border border-exeer-border bg-md-surface-dim px-3 py-2 text-sm text-exeer-muted">
+        {period.name} ({period.start} – {period.end})
+      </p>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      {periods.map((period) => {
+        const checked = selected.includes(period.id);
+        return (
+          <label
+            key={period.id}
+            className="flex cursor-pointer items-start gap-3 rounded-md border border-exeer-border bg-white px-3 py-2.5 dark:bg-slate-950/40"
+          >
+            <input
+              type="checkbox"
+              checked={checked}
+              disabled={disabled || (checked && selected.length === 1)}
+              onChange={() => togglePeriod(period.id)}
+              className="mt-1 h-4 w-4 rounded border-exeer-border"
+            />
+            <span className="min-w-0">
+              <span className="block text-sm font-semibold text-exeer-primary">
+                {period.name}
+              </span>
+              <span className="block text-xs text-exeer-muted">
+                {period.start} – {period.end}
+              </span>
+            </span>
+          </label>
+        );
+      })}
+    </div>
+  );
+}
+
 function Field({ label, children, required }) {
   return (
     <div>
@@ -323,6 +385,16 @@ export default function EmployeeFormSections({
                 لا توجد فروع لهذه الشركة. عرّفها من إعدادات البصمة أولاً.
               </p>
             ) : null}
+          </Field>
+          <Field label="مواعيد الدوام المعيّنة">
+            <WorkPeriodAssignmentField
+              form={form}
+              update={update}
+              disabled={disabled}
+            />
+            <p className="mt-1.5 text-xs text-exeer-muted">
+              يحدد فترات الحضور والانصراف في البصمة لهذا الموظف.
+            </p>
           </Field>
           <Field label="الإدارة">
             {departmentOptions.length > 0 ? (

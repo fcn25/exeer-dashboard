@@ -6,6 +6,7 @@ import {
 import { supabase } from "../utils/supabaseClient.js";
 import { getCompanyId } from "../utils/mobileAuth.js";
 import { isActiveEmployee } from "../utils/employeeStatus.js";
+import { isMissingColumnError } from "../utils/supabaseErrors.js";
 import { fetchCompanyBilling } from "./billingService.js";
 import { inviteEmployeeByEmail } from "./employeeInviteService.js";
 
@@ -38,6 +39,9 @@ export function employeeFormToRow(form) {
     direct_manager_name: form.direct_manager_name?.trim() || null,
     job_title_name: form.job_title_name?.trim() || null,
     work_location_id: form.work_location_id ? form.work_location_id : null,
+    work_period_ids: Array.isArray(form.work_period_ids) && form.work_period_ids.length
+      ? form.work_period_ids
+      : ["period_1"],
     department: form.department?.trim() || null,
     basic_salary: Number(form.basic_salary) || 0,
     housing_allowance: Number(form.housing_allowance) || 0,
@@ -167,23 +171,39 @@ export async function getEmployeeById(employeeId) {
   return data;
 }
 
-export async function createEmployee(form) {
-  await assertCanAddEmployees(1);
-
-  const companyId = getCompanyId();
-
-  const { data, error } = await supabase
+async function insertEmployeeRow(companyId, row) {
+  let { data, error } = await supabase
     .from("employees")
     .insert({
       company_id: companyId,
-      ...employeeFormToRow(form),
+      ...row,
     })
     .select()
     .single();
 
-  if (error) throw new Error(mapDbError(error));
+  if (error && isMissingColumnError(error) && row.work_period_ids) {
+    const { work_period_ids: _ignored, ...fallbackRow } = row;
+    const retry = await supabase
+      .from("employees")
+      .insert({
+        company_id: companyId,
+        ...fallbackRow,
+      })
+      .select()
+      .single();
+    data = retry.data;
+    error = retry.error;
+  }
 
+  if (error) throw new Error(mapDbError(error));
   return data;
+}
+
+export async function createEmployee(form) {
+  await assertCanAddEmployees(1);
+
+  const companyId = getCompanyId();
+  return insertEmployeeRow(companyId, employeeFormToRow(form));
 }
 
 export async function bulkCreateEmployees(rows) {
@@ -294,16 +314,31 @@ export async function inviteEmployeesWithoutAccounts() {
 
 export async function updateEmployee(employeeId, form) {
   const companyId = getCompanyId();
-  const { data, error } = await supabase
+  const payload = {
+    ...employeeFormToRow(form),
+    updated_at: new Date().toISOString(),
+  };
+
+  let { data, error } = await supabase
     .from("employees")
-    .update({
-      ...employeeFormToRow(form),
-      updated_at: new Date().toISOString(),
-    })
+    .update(payload)
     .eq("company_id", companyId)
     .eq("id", employeeId)
     .select()
     .single();
+
+  if (error && isMissingColumnError(error) && payload.work_period_ids) {
+    const { work_period_ids: _ignored, ...fallbackPayload } = payload;
+    const retry = await supabase
+      .from("employees")
+      .update(fallbackPayload)
+      .eq("company_id", companyId)
+      .eq("id", employeeId)
+      .select()
+      .single();
+    data = retry.data;
+    error = retry.error;
+  }
 
   if (error) throw new Error(mapDbError(error));
   return data;

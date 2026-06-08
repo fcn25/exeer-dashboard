@@ -31,10 +31,17 @@ function TabPanel({ tabId, activeTab, children }) {
 export default function SettingsPage() {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
+  const showUpdates = isOwner();
   const showSubscription = isOwner();
   const visibleTabs = useMemo(
-    () => TAB_DEFS.filter((tab) => !tab.adminOnly || showSubscription),
-    [showSubscription],
+    () =>
+      TAB_DEFS.filter((tab) => {
+        if (!tab.adminOnly) return true;
+        if (tab.id === "updates") return showUpdates;
+        if (tab.id === "subscription") return showSubscription;
+        return false;
+      }),
+    [showSubscription, showUpdates],
   );
 
   const tabFromUrl = searchParams.get("tab");
@@ -106,15 +113,15 @@ export default function SettingsPage() {
           <TabPanel tabId="support" activeTab={resolvedTab}>
             <SupportSettingsTab />
           </TabPanel>
+          {showUpdates ? (
+            <TabPanel tabId="updates" activeTab={resolvedTab}>
+              <SystemUpdatesTab />
+            </TabPanel>
+          ) : null}
           {showSubscription ? (
-            <>
-              <TabPanel tabId="updates" activeTab={resolvedTab}>
-                <SystemUpdatesTab />
-              </TabPanel>
-              <TabPanel tabId="subscription" activeTab={resolvedTab}>
-                <SubscriptionSettingsTab />
-              </TabPanel>
-            </>
+            <TabPanel tabId="subscription" activeTab={resolvedTab}>
+              <SubscriptionSettingsTab />
+            </TabPanel>
           ) : null}
         </section>
       </div>

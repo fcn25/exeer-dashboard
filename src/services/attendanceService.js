@@ -16,6 +16,11 @@ import {
   formatAttendanceClockTime,
   formatWorkingDuration,
 } from "../utils/attendance/summary.js";
+import {
+  fetchEmployeeAttendanceSchedule,
+  fetchEmployeeAttendanceScheduleFromDb,
+  toAttendanceScheduleContext,
+} from "./employeeWorkScheduleService.js";
 
 function mapDbError(error) {
   if (!error) return "حدث خطأ غير متوقع.";
@@ -380,29 +385,40 @@ export async function fetchEmployeeMonthlyAttendanceReport(employeeId) {
   };
 }
 
-export async function fetchTodayAttendanceForEmployee(employeeId) {
+export async function fetchTodayAttendanceForEmployee(employeeId, options = {}) {
   const companyId = requireCompanyId("تحميل حضور اليوم");
   const resolvedEmployeeId = Number(employeeId);
   if (!Number.isFinite(resolvedEmployeeId) || resolvedEmployeeId <= 0) {
     return buildTodayAttendanceSummary(null);
   }
 
-  const { data, error } = await scopeQueryByCompany(
-    supabase
-      .from("attendance_records")
-      .select(
-        "check_in_1, check_out_1, check_in_2, check_out_2, status, delay_minutes",
-      )
-      .eq("employee_id", resolvedEmployeeId)
-      .eq("record_date", todayIsoDate()),
-    companyId,
-  ).maybeSingle();
+  const [schedule, recordResult] = await Promise.all([
+    options.getSetting
+      ? fetchEmployeeAttendanceSchedule(resolvedEmployeeId, options.getSetting)
+      : fetchEmployeeAttendanceScheduleFromDb(resolvedEmployeeId),
+    scopeQueryByCompany(
+      supabase
+        .from("attendance_records")
+        .select(
+          "check_in_1, check_out_1, check_in_2, check_out_2, status, delay_minutes",
+        )
+        .eq("employee_id", resolvedEmployeeId)
+        .eq("record_date", todayIsoDate()),
+      companyId,
+    ).maybeSingle(),
+  ]);
+
+  const { data, error } = recordResult ?? {};
 
   if (error && !isMissingAttendanceTable(error)) {
     throw new Error(mapDbError(error));
   }
 
-  return buildTodayAttendanceSummary(data ?? null);
+  const scheduleContext = schedule
+    ? toAttendanceScheduleContext(schedule)
+    : {};
+
+  return buildTodayAttendanceSummary(data ?? null, scheduleContext);
 }
 
 export async function fetchAttendanceRecords({

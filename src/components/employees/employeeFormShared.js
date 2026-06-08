@@ -19,6 +19,7 @@ export const EMPTY_EMPLOYEE_FORM = {
   direct_manager_name: "",
   job_title_name: "",
   work_location_id: "",
+  work_period_ids: ["period_1"],
   department: "",
   basic_salary: "",
   housing_allowance: "",
@@ -66,6 +67,9 @@ export function mapRowToEmployeeForm(row) {
     direct_manager_name: String(row.direct_manager_name ?? ""),
     job_title_name: String(row.job_title_name ?? ""),
     work_location_id: row.work_location_id != null ? String(row.work_location_id) : "",
+    work_period_ids: Array.isArray(row.work_period_ids)
+      ? row.work_period_ids
+      : ["period_1"],
     department: String(row.department ?? ""),
     basic_salary:
       row.basic_salary != null && row.basic_salary !== ""

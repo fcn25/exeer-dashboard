@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { DEFAULT_COMPANY_SETTINGS } from "../constants/companySettingsDefaults.js";
 import { SYSTEM_CUSTOMIZATION_TAB_KEYS } from "../components/settings/system/systemCustomizationConfig.js";
 import { useCompanySettings } from "../context/CompanySettingsContext.jsx";
+import { serializeWorkPeriodsForSave } from "../utils/attendance/workSchedules.js";
 
 function buildDraftFromSettings(getSetting) {
   const draft = {};
@@ -12,10 +13,17 @@ function buildDraftFromSettings(getSetting) {
   return draft;
 }
 
+function valuesEqual(a, b) {
+  if (typeof a === "object" && a != null) {
+    return JSON.stringify(a) === JSON.stringify(b);
+  }
+  return a === b;
+}
+
 function pickChanges(draft, baseline, keys) {
   const changes = {};
   for (const key of keys) {
-    if (draft[key] !== baseline[key]) {
+    if (!valuesEqual(draft[key], baseline[key])) {
       changes[key] = draft[key];
     }
   }
@@ -51,12 +59,15 @@ export function useSystemCustomizationForm() {
 
   const tabDirty = useMemo(() => {
     const keys = SYSTEM_CUSTOMIZATION_TAB_KEYS[activeTab] ?? [];
-    return keys.some((key) => draft[key] !== baseline[key]);
+    return keys.some((key) => !valuesEqual(draft[key], baseline[key]));
   }, [activeTab, draft, baseline]);
 
   const handleSaveTab = useCallback(async () => {
     const keys = SYSTEM_CUSTOMIZATION_TAB_KEYS[activeTab] ?? [];
-    const changes = pickChanges(draft, baseline, keys);
+    let changes = pickChanges(draft, baseline, keys);
+    if (changes.work_periods) {
+      changes = { ...changes, ...serializeWorkPeriodsForSave(changes.work_periods) };
+    }
     if (!Object.keys(changes).length) return;
 
     setSavingTab(activeTab);

@@ -1,3 +1,21 @@
+const DEFAULT_WORK_PERIODS_CONFIG = {
+  dual_shift_enabled: false,
+  periods: [
+    {
+      id: "period_1",
+      name: "الدوام الرسمي",
+      start: "08:00",
+      end: "17:00",
+    },
+    {
+      id: "period_2",
+      name: "الفترة الثانية",
+      start: "16:00",
+      end: "22:00",
+    },
+  ],
+};
+
 /** Default company_settings rows seeded on first load */
 export const DEFAULT_COMPANY_SETTINGS = [
   { key: "annual_leave_days", value: 21 },
@@ -16,6 +34,7 @@ export const DEFAULT_COMPANY_SETTINGS = [
   { key: "performance_review_enabled", value: true },
   { key: "performance_review_cycle", value: "quarterly" },
   { key: "attendance_mode", value: "gps" },
+  { key: "work_periods", value: DEFAULT_WORK_PERIODS_CONFIG },
   { key: "work_start_time", value: "08:00" },
   { key: "work_end_time", value: "17:00" },
   { key: "calendar_type", value: "hijri" },

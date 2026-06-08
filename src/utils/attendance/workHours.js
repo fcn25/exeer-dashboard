@@ -1,5 +1,3 @@
-import { formatAttendanceClockTime } from "./summary.js";
-
 const TIME_PATTERN = /^([01]?\d|2[0-3]):([0-5]\d)$/;
 
 export function normalizeWorkTime(value, fallback = "08:00") {
@@ -25,5 +23,8 @@ export function canPunchOutNow(workEndTime) {
 
 export function formatWorkTimeLabel(timeValue) {
   const normalized = normalizeWorkTime(timeValue);
-  return formatAttendanceClockTime(`${normalized}:00`) ?? normalized;
+  const [hours, minutes] = normalized.split(":").map(Number);
+  const period = hours >= 12 ? "م" : "ص";
+  const hours12 = hours % 12 || 12;
+  return `${hours12}:${String(minutes).padStart(2, "0")} ${period}`;
 }

@@ -22,10 +22,10 @@ import {
 } from "../../../services/faceEnrollmentService.js";
 import { useCompanySettings } from "../../../context/CompanySettingsContext.jsx";
 import {
-  canPunchOutNow,
   formatWorkTimeLabel,
   normalizeWorkTime,
 } from "../../../utils/attendance/workHours.js";
+import { canPunchOutForPeriod } from "../../../utils/attendance/workSchedules.js";
 import { canManageAttendanceSettings } from "../../../utils/rbac.js";
 
 function AdminAttendanceSettingsSection() {
@@ -104,8 +104,15 @@ export default function MobileManagerAttendanceTab({ employeeId }) {
   const [isPunching, setIsPunching] = useState(false);
   const [clockTick, setClockTick] = useState(Date.now());
 
-  const workEndTime = normalizeWorkTime(getSetting("work_end_time"), "17:00");
+  const activePeriod = todayData?.activePeriod ?? null;
+  const fallbackEnd = normalizeWorkTime(getSetting("work_end_time"), "17:00");
+  const workEndTime = activePeriod?.end ?? fallbackEnd;
   const workEndLabel = formatWorkTimeLabel(workEndTime);
+  const scheduleHint = Array.isArray(todayData?.assignedPeriods)
+    ? todayData.assignedPeriods
+        .map((period) => `${period.name} (${period.start}–${period.end})`)
+        .join(" · ")
+    : "";
 
   const punchMode = useMemo(() => {
     if (todayData?.nextPunchType === "check_out") return "check_out";
@@ -115,7 +122,7 @@ export default function MobileManagerAttendanceTab({ employeeId }) {
 
   const isCheckIn = punchMode === "check_in";
   const isCheckOut = punchMode === "check_out";
-  const punchOutAllowed = canPunchOutNow(workEndTime);
+  const punchOutAllowed = canPunchOutForPeriod(activePeriod ?? { end: workEndTime });
 
   useEffect(() => {
     const timer = window.setInterval(() => setClockTick(Date.now()), 60_000);
@@ -137,7 +144,7 @@ export default function MobileManagerAttendanceTab({ employeeId }) {
 
     try {
       const [today, logs, report] = await Promise.all([
-        fetchTodayAttendanceForEmployee(employeeId),
+        fetchTodayAttendanceForEmployee(employeeId, { getSetting }),
         fetchRecentAttendanceLogsForEmployee(employeeId),
         fetchEmployeeMonthlyAttendanceReport(employeeId),
       ]);
@@ -153,7 +160,7 @@ export default function MobileManagerAttendanceTab({ employeeId }) {
     } finally {
       setIsLoading(false);
     }
-  }, [employeeId, t]);
+  }, [employeeId, getSetting, t]);
 
   useEffect(() => {
     loadAttendance();
@@ -259,6 +266,12 @@ export default function MobileManagerAttendanceTab({ employeeId }) {
         employeeId={employeeId}
         onEnrollmentChange={(value) => setIsEnrolled(value)}
       />
+
+      {scheduleHint ? (
+        <p className="rounded-2xl border border-exeer-border bg-md-surface px-4 py-3 text-xs leading-relaxed text-exeer-muted dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)] dark:text-[var(--text-secondary)]">
+          {t("pages.mobile.attendance.scheduleHint", { schedule: scheduleHint })}
+        </p>
+      ) : null}
 
       <section className="rounded-3xl border border-exeer-border bg-gradient-to-b from-white to-slate-50/80 px-5 py-6 shadow-sm dark:border-[var(--border-color)] dark:from-[var(--bg-surface)] dark:to-[var(--bg-main)]">
         <AttendancePunchButton

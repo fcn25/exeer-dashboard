@@ -3,9 +3,9 @@ import {
   SettingField,
   SettingNumberInput,
   SettingSelect,
-  SettingTimeInput,
   SettingToggle,
 } from "./SettingControls.jsx";
+import WorkPeriodsEditor from "./WorkPeriodsEditor.jsx";
 
 export default function SystemCustomizationPanels({
   activeTab,
@@ -221,19 +221,14 @@ export default function SystemCustomizationPanels({
           />
         </SettingField>
 
-        <SettingField label={t("systemCustomization.fields.workStartTime")}>
-          <SettingTimeInput
+        <SettingField
+          label={t("systemCustomization.workPeriods.title")}
+          hint={t("systemCustomization.workPeriods.hint")}
+        >
+          <WorkPeriodsEditor
             fullWidth={fullWidth}
-            value={draft.work_start_time}
-            onChange={(v) => updateDraft("work_start_time", v)}
-          />
-        </SettingField>
-
-        <SettingField label={t("systemCustomization.fields.workEndTime")}>
-          <SettingTimeInput
-            fullWidth={fullWidth}
-            value={draft.work_end_time}
-            onChange={(v) => updateDraft("work_end_time", v)}
+            value={draft.work_periods}
+            onChange={(value) => updateDraft("work_periods", value)}
           />
         </SettingField>
 

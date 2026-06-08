@@ -68,6 +68,8 @@ export function persistAuthSession(session, profile) {
     if (companyId != null) {
       localStorage.setItem("company_id", String(companyId));
     }
+
+    repairStoredAuthProfile();
   }
 }
 
@@ -160,6 +162,31 @@ export function getAuthUser() {
 export function getUserPermissions() {
   const user = getAuthUser();
   return resolvePermissionsForRole(user?.role, user?.permissions);
+}
+
+/** Re-normalize cached auth profile so legacy Admin owners always get full permissions. */
+export function repairStoredAuthProfile() {
+  try {
+    const user = getAuthUser();
+    if (!user) return null;
+
+    const role = normalizeAppRole(user.role);
+    const permissions = resolvePermissionsForRole(role, user.permissions);
+    const needsRoleRepair = user.role !== role;
+    const needsPermissionRepair = JSON.stringify(user.permissions) !== JSON.stringify(permissions);
+
+    if (!needsRoleRepair && !needsPermissionRepair) return user;
+
+    const repaired = {
+      ...user,
+      role,
+      permissions,
+    };
+    localStorage.setItem("auth_user", JSON.stringify(repaired));
+    return repaired;
+  } catch {
+    return null;
+  }
 }
 
 export function getUserDisplay() {

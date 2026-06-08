@@ -1,5 +1,5 @@
--- Ensure primary subscriber (company owner) has full tenant access.
--- Legacy "Admin" rows and RLS helpers must match application owner role.
+-- Run in Supabase SQL Editor to fix all primary subscriber (owner) accounts.
+-- Safe to run multiple times.
 
 update public.employees
 set role = 'owner'
@@ -47,5 +47,7 @@ as $$
   );
 $$;
 
-comment on function public.is_company_owner() is
-  'True for company owner (owner or legacy Admin role).';
+-- Verify owners after update:
+-- select id, email, role, company_id, employee_number from public.employees
+-- where employee_number = 'EMP-001' or role in ('owner', 'Admin')
+-- order by company_id;

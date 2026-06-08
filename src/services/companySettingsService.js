@@ -1,4 +1,8 @@
-import { requireSupabaseAdmin } from "../lib/supabaseAdmin.js";
+import {
+  isSupabaseAdminConfigured,
+  supabaseAdmin,
+} from "../lib/supabaseAdmin.js";
+import { supabase } from "../utils/supabaseClient.js";
 import { getCompanyId, getEmployeeId } from "../utils/mobileAuth.js";
 import {
   COMPANY_SETTING_KEYS,
@@ -11,7 +15,7 @@ function mapDbError(error) {
     return "جدول company_settings غير جاهز. نفّذ ملف supabase/migrations/20250709120000_company_settings.sql في Supabase SQL Editor.";
   }
   if (error.code === "42501" || /row-level security/i.test(error.message ?? "")) {
-    return "تعذّر حفظ الإعدادات. تأكد من ضبط VITE_SUPABASE_SERVICE_ROLE_KEY في .env.";
+    return "تعذّر حفظ الإعدادات — تأكد أن حسابك مالك المنشأة (owner) ونفّذ supabase/scripts/fix_owner_roles.sql في Supabase.";
   }
   return error.message || "تعذّر تحميل إعدادات النظام.";
 }
@@ -32,15 +36,39 @@ export function rowsToSettingsMap(rows = []) {
   return map;
 }
 
-export async function fetchCompanySettings(companyId = getCompanyId()) {
-  const admin = requireSupabaseAdmin();
-  const { data, error } = await admin
-    .from("company_settings")
-    .select("setting_key, setting_value")
-    .eq("company_id", companyId);
+/** Prefer authenticated session (owner RLS). Fall back to service role when configured. */
+function getCompanySettingsClients() {
+  const clients = [supabase];
+  if (isSupabaseAdminConfigured && supabaseAdmin) {
+    clients.push(supabaseAdmin);
+  }
+  return clients;
+}
 
-  if (error) throw new Error(mapDbError(error));
-  return rowsToSettingsMap(data ?? []);
+async function runWithSettingsClients(run) {
+  let lastError = null;
+
+  for (const client of getCompanySettingsClients()) {
+    try {
+      return await run(client);
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  throw lastError ?? new Error("تعذّر الوصول إلى إعدادات الشركة.");
+}
+
+export async function fetchCompanySettings(companyId = getCompanyId()) {
+  return runWithSettingsClients(async (client) => {
+    const { data, error } = await client
+      .from("company_settings")
+      .select("setting_key, setting_value")
+      .eq("company_id", companyId);
+
+    if (error) throw new Error(mapDbError(error));
+    return rowsToSettingsMap(data ?? []);
+  });
 }
 
 export async function ensureDefaultCompanySettings(
@@ -54,7 +82,6 @@ export async function ensureDefaultCompanySettings(
 
   if (!missing.length) return existing;
 
-  const admin = requireSupabaseAdmin();
   const payload = missing.map((row) => ({
     company_id: companyId,
     setting_key: row.key,
@@ -62,11 +89,12 @@ export async function ensureDefaultCompanySettings(
     updated_by: employeeId ?? null,
   }));
 
-  const { error } = await admin.from("company_settings").upsert(payload, {
-    onConflict: "company_id,setting_key",
+  await runWithSettingsClients(async (client) => {
+    const { error } = await client.from("company_settings").upsert(payload, {
+      onConflict: "company_id,setting_key",
+    });
+    if (error) throw new Error(mapDbError(error));
   });
-
-  if (error) throw new Error(mapDbError(error));
 
   return fetchCompanySettings(companyId);
 }
@@ -81,7 +109,6 @@ export async function upsertCompanySettings(
 
   if (!entries.length) return;
 
-  const admin = requireSupabaseAdmin();
   const payload = entries.map(([setting_key, value]) => ({
     company_id: companyId,
     setting_key,
@@ -90,9 +117,10 @@ export async function upsertCompanySettings(
     updated_at: new Date().toISOString(),
   }));
 
-  const { error } = await admin.from("company_settings").upsert(payload, {
-    onConflict: "company_id,setting_key",
+  await runWithSettingsClients(async (client) => {
+    const { error } = await client.from("company_settings").upsert(payload, {
+      onConflict: "company_id,setting_key",
+    });
+    if (error) throw new Error(mapDbError(error));
   });
-
-  if (error) throw new Error(mapDbError(error));
 }

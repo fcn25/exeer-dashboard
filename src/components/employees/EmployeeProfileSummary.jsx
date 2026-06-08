@@ -1,5 +1,5 @@
 import { formatDisplayValue } from "../../utils/displayValue.js";
-import { ROLE_LABELS } from "../../constants/roles.js";
+import { formatEmployeeRoleLabel } from "../../constants/roles.js";
 
 function ProfileRow({ label, value }) {
   return (
@@ -30,7 +30,7 @@ export default function EmployeeProfileSummary({ employee, isLoading = false }) 
   }
 
   const roleLabel =
-    ROLE_LABELS[employee.role] ?? formatDisplayValue(employee.role);
+    formatEmployeeRoleLabel(employee.role);
 
   return (
     <dl className="rounded-md border border-gray-200 bg-white px-4 py-1 shadow-none">

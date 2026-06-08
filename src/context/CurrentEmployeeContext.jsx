@@ -10,7 +10,8 @@ import {
   clearCurrentEmployeeCache,
   fetchCurrentEmployee,
 } from "../services/currentEmployeeService.js";
-import { persistAuthSession } from "../utils/mobileAuth.js";
+import { resolvePermissionsForRole } from "../constants/roles.js";
+import { persistAuthSession, repairStoredAuthProfile } from "../utils/mobileAuth.js";
 import { useAuth } from "./AuthContext.jsx";
 
 const CurrentEmployeeContext = createContext(null);
@@ -18,17 +19,19 @@ const CurrentEmployeeContext = createContext(null);
 function syncEmployeeToAuthStorage(current, authUser) {
   if (!current || !authUser) return;
 
+  const role = current.role ?? authUser.role;
   persistAuthSession(null, {
     id: authUser.id,
     email: authUser.email ?? current.email,
     name: current.fullName ?? authUser.name,
-    role: current.role,
+    role,
     company_id: current.companyId,
     employee_id: current.employeeId,
     department: current.department,
     job_title: current.jobTitle,
-    permissions: authUser.permissions,
+    permissions: resolvePermissionsForRole(role, authUser.permissions),
   });
+  repairStoredAuthProfile();
 }
 
 export function CurrentEmployeeProvider({ children }) {

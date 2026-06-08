@@ -21,6 +21,7 @@ import {
   clearAuthStorage,
   getAuthUser,
   persistAuthSession,
+  repairStoredAuthProfile,
 } from "../utils/mobileAuth.js";
 
 const AuthContext = createContext(null);
@@ -49,7 +50,8 @@ export function AuthProvider({ children, onSignedOut }) {
       try {
         const profile = await resolveAuthProfile(session.user);
         persistAuthSession(session, profile);
-        setUser(profile);
+        repairStoredAuthProfile();
+        setUser(getAuthUser() ?? profile);
         setIsAuthenticated(true);
         return profile;
       } catch (error) {

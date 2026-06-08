@@ -171,6 +171,18 @@ export function isOwnerRole(role) {
   return normalizeAppRole(role) === "owner";
 }
 
+export function formatEmployeeRoleLabel(role) {
+  const normalized = normalizeAppRole(role);
+  return ROLE_LABELS[normalized] ?? ROLE_LABELS[role] ?? role ?? "—";
+}
+
+/** Primary subscriber accounts (EMP-001) should always be company owners. */
+export function isPrimarySubscriberEmployee(employee) {
+  const employeeNumber = String(employee?.employee_number ?? "").trim();
+  const role = normalizeAppRole(employee?.role);
+  return employeeNumber === "EMP-001" || isOwnerRole(role);
+}
+
 /** @deprecated Use isOwnerRole */
 export function isAdminRole(role) {
   return isOwnerRole(role);

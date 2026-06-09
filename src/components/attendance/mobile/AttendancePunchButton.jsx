@@ -38,7 +38,14 @@ function toArabicNumerals(value) {
 function formatLockedCountdown(lockedUntil, now) {
   if (!lockedUntil) return "الخروج لاحقاً";
 
-  const diffMs = lockedUntil.getTime() - now.getTime();
+  const untilDate =
+    lockedUntil instanceof Date ? lockedUntil : new Date(lockedUntil);
+
+  const nowDate = now instanceof Date ? now : new Date(now);
+
+  if (isNaN(untilDate.getTime())) return "الخروج لاحقاً";
+
+  const diffMs = untilDate.getTime() - nowDate.getTime();
   if (diffMs <= 0) return "تسجيل الانصراف";
 
   const totalMinutes = Math.ceil(diffMs / 60_000);
@@ -47,7 +54,7 @@ function formatLockedCountdown(lockedUntil, now) {
   const parts = ["الخروج بعد"];
 
   if (hours > 0) {
-    parts.push(`${toArabicNumerals(hours)} ساعات`);
+    parts.push(`${toArabicNumerals(hours)} ساعة`);
   }
   if (minutes > 0) {
     parts.push(`${toArabicNumerals(minutes)} دقيقة`);
@@ -63,13 +70,13 @@ export default function AttendancePunchButton({
   isProcessing = false,
 }) {
   const config = STATE_CONFIG[state] ?? STATE_CONFIG.check_in;
-  const [now, setNow] = useState(() => Date.now());
+  const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
     if (state !== "locked" || !lockedUntil) return undefined;
 
-    setNow(Date.now());
-    const timer = window.setInterval(() => setNow(Date.now()), 60_000);
+    setNow(new Date());
+    const timer = window.setInterval(() => setNow(new Date()), 60_000);
     return () => window.clearInterval(timer);
   }, [lockedUntil, state]);
 

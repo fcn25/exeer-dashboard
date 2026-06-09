@@ -21,10 +21,7 @@ import {
   saveLatestPunchSelfie,
 } from "../../../services/faceEnrollmentService.js";
 import { useCompanySettings } from "../../../context/CompanySettingsContext.jsx";
-import {
-  formatWorkTimeLabel,
-  normalizeWorkTime,
-} from "../../../utils/attendance/workHours.js";
+import { normalizeWorkTime } from "../../../utils/attendance/workHours.js";
 import { canPunchOutForPeriod } from "../../../utils/attendance/workSchedules.js";
 import { canManageAttendanceSettings } from "../../../utils/rbac.js";
 
@@ -108,22 +105,36 @@ export default function MobileManagerAttendanceTab({ employeeId }) {
   const activePeriod = todayData?.activePeriod ?? null;
   const fallbackEnd = normalizeWorkTime(getSetting("work_end_time"), "17:00");
   const workEndTime = activePeriod?.end ?? fallbackEnd;
-  const workEndLabel = formatWorkTimeLabel(workEndTime);
   const scheduleHint = Array.isArray(todayData?.assignedPeriods)
     ? todayData.assignedPeriods
         .map((period) => `${period.name} (${period.start}–${period.end})`)
         .join(" · ")
     : "";
 
-  const punchMode = useMemo(() => {
-    if (todayData?.nextPunchType === "check_out") return "check_out";
-    if (todayData?.nextPunchType === "complete") return "complete";
-    return "check_in";
-  }, [todayData?.nextPunchType]);
-
-  const isCheckIn = punchMode === "check_in";
-  const isCheckOut = punchMode === "check_out";
   const punchOutAllowed = canPunchOutForPeriod(activePeriod ?? { end: workEndTime });
+
+  const buttonState = useMemo(() => {
+    if (!todayData || todayData.nextPunchType === "check_in") return "check_in";
+    if (todayData.nextPunchType === "complete") return "done";
+    if (todayData.nextPunchType === "check_out") {
+      return punchOutAllowed ? "check_out" : "locked";
+    }
+    return "check_in";
+  }, [punchOutAllowed, todayData]);
+
+  const lockedUntil = useMemo(() => {
+    if (buttonState !== "locked") return null;
+
+    const endTime = activePeriod?.end ?? workEndTime;
+    const [hours, minutes] = String(endTime).split(":").map(Number);
+    if (!Number.isFinite(hours)) return null;
+
+    const unlockAt = new Date();
+    unlockAt.setHours(hours, Number.isFinite(minutes) ? minutes : 0, 0, 0);
+    return unlockAt;
+  }, [activePeriod?.end, buttonState, clockTick, workEndTime]);
+
+  const isCheckIn = buttonState === "check_in";
 
   useEffect(() => {
     const timer = window.setInterval(() => setClockTick(Date.now()), 60_000);
@@ -198,57 +209,33 @@ export default function MobileManagerAttendanceTab({ employeeId }) {
     }
   };
 
-  const handlePunchRequest = async () => {
+  const handleButtonPress = async () => {
+    if (buttonState !== "check_in" && buttonState !== "check_out") return;
+    if (isLoading || loadError || isPunching) return;
+
     setActionError("");
     setSuccessMessage("");
 
-    if (isCheckIn) {
-      if (!isEnrolled) {
-        setActionError(t("pages.mobile.attendance.enrollmentRequired"));
-        return;
-      }
-
-      try {
-        const branch = await fetchEmployeeWorkBranchInfo(employeeId);
-        setPunchBranchName(branch.branchName);
-        setIsPunchCameraOpen(true);
-      } catch (err) {
-        setActionError(err.message || t("pages.mobile.attendance.punchError"));
-      }
+    if (buttonState === "check_in" && !isEnrolled) {
+      setActionError(t("pages.mobile.attendance.enrollmentRequired"));
       return;
     }
 
-    if (isCheckOut) {
-      if (!punchOutAllowed) return;
-      await executePunch();
+    try {
+      const branch = await fetchEmployeeWorkBranchInfo(employeeId);
+      setPunchBranchName(branch.branchName);
+      setIsPunchCameraOpen(true);
+    } catch (err) {
+      setActionError(err.message || t("pages.mobile.attendance.punchError"));
     }
   };
 
   const handlePunchSelfieCapture = async (selfieDataUrl) => {
+    const punchType = buttonState === "check_out" ? "Out" : "In";
     pendingSelfieRef.current = selfieDataUrl;
-    saveLatestPunchSelfie(employeeId, selfieDataUrl, "In");
+    saveLatestPunchSelfie(employeeId, selfieDataUrl, punchType);
     await executePunch();
   };
-
-  const punchLabel =
-    todayData?.nextPunchLabel ??
-    (isCheckOut
-      ? t("pages.mobile.attendance.punchOut")
-      : t("pages.mobile.attendance.punchIn"));
-
-  const disabledHint = isCheckOut && !punchOutAllowed
-    ? t("pages.mobile.attendance.punchOutLocked", { time: workEndLabel })
-    : "";
-
-  const canPunch =
-    !isLoading &&
-    !loadError &&
-    !isPunching &&
-    todayData?.canPunch !== false &&
-    punchMode !== "complete" &&
-    (isCheckIn ? isEnrolled : punchOutAllowed);
-
-  void clockTick;
 
   return (
     <div className="space-y-4">
@@ -281,21 +268,14 @@ export default function MobileManagerAttendanceTab({ employeeId }) {
 
       <section className="rounded-3xl border border-exeer-border bg-gradient-to-b from-white to-slate-50/80 px-5 py-6 shadow-sm dark:border-[var(--border-color)] dark:from-[var(--bg-surface)] dark:to-[var(--bg-main)]">
         <AttendancePunchButton
-          label={punchLabel}
-          onPunch={handlePunchRequest}
-          disabled={!canPunch}
-          isProcessing={isPunching && !isPunchCameraOpen}
-          mode={punchMode}
-          disabledHint={disabledHint}
+          state={buttonState}
+          onPress={handleButtonPress}
+          lockedUntil={lockedUntil}
+          isProcessing={isPunching}
         />
         {!isEnrolled && isCheckIn && !isLoading ? (
           <p className="mt-2 text-center text-xs text-amber-700 dark:text-amber-300">
             {t("pages.mobile.attendance.enrollmentRequired")}
-          </p>
-        ) : null}
-        {isCheckOut && !punchOutAllowed && !isLoading ? (
-          <p className="mt-2 text-center text-xs text-exeer-muted dark:text-[var(--text-secondary)]">
-            {disabledHint}
           </p>
         ) : null}
       </section>

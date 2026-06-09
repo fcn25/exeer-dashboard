@@ -1,75 +1,171 @@
-import { Fingerprint, Loader2, LogIn, LogOut } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+
+const STATE_CONFIG = {
+  check_in: {
+    background: "#0F172A",
+    icon: "→",
+    subtext: "تسجيل الحضور",
+    pulse: true,
+    tappable: true,
+  },
+  locked: {
+    background: "#16A34A",
+    icon: "✓",
+    subtext: "",
+    pulse: false,
+    tappable: false,
+  },
+  check_out: {
+    background: "#0F172A",
+    icon: "←",
+    subtext: "تسجيل الانصراف",
+    pulse: true,
+    tappable: true,
+  },
+  done: {
+    background: "#64748B",
+    icon: "✓",
+    subtext: "تم تسجيل الانصراف",
+    pulse: false,
+    tappable: false,
+  },
+};
+
+function toArabicNumerals(value) {
+  return String(value).replace(/\d/g, (digit) => "٠١٢٣٤٥٦٧٨٩"[Number(digit)]);
+}
+
+function formatLockedCountdown(lockedUntil, now) {
+  if (!lockedUntil) return "الخروج لاحقاً";
+
+  const diffMs = lockedUntil.getTime() - now.getTime();
+  if (diffMs <= 0) return "تسجيل الانصراف";
+
+  const totalMinutes = Math.ceil(diffMs / 60_000);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  const parts = ["الخروج بعد"];
+
+  if (hours > 0) {
+    parts.push(`${toArabicNumerals(hours)} ساعات`);
+  }
+  if (minutes > 0) {
+    parts.push(`${toArabicNumerals(minutes)} دقيقة`);
+  }
+
+  return parts.join(" ");
+}
 
 export default function AttendancePunchButton({
-  label,
-  onPunch,
-  disabled = false,
+  state = "check_in",
+  onPress,
+  lockedUntil = null,
   isProcessing = false,
-  mode = "check_in",
-  disabledHint = "",
-  statusText = "",
 }) {
-  const isCheckOut = mode === "check_out";
-  const isComplete = mode === "complete";
-  const Icon = isCheckOut ? LogOut : isComplete ? Fingerprint : LogIn;
+  const config = STATE_CONFIG[state] ?? STATE_CONFIG.check_in;
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    if (state !== "locked" || !lockedUntil) return undefined;
+
+    setNow(Date.now());
+    const timer = window.setInterval(() => setNow(Date.now()), 60_000);
+    return () => window.clearInterval(timer);
+  }, [lockedUntil, state]);
+
+  const subtext = useMemo(() => {
+    if (isProcessing) return "جارٍ التسجيل...";
+    if (state === "locked") {
+      return formatLockedCountdown(lockedUntil, now);
+    }
+    return config.subtext;
+  }, [config.subtext, isProcessing, lockedUntil, now, state]);
+
+  const isTappable = config.tappable && !isProcessing;
 
   const handleClick = () => {
-    if (isProcessing || disabled) return;
-    onPunch?.();
+    if (!isTappable) return;
+    onPress?.();
   };
-
-  const primaryStatus =
-    statusText ||
-    (isProcessing
-      ? "جاري التحقق والتسجيل..."
-      : disabled && disabledHint
-        ? disabledHint
-        : isCheckOut
-          ? "تسجيل الانصراف"
-          : isComplete
-            ? "اكتمل التسجيل اليوم"
-            : "تسجيل الحضور");
 
   return (
     <div className="flex flex-col items-center gap-4 py-2">
-      <button
-        type="button"
-        onClick={handleClick}
-        disabled={isProcessing || disabled}
-        aria-label={label}
-        className={`group relative flex h-36 w-36 items-center justify-center rounded-full text-white shadow-md transition-transform active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-55 ${
-          isCheckOut
-            ? "bg-slate-600 dark:bg-slate-700"
-            : "bg-exeer-primary hover:scale-[1.02]"
-        }`}
-      >
-        {!isProcessing && !disabled && !isComplete ? (
+      <div className="relative flex items-center justify-center">
+        {isProcessing ? (
           <span
-            className="absolute inset-0 rounded-full bg-exeer-primary/30 animate-ping"
+            className="pointer-events-none absolute rounded-full border-2 border-transparent border-t-white/90 border-e-white/35"
+            style={{
+              width: 196,
+              height: 196,
+              animation: "punch-spin 0.9s linear infinite",
+            }}
             aria-hidden
           />
         ) : null}
-        <span
-          className="absolute -inset-3 rounded-full bg-blue-100/50 opacity-70 blur-md dark:bg-blue-900/30"
-          aria-hidden
-        />
-        <span className="relative flex h-[calc(100%-8px)] w-[calc(100%-8px)] items-center justify-center rounded-full border border-white/20 bg-inherit shadow-inner">
-          {isProcessing ? (
-            <Loader2 className="h-12 w-12 animate-spin stroke-[1.5]" aria-hidden />
-          ) : (
-            <Icon className="h-12 w-12 stroke-[1.25]" aria-hidden />
-          )}
-        </span>
-      </button>
 
-      <div className="space-y-1 text-center">
-        <p className="text-sm font-bold text-exeer-primary dark:text-[var(--text-primary)]">
-          {primaryStatus}
-        </p>
-        <p className="text-xs text-exeer-muted dark:text-[var(--text-secondary)]">
-          {label}
-        </p>
+        {config.pulse && isTappable ? (
+          <span
+            className="pointer-events-none absolute rounded-full"
+            style={{
+              width: 180,
+              height: 180,
+              animation: "punch-breathe 2.4s ease-in-out infinite",
+              background: config.background,
+              opacity: 0.35,
+            }}
+            aria-hidden
+          />
+        ) : null}
+
+        <button
+          type="button"
+          onClick={handleClick}
+          disabled={!isTappable}
+          aria-label={subtext}
+          className="relative flex items-center justify-center rounded-full text-white shadow-md transition-transform active:scale-[0.97] disabled:cursor-not-allowed"
+          style={{
+            width: 180,
+            height: 180,
+            borderRadius: "50%",
+            background: config.background,
+            cursor: isTappable
+              ? "pointer"
+              : state === "done"
+                ? "default"
+                : "not-allowed",
+          }}
+        >
+          <span
+            className="font-semibold leading-none text-white"
+            style={{ fontSize: 32 }}
+            aria-hidden
+          >
+            {config.icon}
+          </span>
+        </button>
       </div>
+
+      <p className="max-w-[240px] text-center text-sm font-bold text-exeer-primary dark:text-[var(--text-primary)]">
+        {subtext}
+      </p>
+
+      <style>{`
+        @keyframes punch-breathe {
+          0%, 100% {
+            transform: scale(1);
+            opacity: 0.35;
+          }
+          50% {
+            transform: scale(1.06);
+            opacity: 0.15;
+          }
+        }
+        @keyframes punch-spin {
+          to {
+            transform: rotate(360deg);
+          }
+        }
+      `}</style>
     </div>
   );
 }

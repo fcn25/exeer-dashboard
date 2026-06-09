@@ -2,21 +2,21 @@ import { useEffect, useMemo, useState } from "react";
 
 const STATE_CONFIG = {
   check_in: {
-    background: "#0F172A",
+    background: "#16A34A",
     icon: "→",
     subtext: "تسجيل الحضور",
     pulse: true,
     tappable: true,
   },
   locked: {
-    background: "#16A34A",
+    background: "#DC2626",
     icon: "✓",
     subtext: "",
     pulse: false,
     tappable: false,
   },
   check_out: {
-    background: "#0F172A",
+    background: "#DC2626",
     icon: "←",
     subtext: "تسجيل الانصراف",
     pulse: true,

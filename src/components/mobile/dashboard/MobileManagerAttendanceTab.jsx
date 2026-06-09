@@ -255,17 +255,6 @@ export default function MobileManagerAttendanceTab({ employeeId }) {
         </p>
       ) : null}
 
-      <BiometricEnrollmentSection
-        employeeId={employeeId}
-        onEnrollmentChange={(value) => setIsEnrolled(value)}
-      />
-
-      {scheduleHint ? (
-        <p className="rounded-2xl border border-exeer-border bg-md-surface px-4 py-3 text-xs leading-relaxed text-exeer-muted dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)] dark:text-[var(--text-secondary)]">
-          {t("pages.mobile.attendance.scheduleHint", { schedule: scheduleHint })}
-        </p>
-      ) : null}
-
       <section className="rounded-3xl border border-exeer-border bg-gradient-to-b from-white to-slate-50/80 px-5 py-6 shadow-sm dark:border-[var(--border-color)] dark:from-[var(--bg-surface)] dark:to-[var(--bg-main)]">
         <AttendancePunchButton
           state={buttonState}
@@ -279,6 +268,17 @@ export default function MobileManagerAttendanceTab({ employeeId }) {
           </p>
         ) : null}
       </section>
+
+      <BiometricEnrollmentSection
+        employeeId={employeeId}
+        onEnrollmentChange={(value) => setIsEnrolled(value)}
+      />
+
+      {scheduleHint ? (
+        <p className="rounded-2xl border border-exeer-border bg-md-surface px-4 py-3 text-xs leading-relaxed text-exeer-muted dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)] dark:text-[var(--text-secondary)]">
+          {t("pages.mobile.attendance.scheduleHint", { schedule: scheduleHint })}
+        </p>
+      ) : null}
 
       <AttendanceOperationsSection logs={operationLogs} isLoading={isLoading} />
 

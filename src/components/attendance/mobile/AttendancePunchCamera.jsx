@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Capacitor } from "@capacitor/core";
 import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 import { Loader2, X } from "lucide-react";
-import { captureVideoFrameWithWatermark } from "../../../utils/attendance/selfieWatermark.js";
 
 const CAMERA_PERMISSION_MESSAGE =
   "تعذّر الوصول للكاميرا. يرجى السماح بالإذن من إعدادات الجهاز";
@@ -13,19 +12,23 @@ function stopStream(stream) {
   stream?.getTracks?.().forEach((track) => track.stop());
 }
 
-async function watermarkDataUrlPhoto(dataUrl, options) {
-  const video = document.createElement("video");
-  video.muted = true;
-  video.playsInline = true;
-  video.src = dataUrl;
+function captureVideoFrameAsDataUrl(video) {
+  const width = video.videoWidth;
+  const height = video.videoHeight;
+  if (!width || !height) {
+    throw new Error("الكاميرا غير جاهزة للالتقاط.");
+  }
 
-  await new Promise((resolve, reject) => {
-    video.onloadeddata = () => resolve();
-    video.onerror = () => reject(new Error("تعذّر تهيئة صورة السيلفي."));
-    video.play().catch(reject);
-  });
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext("2d");
+  if (!context) {
+    throw new Error("تعذّر تهيئة صورة السيلفي.");
+  }
 
-  return captureVideoFrameWithWatermark(video, options);
+  context.drawImage(video, 0, 0, width, height);
+  return canvas.toDataURL("image/jpeg", 0.7);
 }
 
 export default function AttendancePunchCamera({
@@ -73,16 +76,13 @@ export default function AttendancePunchCamera({
       capturedRef.current = true;
       setStatusText("جاري التقاط الصورة...");
 
-      let finalDataUrl;
-      if (isNative) {
-        finalDataUrl = photo.dataUrl
-          .replace(/\\\//g, "/")
-          .replace(/\\"/g, '"');
-      } else {
-        finalDataUrl = await watermarkDataUrlPhoto(photo.dataUrl, {
-          branchName,
-          capturedAt: new Date(),
-        });
+      const rawDataUrl = photo.dataUrl || "";
+      const finalDataUrl = rawDataUrl
+        .replace(/\\\//g, "/")
+        .replace(/\\"/g, '"');
+
+      if (!finalDataUrl.includes("base64,")) {
+        throw new Error("تعذّر تهيئة صورة السيلفي.");
       }
 
       await onCapture?.(finalDataUrl);
@@ -108,7 +108,7 @@ export default function AttendancePunchCamera({
       isCameraOpen = false;
       setIsStartingCamera(false);
     }
-  }, [branchName, isNative, onCapture]);
+  }, [onCapture]);
 
   const startCamera = useCallback(async () => {
     if (isNative) {
@@ -173,10 +173,7 @@ export default function AttendancePunchCamera({
     setStatusText("جاري التقاط الصورة...");
 
     try {
-      const dataUrl = await captureVideoFrameWithWatermark(video, {
-        branchName,
-        capturedAt: new Date(),
-      });
+      const dataUrl = captureVideoFrameAsDataUrl(video);
       stopStream(streamRef.current);
       streamRef.current = null;
       await onCapture?.(dataUrl);
@@ -186,7 +183,7 @@ export default function AttendancePunchCamera({
       setStatusText("");
       await startCamera();
     }
-  }, [branchName, isNative, isProcessing, onCapture, startCamera]);
+  }, [isNative, isProcessing, onCapture, startCamera]);
 
   useEffect(() => {
     if (!isOpen) {

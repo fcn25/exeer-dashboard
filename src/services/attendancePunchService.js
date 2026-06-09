@@ -36,21 +36,43 @@ function nowLocalTimeValue() {
 }
 
 async function uploadPunchSelfie(dataUrl, companyId, employeeId) {
-  const res = await fetch(dataUrl);
-  const blob = await res.blob();
+  try {
+    const base64Data = dataUrl.includes(",")
+      ? dataUrl.split(",")[1]
+      : dataUrl;
 
-  const timestamp = Date.now();
-  const path = `${companyId}/${employeeId}/${timestamp}.jpg`;
+    const byteCharacters = atob(base64Data);
+    const byteArrays = [];
 
-  const { error } = await supabase.storage
-    .from("attendance-selfies")
-    .upload(path, blob, {
-      contentType: "image/jpeg",
-      upsert: false,
-    });
+    for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+      const slice = byteCharacters.slice(offset, offset + 512);
+      const byteNumbers = new Array(slice.length);
 
-  if (error) throw error;
-  return path;
+      for (let i = 0; i < slice.length; i++) {
+        byteNumbers[i] = slice.charCodeAt(i);
+      }
+
+      byteArrays.push(new Uint8Array(byteNumbers));
+    }
+
+    const blob = new Blob(byteArrays, { type: "image/jpeg" });
+
+    const timestamp = Date.now();
+    const path = `${companyId}/${employeeId}/${timestamp}.jpg`;
+
+    const { error } = await supabase.storage
+      .from("attendance-selfies")
+      .upload(path, blob, {
+        contentType: "image/jpeg",
+        upsert: false,
+      });
+
+    if (error) throw error;
+    return path;
+  } catch (err) {
+    console.warn("Selfie upload failed silently:", err.message);
+    return null;
+  }
 }
 
 async function calculateDelayMinutes(

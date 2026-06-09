@@ -73,12 +73,19 @@ export default function AttendancePunchCamera({
       capturedRef.current = true;
       setStatusText("جاري التقاط الصورة...");
 
-      const dataUrl = await watermarkDataUrlPhoto(photo.dataUrl, {
-        branchName,
-        capturedAt: new Date(),
-      });
+      let finalDataUrl;
+      if (isNative) {
+        finalDataUrl = photo.dataUrl
+          .replace(/\\\//g, "/")
+          .replace(/\\"/g, '"');
+      } else {
+        finalDataUrl = await watermarkDataUrlPhoto(photo.dataUrl, {
+          branchName,
+          capturedAt: new Date(),
+        });
+      }
 
-      await onCapture?.(dataUrl);
+      await onCapture?.(finalDataUrl);
     } catch (error) {
       capturedRef.current = false;
       const message = String(error?.message ?? "").toLowerCase();
@@ -101,7 +108,7 @@ export default function AttendancePunchCamera({
       isCameraOpen = false;
       setIsStartingCamera(false);
     }
-  }, [branchName, onCapture]);
+  }, [branchName, isNative, onCapture]);
 
   const startCamera = useCallback(async () => {
     if (isNative) {

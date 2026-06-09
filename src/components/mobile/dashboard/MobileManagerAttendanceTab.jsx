@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { ChevronLeft, Fingerprint, MapPin, Settings2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -103,6 +103,7 @@ export default function MobileManagerAttendanceTab({ employeeId }) {
   const [punchBranchName, setPunchBranchName] = useState("—");
   const [isPunching, setIsPunching] = useState(false);
   const [clockTick, setClockTick] = useState(Date.now());
+  const pendingSelfieRef = useRef(null);
 
   const activePeriod = todayData?.activePeriod ?? null;
   const fallbackEnd = normalizeWorkTime(getSetting("work_end_time"), "17:00");
@@ -166,14 +167,17 @@ export default function MobileManagerAttendanceTab({ employeeId }) {
     loadAttendance();
   }, [loadAttendance]);
 
-  const executePunch = async (selfieDataUrl = null) => {
+  const executePunch = async () => {
     setActionError("");
     setIsPunching(true);
 
     try {
-      const result = await performAttendancePunch(employeeId);
-      if (selfieDataUrl) {
-        saveLatestPunchSelfie(employeeId, selfieDataUrl, result.punchType);
+      const selfieForPunch = pendingSelfieRef.current;
+      const result = await performAttendancePunch(employeeId, selfieForPunch);
+      pendingSelfieRef.current = null;
+
+      if (selfieForPunch) {
+        saveLatestPunchSelfie(employeeId, selfieForPunch, result.punchType);
       }
       setTodayData(result.summary);
       setSuccessMessage(
@@ -221,7 +225,9 @@ export default function MobileManagerAttendanceTab({ employeeId }) {
   };
 
   const handlePunchSelfieCapture = async (selfieDataUrl) => {
-    await executePunch(selfieDataUrl);
+    pendingSelfieRef.current = selfieDataUrl;
+    saveLatestPunchSelfie(employeeId, selfieDataUrl, "In");
+    await executePunch();
   };
 
   const punchLabel =

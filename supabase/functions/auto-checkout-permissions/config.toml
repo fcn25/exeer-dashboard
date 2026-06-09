@@ -1,0 +1,3 @@
+[functions.auto-checkout-permissions]
+verify_jwt = false
+schedule = "*/5 * * * *"

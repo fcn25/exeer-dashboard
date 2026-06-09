@@ -37,9 +37,21 @@ function nowLocalTimeValue() {
 
 async function uploadPunchSelfie(dataUrl, companyId, employeeId) {
   try {
-    const base64Data = dataUrl.includes(",")
-      ? dataUrl.split(",")[1]
-      : dataUrl;
+    const cleanDataUrl = dataUrl
+      .replace(/\\\//g, "/")
+      .replace(/\\"/g, '"');
+
+    const base64Data = cleanDataUrl.includes(",")
+      ? cleanDataUrl.split(",")[1].trim()
+      : cleanDataUrl.trim();
+
+    if (!base64Data || base64Data.length < 100) {
+      console.warn("Invalid base64 data received");
+      return null;
+    }
+
+    console.log("base64 length:", base64Data.length);
+    console.log("base64 start:", base64Data.substring(0, 20));
 
     const byteCharacters = atob(base64Data);
     const byteArrays = [];

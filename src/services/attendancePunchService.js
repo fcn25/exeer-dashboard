@@ -1,5 +1,6 @@
 import { supabase } from "../utils/supabaseClient.js";
 import { requireCompanyId, scopeQueryByCompany } from "../utils/tenantScope.js";
+import { workTimeToMinutes } from "../utils/attendance/workHours.js";
 import {
   authenticateWithBiometric,
   captureCurrentPosition,
@@ -32,6 +33,51 @@ function nowLocalTimeValue() {
   const minutes = String(now.getMinutes()).padStart(2, "0");
   const seconds = String(now.getSeconds()).padStart(2, "0");
   return `${hours}:${minutes}:${seconds}`;
+}
+
+async function uploadPunchSelfie(dataUrl, companyId, employeeId) {
+  const res = await fetch(dataUrl);
+  const blob = await res.blob();
+
+  const timestamp = Date.now();
+  const path = `${companyId}/${employeeId}/${timestamp}.jpg`;
+
+  const { error } = await supabase.storage
+    .from("attendance-selfies")
+    .upload(path, blob, {
+      contentType: "image/jpeg",
+      upsert: false,
+    });
+
+  if (error) throw error;
+  return path;
+}
+
+async function calculateDelayMinutes(
+  employeeId,
+  companyId,
+  punchType,
+  punchedAt,
+  todayRecord,
+) {
+  if (punchType !== "In") return 0;
+
+  try {
+    const schedule = await fetchEmployeeAttendanceScheduleFromDb(employeeId);
+    const scheduleContext = toAttendanceScheduleContext(schedule);
+    const nextPunch = resolveNextPunch(todayRecord, scheduleContext);
+    const scheduledStart = nextPunch.activePeriod?.start;
+
+    if (!scheduledStart) return 0;
+
+    const scheduledMinutes = workTimeToMinutes(scheduledStart);
+    const punchedMinutes = punchedAt.getHours() * 60 + punchedAt.getMinutes();
+
+    if (punchedMinutes <= scheduledMinutes) return 0;
+    return punchedMinutes - scheduledMinutes;
+  } catch {
+    return 0;
+  }
 }
 
 async function verifyGeofenceViaRpc(latitude, longitude) {
@@ -157,6 +203,9 @@ async function insertAttendanceLog({
   punchType,
   latitude,
   longitude,
+  punchedAt,
+  selfieUrl = null,
+  delayMinutes = 0,
 }) {
   const { error } = await supabase.from("attendance_logs").insert({
     company_id: companyId,
@@ -165,7 +214,9 @@ async function insertAttendanceLog({
     punch_type: punchType,
     latitude,
     longitude,
-    punched_at: new Date().toISOString(),
+    punched_at: punchedAt,
+    selfie_url: selfieUrl,
+    delay_minutes: delayMinutes,
   });
 
   if (error) throw new Error(mapDbError(error));
@@ -205,7 +256,7 @@ async function upsertAttendanceRecord({
 /**
  * Full native punch flow: biometric → GPS → geofence → Supabase log + daily record.
  */
-export async function performAttendancePunch(employeeId) {
+export async function performAttendancePunch(employeeId, selfieDataUrl = null) {
   const resolvedEmployeeId = Number(employeeId);
   if (!Number.isFinite(resolvedEmployeeId) || resolvedEmployeeId <= 0) {
     throw new Error("لم يتم ربط حسابك بسجل موظف.");
@@ -237,7 +288,29 @@ export async function performAttendancePunch(employeeId) {
     throw new Error("اكتمل تسجيل الحضور والانصراف لهذا اليوم.");
   }
 
+  const punchedAt = new Date();
   const timeValue = nowLocalTimeValue();
+
+  let selfiePath = null;
+  if (selfieDataUrl) {
+    try {
+      selfiePath = await uploadPunchSelfie(
+        selfieDataUrl,
+        companyId,
+        resolvedEmployeeId,
+      );
+    } catch (uploadError) {
+      console.error("attendance punch selfie upload failed:", uploadError);
+    }
+  }
+
+  const delayMinutes = await calculateDelayMinutes(
+    resolvedEmployeeId,
+    companyId,
+    nextPunch.punchType,
+    punchedAt,
+    todayRecord,
+  );
 
   await insertAttendanceLog({
     companyId,
@@ -246,6 +319,9 @@ export async function performAttendancePunch(employeeId) {
     punchType: nextPunch.punchType,
     latitude: coordinates.latitude,
     longitude: coordinates.longitude,
+    punchedAt: punchedAt.toISOString(),
+    selfieUrl: selfiePath,
+    delayMinutes,
   });
 
   await upsertAttendanceRecord({

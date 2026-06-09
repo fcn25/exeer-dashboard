@@ -2,32 +2,44 @@ import { useEffect, useMemo, useState } from "react";
 
 const STATE_CONFIG = {
   check_in: {
-    background: "#16A34A",
+    background: "#166534",
+    glowColor: "rgba(22,101,52,0.25)",
     icon: "→",
     subtext: "تسجيل الحضور",
     pulse: true,
     tappable: true,
   },
   locked: {
-    background: "#DC2626",
+    background: "#991B1B",
+    glowColor: "rgba(153,27,27,0.20)",
     icon: "✓",
     subtext: "",
     pulse: false,
     tappable: false,
   },
   check_out: {
-    background: "#DC2626",
+    background: "#991B1B",
+    glowColor: "rgba(153,27,27,0.25)",
     icon: "←",
     subtext: "تسجيل الانصراف",
     pulse: true,
     tappable: true,
   },
   done: {
-    background: "#64748B",
+    background: "#1E293B",
+    glowColor: "rgba(30,41,59,0.15)",
     icon: "✓",
     subtext: "تم تسجيل الانصراف",
     pulse: false,
     tappable: false,
+  },
+  permission_out: {
+    background: "#92400E",
+    glowColor: "rgba(146,64,14,0.25)",
+    icon: "⏸",
+    subtext: "في استئذان",
+    pulse: false,
+    tappable: true,
   },
 };
 
@@ -114,11 +126,11 @@ export default function AttendancePunchButton({
           <span
             className="pointer-events-none absolute rounded-full"
             style={{
-              width: 180,
-              height: 180,
+              width: 200,
+              height: 200,
               animation: "punch-breathe 2.4s ease-in-out infinite",
-              background: config.background,
-              opacity: 0.35,
+              background: config.glowColor,
+              borderRadius: "50%",
             }}
             aria-hidden
           />
@@ -129,12 +141,15 @@ export default function AttendancePunchButton({
           onClick={handleClick}
           disabled={!isTappable}
           aria-label={subtext}
-          className="relative flex items-center justify-center rounded-full text-white shadow-md transition-transform active:scale-[0.97] disabled:cursor-not-allowed"
+          className="relative flex items-center justify-center rounded-full text-white transition-transform active:scale-[0.97] disabled:cursor-not-allowed"
           style={{
             width: 180,
             height: 180,
             borderRadius: "50%",
             background: config.background,
+            boxShadow: isTappable
+              ? `0 0 32px 4px ${config.glowColor}, 0 4px 16px rgba(0,0,0,0.18)`
+              : "0 2px 8px rgba(0,0,0,0.10)",
             cursor: isTappable
               ? "pointer"
               : state === "done"

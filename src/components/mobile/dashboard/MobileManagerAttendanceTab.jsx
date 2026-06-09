@@ -24,6 +24,7 @@ import { useCompanySettings } from "../../../context/CompanySettingsContext.jsx"
 import { normalizeWorkTime } from "../../../utils/attendance/workHours.js";
 import { canPunchOutForPeriod } from "../../../utils/attendance/workSchedules.js";
 import { canManageAttendanceSettings } from "../../../utils/rbac.js";
+import { supabase } from "../../../utils/supabaseClient.js";
 
 function AdminAttendanceSettingsSection() {
   const { t } = useTranslation();
@@ -101,6 +102,8 @@ export default function MobileManagerAttendanceTab({ employeeId }) {
   const [isPunching, setIsPunching] = useState(false);
   const [clockTick, setClockTick] = useState(Date.now());
   const pendingSelfieRef = useRef(null);
+  const [permissionStatus, setPermissionStatus] = useState(null);
+  const [isPermissionLoading, setIsPermissionLoading] = useState(false);
 
   const activePeriod = todayData?.activePeriod ?? null;
   const fallbackEnd = normalizeWorkTime(getSetting("work_end_time"), "17:00");
@@ -117,10 +120,11 @@ export default function MobileManagerAttendanceTab({ employeeId }) {
     if (!todayData || todayData.nextPunchType === "check_in") return "check_in";
     if (todayData.nextPunchType === "complete") return "done";
     if (todayData.nextPunchType === "check_out") {
+      if (permissionStatus === "out") return "permission_out";
       return punchOutAllowed ? "check_out" : "locked";
     }
     return "check_in";
-  }, [punchOutAllowed, todayData]);
+  }, [punchOutAllowed, permissionStatus, todayData]);
 
   const lockedUntil = useMemo(() => {
     if (buttonState !== "locked") return null;
@@ -164,6 +168,28 @@ export default function MobileManagerAttendanceTab({ employeeId }) {
       setOperationLogs(logs);
       setMonthlyReport(report);
       setIsEnrolled(isFaceEnrolled(employeeId));
+
+      try {
+        const { data: empData } = await supabase
+          .from("employees")
+          .select("id")
+          .eq("auth_user_id", (await supabase.auth.getUser()).data.user?.id)
+          .single();
+
+        const todayDate = new Date().toISOString().split("T")[0];
+        const { data: perm } = await supabase
+          .from("attendance_permissions")
+          .select("status")
+          .eq("employee_id", empData.id)
+          .eq("permission_date", todayDate)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .single();
+
+        setPermissionStatus(perm?.status ?? null);
+      } catch {
+        setPermissionStatus(null);
+      }
     } catch (err) {
       setLoadError(err.message || t("pages.mobile.attendance.loadError"));
       setTodayData(null);
@@ -210,6 +236,10 @@ export default function MobileManagerAttendanceTab({ employeeId }) {
   };
 
   const handleButtonPress = async () => {
+    if (buttonState === "permission_out") {
+      return;
+    }
+
     if (buttonState !== "check_in" && buttonState !== "check_out") return;
     if (isLoading || loadError || isPunching) return;
 
@@ -235,6 +265,72 @@ export default function MobileManagerAttendanceTab({ employeeId }) {
     pendingSelfieRef.current = selfieDataUrl;
     saveLatestPunchSelfie(employeeId, selfieDataUrl, punchType);
     await executePunch();
+  };
+
+  const handlePermissionOut = async () => {
+    if (isPermissionLoading) return;
+    setIsPermissionLoading(true);
+    try {
+      const { data: emp } = await supabase
+        .from("employees")
+        .select("id, company_id")
+        .eq("auth_user_id", (await supabase.auth.getUser()).data.user?.id)
+        .single();
+
+      const today = new Date().toISOString().split("T")[0];
+
+      const { data: record } = await supabase
+        .from("attendance_records")
+        .select("id")
+        .eq("employee_id", emp.id)
+        .eq("record_date", today)
+        .single();
+
+      await supabase.from("attendance_permissions").insert({
+        company_id: emp.company_id,
+        employee_id: emp.id,
+        record_id: record?.id ?? null,
+        permission_date: today,
+        out_at: new Date().toISOString(),
+        status: "out",
+      });
+
+      setPermissionStatus("out");
+    } catch {
+      setActionError("تعذّر تسجيل الاستئذان");
+    } finally {
+      setIsPermissionLoading(false);
+    }
+  };
+
+  const handlePermissionReturn = async () => {
+    if (isPermissionLoading) return;
+    setIsPermissionLoading(true);
+    try {
+      const { data: emp } = await supabase
+        .from("employees")
+        .select("id")
+        .eq("auth_user_id", (await supabase.auth.getUser()).data.user?.id)
+        .single();
+
+      const today = new Date().toISOString().split("T")[0];
+
+      await supabase
+        .from("attendance_permissions")
+        .update({
+          in_at: new Date().toISOString(),
+          status: "returned",
+        })
+        .eq("employee_id", emp.id)
+        .eq("permission_date", today)
+        .eq("status", "out");
+
+      setPermissionStatus("returned");
+    } catch {
+      setActionError("تعذّر تسجيل العودة");
+    } finally {
+      setIsPermissionLoading(false);
+    }
   };
 
   return (
@@ -269,10 +365,31 @@ export default function MobileManagerAttendanceTab({ employeeId }) {
         ) : null}
       </section>
 
-      <BiometricEnrollmentSection
-        employeeId={employeeId}
-        onEnrollmentChange={(value) => setIsEnrolled(value)}
-      />
+      {buttonState === "locked" || buttonState === "check_out" ? (
+        <div className="flex flex-col items-center gap-2 px-4">
+          {permissionStatus === "out" ? (
+            <button
+              type="button"
+              onClick={handlePermissionReturn}
+              disabled={isPermissionLoading}
+              className="w-full rounded-2xl border-2 border-amber-700/40 bg-amber-50 px-4 py-3.5 text-sm font-semibold text-amber-800 transition active:scale-[0.98] disabled:opacity-50 dark:border-amber-700/30 dark:bg-amber-950/30 dark:text-amber-300"
+            >
+              {isPermissionLoading
+                ? "جارٍ التسجيل..."
+                : "🔵 تسجيل العودة من الاستئذان"}
+            </button>
+          ) : permissionStatus === null || permissionStatus === "returned" ? (
+            <button
+              type="button"
+              onClick={handlePermissionOut}
+              disabled={isPermissionLoading}
+              className="w-full rounded-2xl border border-exeer-border bg-white px-4 py-3.5 text-sm font-medium text-exeer-muted transition active:scale-[0.98] disabled:opacity-50 dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)] dark:text-[var(--text-secondary)]"
+            >
+              {isPermissionLoading ? "جارٍ التسجيل..." : "↗ طلب استئذان"}
+            </button>
+          ) : null}
+        </div>
+      ) : null}
 
       {scheduleHint ? (
         <p className="rounded-2xl border border-exeer-border bg-md-surface px-4 py-3 text-xs leading-relaxed text-exeer-muted dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)] dark:text-[var(--text-secondary)]">

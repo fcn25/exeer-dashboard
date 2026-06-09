@@ -1,9 +1,29 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Capacitor } from "@capacitor/core";
+import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 import { Loader2, X } from "lucide-react";
 import { captureVideoFrameWithWatermark } from "../../../utils/attendance/selfieWatermark.js";
 
+const CAMERA_PERMISSION_MESSAGE =
+  "تعذّر الوصول للكاميرا. يرجى السماح بالإذن من إعدادات الجهاز";
+
 function stopStream(stream) {
   stream?.getTracks?.().forEach((track) => track.stop());
+}
+
+async function watermarkDataUrlPhoto(dataUrl, options) {
+  const video = document.createElement("video");
+  video.muted = true;
+  video.playsInline = true;
+  video.src = dataUrl;
+
+  await new Promise((resolve, reject) => {
+    video.onloadeddata = () => resolve();
+    video.onerror = () => reject(new Error("تعذّر تهيئة صورة السيلفي."));
+    video.play().catch(reject);
+  });
+
+  return captureVideoFrameWithWatermark(video, options);
 }
 
 export default function AttendancePunchCamera({
@@ -17,12 +37,69 @@ export default function AttendancePunchCamera({
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const capturedRef = useRef(false);
+  const isNative = Capacitor.isNativePlatform();
 
   const [cameraError, setCameraError] = useState("");
   const [isStartingCamera, setIsStartingCamera] = useState(false);
   const [statusText, setStatusText] = useState("");
 
+  const captureNativePhoto = useCallback(async () => {
+    setCameraError("");
+    setIsStartingCamera(true);
+    setStatusText("جاري تشغيل الكاميرا...");
+    capturedRef.current = false;
+
+    try {
+      const photo = await Camera.getPhoto({
+        resultType: CameraResultType.DataUrl,
+        source: CameraSource.Camera,
+        direction: "front",
+        quality: 70,
+        width: 600,
+      });
+
+      if (!photo.dataUrl) {
+        throw new Error("تعذّر التقاط الصورة.");
+      }
+
+      capturedRef.current = true;
+      setStatusText("جاري التقاط الصورة...");
+
+      const dataUrl = await watermarkDataUrlPhoto(photo.dataUrl, {
+        branchName,
+        capturedAt: new Date(),
+      });
+
+      await onCapture?.(dataUrl);
+    } catch (error) {
+      capturedRef.current = false;
+      const message = String(error?.message ?? "").toLowerCase();
+      if (
+        error?.message === "CAMERA_PERMISSION_DENIED" ||
+        message.includes("denied") ||
+        message.includes("permission") ||
+        message.includes("cancel")
+      ) {
+        setCameraError(
+          message.includes("cancel")
+            ? "تم إلغاء التقاط الصورة."
+            : CAMERA_PERMISSION_MESSAGE,
+        );
+      } else {
+        setCameraError(error?.message || "تعذّر فتح الكاميرا.");
+      }
+      setStatusText("");
+    } finally {
+      setIsStartingCamera(false);
+    }
+  }, [branchName, onCapture]);
+
   const startCamera = useCallback(async () => {
+    if (isNative) {
+      await captureNativePhoto();
+      return;
+    }
+
     setCameraError("");
     setIsStartingCamera(true);
     setStatusText("جاري تشغيل الكاميرا...");
@@ -31,19 +108,12 @@ export default function AttendancePunchCamera({
     stopStream(streamRef.current);
     streamRef.current = null;
 
-    if (!navigator.mediaDevices?.getUserMedia) {
-      setCameraError("الكاميرا غير مدعومة على هذا الجهاز.");
-      setIsStartingCamera(false);
-      return;
-    }
-
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        audio: false,
         video: {
           facingMode: "user",
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
+          width: { ideal: 600 },
+          height: { ideal: 600 },
         },
       });
 
@@ -57,20 +127,24 @@ export default function AttendancePunchCamera({
       video.srcObject = stream;
       await video.play();
       setStatusText("ثبّت وجهك أمام الكاميرا...");
-    } catch (error) {
-      const message = String(error?.message ?? "").toLowerCase();
-      if (message.includes("denied") || message.includes("permission")) {
-        setCameraError("يجب السماح بالوصول إلى الكاميرا الأمامية.");
+    } catch (err) {
+      const message = String(err?.message ?? "").toLowerCase();
+      if (
+        err?.message === "CAMERA_PERMISSION_DENIED" ||
+        message.includes("denied") ||
+        message.includes("permission")
+      ) {
+        setCameraError(CAMERA_PERMISSION_MESSAGE);
       } else {
-        setCameraError(error?.message || "تعذّر فتح الكاميرا.");
+        setCameraError(err?.message || "تعذّر فتح الكاميرا.");
       }
     } finally {
       setIsStartingCamera(false);
     }
-  }, []);
+  }, [captureNativePhoto, isNative]);
 
   const captureAndSubmit = useCallback(async () => {
-    if (capturedRef.current || isProcessing) return;
+    if (capturedRef.current || isProcessing || isNative) return;
 
     const video = videoRef.current;
     if (!video || !video.videoWidth) return;
@@ -92,7 +166,7 @@ export default function AttendancePunchCamera({
       setStatusText("");
       await startCamera();
     }
-  }, [branchName, isProcessing, onCapture, startCamera]);
+  }, [branchName, isNative, isProcessing, onCapture, startCamera]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -112,6 +186,7 @@ export default function AttendancePunchCamera({
   }, [isOpen, startCamera]);
 
   useEffect(() => {
+    if (isNative) return undefined;
     if (!isOpen || isStartingCamera || cameraError || isProcessing) return undefined;
 
     const video = videoRef.current;
@@ -142,6 +217,7 @@ export default function AttendancePunchCamera({
     autoCaptureDelayMs,
     cameraError,
     captureAndSubmit,
+    isNative,
     isOpen,
     isProcessing,
     isStartingCamera,
@@ -156,14 +232,16 @@ export default function AttendancePunchCamera({
       aria-modal="true"
       aria-label="كاميرا تسجيل الحضور"
     >
-      <video
-        ref={videoRef}
-        playsInline
-        muted
-        autoPlay
-        className="h-full w-full object-cover"
-        style={{ transform: "scaleX(-1)" }}
-      />
+      {!isNative ? (
+        <video
+          ref={videoRef}
+          playsInline
+          muted
+          autoPlay
+          className="h-full w-full object-cover"
+          style={{ transform: "scaleX(-1)" }}
+        />
+      ) : null}
 
       <div className="pointer-events-none absolute inset-x-0 top-0 bg-gradient-to-b from-black/70 to-transparent px-4 pb-10 pt-4">
         <p className="text-center text-sm font-medium text-white">{statusText}</p>

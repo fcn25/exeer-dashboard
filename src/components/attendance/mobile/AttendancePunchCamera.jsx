@@ -7,6 +7,8 @@ import { captureVideoFrameWithWatermark } from "../../../utils/attendance/selfie
 const CAMERA_PERMISSION_MESSAGE =
   "تعذّر الوصول للكاميرا. يرجى السماح بالإذن من إعدادات الجهاز";
 
+let isCameraOpen = false;
+
 function stopStream(stream) {
   stream?.getTracks?.().forEach((track) => track.stop());
 }
@@ -44,18 +46,24 @@ export default function AttendancePunchCamera({
   const [statusText, setStatusText] = useState("");
 
   const captureNativePhoto = useCallback(async () => {
+    if (isCameraOpen) return;
+    isCameraOpen = true;
+
     setCameraError("");
     setIsStartingCamera(true);
     setStatusText("جاري تشغيل الكاميرا...");
     capturedRef.current = false;
 
     try {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+
       const photo = await Camera.getPhoto({
         resultType: CameraResultType.DataUrl,
         source: CameraSource.Camera,
-        direction: "front",
         quality: 70,
         width: 600,
+        allowEditing: false,
+        saveToGallery: false,
       });
 
       if (!photo.dataUrl) {
@@ -90,6 +98,7 @@ export default function AttendancePunchCamera({
       }
       setStatusText("");
     } finally {
+      isCameraOpen = false;
       setIsStartingCamera(false);
     }
   }, [branchName, onCapture]);
@@ -99,6 +108,9 @@ export default function AttendancePunchCamera({
       await captureNativePhoto();
       return;
     }
+
+    if (isCameraOpen) return;
+    isCameraOpen = true;
 
     setCameraError("");
     setIsStartingCamera(true);
@@ -139,6 +151,7 @@ export default function AttendancePunchCamera({
         setCameraError(err?.message || "تعذّر فتح الكاميرا.");
       }
     } finally {
+      isCameraOpen = false;
       setIsStartingCamera(false);
     }
   }, [captureNativePhoto, isNative]);

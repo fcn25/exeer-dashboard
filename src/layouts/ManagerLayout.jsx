@@ -12,6 +12,7 @@ import {
   PanelLeftOpen,
   Settings,
   SlidersHorizontal,
+  Smartphone,
   Target,
   UserPlus,
   Users,
@@ -295,6 +296,22 @@ export default function ManagerLayout() {
         </nav>
 
         <div className="mt-4 border-t border-gray-200 pt-4 dark:border-slate-800">
+          {isOwner() ? (
+            <button
+              type="button"
+              onClick={() => window.open("/mobile/attendance", "_blank")}
+              title={isSidebarCollapsed ? "عرض تطبيق المدير" : undefined}
+              className={`relative mb-2 flex w-full items-center gap-3 rounded-md py-2.5 text-sm font-medium text-slate-500 transition-colors hover:bg-gray-50 hover:text-slate-900 dark:hover:bg-slate-800/60 dark:hover:text-slate-100 ${
+                isSidebarCollapsed ? "justify-center px-2" : "px-3"
+              }`}
+            >
+              <Smartphone
+                className="h-[18px] w-[18px] shrink-0 stroke-[1.75]"
+                aria-hidden
+              />
+              {isSidebarCollapsed ? null : <span>عرض تطبيق المدير</span>}
+            </button>
+          ) : null}
           <button
             type="button"
             onClick={handleLogout}

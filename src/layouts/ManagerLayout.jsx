@@ -199,10 +199,10 @@ export default function ManagerLayout() {
     <div
       dir={dir}
       lang={lang}
-      className="flex h-screen w-screen overflow-hidden bg-white font-sans text-slate-900 dark:bg-[var(--bg-main)] dark:text-[var(--text-primary)]"
+      className="flex h-screen w-screen overflow-hidden bg-md-surface-dim font-sans text-slate-900 dark:bg-[var(--bg-main)] dark:text-[var(--text-primary)]"
     >
       <aside
-        className={`flex shrink-0 flex-col border-e border-gray-200 bg-white py-5 transition-[width] duration-200 dark:border-slate-800 dark:bg-slate-950 print:hidden ${
+        className={`flex shrink-0 flex-col border-e border-exeer-border bg-md-surface py-5 transition-[width] duration-200 dark:border-slate-800 dark:bg-slate-950 print:hidden ${
           isSidebarCollapsed ? "w-[4.25rem] px-2" : "w-64 px-3"
         }`}
       >
@@ -324,7 +324,7 @@ export default function ManagerLayout() {
       </aside>
 
       <div className="flex min-h-0 min-w-0 flex-1">
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-gray-50/50 dark:bg-[var(--bg-main)]">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-md-surface-dim dark:bg-[var(--bg-main)]">
           <div className="shrink-0 px-6 md:px-8">
             <DashboardTopBar
               isCalendarOpen={isCalendarOpen}

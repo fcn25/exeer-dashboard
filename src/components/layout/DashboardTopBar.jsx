@@ -97,7 +97,7 @@ export default function DashboardTopBar({
 
   return (
     <>
-      <div className="sticky top-0 z-30 flex shrink-0 items-center justify-end gap-2 border-b border-exeer-border bg-gray-50/95 px-0 py-3 backdrop-blur-sm dark:border-[var(--border-color)] dark:bg-[var(--bg-main)]/95">
+      <div className="sticky top-0 z-30 flex shrink-0 items-center justify-end gap-2 border-b border-exeer-border bg-md-surface-dim/95 px-0 py-3 backdrop-blur-sm dark:border-[var(--border-color)] dark:bg-[var(--bg-main)]/95">
         <TopBarButton
           label={t("nav.notifications")}
           badge={unreadCount}

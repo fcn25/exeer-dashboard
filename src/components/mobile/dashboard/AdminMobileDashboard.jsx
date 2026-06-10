@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { MoreHorizontal } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { ROLE_LABELS } from "../../../constants/roles.js";
 import { useAuth } from "../../../context/AuthContext.jsx";
@@ -107,23 +106,14 @@ export default function AdminMobileDashboard({
     <div
       dir={pageDir}
       lang={pageLang}
-      className="native-mobile-shell native-mobile-shell--bottom-nav mx-auto min-h-screen w-full max-w-[480px] bg-md-surface-dim font-sans text-exeer-primary dark:bg-[var(--bg-main)] dark:text-[var(--text-primary)]"
+      className="native-mobile-shell native-mobile-shell--bottom-nav mx-auto min-h-screen w-full max-w-[480px] bg-md-surface font-sans text-exeer-primary dark:bg-[var(--bg-surface)] dark:text-[var(--text-primary)]"
+      style={{ paddingTop: "env(safe-area-inset-top)" }}
     >
       <CompactMobileAppBar
         variant="manager"
         employeeName={displayName}
         roleLabel={roleLabel}
         profileImageUrl={profileImageUrl}
-        menuButton={
-          <button
-            type="button"
-            onClick={() => setIsMenuOpen(true)}
-            aria-label={i18n.t("nav.managerMenu")}
-            className="flex h-9 w-9 items-center justify-center rounded-full text-exeer-primary transition-colors hover:bg-exeer-hover dark:text-[var(--text-primary)] dark:hover:bg-[var(--bg-surface-hover)]"
-          >
-            <MoreHorizontal className="h-5 w-5 stroke-[1.75]" aria-hidden />
-          </button>
-        }
       />
 
       <main className="space-y-4 px-4 py-4">

@@ -1,11 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
-import { Bell, Settings } from "lucide-react";
+import { Bell } from "lucide-react";
 import { useAuth } from "../../../context/AuthContext.jsx";
 import { useCurrentEmployee } from "../../../hooks/useCurrentEmployee.js";
 import { countUnreadNotifications } from "../../../services/notificationsService.js";
 import { getTimeBasedGreeting } from "../../../utils/portalGreeting.js";
 import NotificationsDrawer from "../NotificationsDrawer.jsx";
-import MobileSettingsDrawer from "../MobileSettingsDrawer.jsx";
 
 function HeaderIconButton({ label, onClick, children, badge }) {
   return (
@@ -30,15 +29,13 @@ export default function CompactMobileAppBar({
   roleLabel,
   profileImageUrl,
   variant = "employee",
-  menuButton = null,
 }) {
   const { user } = useAuth();
-  const { employeeId, authUserId } = useCurrentEmployee();
+  const { authUserId } = useCurrentEmployee();
   const greeting = getTimeBasedGreeting();
   const userId = authUserId ?? user?.id;
 
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
   const refreshUnreadCount = useCallback(async () => {
@@ -61,69 +58,49 @@ export default function CompactMobileAppBar({
 
   const isManager = variant === "manager";
 
+  const headerClassName = isManager
+    ? "sticky top-0 z-40 border-b border-exeer-border bg-md-surface shadow-[0_1px_0_rgba(0,0,0,0.04)] dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)] dark:shadow-none"
+    : "native-mobile-app-bar sticky top-0 z-40 border-b border-exeer-border bg-md-surface/95 shadow-[0_1px_0_rgba(0,0,0,0.04)] backdrop-blur-md dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)]/95 dark:shadow-none";
+
   return (
     <>
-      <header className="native-mobile-app-bar sticky top-0 z-40 border-b border-exeer-border bg-md-surface/95 shadow-[0_1px_0_rgba(0,0,0,0.04)] backdrop-blur-md dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)]/95 dark:shadow-none">
-        <div className="mx-auto flex max-w-[480px] items-center gap-3 px-4 py-3">
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-exeer-primary dark:text-[var(--text-primary)]">
-              {greeting}، {employeeName}
-              {roleLabel ? (
-                <span className="font-medium text-exeer-muted dark:text-[var(--text-secondary)]">
-                  {" "}
-                  — {roleLabel}
-                </span>
-              ) : null}
+      <header className={headerClassName}>
+        <div
+          className={`mx-auto flex max-w-[480px] px-4 py-3 ${
+            isManager
+              ? "flex-col gap-1"
+              : "items-start justify-between gap-3"
+          }`}
+        >
+          <div className="min-w-0 flex flex-col gap-0.5">
+            <p className="text-sm font-semibold text-exeer-primary dark:text-[var(--text-primary)]">
+              {greeting}
+            </p>
+            <p className="truncate text-xs font-medium text-exeer-muted dark:text-[var(--text-secondary)]">
+              {employeeName}
+              {roleLabel ? ` — ${roleLabel}` : ""}
             </p>
           </div>
 
-          <div className="flex shrink-0 items-center gap-0.5">
-            {isManager ? (
-              menuButton
-            ) : (
-              <>
-                <HeaderIconButton
-                  label="الإشعارات"
-                  badge={unreadCount}
-                  onClick={() => {
-                    setIsSettingsOpen(false);
-                    setIsNotificationsOpen(true);
-                  }}
-                >
-                  <Bell className="h-[18px] w-[18px] stroke-[1.75]" aria-hidden />
-                </HeaderIconButton>
-                <HeaderIconButton
-                  label="الإعدادات"
-                  onClick={() => {
-                    setIsNotificationsOpen(false);
-                    setIsSettingsOpen(true);
-                  }}
-                >
-                  <Settings className="h-[18px] w-[18px] stroke-[1.75]" aria-hidden />
-                </HeaderIconButton>
-              </>
-            )}
-          </div>
+          {!isManager ? (
+            <HeaderIconButton
+              label="الإشعارات"
+              badge={unreadCount}
+              onClick={() => setIsNotificationsOpen(true)}
+            >
+              <Bell className="h-[18px] w-[18px] stroke-[1.75]" aria-hidden />
+            </HeaderIconButton>
+          ) : null}
         </div>
       </header>
 
       {!isManager ? (
-        <>
-          <NotificationsDrawer
-            isOpen={isNotificationsOpen}
-            onClose={() => setIsNotificationsOpen(false)}
-            userId={userId}
-            onUnreadChange={setUnreadCount}
-          />
-
-          <MobileSettingsDrawer
-            isOpen={isSettingsOpen}
-            onClose={() => setIsSettingsOpen(false)}
-            employeeId={employeeId}
-            fullName={employeeName}
-            imageUrl={profileImageUrl}
-          />
-        </>
+        <NotificationsDrawer
+          isOpen={isNotificationsOpen}
+          onClose={() => setIsNotificationsOpen(false)}
+          userId={userId}
+          onUnreadChange={setUnreadCount}
+        />
       ) : null}
     </>
   );

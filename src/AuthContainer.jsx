@@ -39,13 +39,13 @@ export default function AuthContainer() {
     <div
       dir={dir}
       lang={lang}
-      className="relative flex min-h-screen flex-col items-center justify-center bg-white px-4 py-10 font-sans dark:bg-[var(--bg-main)] dark:text-[var(--text-primary)]"
+      className="native-auth-shell relative flex min-h-screen flex-col items-center justify-center bg-white px-4 pb-10 font-sans dark:bg-[var(--bg-main)] dark:text-[var(--text-primary)]"
     >
-      <div className="absolute top-4 end-4 z-10">
+      <div className="native-auth-shell__lang absolute end-4 z-10">
         <AuthLanguageToggle />
       </div>
 
-      <div className="mb-8 flex w-full max-w-md flex-col items-center">
+      <div className="mb-6 flex w-full max-w-md flex-col items-center">
         <ExeerLogo className="h-14 w-auto object-contain" />
       </div>
 

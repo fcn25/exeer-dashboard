@@ -290,10 +290,10 @@ export async function inviteEmployeesWithoutAccounts() {
   const employees = await listEmployeesWithoutAuthAccount();
   let invitesSent = 0;
 
-  console.log("الموظفون بدون حساب:", employees);
+  if (import.meta.env.DEV) console.log("الموظفون بدون حساب:", employees);
 
   for (const emp of employees) {
-    console.log("إرسال دعوة لـ:", emp.email);
+    if (import.meta.env.DEV) console.log("إرسال دعوة لـ:", emp.email);
     try {
       const result = await inviteEmployeeByEmail({
         email: emp.email,
@@ -302,10 +302,10 @@ export async function inviteEmployeesWithoutAccounts() {
         companyId,
         employeeId: emp.id,
       });
-      console.log("نجح:", result);
+      if (import.meta.env.DEV) console.log("نجح:", result);
       invitesSent += 1;
     } catch (err) {
-      console.log("فشل:", err.message);
+      if (import.meta.env.DEV) console.log("فشل:", err.message);
     }
   }
 

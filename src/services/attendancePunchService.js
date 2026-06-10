@@ -50,8 +50,8 @@ async function uploadPunchSelfie(dataUrl, companyId, employeeId) {
       return null;
     }
 
-    console.log("base64 length:", base64Data.length);
-    console.log("base64 start:", base64Data.substring(0, 20));
+    if (import.meta.env.DEV) console.log("base64 length:", base64Data.length);
+    if (import.meta.env.DEV) console.log("base64 start:", base64Data.substring(0, 20));
 
     const byteCharacters = atob(base64Data);
     const byteArrays = [];

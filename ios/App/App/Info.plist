@@ -51,6 +51,8 @@
 	<string>نحتاج موقعك لتفعيل تسجيل الحضور البيومتري</string>
 	<key>NSCameraUsageDescription</key>
 	<string>يحتاج التطبيق للكاميرا لالتقاط صورة تحقق عند تسجيل الحضور</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>يستخدم التطبيق Face ID للتحقق من هوية الموظف عند تسجيل الحضور</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>يحتاج التطبيق لمكتبة الصور لحفظ صور الحضور</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>

@@ -223,7 +223,7 @@ export function buildTemplatePreviewSections({ questionsJsonb, uiTemplate }) {
   const uiPreviewSections = getTemplatePreviewSections(uiTemplate);
 
   if (flatRecords.length > 0) {
-    console.log("buildTemplatePreviewSections flatRecords", flatRecords);
+    if (import.meta.env.DEV) console.log("buildTemplatePreviewSections flatRecords", flatRecords);
     const questions = flatRecords.map((question, index) =>
       storedQuestionToPreviewDetail(question, index),
     );

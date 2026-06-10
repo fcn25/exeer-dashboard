@@ -29,7 +29,6 @@ import MobileAttendanceSettingsPage from "./pages/mobile/MobileAttendanceSetting
 import MobileSystemCustomizationPage from "./pages/mobile/MobileSystemCustomizationPage.jsx";
 import { AdministrativeActionsGate } from "./components/administrative/AdministrativeActionsGate.jsx";
 import { PerformanceGate } from "./components/performance/PerformanceGate.jsx";
-import MobileSubscriptionPage from "./pages/MobileSubscriptionPage.jsx";
 import UpdatePasswordPage from "./pages/UpdatePasswordPage.jsx";
 import { ProtectedRoute } from "./components/ProtectedRoute.jsx";
 import ErrorBoundary from "./components/ErrorBoundary.jsx";
@@ -255,15 +254,7 @@ function AppRoutes() {
       />
       <Route
         path="/mobile/subscription"
-        element={
-          <ProtectedRoute allowPortal>
-            <ProtectedRoute requiredRole="owner">
-              <MobileRoute>
-                <MobileSubscriptionPage />
-              </MobileRoute>
-            </ProtectedRoute>
-          </ProtectedRoute>
-        }
+        element={<Navigate to="/mobile" replace />}
       />
       <Route
         path="/mobile"

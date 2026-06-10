@@ -1,6 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { ChevronLeft, Fingerprint, MapPin, Settings2 } from "lucide-react";
+import {
+  ChevronLeft,
+  Fingerprint,
+  MapPin,
+  Pause,
+  PlayCircle,
+  Settings2,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import AttendancePunchButton from "../../attendance/mobile/AttendancePunchButton.jsx";
 import AttendancePunchCamera from "../../attendance/mobile/AttendancePunchCamera.jsx";
@@ -366,26 +373,44 @@ export default function MobileManagerAttendanceTab({ employeeId }) {
       </section>
 
       {buttonState === "locked" || buttonState === "check_out" || buttonState === "permission_out" ? (
-        <div className="flex flex-col items-center gap-2 px-4">
+        <div className="flex flex-col items-center gap-3 px-4">
           {permissionStatus === "out" ? (
             <button
               type="button"
               onClick={handlePermissionReturn}
               disabled={isPermissionLoading}
-              className="w-full rounded-2xl border-2 border-amber-700/40 bg-amber-50 px-4 py-3.5 text-sm font-semibold text-amber-800 transition active:scale-[0.98] disabled:opacity-50 dark:border-amber-700/30 dark:bg-amber-950/30 dark:text-amber-300"
+              className="group flex w-full max-w-sm items-center gap-4 rounded-2xl border-2 border-emerald-600/35 bg-gradient-to-b from-emerald-50 to-emerald-100/80 px-4 py-4 text-start shadow-[inset_0_1px_0_rgba(255,255,255,0.7),0_6px_18px_rgba(5,150,105,0.12)] transition active:scale-[0.98] disabled:opacity-50 dark:border-emerald-700/35 dark:from-emerald-950/40 dark:to-emerald-950/20 dark:text-emerald-200"
             >
-              {isPermissionLoading
-                ? "جارٍ التسجيل..."
-                : "🔵 تسجيل العودة من الاستئذان"}
+              <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-b from-emerald-500 to-emerald-700 text-white shadow-[inset_0_2px_6px_rgba(255,255,255,0.25),0_4px_10px_rgba(5,150,105,0.35)]">
+                <PlayCircle className="h-7 w-7 stroke-[1.75]" aria-hidden />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-bold text-emerald-900 dark:text-emerald-100">
+                  {isPermissionLoading ? "جارٍ التسجيل..." : "تسجيل العودة"}
+                </span>
+                <span className="mt-0.5 block text-xs text-emerald-800/80 dark:text-emerald-300/80">
+                  إنهاء الاستئذان والعودة للعمل
+                </span>
+              </span>
             </button>
           ) : permissionStatus === null || permissionStatus === "returned" ? (
             <button
               type="button"
               onClick={handlePermissionOut}
               disabled={isPermissionLoading}
-              className="w-full rounded-2xl border border-exeer-border bg-white px-4 py-3.5 text-sm font-medium text-exeer-muted transition active:scale-[0.98] disabled:opacity-50 dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)] dark:text-[var(--text-secondary)]"
+              className="group flex w-full max-w-sm items-center gap-4 rounded-2xl border-2 border-amber-600/30 bg-gradient-to-b from-amber-50 to-orange-50 px-4 py-4 text-start shadow-[inset_0_1px_0_rgba(255,255,255,0.75),0_6px_18px_rgba(217,119,6,0.1)] transition active:scale-[0.98] disabled:opacity-50 dark:border-amber-700/30 dark:from-amber-950/35 dark:to-amber-950/15"
             >
-              {isPermissionLoading ? "جارٍ التسجيل..." : "↗ طلب استئذان"}
+              <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-b from-amber-500 to-amber-700 text-white shadow-[inset_0_2px_6px_rgba(255,255,255,0.28),0_4px_10px_rgba(217,119,6,0.3)]">
+                <Pause className="h-7 w-7 stroke-[2]" aria-hidden />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-bold text-amber-950 dark:text-amber-100">
+                  {isPermissionLoading ? "جارٍ التسجيل..." : "طلب استئذان"}
+                </span>
+                <span className="mt-0.5 block text-xs text-amber-800/75 dark:text-amber-300/80">
+                  إيقاف مؤقت — زر تعليق الاستئذان
+                </span>
+              </span>
             </button>
           ) : null}
         </div>

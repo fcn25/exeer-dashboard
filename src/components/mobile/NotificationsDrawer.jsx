@@ -10,6 +10,7 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import { ar, enUS } from "date-fns/locale";
 import { useTranslation } from "react-i18next";
+import { useLocation } from "react-router-dom";
 import ExeerEmptyState from "../brand/ExeerEmptyState.jsx";
 import {
   listUserNotifications,
@@ -91,8 +92,15 @@ function NotificationItem({ item, locale, onMarkRead }) {
   );
 }
 
+function filterMobileNotifications(items, hideSubscriptionAlerts) {
+  if (!hideSubscriptionAlerts) return ensureArray(items);
+  return ensureArray(items).filter((item) => item?.type !== "subscription_alert");
+}
+
 export default function NotificationsDrawer({ isOpen, onClose, userId, onUnreadChange }) {
   const { i18n } = useTranslation();
+  const location = useLocation();
+  const hideSubscriptionAlerts = location.pathname.startsWith("/mobile");
   const locale = i18n.language?.startsWith("en") ? enUS : ar;
   const dir = i18n.language?.startsWith("en") ? "ltr" : "rtl";
 
@@ -115,7 +123,10 @@ export default function NotificationsDrawer({ isOpen, onClose, userId, onUnreadC
     setError("");
 
     try {
-      const items = ensureArray(await listUserNotifications(userId));
+      const items = filterMobileNotifications(
+        await listUserNotifications(userId),
+        hideSubscriptionAlerts,
+      );
       setNotifications(items);
       syncUnreadCount(items);
     } catch (err) {
@@ -123,7 +134,7 @@ export default function NotificationsDrawer({ isOpen, onClose, userId, onUnreadC
     } finally {
       setIsLoading(false);
     }
-  }, [syncUnreadCount, userId]);
+  }, [hideSubscriptionAlerts, syncUnreadCount, userId]);
 
   useEffect(() => {
     if (!isOpen) return;

@@ -1,11 +1,10 @@
-import { CreditCard, LogOut, SlidersHorizontal, User, X } from "lucide-react";
+import { LogOut, SlidersHorizontal, User, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import EmployeeProfileSummary from "../employees/EmployeeProfileSummary.jsx";
 import ThemeToggle from "../settings/ThemeToggle.jsx";
 import LanguageToggle from "./LanguageToggle.jsx";
-import MobileSubscriptionView from "./MobileSubscriptionView.jsx";
 import { fetchEmployeeProfileById } from "../../services/employeeProfileService.js";
 import { signOut } from "../../utils/mobileAuth.js";
 import { isOwner } from "../../utils/rbac.js";
@@ -40,7 +39,6 @@ export default function MobileSettingsDrawer({
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const dir = i18n.language?.startsWith("en") ? "ltr" : "rtl";
-  const [isSubscriptionOpen, setIsSubscriptionOpen] = useState(false);
   const [profile, setProfile] = useState(null);
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileError, setProfileError] = useState("");
@@ -81,11 +79,6 @@ export default function MobileSettingsDrawer({
   const handleSignOut = async () => {
     await signOut();
     navigate("/login", { replace: true });
-  };
-
-  const openSubscription = () => {
-    onClose();
-    navigate("/mobile/subscription");
   };
 
   if (!isOpen) return null;
@@ -168,29 +161,6 @@ export default function MobileSettingsDrawer({
                     </span>
                   </button>
 
-                  <div className="md-surface-muted rounded-md p-4">
-                  <button
-                    type="button"
-                    onClick={openSubscription}
-                    className="flex w-full items-center justify-between gap-3 rounded-md bg-md-primary px-4 py-3.5 text-sm font-semibold text-white dark:bg-slate-700"
-                  >
-                    <span className="inline-flex items-center gap-2">
-                      <CreditCard className="h-5 w-5" aria-hidden />
-                      {t("settings.tabs.subscription")}
-                    </span>
-                    <span className="text-xs opacity-90">ادفع الآن</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onClose();
-                      setIsSubscriptionOpen(true);
-                    }}
-                    className="mt-2 w-full text-center text-xs font-medium text-exeer-muted underline-offset-2 hover:underline"
-                  >
-                    عرض تفاصيل الاشتراك
-                  </button>
-                  </div>
                 </div>
               ) : null}
 
@@ -219,10 +189,6 @@ export default function MobileSettingsDrawer({
         </aside>
       </div>
 
-      <MobileSubscriptionView
-        isOpen={isSubscriptionOpen}
-        onClose={() => setIsSubscriptionOpen(false)}
-      />
     </>
   );
 }

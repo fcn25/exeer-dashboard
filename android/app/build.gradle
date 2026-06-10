@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace = "com.exeer.dashboard"
+    namespace = "com.exeerai.dashboard"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.exeer.dashboard"
+        applicationId "com.exeerai.dashboard"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

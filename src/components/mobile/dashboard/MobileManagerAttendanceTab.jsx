@@ -365,7 +365,7 @@ export default function MobileManagerAttendanceTab({ employeeId }) {
         ) : null}
       </section>
 
-      {buttonState === "locked" || buttonState === "check_out" ? (
+      {buttonState === "locked" || buttonState === "check_out" || buttonState === "permission_out" ? (
         <div className="flex flex-col items-center gap-2 px-4">
           {permissionStatus === "out" ? (
             <button

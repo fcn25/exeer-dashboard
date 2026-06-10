@@ -371,7 +371,12 @@
       "whatsapp": "WhatsApp support",
       "email": "Email",
       "terms": "Terms of use",
-      "termsHint": "Read the Exeer system usage agreement"
+      "termsHint": "Read the Exeer system usage agreement",
+      "privacy": "Privacy policy",
+      "privacyHint": "Read the Exeer platform data privacy policy"
+    },
+    "legal": {
+      "title": "Legal"
     },
     "subscription": {
       "title": "Subscription",
@@ -400,6 +405,10 @@
       "title": "Terms of use",
       "close": "Close",
       "bodyEn": "The full terms of use are available in Arabic. Switch the interface language to Arabic to read the agreement."
+    },
+    "privacyModal": {
+      "title": "Privacy policy",
+      "close": "Close"
     },
     "postSubscription": {
       "title": "After subscription",

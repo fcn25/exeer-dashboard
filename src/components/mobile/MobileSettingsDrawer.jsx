@@ -1,9 +1,11 @@
-import { LogOut, SlidersHorizontal, User, X } from "lucide-react";
+import { FileText, LogOut, Shield, SlidersHorizontal, User, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import EmployeeProfileSummary from "../employees/EmployeeProfileSummary.jsx";
 import ThemeToggle from "../settings/ThemeToggle.jsx";
+import TermsModal from "../settings/TermsModal.jsx";
+import PrivacyPolicyModal from "../settings/PrivacyPolicyModal.jsx";
 import LanguageToggle from "./LanguageToggle.jsx";
 import { fetchEmployeeProfileById } from "../../services/employeeProfileService.js";
 import { signOut } from "../../utils/mobileAuth.js";
@@ -42,6 +44,8 @@ export default function MobileSettingsDrawer({
   const [profile, setProfile] = useState(null);
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileError, setProfileError] = useState("");
+  const [isTermsOpen, setIsTermsOpen] = useState(false);
+  const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
   const owner = isOwner();
 
   useEffect(() => {
@@ -173,6 +177,36 @@ export default function MobileSettingsDrawer({
                 <p className="md-label">{t("settings.appearance.themeLabel")}</p>
                 <ThemeToggle />
               </div>
+
+              <div className="md-surface-muted space-y-3 rounded-md p-4">
+                <p className="md-label">{t("settings.legal.title")}</p>
+                <button
+                  type="button"
+                  onClick={() => setIsTermsOpen(true)}
+                  className="flex w-full items-center gap-3 rounded-md border border-exeer-border bg-white px-4 py-3.5 text-start text-sm font-semibold text-exeer-primary transition-colors hover:bg-exeer-hover"
+                >
+                  <FileText className="h-5 w-5 shrink-0 stroke-[1.75]" aria-hidden />
+                  <span className="min-w-0">
+                    <span className="block">{t("settings.support.terms")}</span>
+                    <span className="block text-xs font-normal text-exeer-muted">
+                      {t("settings.support.termsHint")}
+                    </span>
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsPrivacyOpen(true)}
+                  className="flex w-full items-center gap-3 rounded-md border border-exeer-border bg-white px-4 py-3.5 text-start text-sm font-semibold text-exeer-primary transition-colors hover:bg-exeer-hover"
+                >
+                  <Shield className="h-5 w-5 shrink-0 stroke-[1.75]" aria-hidden />
+                  <span className="min-w-0">
+                    <span className="block">{t("settings.support.privacy")}</span>
+                    <span className="block text-xs font-normal text-exeer-muted">
+                      {t("settings.support.privacyHint")}
+                    </span>
+                  </span>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -189,6 +223,11 @@ export default function MobileSettingsDrawer({
         </aside>
       </div>
 
+      <TermsModal isOpen={isTermsOpen} onClose={() => setIsTermsOpen(false)} />
+      <PrivacyPolicyModal
+        isOpen={isPrivacyOpen}
+        onClose={() => setIsPrivacyOpen(false)}
+      />
     </>
   );
 }

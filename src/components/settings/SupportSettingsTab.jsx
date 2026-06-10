@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { FileText, Mail, MessageCircle } from "lucide-react";
+import { FileText, Mail, MessageCircle, Shield } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import TermsModal from "./TermsModal.jsx";
+import PrivacyPolicyModal from "./PrivacyPolicyModal.jsx";
 import PostSubscriptionGuide from "./PostSubscriptionGuide.jsx";
 import {
   SUPPORT_EMAIL_ADDRESS,
@@ -13,6 +14,7 @@ import {
 export default function SupportSettingsTab() {
   const { t } = useTranslation();
   const [isTermsOpen, setIsTermsOpen] = useState(false);
+  const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
 
   return (
     <>
@@ -89,11 +91,33 @@ export default function SupportSettingsTab() {
             </span>
           </button>
 
+          <button
+            type="button"
+            onClick={() => setIsPrivacyOpen(true)}
+            className="md-surface flex w-full min-w-0 items-center gap-4 p-5 text-start transition-colors hover:bg-exeer-hover"
+          >
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-white text-exeer-primary dark:bg-[#334155] dark:text-[#f1f5f9]">
+              <Shield className="h-5 w-5 stroke-[1.75]" aria-hidden />
+            </span>
+            <span className="min-w-0">
+              <span className="block text-sm font-semibold text-exeer-primary">
+                {t("settings.support.privacy")}
+              </span>
+              <span className="block text-xs leading-relaxed text-exeer-muted">
+                {t("settings.support.privacyHint")}
+              </span>
+            </span>
+          </button>
+
           <PostSubscriptionGuide />
         </div>
       </div>
 
       <TermsModal isOpen={isTermsOpen} onClose={() => setIsTermsOpen(false)} />
+      <PrivacyPolicyModal
+        isOpen={isPrivacyOpen}
+        onClose={() => setIsPrivacyOpen(false)}
+      />
     </>
   );
 }

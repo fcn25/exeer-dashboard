@@ -2,6 +2,7 @@ import { Navigate, useLocation } from "react-router-dom";
 import AppLoadingScreen from "./ui/AppLoadingScreen.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import { isAccountantRole, normalizeAppRole } from "../constants/roles.js";
+import { shouldBlockNativeAppAccess } from "../utils/authenticatedHomePath.js";
 
 function normalizeRequiredRoles(requiredRole) {
   if (!requiredRole) return [];
@@ -42,6 +43,10 @@ export function ProtectedRoute({
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace state={{ from: location }} />;
+  }
+
+  if (shouldBlockNativeAppAccess(location.pathname, role)) {
+    return <Navigate to="/mobile/access-denied" replace />;
   }
 
   if (requiredRole && !roleMatches(requiredRole, role)) {

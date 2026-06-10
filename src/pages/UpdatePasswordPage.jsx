@@ -4,7 +4,7 @@ import ExeerLogo from "../components/brand/ExeerLogo.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import { linkEmployeeAuthUserByEmail } from "../services/currentEmployeeService.js";
 import { supabase } from "../utils/supabaseClient.js";
-import { getAuthenticatedHomePath } from "../constants/roles.js";
+import { resolveAuthenticatedHomePath } from "../utils/authenticatedHomePath.js";
 import { detectIsMobile } from "../hooks/useIsMobile.js";
 import LocaleShell from "../components/ui/LocaleShell.jsx";
 
@@ -109,7 +109,7 @@ export default function UpdatePasswordPage() {
       }
 
       const isMobile = detectIsMobile();
-      const destination = getAuthenticatedHomePath(role ?? "Employee", isMobile);
+      const destination = resolveAuthenticatedHomePath(role ?? "Employee", isMobile);
       navigate(destination, { replace: true });
     } catch (err) {
       setError(err.message || "تعذّر حفظ كلمة المرور.");

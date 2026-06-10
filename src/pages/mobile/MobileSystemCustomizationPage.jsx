@@ -34,7 +34,7 @@ export default function MobileSystemCustomizationPage() {
       lang={pageLang}
       className="mx-auto min-h-screen w-full max-w-[480px] bg-gray-50/80 pb-10 font-sans text-exeer-primary"
     >
-      <header className="sticky top-0 z-40 border-b border-gray-100 bg-white/95 backdrop-blur-sm">
+      <header className="native-mobile-app-bar sticky top-0 z-40 border-b border-gray-100 bg-white/95 backdrop-blur-sm">
         <div className="flex items-center gap-3 px-4 py-3">
           <Link
             to="/mobile"

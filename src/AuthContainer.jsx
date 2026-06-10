@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getAuthenticatedHomePath } from "./constants/roles.js";
+import { resolveAuthenticatedHomePath } from "./utils/authenticatedHomePath.js";
 import { detectIsMobile } from "./hooks/useIsMobile.js";
 import { useAuth } from "./context/AuthContext.jsx";
 import { signInWithEmail, signUpCompany, SIGNUP_SUCCESS_MESSAGE } from "./services/authService.js";
@@ -122,7 +122,7 @@ function LoginView({
 
       const profile = await hydrateSession(session);
       navigate(
-        getAuthenticatedHomePath(profile?.role, detectIsMobile()),
+        resolveAuthenticatedHomePath(profile?.role, detectIsMobile()),
         { replace: true },
       );
     } catch (err) {

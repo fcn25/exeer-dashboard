@@ -89,7 +89,7 @@ export default function MobileAttendancePage() {
       lang={pageLang}
       className="native-mobile-shell mx-auto min-h-screen w-full max-w-[480px] bg-md-surface-dim font-sans text-exeer-primary"
     >
-      <header className="sticky top-0 z-40 border-b border-exeer-border bg-md-surface/95 backdrop-blur-sm">
+      <header className="native-mobile-app-bar sticky top-0 z-40 border-b border-exeer-border bg-md-surface/95 backdrop-blur-sm">
         <div className="flex items-center gap-3 px-4 py-3">
           <Link
             to="/mobile"

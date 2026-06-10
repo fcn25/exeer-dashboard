@@ -8,7 +8,7 @@ export default function MobileSubscriptionPage() {
 
   return (
     <LocaleShell className="min-h-screen bg-md-surface-dim pb-8">
-      <header className="sticky top-0 z-10 border-b border-exeer-border bg-md-surface px-4 py-3">
+      <header className="native-mobile-app-bar sticky top-0 z-10 border-b border-exeer-border bg-md-surface px-4 py-3">
         <div className="mx-auto flex max-w-[480px] items-center gap-3">
           <button
             type="button"

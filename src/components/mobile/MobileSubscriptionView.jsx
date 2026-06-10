@@ -6,7 +6,7 @@ export default function MobileSubscriptionView({ isOpen, onClose }) {
 
   return (
     <div className="fixed inset-0 z-[70] flex flex-col bg-white">
-      <header className="sticky top-0 z-10 border-b border-exeer-border bg-md-surface px-4 py-3">
+      <header className="native-mobile-app-bar sticky top-0 z-10 border-b border-exeer-border bg-md-surface px-4 py-3">
         <div className="mx-auto flex max-w-[480px] items-center justify-between gap-3">
           <button
             type="button"

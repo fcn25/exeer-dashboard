@@ -25,6 +25,7 @@ import MobileTrainingPage from "./pages/mobile/MobileTrainingPage.jsx";
 import MobileAttendancePage from "./pages/mobile/MobileAttendancePage.jsx";
 import MobileAttendanceSettingsPage from "./pages/mobile/MobileAttendanceSettingsPage.jsx";
 import MobileSystemCustomizationPage from "./pages/mobile/MobileSystemCustomizationPage.jsx";
+import MobileNativeAccessDeniedPage from "./pages/mobile/MobileNativeAccessDeniedPage.jsx";
 import { AdministrativeActionsGate } from "./components/administrative/AdministrativeActionsGate.jsx";
 import UpdatePasswordPage from "./pages/UpdatePasswordPage.jsx";
 import { ProtectedRoute } from "./components/ProtectedRoute.jsx";
@@ -246,6 +247,16 @@ function AppRoutes() {
         element={
           <ProtectedRoute allowPortal>
             <EmployeePortalPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/mobile/access-denied"
+        element={
+          <ProtectedRoute>
+            <MobileRoute>
+              <MobileNativeAccessDeniedPage />
+            </MobileRoute>
           </ProtectedRoute>
         }
       />

@@ -121,6 +121,20 @@ export function isPortalEmployeeRole(role) {
   return PORTAL_ROLES.has(normalized);
 }
 
+/** Roles allowed in the native managers mobile app (Capacitor). */
+const NATIVE_MOBILE_APP_ALLOWED_ROLES = new Set([
+  "owner",
+  "Executive",
+  "HR_Manager",
+  "HR_Assistant",
+  "Direct_Manager",
+  "Accountant",
+]);
+
+export function isNativeMobileAppAllowedRole(role) {
+  return NATIVE_MOBILE_APP_ALLOWED_ROLES.has(normalizeAppRole(role));
+}
+
 export function getAuthenticatedHomePath(role, isMobile = false) {
   const normalizedRole = normalizeAppRole(role);
 

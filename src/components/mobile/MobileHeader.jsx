@@ -59,7 +59,7 @@ export default function MobileHeader({
 
   return (
     <>
-      <header className="sticky top-0 z-40 border-b border-exeer-border bg-md-surface/90 backdrop-blur-sm">
+      <header className="native-mobile-app-bar sticky top-0 z-40 border-b border-exeer-border bg-md-surface/90 backdrop-blur-sm">
         <div className="mx-auto flex max-w-[480px] items-center justify-between gap-3 px-4 py-3">
           <div className="min-w-0 flex-1 space-y-0.5">
             <p className="truncate text-xs font-medium text-exeer-muted">

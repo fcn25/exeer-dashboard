@@ -9,12 +9,12 @@ import {
 } from "react";
 import { supabase } from "../utils/supabaseClient.js";
 import {
-  getAuthenticatedHomePath,
   isDashboardRole,
   isOwnerRole,
   normalizeAppRole,
   resolvePermissionsForRole,
 } from "../constants/roles.js";
+import { resolveAuthenticatedHomePath } from "../utils/authenticatedHomePath.js";
 import { useIsMobile } from "../hooks/useIsMobile.js";
 import { resolveAuthProfile } from "../services/profileService.js";
 import {
@@ -192,7 +192,7 @@ export function AuthProvider({ children, onSignedOut }) {
       isOwner: isOwnerRole(role) || isPrimarySubscriber(),
       isAdmin: isOwnerRole(role) || isPrimarySubscriber(),
       isDashboardUser: isDashboardRole(role),
-      homePath: getAuthenticatedHomePath(role, isMobile),
+      homePath: resolveAuthenticatedHomePath(role, isMobile),
       isMobile,
       hydrateSession,
       refreshProfile,

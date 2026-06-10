@@ -57,5 +57,7 @@
 	<string>يحتاج التطبيق لمكتبة الصور لحفظ صور الحضور</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>يحتاج التطبيق لإضافة صور الحضور إلى مكتبتك</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 </dict>
 </plist>

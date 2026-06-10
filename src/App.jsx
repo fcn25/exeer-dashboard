@@ -26,6 +26,7 @@ import MobileAttendancePage from "./pages/mobile/MobileAttendancePage.jsx";
 import MobileAttendanceSettingsPage from "./pages/mobile/MobileAttendanceSettingsPage.jsx";
 import MobileSystemCustomizationPage from "./pages/mobile/MobileSystemCustomizationPage.jsx";
 import MobileNativeAccessDeniedPage from "./pages/mobile/MobileNativeAccessDeniedPage.jsx";
+import PrivacyPolicyPage from "./pages/PrivacyPolicyPage.jsx";
 import { AdministrativeActionsGate } from "./components/administrative/AdministrativeActionsGate.jsx";
 import UpdatePasswordPage from "./pages/UpdatePasswordPage.jsx";
 import { ProtectedRoute } from "./components/ProtectedRoute.jsx";
@@ -210,6 +211,7 @@ function AppRoutes() {
       <MobileOrientationController />
       <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/privacy" element={<PrivacyPolicyPage />} />
       <Route path="/update-password" element={<UpdatePasswordPage />} />
       <Route
         path="/unauthorized"

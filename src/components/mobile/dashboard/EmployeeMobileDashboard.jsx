@@ -129,7 +129,7 @@ export default function EmployeeMobileDashboard({
     <div
       dir={pageDir}
       lang={pageLang}
-      className="native-mobile-shell native-mobile-shell--tabbed mx-auto min-h-screen w-full max-w-[480px] bg-gray-50/80 font-sans text-exeer-primary"
+      className="native-mobile-shell native-mobile-shell--tabbed mx-auto min-h-screen w-full max-w-[480px] bg-md-surface-dim font-sans text-exeer-primary dark:bg-[var(--bg-main)] dark:text-[var(--text-primary)]"
     >
       <CompactMobileAppBar
         employeeName={displayName}

@@ -57,7 +57,7 @@ export default function MobileManagerMenuSheet({
 
       <div
         dir={dir}
-        className="relative mx-auto mt-0 w-full max-w-[480px] border-b border-exeer-border bg-md-surface shadow-none dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)]"
+        className="native-mobile-overlay-top relative mx-auto mt-0 w-full max-w-[480px] border-b border-exeer-border bg-md-surface shadow-none dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)]"
         role="dialog"
         aria-modal="true"
         aria-labelledby="mobile-manager-menu-title"

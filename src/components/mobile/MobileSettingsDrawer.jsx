@@ -104,7 +104,7 @@ export default function MobileSettingsDrawer({
           aria-modal="true"
           aria-labelledby="mobile-settings-title"
         >
-          <div className="flex items-start justify-between gap-4 border-b border-exeer-border px-5 py-4">
+          <div className="native-mobile-overlay-top flex items-start justify-between gap-4 border-b border-exeer-border px-5 py-4">
             <div className="space-y-1">
               <h2 id="mobile-settings-title" className="text-lg font-bold text-exeer-primary">
                 {t("settings.title")}

@@ -20,8 +20,8 @@ export default function AttendanceHorizontalWidget({
   const hasPunch = Boolean(lastPunch?.time && lastPunch.time !== "—");
 
   return (
-    <div className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
-      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-exeer-primary ring-1 ring-gray-100">
+    <div className="flex items-center gap-3 rounded-2xl border border-exeer-border bg-md-surface p-4 shadow-sm dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)]">
+      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-md-primary-container text-exeer-primary dark:bg-[var(--bg-surface-hover)] dark:text-[var(--text-primary)]">
         <Fingerprint className="h-5 w-5 stroke-[1.5]" aria-hidden />
       </span>
 

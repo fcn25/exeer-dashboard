@@ -17,7 +17,7 @@ export default function BentoStatGrid({ stats, isLoading }) {
       {stats.map((stat) => (
         <article
           key={stat.id}
-          className={`flex flex-col justify-between rounded-2xl border border-gray-100 ${stat.bg} p-4 shadow-sm ${
+          className={`flex flex-col justify-between rounded-2xl border border-exeer-border ${stat.bg} p-4 shadow-sm dark:border-[var(--border-color)] ${
             stat.span === 2 ? "col-span-2" : ""
           }`}
         >

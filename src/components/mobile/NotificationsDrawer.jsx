@@ -186,7 +186,7 @@ export default function NotificationsDrawer({ isOpen, onClose, userId, onUnreadC
         aria-modal="true"
         aria-labelledby="notifications-drawer-title"
       >
-        <div className="flex items-start justify-between gap-4 border-b border-exeer-border px-5 py-4">
+        <div className="native-mobile-overlay-top flex items-start justify-between gap-4 border-b border-exeer-border px-5 py-4">
           <div className="space-y-1">
             <h2 id="notifications-drawer-title" className="text-lg font-bold text-exeer-primary">
               الإشعارات

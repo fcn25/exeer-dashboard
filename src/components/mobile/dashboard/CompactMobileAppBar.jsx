@@ -63,8 +63,8 @@ export default function CompactMobileAppBar({
 
   return (
     <>
-      <header className="sticky top-0 z-40 border-b border-exeer-border bg-md-surface/95 backdrop-blur-sm dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)]/95">
-        <div className="mx-auto flex max-w-[480px] items-center gap-3 px-4 py-2.5">
+      <header className="native-mobile-app-bar sticky top-0 z-40 border-b border-exeer-border bg-md-surface/95 shadow-[0_1px_0_rgba(0,0,0,0.04)] backdrop-blur-md dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)]/95 dark:shadow-none">
+        <div className="mx-auto flex max-w-[480px] items-center gap-3 px-4 py-3">
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold text-exeer-primary dark:text-[var(--text-primary)]">
               {greeting}، {employeeName}

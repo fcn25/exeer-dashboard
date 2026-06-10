@@ -91,7 +91,7 @@ body {
 
 .cap-native #root {
   min-height: 100dvh;
-  padding-top: var(--safe-top);
+  /* Top inset is applied on .native-mobile-app-bar so the header fills the notch zone */
   padding-bottom: var(--safe-bottom);
   padding-left: var(--safe-left);
   padding-right: var(--safe-right);
@@ -112,9 +112,26 @@ body {
   padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
 }
 
-.cap-native header.sticky,
-.cap-native [class*="sticky"][class*="top-0"] {
+.cap-native header.sticky:not(.native-mobile-app-bar),
+.cap-native [class*="sticky"][class*="top-0"]:not(.native-mobile-tab-bar) {
   top: var(--safe-top);
+}
+
+/* Mobile dashboard header — background to screen top, content below notch */
+.native-mobile-app-bar {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.native-mobile-shell {
+  --mobile-header-block: calc(2.75rem + env(safe-area-inset-top, 0px));
+}
+
+.native-mobile-tab-bar {
+  top: var(--mobile-header-block);
+}
+
+.native-mobile-overlay-top {
+  padding-top: env(safe-area-inset-top, 0px);
 }
 
 .cap-native .native-safe-fixed-bottom {

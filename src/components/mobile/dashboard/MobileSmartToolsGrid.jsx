@@ -1,4 +1,4 @@
-import { SMART_TOOLS } from "../../../constants/smartTools.js";
+import { getMobileVisibleSmartTools } from "../../../constants/smartTools.js";
 import { useSmartToolsModals } from "../../../hooks/useSmartToolsModals.js";
 import SmartToolsModals from "../../smart-tools/SmartToolsModals.jsx";
 
@@ -22,18 +22,21 @@ function MobileSmartToolCard({ label, icon: Icon, onClick, disabled = false }) {
 
 export default function MobileSmartToolsGrid() {
   const { resolveToolAction, modalProps } = useSmartToolsModals();
+  const visibleTools = getMobileVisibleSmartTools();
+
+  if (!visibleTools.length) return null;
 
   return (
     <>
-      <section className="space-y-3" aria-labelledby="mobile-smart-tools-heading">
+      <section className="space-y-3" aria-labelledby="mobile-achievements-record-heading">
         <h2
-          id="mobile-smart-tools-heading"
+          id="mobile-achievements-record-heading"
           className="text-sm font-bold text-exeer-primary"
         >
-          المهام الذكية
+          سجل الإنجازات
         </h2>
-        <div className="grid grid-cols-2 gap-3">
-          {SMART_TOOLS.map((tool) => {
+        <div className="grid grid-cols-1 gap-3">
+          {visibleTools.map((tool) => {
             const onClick = resolveToolAction(tool.id);
 
             return (

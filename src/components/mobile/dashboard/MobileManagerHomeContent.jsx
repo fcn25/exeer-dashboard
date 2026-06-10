@@ -26,7 +26,6 @@ import {
 } from "../../../services/requestApprovalService.js";
 import { useAppLocale } from "../../../i18n/useAppLocale.js";
 import MobileManagerQuickTools from "./MobileManagerQuickTools.jsx";
-import { canAccessStrategicAI } from "../../../utils/rbac.js";
 
 const ACTION_ICONS = {
   iqama: AlertTriangle,
@@ -227,7 +226,7 @@ export default function MobileManagerHomeContent({
         )}
       </section>
 
-      <MobileManagerQuickTools showSmartTools={canAccessStrategicAI()} />
+      <MobileManagerQuickTools />
 
       <ProbationDecisionModal
         isOpen={Boolean(probationModal)}

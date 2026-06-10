@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  BarChart3,
   Briefcase,
   GraduationCap,
   SlidersHorizontal,
@@ -9,7 +8,6 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {
-  canAccessPerformance,
   canManageAdministrativeActions,
   isOwner,
 } from "../../../utils/rbac.js";
@@ -24,13 +22,6 @@ const QUICK_LINKS = [
     icon: Briefcase,
     href: "/mobile/administrative-actions",
     visible: () => canManageAdministrativeActions(),
-  },
-  {
-    id: "performance",
-    labelKey: "nav.performance",
-    icon: BarChart3,
-    href: "/mobile/recognition",
-    visible: () => canAccessPerformance(),
   },
   {
     id: "system",
@@ -84,7 +75,7 @@ function QuickLinkCard({ icon: Icon, label, onClick, to }) {
   );
 }
 
-export default function MobileManagerQuickTools({ showSmartTools = true }) {
+export default function MobileManagerQuickTools() {
   const { t } = useTranslation();
   const [isPromotionOpen, setIsPromotionOpen] = useState(false);
   const [successToast, setSuccessToast] = useState("");
@@ -114,8 +105,9 @@ export default function MobileManagerQuickTools({ showSmartTools = true }) {
             />
           ))}
         </div>
-        {showSmartTools ? <MobileSmartToolsGrid /> : null}
       </section>
+
+      <MobileSmartToolsGrid />
 
       <MobilePromotionRequestModal
         isOpen={isPromotionOpen}

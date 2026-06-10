@@ -29,6 +29,21 @@ export function isSmartToolTemporarilyDisabled(toolId) {
   return GEMINI_POWERED_TOOL_IDS.has(toolId);
 }
 
+/** Hidden on mobile until the native app is published to app stores. */
+export const MOBILE_TEMPORARILY_HIDDEN_SMART_TOOL_IDS = new Set([
+  SMART_TASK_ID,
+  SMART_INTERVIEW_ID,
+  MANAGEMENT_ADVISOR_ID,
+  SMART_GOALS_ID,
+  MONTHLY_REPORT_ID,
+]);
+
+export function getMobileVisibleSmartTools() {
+  return SMART_TOOLS.filter(
+    (tool) => !MOBILE_TEMPORARILY_HIDDEN_SMART_TOOL_IDS.has(tool.id),
+  );
+}
+
 export const SMART_TOOLS = [
   {
     id: SMART_TASK_ID,

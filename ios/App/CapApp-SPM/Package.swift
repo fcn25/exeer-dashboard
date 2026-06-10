@@ -16,8 +16,7 @@ let package = Package(
         .package(name: "CapacitorCamera", path: "../../../node_modules/@capacitor/camera"),
         .package(name: "CapacitorGeolocation", path: "../../../node_modules/@capacitor/geolocation"),
         .package(name: "CapacitorKeyboard", path: "../../../node_modules/@capacitor/keyboard"),
-        .package(name: "CapacitorScreenOrientation", path: "../../../node_modules/@capacitor/screen-orientation"),
-        .package(name: "SentryCapacitor", path: "../../../node_modules/@sentry/capacitor")
+        .package(name: "CapacitorScreenOrientation", path: "../../../node_modules/@capacitor/screen-orientation")
     ],
     targets: [
         .target(
@@ -29,8 +28,7 @@ let package = Package(
                 .product(name: "CapacitorCamera", package: "CapacitorCamera"),
                 .product(name: "CapacitorGeolocation", package: "CapacitorGeolocation"),
                 .product(name: "CapacitorKeyboard", package: "CapacitorKeyboard"),
-                .product(name: "CapacitorScreenOrientation", package: "CapacitorScreenOrientation"),
-                .product(name: "SentryCapacitor", package: "SentryCapacitor")
+                .product(name: "CapacitorScreenOrientation", package: "CapacitorScreenOrientation")
             ]
         )
     ]

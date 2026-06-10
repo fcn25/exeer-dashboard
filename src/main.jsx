@@ -8,15 +8,6 @@ import i18n from "./i18n/index.js";
 import { ThemeProvider } from "./providers/ThemeProvider.jsx";
 import { bootstrapNativeAppShell } from "./utils/nativeAppShell.js";
 
-// 💡 1. استيراد مكتبات Sentry هنا
-import * as Sentry from "@sentry/capacitor";
-import * as SentryReact from "@sentry/react";
-
-// 💡 2. تفعيل Sentry (يجب أن يتم قبل تشغيل التطبيق)
-Sentry.init({
-  dsn: "https://3bb7f74787a4d00fb9eedcf11e2a7522@o451152363638400.ingest.us.sentry.io/4511523651059712",
-}, SentryReact.init);
-
 bootstrapNativeAppShell();
 
 createRoot(document.getElementById("root")).render(

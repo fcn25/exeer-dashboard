@@ -31,13 +31,9 @@ import UpdatePasswordPage from "./pages/UpdatePasswordPage.jsx";
 import { ProtectedRoute } from "./components/ProtectedRoute.jsx";
 import ErrorBoundary from "./components/ErrorBoundary.jsx";
 import AppLoadingScreen from "./components/ui/AppLoadingScreen.jsx";
-import SentryErrorFallback from "./components/ui/SentryErrorFallback.jsx";
 import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
 import { CurrentEmployeeProvider } from "./context/CurrentEmployeeContext.jsx";
 import MobileOrientationController from "./components/mobile/MobileOrientationController.jsx";
-
-// 💡 إضافة Sentry هنا
-import * as SentryReact from "@sentry/react";
 
 function MobileRoute({ children }) {
   return <ErrorBoundary>{children}</ErrorBoundary>;
@@ -355,18 +351,14 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    // 💡 تغليف التطبيق بالكامل بجدار حماية Sentry هنا
-    <SentryReact.ErrorBoundary fallback={<SentryErrorFallback />}>
-      {/* 💡 هذا كودك الأصلي تماماً بداخل الغلاف */}
-      <AuthProvider>
-        <CurrentEmployeeProvider>
-          <CompanySettingsProvider>
-            <ErrorBoundary>
-              <AppRoutes />
-            </ErrorBoundary>
-          </CompanySettingsProvider>
-        </CurrentEmployeeProvider>
-      </AuthProvider>
-    </SentryReact.ErrorBoundary>
+    <AuthProvider>
+      <CurrentEmployeeProvider>
+        <CompanySettingsProvider>
+          <ErrorBoundary>
+            <AppRoutes />
+          </ErrorBoundary>
+        </CompanySettingsProvider>
+      </CurrentEmployeeProvider>
+    </AuthProvider>
   );
 }

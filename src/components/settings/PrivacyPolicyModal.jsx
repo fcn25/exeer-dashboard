@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import {
   EXEER_PRIVACY_POLICY_LAST_UPDATED_AR,
@@ -18,9 +19,9 @@ export default function PrivacyPolicyModal({ isOpen, onClose }) {
 
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-[2px]"
+      className="fixed inset-0 z-[80] flex items-center justify-center bg-black/40 p-4 backdrop-blur-[2px]"
       role="dialog"
       aria-modal="true"
       aria-labelledby="privacy-modal-title"
@@ -63,6 +64,7 @@ export default function PrivacyPolicyModal({ isOpen, onClose }) {
           {t("settings.privacyModal.close")}
         </button>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

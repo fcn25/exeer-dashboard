@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { EXEER_TERMS_SECTIONS_AR } from "../../constants/exeerTermsOfService.js";
 
@@ -7,9 +8,9 @@ export default function TermsModal({ isOpen, onClose }) {
 
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-[2px]"
+      className="fixed inset-0 z-[80] flex items-center justify-center bg-black/40 p-4 backdrop-blur-[2px]"
       role="dialog"
       aria-modal="true"
       aria-labelledby="terms-modal-title"
@@ -57,6 +58,7 @@ export default function TermsModal({ isOpen, onClose }) {
           {t("settings.termsModal.close")}
         </button>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

@@ -85,10 +85,9 @@ export default function MobileSettingsDrawer({
     navigate("/login", { replace: true });
   };
 
-  if (!isOpen) return null;
-
   return (
     <>
+      {isOpen ? (
       <div className="fixed inset-0 z-[60] flex justify-end bg-black/35 backdrop-blur-[2px]">
         <button
           type="button"
@@ -222,6 +221,7 @@ export default function MobileSettingsDrawer({
           </div>
         </aside>
       </div>
+      ) : null}
 
       <TermsModal isOpen={isTermsOpen} onClose={() => setIsTermsOpen(false)} />
       <PrivacyPolicyModal

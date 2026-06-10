@@ -117,13 +117,27 @@ body {
   top: var(--safe-top);
 }
 
-/* Mobile dashboard header — background to screen top, content below notch */
-.native-mobile-app-bar {
-  padding-top: env(safe-area-inset-top, 0px);
+/* Login / auth — logo sits below status bar without excess top gap */
+.native-auth-shell {
+  padding-top: env(safe-area-inset-top, 20px);
 }
 
+.native-auth-shell__lang {
+  top: calc(env(safe-area-inset-top, 20px) + 0.75rem);
+}
+
+/* Mobile dashboard header — background to screen top, content below notch */
 .native-mobile-shell {
-  --mobile-header-block: calc(2.75rem + env(safe-area-inset-top, 0px));
+  --mobile-safe-top: env(safe-area-inset-top, 20px);
+  --mobile-header-block: calc(2.75rem + var(--mobile-safe-top));
+}
+
+.cap-native .native-mobile-shell {
+  --mobile-safe-top: max(env(safe-area-inset-top, 0px), 20px);
+}
+
+.native-mobile-app-bar {
+  padding-top: var(--mobile-safe-top, env(safe-area-inset-top, 20px));
 }
 
 .native-mobile-tab-bar {
@@ -131,7 +145,7 @@ body {
 }
 
 .native-mobile-overlay-top {
-  padding-top: env(safe-area-inset-top, 0px);
+  padding-top: var(--mobile-safe-top, env(safe-area-inset-top, 20px));
 }
 
 .cap-native .native-safe-fixed-bottom {

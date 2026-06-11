@@ -13,7 +13,7 @@ import ProbationDecisionModal from "../../home/ProbationDecisionModal.jsx";
 import {
   HOME_BTN,
   HOME_BTN_PRIMARY,
-  HOME_SHELL,
+  HOME_CARD,
   HOME_TEXT_BODY,
   HOME_TEXT_HEADING,
   HOME_TEXT_HINT,
@@ -175,7 +175,7 @@ export default function MobileManagerHomeContent({
       />
 
       <section
-        className={`${HOME_SHELL} border-r-[3px] border-r-[#0F172A] p-4 dark:border-r-[var(--text-primary)]`}
+        className={`${HOME_CARD} border-r-[3px] border-r-[#0F172A] p-4 dark:border-r-[var(--text-primary)]`}
       >
         <div className="mb-3 flex items-center justify-between gap-2">
           <h2 className={`text-base font-semibold ${HOME_TEXT_HEADING}`}>

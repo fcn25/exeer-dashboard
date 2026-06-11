@@ -6,7 +6,7 @@ import {
   FileWarning,
   ShieldAlert,
 } from "lucide-react";
-import { HOME_BTN, HOME_CARD, HOME_LIST_DIVIDE, HOME_SHELL, TYPE_ITEM, TYPE_META, TYPE_SECTION } from "./homeStyles.js";
+import { HOME_BTN, HOME_CARD, HOME_LIST_DIVIDE, TYPE_ITEM, TYPE_META, TYPE_SECTION } from "./homeStyles.js";
 import { useAppLocale } from "../../i18n/useAppLocale.js";
 import { formatLocaleDate, formatLocaleNumber } from "../../i18n/formatLocale.js";
 import ImportantAlertsList from "./ImportantAlertsList.jsx";
@@ -72,7 +72,7 @@ function AlertList({ items, emptyLabel, onItemAction, actionLabel }) {
             <button
               type="button"
               onClick={() => onItemAction(item)}
-              className={`${HOME_BTN} mt-3 w-full rounded-full border border-[#F0F0F0] bg-white px-3 py-2 text-[13px] font-medium text-[#111111] hover:bg-[#FAFAFA] dark:border-[var(--border-color)] dark:bg-[var(--bg-main)] dark:text-[var(--text-primary)]`}
+              className={`${HOME_BTN} home-btn-outlined mt-3 w-full rounded-full border border-[#F0EEEA] bg-white px-3 py-2 text-[13px] font-medium text-[#111111] hover:bg-[#F7F6F3] dark:border-[var(--border-color)] dark:bg-[var(--bg-main)] dark:text-[var(--text-primary)]`}
             >
               {actionLabel}
             </button>
@@ -85,7 +85,7 @@ function AlertList({ items, emptyLabel, onItemAction, actionLabel }) {
 
 function AlertColumn({ title, description, icon: Icon, iconTone, count, children }) {
   return (
-    <article className={`${HOME_CARD} flex flex-col`}>
+    <article className="flex min-w-0 flex-col">
       <div className="mb-4 flex items-start justify-between gap-2">
         <div className="flex items-start gap-2.5">
           <span
@@ -126,7 +126,7 @@ function EmergencyAlertsGrid({
   onProbationDecision,
 }) {
   return (
-    <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
       <AlertColumn
         title={t("pages.home.contractExpiry")}
         description={t("pages.home.contractExpiryHint")}
@@ -211,7 +211,7 @@ export default function EmergencyAlertsPanel({
 
   return (
     <section
-      className={`${HOME_SHELL} space-y-6 overflow-hidden`}
+      className={`${HOME_CARD} space-y-6 overflow-hidden`}
       aria-labelledby="emergency-alerts-heading"
     >
       <div className="px-1 pt-1 sm:px-0">

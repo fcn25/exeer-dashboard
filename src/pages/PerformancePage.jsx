@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { PERFORMANCE_TABS } from "../constants/performanceTemplates.js";
-import { HOME_SHELL, TYPE_ITEM, TYPE_META } from "../components/home/homeStyles.js";
+import { HOME_CARD, TYPE_ITEM, TYPE_META } from "../components/home/homeStyles.js";
 import { useAppLocale } from "../i18n/useAppLocale.js";
 
 export default function PerformancePage() {
@@ -19,7 +19,7 @@ export default function PerformancePage() {
       <nav
         role="tablist"
         aria-label={t("pages.performance.title")}
-        className={`${HOME_SHELL} mb-6 grid grid-cols-1 gap-2 bg-[#F8FAFC] p-2 dark:bg-[var(--bg-surface)] sm:grid-cols-3`}
+        className={`${HOME_CARD} mb-6 grid grid-cols-1 gap-2 p-2 sm:grid-cols-3 dark:bg-[var(--bg-surface)]`}
       >
         {PERFORMANCE_TABS.map((tab) => {
           const Icon = tab.icon;
@@ -35,7 +35,7 @@ export default function PerformancePage() {
               className={`flex min-h-[72px] items-center gap-3 rounded-[12px] px-4 py-3 text-start transition-colors ${
                 isActive
                   ? "bg-[#0F172A] text-white shadow-none dark:border dark:border-[var(--border-color)] dark:bg-[var(--bg-surface-hover)] dark:text-[var(--text-primary)]"
-                  : "border border-[#F0F0F0] bg-white text-[#6B7280] hover:border-[#E5E5E5] hover:text-[#111111] dark:border-[var(--border-color)] dark:bg-[var(--bg-main)] dark:text-[var(--text-secondary)] dark:hover:border-[var(--border-color)] dark:hover:text-[var(--text-primary)]"
+                  : "border border-[#F0EEEA] bg-[#F7F6F3] text-[#6B7280] hover:text-[#111111] dark:border-[var(--border-color)] dark:bg-[var(--bg-main)] dark:text-[var(--text-secondary)] dark:hover:border-[var(--border-color)] dark:hover:text-[var(--text-primary)]"
               }`}
             >
               <span
@@ -65,7 +65,7 @@ export default function PerformancePage() {
       </nav>
 
       <div
-        className={`${HOME_SHELL} flex min-h-[240px] items-center justify-center p-8 text-center`}
+        className={`${HOME_CARD} flex min-h-[240px] items-center justify-center text-center`}
       >
         <p className="max-w-md text-sm text-exeer-muted">
           جارٍ إعادة بناء نظام الأداء. هذا القسم سيعود قريباً بالتصميم الجديد.

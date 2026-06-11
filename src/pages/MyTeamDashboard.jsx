@@ -19,7 +19,6 @@ import { getUserDisplay } from "../utils/mobileAuth.js";
 import {
   HOME_BTN,
   HOME_CARD,
-  HOME_SHELL,
   HOME_SURFACE,
   PRIORITY_ICON_STYLES,
 } from "../components/home/homeStyles.js";
@@ -177,7 +176,7 @@ function ManagerHrRequestModal({
       aria-modal="true"
       aria-labelledby="manager-hr-request-title"
     >
-      <div className={`${HOME_SHELL} w-full max-w-lg p-5 sm:p-6`}>
+      <div className={`${HOME_CARD} w-full max-w-lg`}>
         <div className="mb-4 flex items-start justify-between gap-3">
           <h3
             id="manager-hr-request-title"
@@ -298,7 +297,7 @@ export default function MyTeamDashboard() {
   return (
     <div className="-mx-6 -my-8 flex flex-col gap-5 bg-[#FFFFFF] px-6 py-8 dark:bg-[var(--bg-main)] md:-mx-8 md:px-8">
       {/* ─── ترويسة ─── */}
-      <header className={`${HOME_SHELL} p-6`}>
+      <header className={HOME_CARD}>
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-1 text-start">
@@ -368,7 +367,7 @@ export default function MyTeamDashboard() {
 
       {/* ─── هيرو 60/40 ─── */}
       <section className="grid grid-cols-1 gap-5 lg:grid-cols-[3fr_2fr]">
-        <article className={`${HOME_SHELL} p-6`}>
+        <article className={HOME_CARD}>
           <p className="text-[14px] font-normal text-[#64748B]">
             إجمالي أعضاء الفريق
           </p>
@@ -404,7 +403,7 @@ export default function MyTeamDashboard() {
           </div>
         </article>
 
-        <article className={`${HOME_SHELL} p-6`}>
+        <article className={HOME_CARD}>
           <h2 className="text-[16px] font-medium text-[#0F172A]">
             طلبات بانتظار الموافقة
           </h2>
@@ -451,7 +450,7 @@ export default function MyTeamDashboard() {
 
       {/* ─── طلبات الفريق ─── */}
       <section
-        className={`${HOME_SHELL} border-r-[3px] border-r-[#0F172A] p-6`}
+        className={`${HOME_CARD} border-r-[3px] border-r-[#0F172A]`}
         aria-labelledby="team-requests-heading"
       >
         <div className="mb-4 flex items-center justify-between gap-3">
@@ -580,7 +579,7 @@ export default function MyTeamDashboard() {
               return (
                 <article
                   key={member.id}
-                  className={`${HOME_CARD} flex flex-col gap-3 p-5 hover:bg-[#F8FAFC]`}
+                  className={`${HOME_CARD} flex flex-col gap-3 hover:bg-[#F7F6F3]`}
                 >
                   <div className="flex items-start gap-3">
                     <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#EEF2FF] text-[14px] font-semibold text-[#4F46E5]">
@@ -650,7 +649,7 @@ export default function MyTeamDashboard() {
                 key={item.id}
                 type="button"
                 onClick={() => setHrModalKind(item.id)}
-                className={`${HOME_CARD} flex min-h-[128px] flex-col items-start gap-3 p-5 text-start hover:bg-[#F8FAFC]`}
+                className={`${HOME_CARD} flex min-h-[128px] flex-col items-start gap-3 text-start hover:bg-[#F7F6F3]`}
               >
                 <span className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-[#EEF2FF] text-[#4F46E5]">
                   <Icon className="h-5 w-5" aria-hidden />

@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { Check } from "lucide-react";
 import { useAppLocale } from "../../i18n/useAppLocale.js";
 import { formatLocaleNumber } from "../../i18n/formatLocale.js";
-import { HOME_BTN, TYPE_ITEM, TYPE_META, TYPE_SECTION } from "./homeStyles.js";
+import { HOME_BTN, HOME_LIST_DIVIDE, TYPE_ITEM, TYPE_META, TYPE_SECTION } from "./homeStyles.js";
 
 function DaysBadge({ daysLeft, severity, todayLabel, isEn }) {
   const isCritical = severity === "critical";
@@ -52,7 +52,7 @@ function AlertItemCard({
   const isCritical = item.severity === "critical";
 
   return (
-    <li className="home-card-interactive rounded-[10px] border border-[#F0F0F0] bg-white px-4 py-3.5 dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)]">
+    <li className="py-4 first:pt-0 last:pb-0">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1 text-start">
           <div className="flex flex-wrap items-center gap-2">
@@ -84,7 +84,7 @@ function AlertItemCard({
         <button
           type="button"
           onClick={() => onViewEmployee?.(item.employeeId)}
-          className={`${HOME_BTN} flex-1 rounded-full border border-[#F0F0F0] bg-white px-3 py-2 text-[13px] font-medium text-[#111111] hover:bg-[#FAFAFA] dark:border-[var(--border-color)] dark:bg-[var(--bg-main)] dark:text-[var(--text-primary)]`}
+          className={`${HOME_BTN} home-btn-outlined flex-1 rounded-full border border-[#F0EEEA] bg-white px-3 py-2 text-[13px] font-medium text-[#111111] hover:bg-[#F7F6F3] dark:border-[var(--border-color)] dark:bg-[var(--bg-main)] dark:text-[var(--text-primary)]`}
         >
           {t("pages.home.viewEmployee")}
         </button>
@@ -92,7 +92,7 @@ function AlertItemCard({
           <button
             type="button"
             onClick={() => onProbationDecision?.(item)}
-            className={`${HOME_BTN} flex-1 rounded-full border border-[#F0F0F0] bg-[#EEF2FF] px-3 py-2 text-[13px] font-medium text-[#4F46E5] hover:bg-white dark:border-[var(--border-color)]`}
+            className={`${HOME_BTN} home-btn-outlined flex-1 rounded-full border border-[#F0EEEA] bg-[#EEF2FF] px-3 py-2 text-[13px] font-medium text-[#4F46E5] hover:bg-white dark:border-[var(--border-color)]`}
           >
             {t("pages.home.probationDecision")}
           </button>
@@ -119,7 +119,7 @@ function AlertSection({
       <h3 className={TYPE_SECTION}>
         {emoji} {title}
       </h3>
-      <ul className="space-y-3">
+      <ul className={`${HOME_LIST_DIVIDE} space-y-0`}>
         {items.map((item) => (
           <AlertItemCard
             key={item.id}

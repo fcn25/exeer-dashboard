@@ -34,7 +34,6 @@ import {
   HOME_BTN_PRIMARY,
   HOME_BTN_SECONDARY,
   HOME_CARD,
-  HOME_SHELL,
   HOME_SURFACE,
   HOME_TEXT_BODY,
   HOME_TEXT_HEADING,
@@ -335,7 +334,7 @@ export default function HomePage() {
   return (
     <div className="-mx-6 -my-8 flex flex-col gap-8 bg-md-surface-dim px-6 py-8 dark:bg-[var(--bg-main)] md:-mx-8 md:px-8">
       {/* ─── 1. ترويسة ─── */}
-      <header className={`${HOME_SHELL} p-6`}>
+      <header className={HOME_CARD}>
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-1 text-start">
@@ -392,7 +391,7 @@ export default function HomePage() {
 
       {/* ─── 2. صف هيرو 60/40 ─── */}
       <section className="grid grid-cols-1 gap-5 lg:grid-cols-[3fr_2fr]">
-        <article className={`${HOME_SHELL} p-6`}>
+        <article className={HOME_CARD}>
           <p className={`${HOME_TEXT_LABEL} font-normal`}>
             {t("pages.home.payrollTotal", { month: payrollMonthLabel })}
           </p>
@@ -438,7 +437,7 @@ export default function HomePage() {
           </div>
         </article>
 
-        <article className={`${HOME_SHELL} p-6`}>
+        <article className={HOME_CARD}>
           <h2 className={HOME_TEXT_HEADING}>
             {t("pages.home.workforceTitle")}
           </h2>
@@ -507,7 +506,7 @@ export default function HomePage() {
       </section>
 
       {/* ─── 3. يحتاج اهتمامك ─── */}
-      <section className={`${HOME_SHELL} border-r-[3px] border-r-[#0F172A] p-6 dark:border-r-[var(--text-primary)]`}>
+      <section className={`${HOME_CARD} border-r-[3px] border-r-[#0F172A] dark:border-r-[var(--text-primary)]`}>
         <div className="mb-4 flex items-center justify-between gap-3">
           <h2 className={`${TYPE_SECTION} text-[1.125rem]`}>
             {t("pages.home.needsAttention")}
@@ -648,7 +647,7 @@ export default function HomePage() {
                   type="button"
                   onClick={onClick}
                   disabled={!onClick}
-                  className={`${HOME_CARD} relative flex min-h-[128px] flex-col items-start gap-3 text-start hover:bg-[#FAFAFA] disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-slate-800`}
+                  className={`${HOME_CARD} relative flex min-h-[128px] flex-col items-start gap-3 text-start hover:bg-[#F7F6F3] disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-slate-800`}
                 >
                   <span className="inline-flex items-center rounded-full bg-[#EEF2FF] px-2 py-0.5 text-[11px] font-medium text-[#4F46E5] dark:bg-indigo-950/50 dark:text-indigo-300">
                     ✨ AI

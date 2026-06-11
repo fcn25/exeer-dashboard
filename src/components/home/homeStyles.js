@@ -5,20 +5,20 @@ export const PAGE_DARK =
 export const SURFACE_DARK =
   "dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)]";
 
-/** Large section groupings — whitespace + type weight, no box (light) */
+/** Section wrapper on warm canvas — spacing only in light; white card in dark */
 export const HOME_SHELL =
-  "home-section-shell bg-white shadow-none dark:rounded-[16px] dark:border dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)]";
+  "home-section-shell shadow-none dark:rounded-[16px] dark:border dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)]";
 
-/** Interactive cards — hairline border in light */
+/** Floating white card on warm canvas */
 export const HOME_CARD =
-  "home-card-interactive rounded-[12px] border border-[#F0F0F0] bg-white p-5 shadow-none dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)]";
+  "home-card-interactive rounded-[12px] bg-white p-6 shadow-none dark:border dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)]";
 
-/** Nested content areas — dividers instead of boxes (light) */
+/** In-card nested areas — dividers, not nested boxes */
 export const HOME_SURFACE =
-  "rounded-[12px] bg-white shadow-none dark:border dark:border-[var(--border-color)] dark:bg-[var(--bg-surface-hover)]";
+  "rounded-[12px] shadow-none dark:border dark:border-[var(--border-color)] dark:bg-[var(--bg-surface-hover)]";
 
 export const HOME_LIST_DIVIDE =
-  "home-list-divide divide-y divide-[#F0F0F0] dark:divide-[var(--border-color)]";
+  "home-list-divide divide-y divide-[#F0EEEA] dark:divide-[var(--border-color)]";
 
 export const HOME_BTN =
   "rounded-[10px] shadow-none transition-colors";
@@ -52,10 +52,10 @@ export const HOME_BTN_PRIMARY =
   "rounded-full bg-[#0F172A] px-4 py-2 text-[13px] font-medium text-white hover:opacity-90 dark:bg-[var(--accent-on-dark-bg)] dark:text-[var(--text-primary)] dark:font-semibold dark:hover:brightness-105";
 
 export const HOME_BTN_SECONDARY =
-  "inline-flex items-center gap-1.5 rounded-full border border-[#F0F0F0] bg-white px-4 py-2 text-[13px] font-medium text-[#111111] hover:bg-[#FAFAFA] dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)] dark:text-[var(--text-primary)] dark:font-medium dark:hover:bg-[var(--bg-surface-hover)]";
+  "home-btn-outlined inline-flex items-center gap-1.5 rounded-full border border-[#F0EEEA] bg-white px-4 py-2 text-[13px] font-medium text-[#111111] hover:bg-[#F7F6F3] dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)] dark:text-[var(--text-primary)] dark:font-medium dark:hover:bg-[var(--bg-surface-hover)]";
 
 export const HOME_ICON_BTN =
-  "flex h-9 w-9 items-center justify-center rounded-md border border-[#F0F0F0] text-[#111111] transition-colors hover:bg-[#FAFAFA] dark:border-[var(--border-color)] dark:text-[var(--text-primary)] dark:hover:bg-[var(--bg-surface-hover)]";
+  "home-btn-outlined flex h-9 w-9 items-center justify-center rounded-md border border-[#F0EEEA] text-[#111111] transition-colors hover:bg-[#F7F6F3] dark:border-[var(--border-color)] dark:text-[var(--text-primary)] dark:hover:bg-[var(--bg-surface-hover)]";
 
 export const PRIORITY_ICON_STYLES = {
   red: "bg-[#FEE2E2] text-[#EF4444] dark:bg-red-950/50 dark:text-[var(--text-error)]",

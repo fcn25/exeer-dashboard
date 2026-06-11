@@ -5,14 +5,15 @@
 
 /* Light theme surface tokens */
 :root {
-  --color-bg-page: #ffffff;
+  --color-bg-page: #f7f6f3;
   --color-bg-surface: #ffffff;
-  --color-bg-subtle: #fafafa;
-  --color-border: #ececec;
-  --color-border-interactive: #f0f0f0;
+  --color-bg-subtle: #ffffff;
+  --color-border: #f0eeea;
+  --color-border-interactive: #f0eeea;
   --color-text-primary: #111111;
   --color-text-meta: #6b7280;
   --shadow-card: none;
+  --radius-card: 0.75rem;
   --font-size-body: 0.9375rem;
   --font-size-section: 1.0625rem;
   --font-size-item: 0.9375rem;
@@ -20,8 +21,8 @@
   --font-size-secondary: 0.875rem;
   --font-weight-section: 600;
   --space-page-gap: 2rem;
-  --space-section: 2.5rem;
-  --space-card-padding: 1.25rem;
+  --space-section: 2.75rem;
+  --space-card-padding: 1.5rem;
 }
 
 /* Ultra-minimal SaaS tokens — Notion / Attio / Stripe inspired */
@@ -31,20 +32,20 @@
   --color-md-primary-container: #fafafa;
   --color-md-on-primary-container: #0f172a;
   --color-md-surface: #ffffff;
-  --color-md-surface-dim: #ffffff;
+  --color-md-surface-dim: #f7f6f3;
   --color-md-surface-container: #ffffff;
-  --color-md-surface-container-high: #fafafa;
-  --color-md-outline: #ececec;
-  --color-md-outline-variant: #ebebeb;
-  --color-md-on-surface: #0f172a;
+  --color-md-surface-container-high: #ffffff;
+  --color-md-outline: #f0eeea;
+  --color-md-outline-variant: #f0eeea;
+  --color-md-on-surface: #111111;
   --color-md-on-surface-variant: #6b7280;
-  --color-exeer-bg: #ffffff;
-  --color-exeer-surface: #fafafa;
-  --color-background-secondary: #ffffff;
+  --color-exeer-bg: #f7f6f3;
+  --color-exeer-surface: #ffffff;
+  --color-background-secondary: #f7f6f3;
   --color-exeer-primary: #111111;
   --color-exeer-muted: #6b7280;
-  --color-exeer-border: #ececec;
-  --color-exeer-hover: #fafafa;
+  --color-exeer-border: #f0eeea;
+  --color-exeer-hover: #f7f6f3;
   --font-sans: "Zain", system-ui, sans-serif;
   --font-display: "Zain", system-ui, sans-serif;
   --radius-md-sm: 0.25rem;
@@ -389,7 +390,7 @@ span {
   cursor: not-allowed;
 }
 
-/* Light theme — flat white canvas, hairline separation (dark theme untouched) */
+/* Light theme — warm canvas + floating white cards (dark theme untouched) */
 html:not(.dark) body,
 html:not(.dark) #root {
   background-color: var(--color-bg-page);
@@ -451,7 +452,7 @@ html:not(.dark) .md-label {
 }
 
 html:not(.dark) .md-input {
-  border-color: #ececec;
+  border-color: var(--color-border-interactive);
   padding: 0.6875rem 0.875rem;
 }
 
@@ -468,11 +469,11 @@ html:not(.dark) .md-btn-tonal {
 }
 
 html:not(.dark) .md-btn-tonal {
-  border-color: #ececec;
+  border-color: var(--color-border-interactive);
 }
 
 html:not(.dark) .md-btn-tonal:hover {
-  background: #fafafa;
+  background: var(--color-bg-page);
 }
 
 html:not(.dark) .md-settings-tab {
@@ -482,83 +483,93 @@ html:not(.dark) .md-settings-tab {
 
 html:not(.dark) .md-settings-tab:hover,
 html:not(.dark) .md-settings-tab-active {
-  background: #fafafa;
+  background: var(--color-bg-page);
 }
 
 html:not(.dark) .md-theme-segment {
-  border-color: #ececec;
-  background: #ffffff;
+  border-color: var(--color-border-interactive);
+  background: var(--color-bg-page);
 }
 
 html:not(.dark) .md-theme-segment-btn-active {
-  border-color: #ececec;
-  background: #fafafa;
+  border-color: var(--color-border-interactive);
+  background: var(--color-bg-surface);
 }
 
 html:not(.dark) .md-slider {
-  background: #ececec;
+  background: var(--color-border-interactive);
 }
 
+/* Panel / canvas — warm off-white */
 html:not(.dark) .min-h-screen.bg-white,
 html:not(.dark) .h-screen.bg-white,
-html:not(.dark) .bg-gray-50\/50 {
+html:not(.dark) .bg-gray-50\/50,
+html:not(.dark) .bg-md-surface-dim,
+html:not(.dark) .bg-exeer-bg,
+html:not(.dark) .bg-background-secondary {
   background-color: var(--color-bg-page);
 }
 
-/* Flatten neutral gray page layers — preserve semantic status tints */
+/* Card surfaces — pure white, tonal lift from canvas */
+html:not(.dark) .bg-md-surface,
+html:not(.dark) .bg-white {
+  background-color: var(--color-bg-surface);
+}
+
+/* Neutral grays on canvas → warm panel tint; inside cards → warm hover */
 html:not(.dark) .bg-\[\#F8FAFC\],
 html:not(.dark) .bg-\[\#FAFAF9\],
 html:not(.dark) .bg-\[\#F0F0F5\],
 html:not(.dark) .bg-\[\#FAFAFA\],
 html:not(.dark) .bg-gray-50,
-html:not(.dark) .bg-gray-100,
 html:not(.dark) .bg-md-surface-container,
 html:not(.dark) .bg-md-surface-container-high,
 html:not(.dark) .bg-exeer-surface,
 html:not(.dark) .hover\:bg-\[\#F8FAFC\]:hover,
-html:not(.dark) .hover\:bg-gray-50:hover {
-  background-color: #ffffff;
+html:not(.dark) .hover\:bg-\[\#FAFAFA\]:hover {
+  background-color: var(--color-bg-page);
 }
 
-html:not(.dark) .bg-md-surface-dim,
-html:not(.dark) .bg-exeer-bg,
-html:not(.dark) .bg-background-secondary {
-  background-color: #ffffff;
+html:not(.dark) .bg-gray-100,
+html:not(.dark) .hover\:bg-gray-50:hover {
+  background-color: var(--color-bg-page);
 }
 
 html:not(.dark) .border-\[\#E2E8F0\],
 html:not(.dark) .border-\[\#E5E7EB\],
 html:not(.dark) .border-exeer-border,
 html:not(.dark) .border-gray-200,
-html:not(.dark) .divide-\[\#F1F5F9\] > :not(:last-child) {
-  border-color: #ececec;
+html:not(.dark) .divide-\[\#F1F5F9\] > :not(:last-child),
+html:not(.dark) .divide-\[\#F0F0F0\] > :not(:last-child) {
+  border-color: var(--color-border-interactive);
 }
 
-/* Sidebar + chrome — keep hairline for orientation */
+/* Sidebar — white card on warm canvas */
 html:not(.dark) aside.border-e.border-gray-200.bg-white,
 html:not(.dark) aside.border-exeer-border.bg-md-surface {
   background-color: var(--color-bg-surface);
-  border-color: var(--color-border);
+  border-color: var(--color-border-interactive);
 }
 
+/* Top bar — blends with warm canvas */
 html:not(.dark) .sticky.top-0.z-30.border-b.border-exeer-border,
 html:not(.dark) .sticky.top-0.z-30.border-b.border-exeer-border.bg-md-surface-dim\/95 {
-  background-color: var(--color-bg-surface);
-  border-bottom-color: var(--color-border);
+  background-color: color-mix(in srgb, var(--color-bg-page) 95%, transparent);
+  border-bottom-color: var(--color-border-interactive);
 }
 
-/* Section groupings — no box; separation via type + whitespace */
-html:not(.dark) .home-section-shell,
-html:not(.dark) .md-surface,
-html:not(.dark) .md-surface-muted {
-  background-color: var(--color-bg-surface);
+/* Section wrappers on canvas — no nested box */
+html:not(.dark) .home-section-shell {
+  background-color: transparent;
   border: none;
+  border-radius: 0;
   box-shadow: none;
 }
 
-/* Interactive cards — one hairline so bounds stay readable */
+/* Floating white cards — tonal lift from warm canvas */
 html:not(.dark) .home-card-interactive,
-html:not(.dark) .md-card-interactive,
+html:not(.dark) .md-surface,
+html:not(.dark) .md-surface-muted,
 html:not(.dark) .card,
 html:not(.dark) [class*="card"]:not(.home-section-shell),
 html:not(.dark) section.rounded-md.border.border-gray-200.bg-white,
@@ -576,37 +587,43 @@ html:not(.dark) .rounded-\[12px\].border.border-\[\#E2E8F0\].bg-white,
 html:not(.dark) .rounded-\[16px\].border.border-\[\#E2E8F0\].bg-white,
 html:not(.dark) .rounded-\[12px\].border.border-\[\#ECECEC\].bg-white,
 html:not(.dark) .rounded-\[16px\].border.border-\[\#ECECEC\].bg-white,
+html:not(.dark) .rounded-\[12px\].bg-white,
+html:not(.dark) .rounded-\[16px\].bg-white,
+html:not(.dark) .rounded-2xl.bg-white,
 html:not(.dark) .bg-md-surface.border.rounded-md,
 html:not(.dark) .bg-md-surface.border.rounded-2xl,
 html:not(.dark) .bg-md-surface.border.rounded-\[12px\],
 html:not(.dark) .bg-md-surface.border.rounded-\[16px\] {
   background-color: var(--color-bg-surface);
-  border: 1px solid var(--color-border-interactive);
+  border: none;
+  border-radius: var(--radius-card);
   box-shadow: none;
 }
 
-/* Nested lists — dividers, not per-item boxes */
+/* Interactive controls — barely-there outline only */
+html:not(.dark) .home-btn-outlined,
+html:not(.dark) .md-input,
+html:not(.dark) .md-btn-tonal,
+html:not(.dark) .md-theme-segment,
+html:not(.dark) .md-theme-segment-btn-active {
+  border: 1px solid var(--color-border-interactive);
+}
+
+/* Nested list dividers */
 html:not(.dark) .home-list-divide > :not(:last-child),
-html:not(.dark) .divide-\[\#F0F0F0\] > :not(:last-child),
-html:not(.dark) .divide-\[\#F1F5F9\] > :not(:last-child) {
+html:not(.dark) .divide-\[\#F0EEEA\] > :not(:last-child) {
   border-color: var(--color-border-interactive);
 }
 
-html:not(.dark) .border-\[\#E2E8F0\],
-html:not(.dark) .border-\[\#E5E7EB\],
-html:not(.dark) .border-exeer-border,
-html:not(.dark) .border-gray-200 {
-  border-color: var(--color-border-interactive);
-}
-
-/* Nested panels inside cards — flat white, no stacked boxes */
+/* No boxes inside boxes */
 html:not(.dark) .border-\[\#E2E8F0\].bg-\[\#F8FAFC\],
 html:not(.dark) .md-surface .bg-exeer-surface,
 html:not(.dark) .md-surface .md-surface-muted,
 html:not(.dark) .bg-md-surface .bg-exeer-surface,
 html:not(.dark) .rounded-md.border.border-exeer-border.bg-exeer-surface,
-html:not(.dark) .rounded-\[12px\].border.border-\[\#E2E8F0\].bg-exeer-surface {
-  background-color: #ffffff;
+html:not(.dark) .rounded-\[12px\].border.border-\[\#E2E8F0\].bg-exeer-surface,
+html:not(.dark) .home-card-interactive .home-card-interactive {
+  background-color: transparent;
   border: none;
   box-shadow: none;
 }

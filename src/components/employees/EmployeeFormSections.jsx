@@ -243,6 +243,14 @@ export default function EmployeeFormSections({
               disabled={disabled}
             />
           </Field>
+          <Field label="تاريخ انتهاء رخصة العمل">
+            <DateInput
+              id="employee-work-permit-expiry"
+              value={form.work_permit_expiry_date}
+              onChange={(e) => update("work_permit_expiry_date", e.target.value)}
+              disabled={disabled}
+            />
+          </Field>
           <Field label="رقم الهوية">
             <input
               type="text"

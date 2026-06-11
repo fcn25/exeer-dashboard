@@ -127,10 +127,13 @@ export default function EmergencyAlertsPanel({
   onViewEmployee,
 }) {
   const { t, isEn } = useAppLocale();
-  const contracts = alerts?.contracts ?? [];
-  const iqamas = alerts?.iqamas ?? [];
-  const probations = alerts?.probations ?? [];
-  const totalCount = alerts?.totalCount ?? 0;
+  const {
+    contracts = [],
+    iqamas = [],
+    probations = [],
+    workPermits = [],
+    totalCount = 0,
+  } = alerts ?? {};
   const todayLabel = t("common.today");
   const mapItems = (items) =>
     items.map((item) => ({ ...item, todayLabel, isEn }));
@@ -175,7 +178,7 @@ export default function EmergencyAlertsPanel({
             {t("pages.home.checkingAlerts")}
           </p>
         ) : (
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
             <AlertColumn
               title={t("pages.home.contractExpiry")}
               description={t("pages.home.contractExpiryHint")}
@@ -201,6 +204,20 @@ export default function EmergencyAlertsPanel({
               <AlertList
                 items={mapItems(iqamas)}
                 emptyLabel={t("pages.home.iqamaEmpty")}
+                onItemAction={(item) => onViewEmployee?.(item.employeeId)}
+                actionLabel={t("pages.home.viewEmployee")}
+              />
+            </AlertColumn>
+
+            <AlertColumn
+              title={t("pages.home.workPermitExpiry")}
+              icon={AlertTriangle}
+              iconTone={{ bg: "#F1F5F9", color: "#64748B" }}
+              count={workPermits.length}
+            >
+              <AlertList
+                items={mapItems(workPermits)}
+                emptyLabel="لا رخص عمل تنتهي قريباً"
                 onItemAction={(item) => onViewEmployee?.(item.employeeId)}
                 actionLabel={t("pages.home.viewEmployee")}
               />

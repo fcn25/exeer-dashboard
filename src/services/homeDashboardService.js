@@ -27,7 +27,7 @@ const SAUDI_NATIONALITIES = new Set([
 ]);
 
 const EMPLOYEE_SELECT_FULL =
-  "id, full_name, nationality, employment_status, hire_date, job_title_name, iqama_expiry_date, probation_end_date";
+  "id, full_name, nationality, employment_status, hire_date, job_title_name, iqama_expiry_date, probation_end_date, work_permit_expiry_date";
 
 const EMPLOYEE_SELECT_BASE =
   "id, full_name, nationality, employment_status, hire_date, job_title_name";
@@ -506,6 +506,7 @@ async function fetchTopPerformers(companyId, bounds) {
 
 const CONTRACT_EXPIRY_WINDOW_DAYS = 90;
 const IQAMA_EXPIRY_WINDOW_DAYS = 30;
+const WORK_PERMIT_EXPIRY_WINDOW_DAYS = 45;
 /** فترة التجربة من تاريخ التعيين (hire_date) */
 const PROBATION_PERIOD_DAYS = 80;
 const PROBATION_ALERT_WINDOW_DAYS = 10;
@@ -641,6 +642,37 @@ function buildIqamaExpiryAlerts(employees) {
   return items.sort((a, b) => a.daysLeft - b.daysLeft);
 }
 
+function buildWorkPermitAlerts(employees) {
+  const items = [];
+
+  for (const employee of employees) {
+    if (!isActiveEmployee(employee)) continue;
+    if (!employee.work_permit_expiry_date) continue;
+
+    const daysLeft = daysUntil(employee.work_permit_expiry_date);
+    if (
+      daysLeft == null ||
+      daysLeft < 0 ||
+      daysLeft > WORK_PERMIT_EXPIRY_WINDOW_DAYS
+    ) {
+      continue;
+    }
+
+    const daysPhrase = formatArabicDaysLeft(daysLeft);
+    items.push(
+      buildEmergencyAlertItem(
+        employee,
+        employee.work_permit_expiry_date,
+        daysLeft,
+        "workPermit",
+        `متبقي ${daysPhrase} على انتهاء رخصة العمل — ${employee.work_permit_expiry_date}`,
+      ),
+    );
+  }
+
+  return items.sort((a, b) => a.daysLeft - b.daysLeft);
+}
+
 function buildProbationEndingAlerts(employees) {
   const items = [];
 
@@ -680,12 +712,18 @@ function buildEmergencyAlerts(employees) {
   const contracts = buildContractExpiryAlerts(employees);
   const iqamas = buildIqamaExpiryAlerts(employees);
   const probations = buildProbationEndingAlerts(employees);
+  const workPermits = buildWorkPermitAlerts(employees);
 
   return {
     contracts,
     iqamas,
     probations,
-    totalCount: contracts.length + iqamas.length + probations.length,
+    workPermits,
+    totalCount:
+      contracts.length +
+      iqamas.length +
+      probations.length +
+      workPermits.length,
   };
 }
 

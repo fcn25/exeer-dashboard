@@ -28,6 +28,7 @@ export function employeeFormToRow(form) {
     nationality: form.nationality?.trim() || null,
     iqama_number: form.iqama_number?.trim() || null,
     iqama_expiry_date: form.iqama_expiry_date || null,
+    work_permit_expiry_date: form.work_permit_expiry_date || null,
     probation_end_date: form.probation_end_date || null,
     id_number: form.id_number ? Number(form.id_number) : null,
     national_address: form.national_address?.trim() || null,

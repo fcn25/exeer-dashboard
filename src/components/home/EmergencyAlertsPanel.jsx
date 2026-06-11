@@ -293,13 +293,23 @@ export default function EmergencyAlertsPanel({
           <p className="py-10 text-center text-[13px] text-[#94A3B8]">
             {t("pages.home.checkingAlerts")}
           </p>
-        ) : showImportantTab && activeTab === "important" ? (
+        ) : (
+          <>
+            {showImportantTab ? (
+              <p className="mb-4 rounded-[10px] border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-[12px] leading-relaxed text-[#64748B] dark:border-[var(--border-color)] dark:bg-[var(--bg-surface-hover)] dark:text-[var(--text-secondary)]">
+                {activeTab === "important"
+                  ? t("pages.home.importantAlertsTabDescription")
+                  : t("pages.home.emergencyTabDescription")}
+              </p>
+            ) : null}
+
+            {showImportantTab && activeTab === "important" ? (
           <ImportantAlertsList
             alerts={alerts}
             onViewEmployee={onViewEmployee}
             onProbationDecision={onProbationDecision}
           />
-        ) : (
+            ) : (
           <EmergencyAlertsGrid
             contracts={contracts}
             iqamas={iqamas}
@@ -310,6 +320,8 @@ export default function EmergencyAlertsPanel({
             onViewEmployee={onViewEmployee}
             onProbationDecision={onProbationDecision}
           />
+            )}
+          </>
         )}
       </div>
     </section>

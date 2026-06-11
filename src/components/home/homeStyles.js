@@ -5,41 +5,57 @@ export const PAGE_DARK =
 export const SURFACE_DARK =
   "dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)]";
 
+/** Large section groupings — whitespace + type weight, no box (light) */
 export const HOME_SHELL =
-  "rounded-[16px] border border-[#ECECEC] bg-white shadow-none dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)]";
+  "home-section-shell bg-white shadow-none dark:rounded-[16px] dark:border dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)]";
 
+/** Interactive cards — hairline border in light */
 export const HOME_CARD =
-  "rounded-[12px] border border-[#ECECEC] bg-white shadow-none dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)]";
+  "home-card-interactive rounded-[12px] border border-[#F0F0F0] bg-white p-5 shadow-none dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)]";
 
+/** Nested content areas — dividers instead of boxes (light) */
 export const HOME_SURFACE =
-  "rounded-[12px] border border-[#ECECEC] bg-white shadow-none dark:border-[var(--border-color)] dark:bg-[var(--bg-surface-hover)]";
+  "rounded-[12px] bg-white shadow-none dark:border dark:border-[var(--border-color)] dark:bg-[var(--bg-surface-hover)]";
+
+export const HOME_LIST_DIVIDE =
+  "home-list-divide divide-y divide-[#F0F0F0] dark:divide-[var(--border-color)]";
 
 export const HOME_BTN =
   "rounded-[10px] shadow-none transition-colors";
 
+/** Typographic hierarchy — light uses CSS utilities; dark keeps existing weights */
+export const TYPE_SECTION =
+  "type-section-title dark:text-[var(--text-primary)] dark:font-semibold";
+
+export const TYPE_ITEM =
+  "type-item-title dark:text-[var(--text-primary)] dark:font-medium";
+
+export const TYPE_META =
+  "type-meta dark:text-[var(--text-secondary)] dark:font-normal";
+
 export const HOME_TEXT_TITLE =
-  "text-[#0F172A] dark:text-[var(--text-primary)] dark:font-bold";
+  "type-item-title dark:text-[var(--text-primary)] dark:font-bold";
 
 export const HOME_TEXT_HEADING =
-  "text-[#0F172A] dark:text-[var(--text-primary)] dark:font-semibold";
+  "type-section-title dark:text-[var(--text-primary)] dark:font-semibold";
 
 export const HOME_TEXT_BODY =
-  "text-[#0F172A] dark:text-[var(--text-primary)] dark:font-medium";
+  "type-item-title dark:text-[var(--text-primary)] dark:font-medium";
 
 export const HOME_TEXT_LABEL =
-  "text-[#64748B] dark:text-[var(--text-secondary)] dark:font-medium";
+  "type-meta dark:text-[var(--text-secondary)] dark:font-medium";
 
 export const HOME_TEXT_HINT =
-  "text-[#94A3B8] dark:text-[var(--text-secondary)] dark:font-normal";
+  "type-meta dark:text-[var(--text-secondary)] dark:font-normal";
 
 export const HOME_BTN_PRIMARY =
   "rounded-full bg-[#0F172A] px-4 py-2 text-[13px] font-medium text-white hover:opacity-90 dark:bg-[var(--accent-on-dark-bg)] dark:text-[var(--text-primary)] dark:font-semibold dark:hover:brightness-105";
 
 export const HOME_BTN_SECONDARY =
-  "inline-flex items-center gap-1.5 rounded-full border border-[#ECECEC] bg-white px-4 py-2 text-[13px] font-medium text-[#0F172A] hover:bg-[#FAFAFA] dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)] dark:text-[var(--text-primary)] dark:font-medium dark:hover:bg-[var(--bg-surface-hover)]";
+  "inline-flex items-center gap-1.5 rounded-full border border-[#F0F0F0] bg-white px-4 py-2 text-[13px] font-medium text-[#111111] hover:bg-[#FAFAFA] dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)] dark:text-[var(--text-primary)] dark:font-medium dark:hover:bg-[var(--bg-surface-hover)]";
 
 export const HOME_ICON_BTN =
-  "flex h-9 w-9 items-center justify-center rounded-md border border-[#ECECEC] text-[#0F172A] transition-colors hover:bg-[#FAFAFA] dark:border-[var(--border-color)] dark:text-[var(--text-primary)] dark:hover:bg-[var(--bg-surface-hover)]";
+  "flex h-9 w-9 items-center justify-center rounded-md border border-[#F0F0F0] text-[#111111] transition-colors hover:bg-[#FAFAFA] dark:border-[var(--border-color)] dark:text-[var(--text-primary)] dark:hover:bg-[var(--bg-surface-hover)]";
 
 export const PRIORITY_ICON_STYLES = {
   red: "bg-[#FEE2E2] text-[#EF4444] dark:bg-red-950/50 dark:text-[var(--text-error)]",

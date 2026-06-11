@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { PERFORMANCE_TABS } from "../constants/performanceTemplates.js";
-import { HOME_SHELL } from "../components/home/homeStyles.js";
+import { HOME_SHELL, TYPE_ITEM, TYPE_META } from "../components/home/homeStyles.js";
 import { useAppLocale } from "../i18n/useAppLocale.js";
 
 export default function PerformancePage() {
@@ -35,7 +35,7 @@ export default function PerformancePage() {
               className={`flex min-h-[72px] items-center gap-3 rounded-[12px] px-4 py-3 text-start transition-colors ${
                 isActive
                   ? "bg-[#0F172A] text-white shadow-none dark:border dark:border-[var(--border-color)] dark:bg-[var(--bg-surface-hover)] dark:text-[var(--text-primary)]"
-                  : "border border-[#E2E8F0] bg-white text-[#64748B] hover:border-[#CBD5E1] hover:text-[#0F172A] dark:border-[var(--border-color)] dark:bg-[var(--bg-main)] dark:text-[var(--text-secondary)] dark:hover:border-[var(--border-color)] dark:hover:text-[var(--text-primary)]"
+                  : "border border-[#F0F0F0] bg-white text-[#6B7280] hover:border-[#E5E5E5] hover:text-[#111111] dark:border-[var(--border-color)] dark:bg-[var(--bg-main)] dark:text-[var(--text-secondary)] dark:hover:border-[var(--border-color)] dark:hover:text-[var(--text-primary)]"
               }`}
             >
               <span
@@ -48,12 +48,12 @@ export default function PerformancePage() {
                 <Icon className="h-5 w-5" aria-hidden />
               </span>
               <span className="min-w-0">
-                <span className="block text-[14px] font-semibold leading-snug">
+                <span className={`block ${TYPE_ITEM} leading-snug`}>
                   {t(`pages.performance.tabs.${tab.id}.label`)}
                 </span>
                 <span
-                  className={`mt-0.5 block text-[11px] font-normal leading-relaxed ${
-                    isActive ? "text-white/75" : "text-[#94A3B8]"
+                  className={`${TYPE_META} mt-0.5 block leading-relaxed ${
+                    isActive ? "text-white/75 dark:text-[var(--text-secondary)]" : ""
                   }`}
                 >
                   {t(`pages.performance.tabs.${tab.id}.hint`)}

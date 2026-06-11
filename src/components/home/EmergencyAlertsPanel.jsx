@@ -6,7 +6,7 @@ import {
   FileWarning,
   ShieldAlert,
 } from "lucide-react";
-import { HOME_BTN, HOME_CARD, HOME_SHELL } from "./homeStyles.js";
+import { HOME_BTN, HOME_CARD, HOME_LIST_DIVIDE, HOME_SHELL, TYPE_ITEM, TYPE_META, TYPE_SECTION } from "./homeStyles.js";
 import { useAppLocale } from "../../i18n/useAppLocale.js";
 import { formatLocaleDate, formatLocaleNumber } from "../../i18n/formatLocale.js";
 import ImportantAlertsList from "./ImportantAlertsList.jsx";
@@ -37,30 +37,23 @@ function AlertList({ items, emptyLabel, onItemAction, actionLabel }) {
     return (
       <div className="flex flex-col items-center gap-2 py-6 text-center">
         <Check className="h-8 w-8 text-[#10B981]" aria-hidden />
-        <p className="text-[13px] text-[#64748B]">{emptyLabel}</p>
+        <p className={`${TYPE_META} py-6 text-center`}>{emptyLabel}</p>
       </div>
     );
   }
 
   return (
-    <ul className="max-h-[280px] space-y-2 overflow-y-auto">
+    <ul className={`${HOME_LIST_DIVIDE} max-h-[280px] overflow-y-auto`}>
       {items.map((item) => (
-        <li
-          key={item.id}
-          className="rounded-[10px] border border-[#E2E8F0] bg-white px-3 py-2.5"
-        >
+        <li key={item.id} className="py-3.5 first:pt-0 last:pb-0">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 text-start">
-              <p className="truncate text-[13px] font-medium text-[#0F172A]">
-                {item.fullName}
-              </p>
-              <p className="truncate text-[12px] text-[#64748B]">{item.jobTitle}</p>
+              <p className={`${TYPE_ITEM} truncate`}>{item.fullName}</p>
+              <p className={`${TYPE_META} truncate`}>{item.jobTitle}</p>
               {item.message ? (
-                <p className="mt-1.5 text-[12px] leading-relaxed text-[#475569]">
-                  {item.message}
-                </p>
+                <p className={`${TYPE_META} mt-1.5 leading-relaxed`}>{item.message}</p>
               ) : null}
-              <p className="mt-1 text-[11px] text-[#94A3B8]">
+              <p className={`${TYPE_META} mt-1 opacity-80`}>
                 {formatLocaleDate(item.endDate, {
                   day: "numeric",
                   month: "long",
@@ -79,7 +72,7 @@ function AlertList({ items, emptyLabel, onItemAction, actionLabel }) {
             <button
               type="button"
               onClick={() => onItemAction(item)}
-              className={`${HOME_BTN} mt-2 w-full rounded-full border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-1.5 text-[12px] font-medium text-[#0F172A] hover:bg-white`}
+              className={`${HOME_BTN} mt-3 w-full rounded-full border border-[#F0F0F0] bg-white px-3 py-2 text-[13px] font-medium text-[#111111] hover:bg-[#FAFAFA] dark:border-[var(--border-color)] dark:bg-[var(--bg-main)] dark:text-[var(--text-primary)]`}
             >
               {actionLabel}
             </button>
@@ -92,8 +85,8 @@ function AlertList({ items, emptyLabel, onItemAction, actionLabel }) {
 
 function AlertColumn({ title, description, icon: Icon, iconTone, count, children }) {
   return (
-    <article className={`${HOME_CARD} flex flex-col p-4`}>
-      <div className="mb-3 flex items-start justify-between gap-2">
+    <article className={`${HOME_CARD} flex flex-col`}>
+      <div className="mb-4 flex items-start justify-between gap-2">
         <div className="flex items-start gap-2.5">
           <span
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px]"
@@ -102,11 +95,9 @@ function AlertColumn({ title, description, icon: Icon, iconTone, count, children
             <Icon className="h-4 w-4" aria-hidden />
           </span>
           <div className="min-w-0 text-start">
-            <h3 className="text-[14px] font-medium text-[#0F172A]">{title}</h3>
+            <h3 className={TYPE_SECTION}>{title}</h3>
             {description ? (
-              <p className="mt-0.5 text-[11px] leading-relaxed text-[#64748B]">
-                {description}
-              </p>
+              <p className={`${TYPE_META} mt-1 leading-relaxed`}>{description}</p>
             ) : null}
           </div>
         </div>
@@ -220,25 +211,20 @@ export default function EmergencyAlertsPanel({
 
   return (
     <section
-      className={`${HOME_SHELL} overflow-hidden`}
+      className={`${HOME_SHELL} space-y-6 overflow-hidden`}
       aria-labelledby="emergency-alerts-heading"
     >
-      <div className="border-b border-[#F1F5F9] bg-[#FAFAF9] px-5 py-4 dark:border-[var(--border-color)] dark:bg-[var(--bg-main)] sm:px-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="px-1 pt-1 sm:px-0">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#F1F5F9] text-[#64748B]">
+            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#F1F5F9] text-[#64748B] dark:bg-[var(--bg-surface-hover)]">
               <ShieldAlert className="h-5 w-5" aria-hidden />
             </span>
             <div className="text-start">
-              <h2
-                id="emergency-alerts-heading"
-                className="text-[18px] font-medium text-[#0F172A]"
-              >
+              <h2 id="emergency-alerts-heading" className={`${TYPE_SECTION} text-[1.125rem] font-semibold`}>
                 {t("pages.home.emergencyTitle")}
               </h2>
-              <p className="text-[12px] text-[#64748B]">
-                {t("pages.home.emergencySubtitle")}
-              </p>
+              <p className={`${TYPE_META} mt-0.5`}>{t("pages.home.emergencySubtitle")}</p>
             </div>
           </div>
           {!isLoading && totalCount > 0 ? (
@@ -250,7 +236,7 @@ export default function EmergencyAlertsPanel({
         </div>
 
         {showImportantTab ? (
-          <div className="mt-4 flex flex-wrap gap-2 border-t border-[#F1F5F9] pt-4 dark:border-[var(--border-color)]">
+          <div className="mt-5 flex flex-wrap gap-2">
             <button
               type="button"
               onClick={() => setActiveTab("emergency")}
@@ -288,15 +274,15 @@ export default function EmergencyAlertsPanel({
         ) : null}
       </div>
 
-      <div className="p-4 sm:p-5">
+      <div>
         {isLoading ? (
-          <p className="py-10 text-center text-[13px] text-[#94A3B8]">
+          <p className={`${TYPE_META} py-10 text-center opacity-80`}>
             {t("pages.home.checkingAlerts")}
           </p>
         ) : (
           <>
             {showImportantTab ? (
-              <p className="mb-4 rounded-[10px] border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-[12px] leading-relaxed text-[#64748B] dark:border-[var(--border-color)] dark:bg-[var(--bg-surface-hover)] dark:text-[var(--text-secondary)]">
+              <p className={`${TYPE_META} mb-5 leading-relaxed`}>
                 {activeTab === "important"
                   ? t("pages.home.importantAlertsTabDescription")
                   : t("pages.home.emergencyTabDescription")}

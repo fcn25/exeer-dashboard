@@ -42,6 +42,8 @@ import {
   HOME_TEXT_LABEL,
   HOME_TEXT_TITLE,
   PRIORITY_ICON_STYLES,
+  TYPE_META,
+  TYPE_SECTION,
 } from "../components/home/homeStyles.js";
 import { useAppLocale } from "../i18n/useAppLocale.js";
 import {
@@ -92,7 +94,7 @@ function PayrollSubMetric({ label, value, color, isLoading = false, currencyLabe
 
   return (
     <div className="min-w-0 flex-1">
-      <p className={`text-[13px] font-normal ${HOME_TEXT_LABEL}`}>{label}</p>
+      <p className={`${HOME_TEXT_LABEL}`}>{label}</p>
       <p
         className="mt-1 text-[18px] font-semibold tabular-nums"
         style={{ color }}
@@ -187,8 +189,8 @@ function ActionItemRow({
           <Icon className="h-4 w-4" aria-hidden />
         </span>
         <div className="min-w-0 text-start">
-          <p className={`text-[14px] font-medium ${HOME_TEXT_BODY}`}>{item.title}</p>
-          <p className={`mt-0.5 text-[13px] font-normal ${HOME_TEXT_LABEL}`}>{item.detail}</p>
+          <p className={HOME_TEXT_BODY}>{item.title}</p>
+          <p className={`${TYPE_META} mt-0.5`}>{item.detail}</p>
         </div>
       </div>
       <button
@@ -205,10 +207,10 @@ function ActionItemRow({
 function MiniStatCard({ label, value, sublabel, sparkline }) {
   return (
     <article className={`${HOME_SURFACE} p-4`}>
-      <p className={`text-[12px] font-normal ${HOME_TEXT_LABEL}`}>{label}</p>
+      <p className={HOME_TEXT_LABEL}>{label}</p>
       <p className={`mt-1 text-[22px] font-semibold tabular-nums ${HOME_TEXT_TITLE}`}>{value}</p>
       {sublabel ? (
-        <p className={`mt-0.5 text-[11px] font-normal ${HOME_TEXT_HINT}`}>{sublabel}</p>
+        <p className={`${TYPE_META} mt-0.5 opacity-80`}>{sublabel}</p>
       ) : null}
       <SparkLine data={sparkline} height={40} className="mt-2" />
     </article>
@@ -331,15 +333,15 @@ export default function HomePage() {
   );
 
   return (
-    <div className="-mx-6 -my-8 flex flex-col gap-5 bg-md-surface-dim px-6 py-8 dark:bg-[var(--bg-main)] md:-mx-8 md:px-8">
+    <div className="-mx-6 -my-8 flex flex-col gap-8 bg-md-surface-dim px-6 py-8 dark:bg-[var(--bg-main)] md:-mx-8 md:px-8">
       {/* ─── 1. ترويسة ─── */}
       <header className={`${HOME_SHELL} p-6`}>
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-1 text-start">
-              <p className={`text-[13px] font-normal ${HOME_TEXT_LABEL}`}>{getGreeting(t)}</p>
-              <h1 className={`text-[24px] font-medium ${HOME_TEXT_TITLE}`}>{user.name}</h1>
-              <p className={`text-[12px] font-normal ${HOME_TEXT_HINT}`}>{headerDate}</p>
+              <p className={HOME_TEXT_LABEL}>{getGreeting(t)}</p>
+              <h1 className={`text-[24px] font-semibold ${HOME_TEXT_TITLE}`}>{user.name}</h1>
+              <p className={HOME_TEXT_HINT}>{headerDate}</p>
             </div>
 
             <div className="flex flex-wrap gap-2 sm:shrink-0">
@@ -391,7 +393,7 @@ export default function HomePage() {
       {/* ─── 2. صف هيرو 60/40 ─── */}
       <section className="grid grid-cols-1 gap-5 lg:grid-cols-[3fr_2fr]">
         <article className={`${HOME_SHELL} p-6`}>
-          <p className={`text-[14px] font-normal ${HOME_TEXT_LABEL}`}>
+          <p className={`${HOME_TEXT_LABEL} font-normal`}>
             {t("pages.home.payrollTotal", { month: payrollMonthLabel })}
           </p>
 
@@ -404,7 +406,7 @@ export default function HomePage() {
           </div>
 
           {!isLoading && !payrollHero?.hasData ? (
-            <p className={`mt-1 text-[12px] font-normal ${HOME_TEXT_HINT}`}>
+            <p className={`${HOME_TEXT_HINT} mt-1`}>
               {t("pages.home.noPayrollYet")}
             </p>
           ) : null}
@@ -412,7 +414,7 @@ export default function HomePage() {
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <DeltaBadge value={payrollHero?.percentChange ?? null} />
             {payrollHero?.percentChange != null ? (
-              <span className={`text-[12px] font-normal ${HOME_TEXT_HINT}`}>
+              <span className={HOME_TEXT_HINT}>
                 {t("pages.home.vsLastMonth")}
               </span>
             ) : null}
@@ -437,10 +439,10 @@ export default function HomePage() {
         </article>
 
         <article className={`${HOME_SHELL} p-6`}>
-          <h2 className={`text-[16px] font-medium ${HOME_TEXT_HEADING}`}>
+          <h2 className={HOME_TEXT_HEADING}>
             {t("pages.home.workforceTitle")}
           </h2>
-          <p className={`mt-1 text-[12px] font-normal ${HOME_TEXT_HINT}`}>
+          <p className={`${HOME_TEXT_HINT} mt-1`}>
             {isLoading
               ? t("common.loading")
               : stats?.hasEmployeeData
@@ -452,17 +454,17 @@ export default function HomePage() {
 
           <ul className="mt-5 space-y-4">
             <li className="flex items-center justify-between gap-3">
-              <div className={`flex items-center gap-2 text-[13px] font-medium ${HOME_TEXT_BODY}`}>
+              <div className={`flex items-center gap-2 ${HOME_TEXT_BODY}`}>
                 <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#ECFDF5] text-[#047857] dark:bg-emerald-950/50 dark:text-emerald-300">
                   <Users className="h-4 w-4" aria-hidden />
                 </span>
                 {t("pages.home.saudi")}
               </div>
               <div className="text-end">
-                <p className={`text-[14px] font-semibold tabular-nums ${HOME_TEXT_TITLE}`}>
+                <p className={`${HOME_TEXT_TITLE} tabular-nums`}>
                   {formatLocaleNumber(saudiPercent)}%
                 </p>
-                <p className={`text-[12px] font-normal ${HOME_TEXT_LABEL}`}>
+                <p className={HOME_TEXT_LABEL}>
                   {t("pages.home.employeeCount", {
                     count: formatLocaleNumber(saudiCount),
                   })}
@@ -470,17 +472,17 @@ export default function HomePage() {
               </div>
             </li>
             <li className="flex items-center justify-between gap-3">
-              <div className={`flex items-center gap-2 text-[13px] font-medium ${HOME_TEXT_BODY}`}>
+              <div className={`flex items-center gap-2 ${HOME_TEXT_BODY}`}>
                 <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F1F5F9] text-[#475569] dark:bg-slate-800 dark:text-white">
                   <Users className="h-4 w-4" aria-hidden />
                 </span>
                 {t("pages.home.nonSaudi")}
               </div>
               <div className="text-end">
-                <p className={`text-[14px] font-semibold tabular-nums ${HOME_TEXT_TITLE}`}>
+                <p className={`${HOME_TEXT_TITLE} tabular-nums`}>
                   {formatLocaleNumber(nonSaudiPercent)}%
                 </p>
-                <p className={`text-[12px] font-normal ${HOME_TEXT_LABEL}`}>
+                <p className={HOME_TEXT_LABEL}>
                   {t("pages.home.employeeCount", {
                     count: formatLocaleNumber(nonSaudiCount),
                   })}
@@ -507,7 +509,7 @@ export default function HomePage() {
       {/* ─── 3. يحتاج اهتمامك ─── */}
       <section className={`${HOME_SHELL} border-r-[3px] border-r-[#0F172A] p-6 dark:border-r-[var(--text-primary)]`}>
         <div className="mb-4 flex items-center justify-between gap-3">
-          <h2 className={`text-[18px] font-medium ${HOME_TEXT_HEADING}`}>
+          <h2 className={`${TYPE_SECTION} text-[1.125rem]`}>
             {t("pages.home.needsAttention")}
           </h2>
           {!isLoading && actionItems.length > 0 ? (
@@ -521,13 +523,13 @@ export default function HomePage() {
         </div>
 
         {isLoading ? (
-          <p className={`py-6 text-center text-[13px] font-normal ${HOME_TEXT_HINT}`}>
+          <p className={`${HOME_TEXT_HINT} py-6 text-center`}>
             {t("common.loading")}
           </p>
         ) : actionItems.length === 0 ? (
           <div className="flex flex-col items-center gap-3 py-8 text-center">
             <Check className="h-10 w-10 text-[#10B981] dark:text-emerald-400" aria-hidden />
-            <p className={`text-[14px] font-normal ${HOME_TEXT_LABEL}`}>
+            <p className={HOME_TEXT_LABEL}>
               {t("pages.home.allClear")}
             </p>
           </div>
@@ -611,7 +613,7 @@ export default function HomePage() {
 
       {/* ─── 5. أدوات سريعة ─── */}
       <section className="space-y-4">
-        <h2 className={`text-[16px] font-medium ${HOME_TEXT_HEADING}`}>
+        <h2 className={HOME_TEXT_HEADING}>
           {t("pages.home.quickTools")}
         </h2>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
@@ -633,7 +635,7 @@ export default function HomePage() {
         <section className="mt-10 space-y-4">
           <div className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-[#4F46E5]" aria-hidden />
-            <h2 className={`text-[16px] font-medium ${HOME_TEXT_HEADING}`}>
+            <h2 className={HOME_TEXT_HEADING}>
               {t("pages.home.smartTasks")}
             </h2>
           </div>
@@ -646,17 +648,17 @@ export default function HomePage() {
                   type="button"
                   onClick={onClick}
                   disabled={!onClick}
-                  className={`${HOME_CARD} relative flex min-h-[128px] flex-col items-start gap-3 p-5 text-start hover:bg-[#F8FAFC] disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-slate-800`}
+                  className={`${HOME_CARD} relative flex min-h-[128px] flex-col items-start gap-3 text-start hover:bg-[#FAFAFA] disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-slate-800`}
                 >
                   <span className="inline-flex items-center rounded-full bg-[#EEF2FF] px-2 py-0.5 text-[11px] font-medium text-[#4F46E5] dark:bg-indigo-950/50 dark:text-indigo-300">
                     ✨ AI
                   </span>
                   <task.icon className={`h-5 w-5 ${HOME_TEXT_BODY}`} aria-hidden />
                   <span className="min-w-0">
-                    <span className={`block text-[14px] font-medium ${HOME_TEXT_BODY}`}>
+                    <span className={`block ${HOME_TEXT_BODY}`}>
                       {task.label}
                     </span>
-                    <span className={`mt-1 block text-[12px] font-normal leading-relaxed ${HOME_TEXT_LABEL}`}>
+                    <span className={`${TYPE_META} mt-1 block leading-relaxed`}>
                       {task.description}
                     </span>
                   </span>

@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { Check } from "lucide-react";
 import { useAppLocale } from "../../i18n/useAppLocale.js";
 import { formatLocaleNumber } from "../../i18n/formatLocale.js";
-import { HOME_BTN } from "./homeStyles.js";
+import { HOME_BTN, TYPE_ITEM, TYPE_META, TYPE_SECTION } from "./homeStyles.js";
 
 function DaysBadge({ daysLeft, severity, todayLabel, isEn }) {
   const isCritical = severity === "critical";
@@ -52,13 +52,11 @@ function AlertItemCard({
   const isCritical = item.severity === "critical";
 
   return (
-    <li className="rounded-[10px] border border-[#E2E8F0] bg-white px-3 py-2.5 dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)]">
+    <li className="home-card-interactive rounded-[10px] border border-[#F0F0F0] bg-white px-4 py-3.5 dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)]">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1 text-start">
           <div className="flex flex-wrap items-center gap-2">
-            <p className="truncate text-[13px] font-medium text-[#0F172A] dark:text-[var(--text-primary)]">
-              {item.fullName}
-            </p>
+            <p className={`${TYPE_ITEM} truncate`}>{item.fullName}</p>
             <span
               className="rounded-full px-2 py-0.5 text-[10px] font-semibold"
               style={{
@@ -69,13 +67,9 @@ function AlertItemCard({
               {getAlertTypeLabel(item.type, t)}
             </span>
           </div>
-          <p className="mt-0.5 truncate text-[12px] text-[#64748B] dark:text-[var(--text-secondary)]">
-            {item.jobTitle}
-          </p>
+          <p className={`${TYPE_META} mt-0.5 truncate`}>{item.jobTitle}</p>
           {item.message ? (
-            <p className="mt-1.5 text-[12px] leading-relaxed text-[#475569] dark:text-[var(--text-secondary)]">
-              {item.message}
-            </p>
+            <p className={`${TYPE_META} mt-1.5 leading-relaxed`}>{item.message}</p>
           ) : null}
         </div>
         <DaysBadge
@@ -86,11 +80,11 @@ function AlertItemCard({
         />
       </div>
 
-      <div className="mt-2 flex flex-wrap gap-2">
+      <div className="mt-3 flex flex-wrap gap-2">
         <button
           type="button"
           onClick={() => onViewEmployee?.(item.employeeId)}
-          className={`${HOME_BTN} flex-1 rounded-full border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-1.5 text-[12px] font-medium text-[#0F172A] hover:bg-white dark:border-[var(--border-color)] dark:bg-[var(--bg-main)] dark:text-[var(--text-primary)]`}
+          className={`${HOME_BTN} flex-1 rounded-full border border-[#F0F0F0] bg-white px-3 py-2 text-[13px] font-medium text-[#111111] hover:bg-[#FAFAFA] dark:border-[var(--border-color)] dark:bg-[var(--bg-main)] dark:text-[var(--text-primary)]`}
         >
           {t("pages.home.viewEmployee")}
         </button>
@@ -98,7 +92,7 @@ function AlertItemCard({
           <button
             type="button"
             onClick={() => onProbationDecision?.(item)}
-            className={`${HOME_BTN} flex-1 rounded-full border border-[#E2E8F0] bg-[#EEF2FF] px-3 py-1.5 text-[12px] font-medium text-[#4F46E5] hover:bg-white dark:border-[var(--border-color)]`}
+            className={`${HOME_BTN} flex-1 rounded-full border border-[#F0F0F0] bg-[#EEF2FF] px-3 py-2 text-[13px] font-medium text-[#4F46E5] hover:bg-white dark:border-[var(--border-color)]`}
           >
             {t("pages.home.probationDecision")}
           </button>
@@ -121,11 +115,11 @@ function AlertSection({
   if (!items.length) return null;
 
   return (
-    <section className="space-y-3">
-      <h3 className="text-[14px] font-semibold text-[#0F172A] dark:text-[var(--text-primary)]">
+    <section className="space-y-4">
+      <h3 className={TYPE_SECTION}>
         {emoji} {title}
       </h3>
-      <ul className="space-y-2">
+      <ul className="space-y-3">
         {items.map((item) => (
           <AlertItemCard
             key={item.id}
@@ -175,9 +169,7 @@ export default function ImportantAlertsList({
     return (
       <div className="flex flex-col items-center gap-3 py-16 text-center">
         <Check className="h-10 w-10 text-[#10B981]" aria-hidden />
-        <p className="text-[14px] text-[#64748B] dark:text-[var(--text-secondary)]">
-          {t("pages.home.alertsDrawerEmpty")}
-        </p>
+        <p className={TYPE_META}>{t("pages.home.alertsDrawerEmpty")}</p>
       </div>
     );
   }

@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import TermsModal from "./TermsModal.jsx";
 import PrivacyPolicyModal from "./PrivacyPolicyModal.jsx";
 import PostSubscriptionGuide from "./PostSubscriptionGuide.jsx";
+import FeedbackSettingsSection from "./FeedbackSettingsSection.jsx";
 import {
   SUPPORT_EMAIL_ADDRESS,
   SUPPORT_EMAIL_HREF,
@@ -27,6 +28,8 @@ export default function SupportSettingsTab() {
             {t("settings.support.description")}
           </p>
         </header>
+
+        <FeedbackSettingsSection />
 
         <div className="w-full min-w-0 space-y-4 rounded-md border border-exeer-border bg-[#fafafa] p-4 md:p-6 dark:bg-slate-900/40">
           <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2">

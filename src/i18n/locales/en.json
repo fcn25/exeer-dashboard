@@ -382,6 +382,23 @@
       "privacy": "Privacy policy",
       "privacyHint": "Read the Exeer platform data privacy policy"
     },
+    "feedback": {
+      "title": "Share your feedback",
+      "description": "Suggest a new feature or share a note — your input shapes Exeer.",
+      "categoryLabel": "Category",
+      "messageLabel": "Your message",
+      "messagePlaceholder": "Write your suggestion or feedback here…",
+      "messageHint": "Text only — no attachments.",
+      "submit": "Send",
+      "submitSending": "Sending…",
+      "submitSuccess": "Sent — thank you ✓",
+      "submitError": "Could not send — try again",
+      "categories": {
+        "feature": "Feature suggestion",
+        "issue": "Issue",
+        "question": "Question"
+      }
+    },
     "legal": {
       "title": "Legal"
     },

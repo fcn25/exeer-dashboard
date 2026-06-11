@@ -390,6 +390,23 @@
       "privacy": "سياسة الخصوصية",
       "privacyHint": "اطّلع على سياسة خصوصية بيانات منصة إكسير"
     },
+    "feedback": {
+      "title": "شاركنا رأيك",
+      "description": "اقترح ميزة جديدة أو شاركنا ملاحظتك — رأيك يصنع إكسير.",
+      "categoryLabel": "التصنيف",
+      "messageLabel": "رسالتك",
+      "messagePlaceholder": "اكتب اقتراحك أو ملاحظتك هنا…",
+      "messageHint": "نص فقط — بدون مرفقات.",
+      "submit": "إرسال",
+      "submitSending": "جاري الإرسال…",
+      "submitSuccess": "تم الإرسال، شكراً لك ✓",
+      "submitError": "تعذّر الإرسال، حاول مجدداً",
+      "categories": {
+        "feature": "اقتراح ميزة",
+        "issue": "مشكلة",
+        "question": "استفسار"
+      }
+    },
     "legal": {
       "title": "القانوني"
     },

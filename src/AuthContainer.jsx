@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { resolveAuthenticatedHomePath } from "./utils/authenticatedHomePath.js";
 import { detectIsMobile } from "./hooks/useIsMobile.js";
 import { useAuth } from "./context/AuthContext.jsx";
@@ -32,8 +32,17 @@ function AuthMessage({ type, children }) {
 
 export default function AuthContainer() {
   const { dir, lang } = useAppLocale();
+  const location = useLocation();
   const [authView, setAuthView] = useState("login");
   const [successMessage, setSuccessMessage] = useState("");
+
+  useEffect(() => {
+    if (location.state?.accountDeletionSuccess) {
+      setSuccessMessage(location.state.accountDeletionSuccess);
+      setAuthView("login");
+      window.history.replaceState({}, document.title, location.pathname);
+    }
+  }, [location.pathname, location.state]);
 
   return (
     <div

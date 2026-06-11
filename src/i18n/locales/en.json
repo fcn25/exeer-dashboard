@@ -378,6 +378,20 @@
     "legal": {
       "title": "Legal"
     },
+    "accountDeletion": {
+      "dangerZone": "Danger zone",
+      "button": "Delete account",
+      "buttonHint": "Request permanent deletion of your account and data",
+      "title": "Delete account",
+      "step1Message": "Are you sure you want to delete your account? This action cannot be undone.",
+      "step2Message": "Type DELETE to confirm",
+      "cancel": "Cancel",
+      "continue": "Continue",
+      "confirmDelete": "Delete permanently",
+      "submitting": "Processing...",
+      "successMessage": "Your account deletion request has been received. Your data will be deleted within 30 days.",
+      "error": "Could not submit the account deletion request."
+    },
     "subscription": {
       "title": "Subscription",
       "description": "Manage your current plan and upgrade features.",

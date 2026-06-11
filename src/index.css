@@ -1153,6 +1153,23 @@ html:not(.dark) main.overflow-y-auto {
     border-color: var(--border-color) !important;
   }
 
+  /* Light-fill primary pills — navy text/icons (fixes white-on-light in dark) */
+  .dark .bg-\[\#0F172A\].text-white.dark\:bg-\[var\(--accent-on-dark-bg\)\] {
+    color: var(--accent-color) !important;
+  }
+
+  .dark .bg-\[\#0F172A\].text-white.dark\:bg-\[var\(--accent-on-dark-bg\)\] svg {
+    color: var(--accent-color) !important;
+  }
+
+  .dark button.bg-md-primary.text-white:not([class*="dark:bg-slate"]):not([class*="dark:bg-[var(--accent-color)"]]) {
+    color: var(--accent-color) !important;
+  }
+
+  .dark button.bg-md-primary.text-white:not([class*="dark:bg-slate"]):not([class*="dark:bg-[var(--accent-color)"]]) svg {
+    color: var(--accent-color) !important;
+  }
+
   .dark button.bg-red-700,
   .dark .bg-red-700 {
     background-color: var(--color-error-surface) !important;

@@ -262,7 +262,7 @@ export default function EmergencyAlertsPanel({
                 <span
                   className={`rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums ${
                     activeTab === "important"
-                      ? "bg-white/20 text-white"
+                      ? "bg-white/20 text-white dark:text-[#0F172A]"
                       : "bg-[#FEE2E2] text-[#B91C1C]"
                   }`}
                 >

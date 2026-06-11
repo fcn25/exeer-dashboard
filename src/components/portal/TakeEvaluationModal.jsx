@@ -34,7 +34,7 @@ export default function TakeEvaluationModal({ isOpen, onClose }) {
         <button
           type="button"
           onClick={onClose}
-          className="mt-6 w-full rounded-lg bg-md-primary px-4 py-2.5 text-sm font-medium text-white"
+          className="mt-6 w-full rounded-lg bg-md-primary px-4 py-2.5 text-sm font-medium text-white dark:text-[#0F172A]"
         >
           حسناً
         </button>

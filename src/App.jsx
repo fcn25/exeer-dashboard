@@ -213,6 +213,7 @@ function AppRoutes() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/privacy" element={<PrivacyPolicyPage />} />
       <Route path="/update-password" element={<UpdatePasswordPage />} />
+      <Route path="/set-password" element={<UpdatePasswordPage />} />
       <Route
         path="/unauthorized"
         element={

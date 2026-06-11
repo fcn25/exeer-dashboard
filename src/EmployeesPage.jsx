@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Eye, Mail, Pencil, Plus, Search, Trophy } from "lucide-react";
 import EmployeeFormSections from "./components/employees/EmployeeFormSections.jsx";
+import ResendInviteButton from "./components/employees/ResendInviteButton.jsx";
 import LogAchievementModal from "./components/achievements/LogAchievementModal.jsx";
 import {
   EMPTY_EMPLOYEE_FORM,
@@ -360,14 +361,17 @@ function EmployeeDetailsSlideOver({
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
           {!isLoading && !loadError ? (
-            <button
-              type="button"
-              onClick={() => setIsLogAchievementOpen(true)}
-              className="md-btn-primary inline-flex items-center gap-2"
-            >
-              <Trophy className="h-4 w-4" aria-hidden />
-              إضافة إنجاز
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={() => setIsLogAchievementOpen(true)}
+                className="md-btn-primary inline-flex items-center gap-2"
+              >
+                <Trophy className="h-4 w-4" aria-hidden />
+                إضافة إنجاز
+              </button>
+              <ResendInviteButton employee={form} />
+            </>
           ) : null}
         </div>
 

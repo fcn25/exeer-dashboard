@@ -1,8 +1,5 @@
 import { useState } from "react";
 import { PERFORMANCE_TABS } from "../constants/performanceTemplates.js";
-import CyclesTab from "../components/performance/CyclesTab.jsx";
-import ExecutiveSummaryTab from "../components/performance/ExecutiveSummaryTab.jsx";
-import TemplatesTab from "../components/performance/TemplatesTab.jsx";
 import { HOME_SHELL } from "../components/home/homeStyles.js";
 import { useAppLocale } from "../i18n/useAppLocale.js";
 
@@ -67,10 +64,12 @@ export default function PerformancePage() {
         })}
       </nav>
 
-      <div className="min-w-0 flex-1">
-        {activeTab === "templates" ? <TemplatesTab /> : null}
-        {activeTab === "cycles" ? <CyclesTab /> : null}
-        {activeTab === "summary" ? <ExecutiveSummaryTab /> : null}
+      <div
+        className={`${HOME_SHELL} flex min-h-[240px] items-center justify-center p-8 text-center`}
+      >
+        <p className="max-w-md text-sm text-exeer-muted">
+          جارٍ إعادة بناء نظام الأداء. هذا القسم سيعود قريباً بالتصميم الجديد.
+        </p>
       </div>
     </div>
   );

@@ -1,29 +1,24 @@
 import { supabase } from "../utils/supabaseClient.js";
-import { TEMPLATE_UI_SEED_TITLE_AR } from "../constants/performanceTemplates.js";
-import { resolveTemplateContentPayload } from "../utils/evaluationTemplateContent.js";
-import {
-  fetchEvaluationTemplateById,
-  fetchEvaluationTemplateRows,
-  getEvaluationTemplateEmbedSelect,
-  normalizeEmbeddedTemplate,
-} from "../utils/evaluationTemplateDb.js";
 import { getCompanyId } from "../utils/mobileAuth.js";
 import { requireCompanyId, scopeQueryByCompany } from "../utils/tenantScope.js";
 import { listDepartments } from "./catalogService.js";
 import {
-  buildEvaluationAnswersPayload,
-  calculateEvaluationScore,
   EVALUATION_CRITERIA,
-} from "../constants/evaluationCriteria.js";
-import {
+  buildEvaluationAnswersPayload,
   calculateDynamicEvaluationScore,
+  calculateEvaluationScore,
+  fetchEvaluationTemplateById,
+  fetchEvaluationTemplateRows,
   formatAnswersForSummary,
+  getEvaluationTemplateEmbedSelect,
   getLegacyDefaultQuestions,
   normalizeAnswersPayload,
+  normalizeEmbeddedTemplate,
   parseTemplateQuestions,
   resolveEvaluationQuestions,
+  resolveTemplateContentPayload,
   validateTemplateAnswers,
-} from "../utils/evaluationTemplateQuestions.js";
+} from "./performanceLegacyHelpers.js";
 import { notifyEvaluationAssignments } from "./notificationsService.js";
 import { listActiveEmployees } from "./employeesService.js";
 import { generateExecutiveSummaryWithGemini } from "./geminiService.js";
@@ -146,12 +141,6 @@ export function resolveEvaluationTemplateId(title, templates = [], uiTemplateId 
   });
 
   const pool = withQuestions.length ? withQuestions : templates;
-
-  const seedTitle = uiTemplateId ? TEMPLATE_UI_SEED_TITLE_AR[uiTemplateId] : "";
-  if (seedTitle) {
-    const bySeed = pool.find((row) => row.title === seedTitle);
-    if (bySeed) return bySeed.id;
-  }
 
   const exact = pool.find((row) => row.title === normalized);
   if (exact) return exact.id;

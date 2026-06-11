@@ -14,7 +14,7 @@ import {
   fetchPayrollHistorySummaries,
 } from "./payrollService.js";
 import { formatPayrollMonthFromPicker } from "../utils/payroll/calculations.js";
-import { calculateEvaluationScore } from "../constants/evaluationCriteria.js";
+import { calculateEvaluationScore } from "./performanceLegacyHelpers.js";
 
 const INACTIVE_EMPLOYMENT_STATUSES = new Set(["منتهي الخدمة", "موقوف"]);
 

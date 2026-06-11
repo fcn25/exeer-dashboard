@@ -1,8 +1,12 @@
 {
-  "generatedAt": "2026-06-11T18:56:46.907Z",
+  "generatedAt": "2026-06-11T18:58:09.739Z",
   "displayFrom": "2026-06-07T12:25:00.000Z",
   "source": "git",
   "updates": [
+    {
+      "title": "تحسينات بصرية",
+      "publishedAt": "2026-06-11T21:57:59+03:00"
+    },
     {
       "title": "تحديث أمان المسير",
       "publishedAt": "2026-06-11T21:24:08+03:00"
@@ -158,10 +162,6 @@
     {
       "title": "تحديث الشهادة",
       "publishedAt": "2026-06-10T12:37:17+03:00"
-    },
-    {
-      "title": "connected apple store",
-      "publishedAt": "2026-06-10T12:32:42+03:00"
     }
   ]
 }

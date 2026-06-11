@@ -18,9 +18,18 @@ import { isDirectManager } from "../utils/rbac.js";
 import { getUserDisplay } from "../utils/mobileAuth.js";
 import {
   HOME_BTN,
+  HOME_BTN_PRIMARY,
   HOME_CARD,
   HOME_SURFACE,
-  PRIORITY_ICON_STYLES,
+  HOME_TEXT_BODY,
+  HOME_TEXT_HEADING,
+  HOME_TEXT_HINT,
+  HOME_TEXT_LABEL,
+  HOME_TEXT_TITLE,
+  ICON_CHIP,
+  ICON_CHIP_ROUND,
+  TYPE_META,
+  TYPE_SECTION,
 } from "../components/home/homeStyles.js";
 import PendingRequestCard from "../components/requests/PendingRequestCard.jsx";
 import {
@@ -119,12 +128,12 @@ function StatusBadge({ status }) {
 function MiniStatCard({ label, value, sublabel }) {
   return (
     <article className={`${HOME_SURFACE} p-4`}>
-      <p className="text-[12px] font-normal text-[#64748B]">{label}</p>
-      <p className="mt-1 text-[22px] font-semibold tabular-nums text-[#0F172A]">
+      <p className={HOME_TEXT_LABEL}>{label}</p>
+      <p className={`mt-1 text-[22px] font-semibold tabular-nums ${HOME_TEXT_TITLE}`}>
         {value}
       </p>
       {sublabel ? (
-        <p className="mt-0.5 text-[11px] font-normal text-[#94A3B8]">{sublabel}</p>
+        <p className={`${TYPE_META} mt-0.5 opacity-80`}>{sublabel}</p>
       ) : null}
     </article>
   );
@@ -180,14 +189,14 @@ function ManagerHrRequestModal({
         <div className="mb-4 flex items-start justify-between gap-3">
           <h3
             id="manager-hr-request-title"
-            className="text-[18px] font-medium text-[#0F172A]"
+            className={`${TYPE_SECTION} text-[1.125rem]`}
           >
             {label}
           </h3>
           <button
             type="button"
             onClick={onClose}
-            className={`${HOME_BTN} rounded-full p-1.5 text-[#64748B] hover:bg-[#F8FAFC]`}
+            className={`${HOME_BTN} rounded-full p-1.5 text-[#64748B] hover:bg-[#F7F6F3] dark:hover:bg-[var(--bg-surface-hover)]`}
             aria-label="إغلاق"
           >
             <X className="h-5 w-5" aria-hidden />
@@ -199,7 +208,7 @@ function ManagerHrRequestModal({
             value={details}
             onChange={(e) => setDetails(e.target.value)}
             rows={5}
-            className="w-full resize-y rounded-[10px] border border-[#E2E8F0] bg-white px-3 py-2.5 text-[14px] text-[#0F172A] outline-none focus:border-[#0F172A]"
+            className="home-btn-outlined w-full resize-y rounded-[10px] border border-[#F0EEEA] bg-white px-3 py-2.5 text-[0.9375rem] text-[#111111] outline-none focus:border-[#0F172A] dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)] dark:text-[var(--text-primary)]"
             placeholder="اشرح الطلب بوضوح ليراجعه فريق الموارد البشرية..."
             required
           />
@@ -207,7 +216,7 @@ function ManagerHrRequestModal({
           <button
             type="submit"
             disabled={isSaving}
-            className={`${HOME_BTN} w-full rounded-full bg-[#0F172A] px-4 py-2.5 text-[13px] font-medium text-white hover:opacity-90 disabled:opacity-50`}
+            className={`${HOME_BTN} ${HOME_BTN_PRIMARY} w-full px-4 py-2.5 disabled:opacity-50`}
           >
             {isSaving ? "جاري الإرسال..." : "إرسال للإدارة"}
           </button>
@@ -295,22 +304,18 @@ export default function MyTeamDashboard() {
   };
 
   return (
-    <div className="-mx-6 -my-8 flex flex-col gap-5 bg-[#FFFFFF] px-6 py-8 dark:bg-[var(--bg-main)] md:-mx-8 md:px-8">
+    <div className="-mx-6 -my-8 flex flex-col gap-8 bg-md-surface-dim px-6 py-8 dark:bg-[var(--bg-main)] md:-mx-8 md:px-8">
       {/* ─── ترويسة ─── */}
       <header className={HOME_CARD}>
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-1 text-start">
-              <p className="text-[13px] font-normal text-[#64748B]">
-                {getGreeting(t)}
-              </p>
-              <h1 className="text-[24px] font-medium text-[#0F172A]">
+              <p className={HOME_TEXT_LABEL}>{getGreeting(t)}</p>
+              <h1 className={`text-[24px] font-semibold ${HOME_TEXT_TITLE}`}>
                 {t("pages.myTeam.title")}
               </h1>
-              <p className="text-[12px] font-normal text-[#94A3B8]">
-                {headerDate}
-              </p>
-              <p className="pt-1 text-[13px] font-normal text-[#64748B]">
+              <p className={HOME_TEXT_HINT}>{headerDate}</p>
+              <p className={`${HOME_TEXT_LABEL} pt-1`}>
                 {managerView
                   ? t("pages.myTeam.subtitleManager")
                   : t("pages.myTeam.subtitleHr")}
@@ -320,8 +325,8 @@ export default function MyTeamDashboard() {
             <div className="flex flex-wrap gap-2 sm:shrink-0">
               <PulsePill
                 label={`${formatArabicNumber(isLoading ? 0 : team.length)} ${t("pages.myTeam.teamTotal")}`}
-                bg="#EEF2FF"
-                color="#4F46E5"
+                bg="#F1F5F9"
+                color="#475569"
               />
               <PulsePill
                 label={`${formatArabicNumber(isLoading ? 0 : activeCount)} ${t("pages.myTeam.active")}`}
@@ -368,18 +373,16 @@ export default function MyTeamDashboard() {
       {/* ─── هيرو 60/40 ─── */}
       <section className="grid grid-cols-1 gap-5 lg:grid-cols-[3fr_2fr]">
         <article className={HOME_CARD}>
-          <p className="text-[14px] font-normal text-[#64748B]">
-            إجمالي أعضاء الفريق
-          </p>
+          <p className={HOME_TEXT_LABEL}>إجمالي أعضاء الفريق</p>
           <p className="mt-2 tabular-nums">
-            <span className="text-[34px] font-semibold text-[#0F172A]">
+            <span className={`text-[34px] font-semibold ${HOME_TEXT_TITLE}`}>
               {formatArabicNumber(isLoading ? 0 : team.length)}
             </span>
-            <span className="ms-1 text-[16px] font-normal text-[#64748B]">
+            <span className={`ms-1 text-[16px] font-normal ${HOME_TEXT_LABEL}`}>
               موظف
             </span>
           </p>
-          <p className="mt-1 text-[12px] font-normal text-[#94A3B8]">
+          <p className={`${HOME_TEXT_HINT} mt-1`}>
             {isLoading
               ? "جاري التحميل..."
               : team.length === 0
@@ -389,14 +392,14 @@ export default function MyTeamDashboard() {
 
           <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="min-w-0">
-              <p className="text-[13px] font-normal text-[#64748B]">النشطون</p>
+              <p className={HOME_TEXT_LABEL}>النشطون</p>
               <p className="mt-1 text-[18px] font-semibold tabular-nums text-[#10B981]">
                 {formatArabicNumber(isLoading ? 0 : activeCount)}
               </p>
             </div>
             <div className="min-w-0">
-              <p className="text-[13px] font-normal text-[#64748B]">الأقسام</p>
-              <p className="mt-1 text-[18px] font-semibold tabular-nums text-[#0F172A]">
+              <p className={HOME_TEXT_LABEL}>الأقسام</p>
+              <p className={`mt-1 text-[18px] font-semibold tabular-nums ${HOME_TEXT_TITLE}`}>
                 {formatArabicNumber(isLoading ? 0 : departmentCount)}
               </p>
             </div>
@@ -404,10 +407,8 @@ export default function MyTeamDashboard() {
         </article>
 
         <article className={HOME_CARD}>
-          <h2 className="text-[16px] font-medium text-[#0F172A]">
-            طلبات بانتظار الموافقة
-          </h2>
-          <p className="mt-1 text-[12px] font-normal text-[#94A3B8]">
+          <h2 className={HOME_TEXT_HEADING}>طلبات بانتظار الموافقة</h2>
+          <p className={`${HOME_TEXT_HINT} mt-1`}>
             {isLoading
               ? "جاري التحميل..."
               : requests.length === 0
@@ -417,9 +418,9 @@ export default function MyTeamDashboard() {
 
           <ul className="mt-5 space-y-3">
             {isLoading ? (
-              <li className="text-[13px] text-[#94A3B8]">جاري التحميل...</li>
+              <li className={HOME_TEXT_HINT}>جاري التحميل...</li>
             ) : requests.length === 0 ? (
-              <li className="flex items-center gap-2 text-[13px] text-[#64748B]">
+              <li className={`flex items-center gap-2 ${HOME_TEXT_LABEL}`}>
                 <Check className="h-4 w-4 text-[#10B981]" aria-hidden />
                 كل الطلبات مُعالَجة
               </li>
@@ -429,15 +430,13 @@ export default function MyTeamDashboard() {
                 return (
                   <li
                     key={request.id}
-                    className="flex items-center justify-between gap-3 border-b border-[#F1F5F9] pb-3 last:border-0 last:pb-0"
+                    className="flex items-center justify-between gap-3 border-b border-[#F0EEEA] pb-3 last:border-0 last:pb-0 dark:border-[var(--border-color)]"
                   >
                     <div className="min-w-0">
-                      <p className="truncate text-[13px] font-medium text-[#0F172A]">
+                      <p className={`truncate ${HOME_TEXT_BODY}`}>
                         {member?.full_name ?? `موظف #${request.employee_id}`}
                       </p>
-                      <p className="truncate text-[12px] text-[#64748B]">
-                        {request.request_type}
-                      </p>
+                      <p className={`${TYPE_META} truncate`}>{request.request_type}</p>
                     </div>
                     <StatusBadge status={request.status} />
                   </li>
@@ -450,16 +449,13 @@ export default function MyTeamDashboard() {
 
       {/* ─── طلبات الفريق ─── */}
       <section
-        className={`${HOME_CARD} border-r-[3px] border-r-[#0F172A]`}
+        className={`${HOME_CARD} border-r-[3px] border-r-[#0F172A] dark:border-r-[var(--text-primary)]`}
         aria-labelledby="team-requests-heading"
       >
         <div className="mb-4 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <ClipboardList className="h-5 w-5 text-[#0F172A]" aria-hidden />
-            <h2
-              id="team-requests-heading"
-              className="text-[18px] font-medium text-[#0F172A]"
-            >
+            <ClipboardList className="h-5 w-5 text-[#0F172A] dark:text-[var(--text-primary)]" aria-hidden />
+            <h2 id="team-requests-heading" className={`${TYPE_SECTION} text-[1.125rem]`}>
               {t("pages.myTeam.contractSection")}
             </h2>
           </div>
@@ -474,16 +470,14 @@ export default function MyTeamDashboard() {
         </div>
 
         {isLoading ? (
-          <div className="flex items-center justify-center gap-2 py-10 text-[13px] text-[#94A3B8]">
+          <div className={`flex items-center justify-center gap-2 py-10 ${HOME_TEXT_HINT}`}>
             <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
             جاري التحميل...
           </div>
         ) : requests.length === 0 ? (
           <div className="flex flex-col items-center gap-3 py-8 text-center">
             <Check className="h-10 w-10 text-[#10B981]" aria-hidden />
-            <p className="text-[14px] font-normal text-[#64748B]">
-              لا توجد طلبات معلقة بانتظار موافقتك
-            </p>
+            <p className={HOME_TEXT_LABEL}>لا توجد طلبات معلقة بانتظار موافقتك</p>
           </div>
         ) : (
           <div className="flex flex-col gap-3">
@@ -495,7 +489,7 @@ export default function MyTeamDashboard() {
                   key={request.id}
                   className={
                     index < requests.length - 1
-                      ? "border-b border-[#F1F5F9] pb-4"
+                      ? "border-b border-[#F0EEEA] pb-4 dark:border-[var(--border-color)]"
                       : ""
                   }
                 >
@@ -549,27 +543,21 @@ export default function MyTeamDashboard() {
         />
       </section>
 
-      {/* ─── موظفي فريقي ─── */}
       <section className="space-y-4" aria-labelledby="team-members-heading">
         <div className="flex items-center gap-2">
-          <Users className="h-5 w-5 text-[#0F172A]" aria-hidden />
-          <h2
-            id="team-members-heading"
-            className="text-[16px] font-medium text-[#0F172A]"
-          >
+          <Users className="h-5 w-5 text-[#0F172A] dark:text-[var(--text-primary)]" aria-hidden />
+          <h2 id="team-members-heading" className={HOME_TEXT_HEADING}>
             {t("pages.myTeam.teamMembers")}
           </h2>
         </div>
 
         {isLoading ? (
-          <div className="flex items-center justify-center gap-2 py-12 text-[13px] text-[#94A3B8]">
+          <div className={`flex items-center justify-center gap-2 py-12 ${HOME_TEXT_HINT}`}>
             <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
             جاري التحميل...
           </div>
         ) : team.length === 0 ? (
-          <p
-            className={`${HOME_CARD} px-4 py-10 text-center text-[14px] text-[#64748B]`}
-          >
+          <p className={`${HOME_CARD} py-10 text-center ${HOME_TEXT_LABEL}`}>
             {t("pages.myTeam.noTeam")}
           </p>
         ) : (
@@ -579,17 +567,15 @@ export default function MyTeamDashboard() {
               return (
                 <article
                   key={member.id}
-                  className={`${HOME_CARD} flex flex-col gap-3 hover:bg-[#F7F6F3]`}
+                  className={`${HOME_CARD} flex flex-col gap-3 hover:bg-[#F7F6F3] dark:hover:bg-[var(--bg-surface-hover)]`}
                 >
                   <div className="flex items-start gap-3">
-                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#EEF2FF] text-[14px] font-semibold text-[#4F46E5]">
+                    <span className={`${ICON_CHIP_ROUND} text-[14px] font-semibold`}>
                       {getInitials(member.full_name)}
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-[14px] font-medium text-[#0F172A]">
-                        {member.full_name}
-                      </p>
-                      <p className="mt-0.5 truncate text-[12px] text-[#64748B]">
+                      <p className={`truncate ${HOME_TEXT_BODY}`}>{member.full_name}</p>
+                      <p className={`${TYPE_META} mt-0.5 truncate`}>
                         {member.job_title_name || "—"}
                       </p>
                     </div>
@@ -604,9 +590,9 @@ export default function MyTeamDashboard() {
                     </span>
                   </div>
 
-                  <div className="space-y-1.5 text-[12px] text-[#64748B]">
+                  <div className={`space-y-1.5 ${TYPE_META}`}>
                     <p>
-                      <span className="text-[#94A3B8]">القسم: </span>
+                      <span className="opacity-70">القسم: </span>
                       {member.department || "—"}
                     </p>
                     <p className="flex items-center gap-1.5 truncate">
@@ -614,7 +600,7 @@ export default function MyTeamDashboard() {
                       {member.email || "—"}
                     </p>
                     <p>
-                      <span className="text-[#94A3B8]">المدير المباشر: </span>
+                      <span className="opacity-70">المدير المباشر: </span>
                       {member.direct_manager_name || "—"}
                     </p>
                   </div>
@@ -625,18 +611,10 @@ export default function MyTeamDashboard() {
         )}
       </section>
 
-      {/* ─── طلباتي للإدارة ─── */}
-      <section
-        id="hr-requests"
-        className="space-y-4"
-        aria-labelledby="hr-requests-heading"
-      >
+      <section id="hr-requests" className="space-y-4" aria-labelledby="hr-requests-heading">
         <div className="flex items-center gap-2">
-          <Briefcase className="h-5 w-5 text-[#0F172A]" aria-hidden />
-          <h2
-            id="hr-requests-heading"
-            className="text-[16px] font-medium text-[#0F172A]"
-          >
+          <Briefcase className="h-5 w-5 text-[#0F172A] dark:text-[var(--text-primary)]" aria-hidden />
+          <h2 id="hr-requests-heading" className={HOME_TEXT_HEADING}>
             {t("pages.myTeam.hrRequests")}
           </h2>
         </div>
@@ -649,16 +627,14 @@ export default function MyTeamDashboard() {
                 key={item.id}
                 type="button"
                 onClick={() => setHrModalKind(item.id)}
-                className={`${HOME_CARD} flex min-h-[128px] flex-col items-start gap-3 text-start hover:bg-[#F7F6F3]`}
+                className={`${HOME_CARD} flex min-h-[128px] flex-col items-start gap-3 text-start hover:bg-[#F7F6F3] dark:hover:bg-[var(--bg-surface-hover)]`}
               >
-                <span className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-[#EEF2FF] text-[#4F46E5]">
+                <span className={ICON_CHIP}>
                   <Icon className="h-5 w-5" aria-hidden />
                 </span>
                 <span className="min-w-0">
-                  <span className="block text-[14px] font-medium text-[#0F172A]">
-                    {item.label}
-                  </span>
-                  <span className="mt-1 block text-[12px] font-normal leading-relaxed text-[#64748B]">
+                  <span className={`block ${HOME_TEXT_BODY}`}>{item.label}</span>
+                  <span className={`${TYPE_META} mt-1 block leading-relaxed`}>
                     {HR_REQUEST_DESCRIPTIONS[item.id] ?? ""}
                   </span>
                 </span>

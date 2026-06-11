@@ -63,3 +63,18 @@ export const PRIORITY_ICON_STYLES = {
   blue: "bg-[#DBEAFE] text-[#3B82F6] dark:bg-blue-950/50 dark:text-blue-300",
   gray: "bg-[#F1F5F9] text-[#64748B] dark:bg-[var(--bg-surface-hover)] dark:text-[var(--text-primary)] dark:font-medium",
 };
+
+/** Soft neutral icon well — light theme (not navy/indigo) */
+export const ICON_CHIP =
+  "flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-[#F1F5F9] text-[#64748B] dark:bg-[var(--bg-surface-hover)] dark:text-[var(--text-primary)]";
+
+export const ICON_CHIP_ROUND =
+  "flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#F1F5F9] text-[#64748B] dark:bg-[var(--bg-surface-hover)] dark:text-[var(--text-primary)]";
+
+/** Active tab pill — brand navy (selected state only) */
+export const TAB_ACTIVE =
+  "bg-[#0F172A] text-white shadow-none dark:border dark:border-[var(--border-color)] dark:bg-[var(--bg-surface-hover)] dark:text-[var(--text-primary)]";
+
+/** Inactive tab on white card */
+export const TAB_INACTIVE =
+  "bg-[#F7F6F3] text-[#6B7280] hover:bg-[#F0EEEA] hover:text-[#111111] dark:border dark:border-[var(--border-color)] dark:bg-[var(--bg-main)] dark:text-[var(--text-secondary)] dark:hover:border-[var(--border-color)] dark:hover:text-[var(--text-primary)]";

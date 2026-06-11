@@ -125,6 +125,7 @@ export default function EmergencyAlertsPanel({
   isLoading = false,
   onProbationDecision,
   onViewEmployee,
+  onOpenDrawer,
 }) {
   const { t, isEn } = useAppLocale();
   const {
@@ -162,12 +163,14 @@ export default function EmergencyAlertsPanel({
             </div>
           </div>
           {!isLoading && totalCount > 0 ? (
-            <span
-              className="inline-flex items-center gap-1.5 rounded-full bg-[#FEE2E2] px-3 py-1.5 text-[13px] font-medium text-[#B91C1C]"
+            <button
+              type="button"
+              onClick={onOpenDrawer}
+              className="inline-flex items-center gap-1.5 rounded-full bg-[#FEE2E2] px-3 py-1.5 text-[13px] font-medium text-[#B91C1C] transition-colors hover:bg-[#FECACA] cursor-pointer"
             >
               <AlertTriangle className="h-4 w-4" aria-hidden />
               {t("pages.home.emergencyCount", { count: formatLocaleNumber(totalCount) })}
-            </span>
+            </button>
           ) : null}
         </div>
       </div>

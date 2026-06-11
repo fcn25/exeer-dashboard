@@ -381,15 +381,15 @@
     "accountDeletion": {
       "dangerZone": "Danger zone",
       "button": "Delete account",
-      "buttonHint": "Request permanent deletion of your account and data",
+      "buttonHint": "Request full removal of your account and data from the system after 30 days",
       "title": "Delete account",
-      "step1Message": "Are you sure you want to delete your account? This action cannot be undone.",
-      "step2Message": "Type DELETE to confirm",
+      "step1Message": "Are you sure you want to request account deletion? Your account and all associated data will be fully removed from the system and databases 30 days after the request date. This cannot be undone once the final deletion is executed.",
+      "step2Message": "To confirm the deletion request, type DELETE. Once confirmed, your request will be recorded and your account will be fully removed after 30 days.",
       "cancel": "Cancel",
       "continue": "Continue",
-      "confirmDelete": "Delete permanently",
+      "confirmDelete": "Confirm deletion request",
       "submitting": "Processing...",
-      "successMessage": "Your account deletion request has been received. Your data will be deleted within 30 days.",
+      "successMessage": "Your account deletion request has been received. Your account and data will be fully removed from the system after 30 days.",
       "error": "Could not submit the account deletion request."
     },
     "subscription": {

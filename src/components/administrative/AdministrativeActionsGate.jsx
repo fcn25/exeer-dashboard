@@ -1,9 +1,5 @@
-import { Navigate } from "react-router-dom";
-import { canManageAdministrativeActions } from "../../utils/rbac.js";
+import { NavAccessGate } from "../ProtectedRoute.jsx";
 
 export function AdministrativeActionsGate({ children }) {
-  if (!canManageAdministrativeActions()) {
-    return <Navigate to="/unauthorized" replace />;
-  }
-  return children;
+  return <NavAccessGate navKey="admin_actions">{children}</NavAccessGate>;
 }

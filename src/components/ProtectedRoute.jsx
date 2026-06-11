@@ -1,40 +1,33 @@
 import { Navigate, useLocation } from "react-router-dom";
 import AppLoadingScreen from "./ui/AppLoadingScreen.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
-import { isAccountantRole, normalizeAppRole } from "../constants/roles.js";
+import { roleCanAccessNavKey, roleCanAccessPath } from "../constants/roleNav.js";
 import { shouldBlockNativeAppAccess } from "../utils/authenticatedHomePath.js";
 
-function normalizeRequiredRoles(requiredRole) {
-  if (!requiredRole) return [];
-  if (Array.isArray(requiredRole)) {
-    return requiredRole.map((role) => normalizeAppRole(role));
-  }
-  return [normalizeAppRole(requiredRole)];
-}
+export function NavAccessGate({
+  children,
+  navKey,
+  altNavKeys = [],
+  fallback = <Navigate to="/unauthorized" replace />,
+}) {
+  const { role } = useAuth();
 
-function roleMatches(requiredRole, userRole) {
-  const allowed = normalizeRequiredRoles(requiredRole);
-  if (allowed.length === 0) return true;
-  return allowed.includes(normalizeAppRole(userRole));
+  if (!roleCanAccessNavKey(role, navKey, altNavKeys)) {
+    return fallback;
+  }
+
+  return children;
 }
 
 export function ProtectedRoute({
   children,
   allowDashboard = false,
   allowPortal = false,
-  requiredRole = null,
-  requiredPermission = null,
+  requiredNavKey = null,
+  altNavKeys = [],
+  enforceRoleNav = false,
 }) {
-  const {
-    isAuthenticated,
-    isBootstrapping,
-    role,
-    permissions,
-    isOwner,
-    isDashboardUser,
-    homePath,
-    isMobile,
-  } = useAuth();
+  const { isAuthenticated, isBootstrapping, role, isMobile } = useAuth();
   const location = useLocation();
 
   if (isBootstrapping) {
@@ -49,54 +42,36 @@ export function ProtectedRoute({
     return <Navigate to="/mobile/access-denied" replace />;
   }
 
-  if (requiredRole && !roleMatches(requiredRole, role)) {
+  if (requiredNavKey && !roleCanAccessNavKey(role, requiredNavKey, altNavKeys)) {
     return <Navigate to="/unauthorized" replace state={{ from: location }} />;
   }
 
-  if (requiredPermission) {
-    const allowed =
-      isOwner ||
-      Boolean(permissions?.[requiredPermission]) ||
-      (requiredPermission === "can_view_payroll" && isAccountantRole(role));
-    if (!allowed) {
-      return <Navigate to="/unauthorized" replace state={{ from: location }} />;
-    }
+  if (enforceRoleNav && !roleCanAccessPath(role, location.pathname)) {
+    return <Navigate to="/unauthorized" replace state={{ from: location }} />;
   }
 
   if (allowDashboard && isMobile) {
     return <Navigate to="/mobile" replace state={{ from: location }} />;
   }
 
-  const isAccountantPayrollRoute =
-    isAccountantRole(role) &&
-    (location.pathname === "/dashboard/payroll" ||
-      location.pathname.startsWith("/dashboard/payroll/"));
+  if (allowDashboard && location.pathname.startsWith("/dashboard")) {
+    if (!roleCanAccessPath(role, location.pathname)) {
+      return <Navigate to="/unauthorized" replace state={{ from: location }} />;
+    }
+  }
 
-  if (allowDashboard && !isDashboardUser && !isAccountantPayrollRoute) {
-    return <Navigate to="/employee-portal" replace state={{ from: location }} />;
+  if (allowPortal && !roleCanAccessPath(role, location.pathname)) {
+    return <Navigate to="/unauthorized" replace state={{ from: location }} />;
   }
 
   return children;
 }
 
-export function PermissionGate({
-  permission,
-  requiredRole = null,
-  children,
-  fallback = null,
-}) {
-  const { role, permissions, isOwner } = useAuth();
+export function PermissionGate({ navKey, altNavKeys = [], children, fallback = null }) {
+  const { role } = useAuth();
 
-  if (requiredRole && !roleMatches(requiredRole, role)) {
+  if (!roleCanAccessNavKey(role, navKey, altNavKeys)) {
     return fallback;
-  }
-
-  if (permission) {
-    const allowed =
-      isOwner ||
-      Boolean(permissions?.[permission]) ||
-      (permission === "can_view_payroll" && isAccountantRole(role));
-    if (!allowed) return fallback;
   }
 
   return children;

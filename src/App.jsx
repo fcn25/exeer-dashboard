@@ -68,17 +68,7 @@ function DashboardRoutes() {
         <Routes>
           <Route element={<ManagerLayout />}>
             <Route index element={<HomePage />} />
-            <Route
-              path="payroll"
-              element={
-                <ProtectedRoute
-                  allowDashboard
-                  requiredPermission="can_view_payroll"
-                >
-                  <PayrollPage />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="payroll" element={<PayrollPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
@@ -92,47 +82,15 @@ function DashboardRoutes() {
         <Route element={<ManagerLayout />}>
           <Route index element={<HomePage />} />
           <Route path="tasks" element={<TasksPage />} />
-          <Route
-            path="employees"
-            element={
-              <ProtectedRoute
-                allowDashboard
-                requiredPermission="can_edit_employees"
-              >
-                <EmployeesPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="events"
-            element={
-              <ProtectedRoute
-                allowDashboard
-                requiredPermission="can_manage_events"
-              >
-                <EventsPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="payroll"
-            element={
-              <ProtectedRoute
-                allowDashboard
-                requiredPermission="can_view_payroll"
-              >
-                <PayrollPage />
-              </ProtectedRoute>
-            }
-          />
+          <Route path="employees" element={<EmployeesPage />} />
+          <Route path="events" element={<EventsPage />} />
+          <Route path="payroll" element={<PayrollPage />} />
           <Route
             path="attendance/settings"
             element={
-              <ProtectedRoute allowDashboard>
-                <AttendanceSettingsGate>
-                  <AttendanceSettingsPage />
-                </AttendanceSettingsGate>
-              </ProtectedRoute>
+              <AttendanceSettingsGate>
+                <AttendanceSettingsPage />
+              </AttendanceSettingsGate>
             }
           />
           <Route
@@ -141,17 +99,7 @@ function DashboardRoutes() {
               <Navigate to="/dashboard/attendance/settings" replace />
             }
           />
-          <Route
-            path="attendance"
-            element={
-              <ProtectedRoute
-                allowDashboard
-                requiredPermission="can_view_payroll"
-              >
-                <AttendancePage />
-              </ProtectedRoute>
-            }
-          />
+          <Route path="attendance" element={<AttendancePage />} />
           <Route
             path="administrative-actions"
             element={
@@ -161,23 +109,7 @@ function DashboardRoutes() {
             }
           />
           <Route path="performance" element={<PerformancePage />} />
-          <Route
-            path="my-team"
-            element={
-              <ProtectedRoute
-                allowDashboard
-                requiredRole={[
-                  "owner",
-                  "Executive",
-                  "HR_Manager",
-                  "HR_Assistant",
-                  "Direct_Manager",
-                ]}
-              >
-                <MyTeamDashboard />
-              </ProtectedRoute>
-            }
-          />
+          <Route path="my-team" element={<MyTeamDashboard />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route
             path="settings/system"
@@ -193,17 +125,7 @@ function DashboardRoutes() {
               <Navigate to="/dashboard/settings?tab=subscription" replace />
             }
           />
-          <Route
-            path="permissions"
-            element={
-              <ProtectedRoute
-                allowDashboard
-                requiredRole={["owner", "Executive"]}
-              >
-                <PermissionsPage />
-              </ProtectedRoute>
-            }
-          />
+          <Route path="permissions" element={<PermissionsPage />} />
         </Route>
       </Routes>
     </ProtectedRoute>
@@ -246,7 +168,7 @@ function AppRoutes() {
       <Route
         path="/performance"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute enforceRoleNav>
             <Navigate to="/dashboard/performance" replace />
           </ProtectedRoute>
         }

@@ -1,9 +1,5 @@
-import { Navigate } from "react-router-dom";
-import { canAccessPerformance } from "../../utils/rbac.js";
+import { NavAccessGate } from "../ProtectedRoute.jsx";
 
 export function PerformanceGate({ children }) {
-  if (!canAccessPerformance()) {
-    return <Navigate to="/unauthorized" replace />;
-  }
-  return children;
+  return <NavAccessGate navKey="performance">{children}</NavAccessGate>;
 }

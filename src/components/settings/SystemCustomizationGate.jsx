@@ -1,19 +1,19 @@
 import { useEffect } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext.jsx";
-import { canAccessSystemCustomization } from "../../utils/rbac.js";
+import { roleHasNavKey } from "../../constants/roleNav.js";
 import { repairStoredAuthProfile } from "../../utils/mobileAuth.js";
 
 export function SystemCustomizationGate({ children }) {
   const location = useLocation();
-  const { isOwner } = useAuth();
+  const { role } = useAuth();
   const isMobile = location.pathname.startsWith("/mobile");
 
   useEffect(() => {
     repairStoredAuthProfile();
   }, []);
 
-  if (isOwner || canAccessSystemCustomization()) {
+  if (roleHasNavKey(role, "system_customization")) {
     return children;
   }
 

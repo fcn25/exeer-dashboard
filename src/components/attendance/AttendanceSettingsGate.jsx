@@ -1,9 +1,5 @@
-import { Navigate } from "react-router-dom";
-import { canManageAttendanceSettings } from "../../utils/rbac.js";
+import { NavAccessGate } from "../ProtectedRoute.jsx";
 
 export function AttendanceSettingsGate({ children }) {
-  if (!canManageAttendanceSettings()) {
-    return <Navigate to="/unauthorized" replace />;
-  }
-  return children;
+  return <NavAccessGate navKey="system_customization">{children}</NavAccessGate>;
 }

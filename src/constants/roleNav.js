@@ -183,6 +183,79 @@ export function roleHasNavKey(role, key) {
 }
 
 /**
+ * Dashboard/mobile path → ROLE_NAV key (longest prefix wins).
+ * Edit nav visibility via ROLE_NAV only; add path rules here when new routes ship.
+ */
+export const ROUTE_NAV_RULES = [
+  { prefix: "/dashboard/settings/system", navKey: "system_customization" },
+  { prefix: "/mobile/settings/system", navKey: "system_customization" },
+  { prefix: "/dashboard/permissions", navKey: "permissions" },
+  { prefix: "/dashboard/administrative-actions", navKey: "admin_actions" },
+  { prefix: "/mobile/administrative-actions", navKey: "admin_actions" },
+  { prefix: "/dashboard/attendance/settings", navKey: "system_customization" },
+  { prefix: "/mobile/attendance/settings", navKey: "system_customization" },
+  { prefix: "/dashboard/attendance", navKey: "attendance" },
+  {
+    prefix: "/mobile/attendance",
+    navKey: "self_service",
+    altNavKeys: ["attendance"],
+  },
+  { prefix: "/dashboard/payroll", navKey: "payroll" },
+  { prefix: "/dashboard/employees", navKey: "employees" },
+  { prefix: "/dashboard/events", navKey: "events" },
+  { prefix: "/dashboard/tasks", navKey: "tasks" },
+  { prefix: "/dashboard/my-team", navKey: "team" },
+  { prefix: "/dashboard/performance", navKey: "performance" },
+  {
+    prefix: "/dashboard/settings",
+    navKey: "settings",
+    altNavKeys: ["settings_basic"],
+  },
+  {
+    prefix: "/dashboard/subscription",
+    navKey: "settings",
+    altNavKeys: ["settings_basic"],
+  },
+  { prefix: "/dashboard", navKey: "home", exact: true },
+  { prefix: "/employee-portal", navKey: "self_service" },
+  { prefix: "/mobile/training", navKey: "self_service" },
+  { prefix: "/mobile", navKey: "self_service", exact: true },
+];
+
+const SORTED_ROUTE_NAV_RULES = [...ROUTE_NAV_RULES].sort(
+  (a, b) => b.prefix.length - a.prefix.length,
+);
+
+export function resolveRouteNavRule(pathname) {
+  const path = String(pathname ?? "").replace(/\/+$/, "") || "/";
+
+  for (const rule of SORTED_ROUTE_NAV_RULES) {
+    if (rule.exact) {
+      if (path === rule.prefix) return rule;
+      continue;
+    }
+    if (path === rule.prefix || path.startsWith(`${rule.prefix}/`)) {
+      return rule;
+    }
+  }
+
+  return null;
+}
+
+export function roleCanAccessNavKey(role, navKey, altNavKeys = []) {
+  if (!navKey) return true;
+  const keys = getRoleNavKeys(role);
+  if (keys.includes(navKey)) return true;
+  return altNavKeys.some((key) => keys.includes(key));
+}
+
+export function roleCanAccessPath(role, pathname) {
+  const rule = resolveRouteNavRule(pathname);
+  if (!rule) return true;
+  return roleCanAccessNavKey(role, rule.navKey, rule.altNavKeys ?? []);
+}
+
+/**
  * @param {string} role — from employee record via AuthContext
  * @param {(key: string) => string} translate — e.g. t from useAppLocale
  */

@@ -59,9 +59,10 @@ export function isOwner() {
   return isOwnerRole(getCurrentUserRole()) || isPrimarySubscriber();
 }
 
-/** Company owner / primary subscriber — full access to system customization. */
+/** Company owner / Executive — system customization (see ROLE_NAV). */
 export function canAccessSystemCustomization() {
-  return isOwner();
+  const normalized = normalizeAppRole(getCurrentUserRole());
+  return isOwnerRole(normalized) || normalized === "Executive";
 }
 
 export function hasPermission(key) {

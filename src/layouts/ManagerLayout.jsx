@@ -1,22 +1,10 @@
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import {
-  Banknote,
-  Calendar,
-  CheckSquare,
-  Fingerprint,
-  Gavel,
-  Home,
-  Lock,
   PanelLeftClose,
   PanelLeftOpen,
-  Settings,
-  SlidersHorizontal,
   Smartphone,
-  Target,
   UserPlus,
-  Users,
-  UsersRound,
 } from "lucide-react";
 import ErrorToast from "../components/ui/ErrorToast.jsx";
 import DashboardTopBar from "../components/layout/DashboardTopBar.jsx";
@@ -27,17 +15,8 @@ import { signOut } from "../utils/mobileAuth.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import ExeerLogo from "../components/brand/ExeerLogo.jsx";
 import { useAppLocale } from "../i18n/useAppLocale.js";
-import {
-  canAccessMyTeam,
-  canAccessPerformance,
-  canAccessSettings,
-  canEditEmployeeRecords,
-  canManageEvents,
-  canManageAdministrativeActions,
-  canViewPayroll,
-  isDirectManager,
-  isOwner,
-} from "../utils/rbac.js";
+import { resolveSidebarNavItems, roleHasNavKey } from "../constants/roleNav.js";
+import { isOwner } from "../utils/rbac.js";
 
 function SidebarLink({ to, label, icon: Icon, end, collapsed }) {
   return (
@@ -65,7 +44,7 @@ export default function ManagerLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const { t, dir, lang } = useAppLocale();
-  const { permissions, role } = useAuth();
+  const { role } = useAuth();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [unauthorizedToast, setUnauthorizedToast] = useState("");
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
@@ -98,97 +77,12 @@ export default function ManagerLayout() {
     navigate(location.pathname, { replace: true, state: {} });
   }, [location.pathname, location.state, navigate]);
 
-  const navItems = useMemo(() => {
-    const managerOnly = isDirectManager(role);
-    const items = [
-      { to: "/dashboard", label: t("nav.home"), icon: Home, end: true },
-      { to: "/dashboard/tasks", label: t("nav.tasks"), icon: CheckSquare },
-    ];
+  const { mainNavItems, systemNavItems } = useMemo(
+    () => resolveSidebarNavItems(role, t),
+    [role, t],
+  );
 
-    if (canManageEvents() || managerOnly) {
-      items.push({
-        to: "/dashboard/events",
-        label: t("nav.events"),
-        icon: Calendar,
-      });
-    }
-
-    if (!managerOnly) {
-      if (canEditEmployeeRecords()) {
-        items.push({
-          to: "/dashboard/employees",
-          label: t("nav.employees"),
-          icon: Users,
-        });
-      }
-
-      if (canManageAdministrativeActions()) {
-        items.push({
-          to: "/dashboard/administrative-actions",
-          label: t("nav.adminActions"),
-          icon: Gavel,
-        });
-      }
-
-      if (canViewPayroll()) {
-        items.push({
-          to: "/dashboard/payroll",
-          label: t("nav.payroll"),
-          icon: Banknote,
-        });
-        items.push({
-          to: "/dashboard/attendance",
-          label: t("nav.attendance"),
-          icon: Fingerprint,
-        });
-      }
-    }
-
-    if (canAccessMyTeam(role)) {
-      items.push({
-        to: "/dashboard/my-team",
-        label: t("nav.myTeam"),
-        icon: UsersRound,
-      });
-    }
-
-    if (canAccessPerformance()) {
-      items.push({
-        to: "/dashboard/performance",
-        label: t("nav.performance"),
-        icon: Target,
-      });
-    }
-
-    if (canAccessSettings()) {
-      items.push({
-        to: "/dashboard/settings",
-        label: t("nav.settings"),
-        icon: Settings,
-      });
-    }
-
-    if (!managerOnly && isOwner()) {
-      items.push({
-        to: "/dashboard/permissions",
-        label: t("nav.permissions"),
-        icon: Lock,
-      });
-    }
-
-    return items;
-  }, [permissions, role, t]);
-
-  const systemNavItems = useMemo(() => {
-    if (!isOwner()) return [];
-    return [
-      {
-        to: "/dashboard/settings/system",
-        label: t("nav.systemCustomization"),
-        icon: SlidersHorizontal,
-      },
-    ];
-  }, [t]);
+  const showAddEmployee = roleHasNavKey(role, "employees");
 
   const handleLogout = async () => {
     await signOut();
@@ -246,7 +140,7 @@ export default function ManagerLayout() {
           </button>
         ) : null}
 
-        {canEditEmployeeRecords() && !isDirectManager(role) && !isSidebarCollapsed ? (
+        {showAddEmployee && !isSidebarCollapsed ? (
           <button
             type="button"
             onClick={() => navigate("/dashboard/employees?add=1")}
@@ -257,7 +151,7 @@ export default function ManagerLayout() {
           </button>
         ) : null}
 
-        {canEditEmployeeRecords() && !isDirectManager(role) && isSidebarCollapsed ? (
+        {showAddEmployee && isSidebarCollapsed ? (
           <button
             type="button"
             onClick={() => navigate("/dashboard/employees?add=1")}
@@ -272,10 +166,13 @@ export default function ManagerLayout() {
           className="flex flex-1 flex-col gap-0.5"
           aria-label={t("nav.mainNav")}
         >
-          {navItems.map((item) => (
+          {mainNavItems.map((item) => (
             <SidebarLink
-              key={item.to}
-              {...item}
+              key={item.key}
+              to={item.to}
+              label={item.label}
+              icon={item.icon}
+              end={item.end}
               collapsed={isSidebarCollapsed}
             />
           ))}
@@ -288,8 +185,11 @@ export default function ManagerLayout() {
 
           {systemNavItems.map((item) => (
             <SidebarLink
-              key={item.to}
-              {...item}
+              key={item.key}
+              to={item.to}
+              label={item.label}
+              icon={item.icon}
+              end={item.end}
               collapsed={isSidebarCollapsed}
             />
           ))}

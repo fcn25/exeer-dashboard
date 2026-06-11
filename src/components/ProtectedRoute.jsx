@@ -76,10 +76,6 @@ export function ProtectedRoute({
     return <Navigate to="/employee-portal" replace state={{ from: location }} />;
   }
 
-  if (allowPortal && isDashboardUser && !isMobile) {
-    return <Navigate to="/dashboard" replace state={{ from: location }} />;
-  }
-
   return children;
 }
 

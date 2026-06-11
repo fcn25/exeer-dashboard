@@ -64,17 +64,25 @@ function DashboardRoutes() {
 
   if (isAccountantRole(role)) {
     return (
-      <Routes>
-        <Route
-          path="payroll"
-          element={
-            <ProtectedRoute requiredPermission="can_view_payroll">
-              <PayrollPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="*" element={<Navigate to="/employee-portal" replace />} />
-      </Routes>
+      <ProtectedRoute allowDashboard>
+        <Routes>
+          <Route element={<ManagerLayout />}>
+            <Route index element={<HomePage />} />
+            <Route
+              path="payroll"
+              element={
+                <ProtectedRoute
+                  allowDashboard
+                  requiredPermission="can_view_payroll"
+                >
+                  <PayrollPage />
+                </ProtectedRoute>
+              }
+            />
+          </Route>
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
+      </ProtectedRoute>
     );
   }
 
@@ -188,7 +196,10 @@ function DashboardRoutes() {
           <Route
             path="permissions"
             element={
-              <ProtectedRoute allowDashboard requiredRole="owner">
+              <ProtectedRoute
+                allowDashboard
+                requiredRole={["owner", "Executive"]}
+              >
                 <PermissionsPage />
               </ProtectedRoute>
             }

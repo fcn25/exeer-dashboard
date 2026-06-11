@@ -21,7 +21,6 @@ import { useSmartToolsModals } from "../hooks/useSmartToolsModals.js";
 import SmartToolsModals from "../components/smart-tools/SmartToolsModals.jsx";
 import { getUserDisplay } from "../utils/mobileAuth.js";
 import { fetchHomeDashboardData } from "../services/homeDashboardService.js";
-import AlertsDrawer from "../components/home/AlertsDrawer.jsx";
 import EmergencyAlertsPanel from "../components/home/EmergencyAlertsPanel.jsx";
 import PendingRequestCard from "../components/requests/PendingRequestCard.jsx";
 import {
@@ -228,7 +227,6 @@ export default function HomePage() {
   const [successMessage, setSuccessMessage] = useState("");
   const [dashboard, setDashboard] = useState(null);
   const [probationModal, setProbationModal] = useState(null);
-  const [alertsDrawerOpen, setAlertsDrawerOpen] = useState(false);
   const [actingRequestId, setActingRequestId] = useState(null);
   const [requestActionError, setRequestActionError] = useState("");
   const loadDashboard = useCallback(async () => {
@@ -377,7 +375,7 @@ export default function HomePage() {
       <EmergencyAlertsPanel
         alerts={emergencyAlerts}
         isLoading={isLoading}
-        onOpenDrawer={() => setAlertsDrawerOpen(true)}
+        showImportantTab
         onProbationDecision={(item) =>
           setProbationModal({
             employeeId: item.employeeId,
@@ -676,24 +674,6 @@ export default function HomePage() {
         probationEndDate={probationModal?.probationEndDate}
         onClose={() => setProbationModal(null)}
         onSuccess={setSuccessMessage}
-      />
-
-      <AlertsDrawer
-        isOpen={alertsDrawerOpen}
-        onClose={() => setAlertsDrawerOpen(false)}
-        alerts={emergencyAlerts}
-        onViewEmployee={(employeeId) => {
-          setAlertsDrawerOpen(false);
-          navigate(`/dashboard/employees?employee=${employeeId}`);
-        }}
-        onProbationDecision={(item) => {
-          setAlertsDrawerOpen(false);
-          setProbationModal({
-            employeeId: item.employeeId,
-            employeeName: item.employeeName ?? item.fullName,
-            probationEndDate: item.probationEndDate ?? item.endDate,
-          });
-        }}
       />
 
       <SmartToolsModals {...modalProps} />

@@ -7,7 +7,6 @@ import {
   ClipboardList,
   Target,
 } from "lucide-react";
-import AlertsDrawer from "../../home/AlertsDrawer.jsx";
 import EmergencyAlertsPanel from "../../home/EmergencyAlertsPanel.jsx";
 import PendingRequestCard from "../../requests/PendingRequestCard.jsx";
 import ProbationDecisionModal from "../../home/ProbationDecisionModal.jsx";
@@ -92,7 +91,6 @@ export default function MobileManagerHomeContent({
   const [actingRequestId, setActingRequestId] = useState(null);
   const [requestActionError, setRequestActionError] = useState("");
   const [probationModal, setProbationModal] = useState(null);
-  const [alertsDrawerOpen, setAlertsDrawerOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
 
   const actionItems = homeEssentials?.actionItems ?? [];
@@ -164,7 +162,6 @@ export default function MobileManagerHomeContent({
       <EmergencyAlertsPanel
         alerts={emergencyAlerts}
         isLoading={isLoading}
-        onOpenDrawer={() => setAlertsDrawerOpen(true)}
         onProbationDecision={(item) =>
           setProbationModal({
             employeeId: item.employeeId,
@@ -240,23 +237,6 @@ export default function MobileManagerHomeContent({
         onSuccess={handleProbationSuccess}
       />
 
-      <AlertsDrawer
-        isOpen={alertsDrawerOpen}
-        onClose={() => setAlertsDrawerOpen(false)}
-        alerts={emergencyAlerts}
-        onViewEmployee={(employeeId) => {
-          setAlertsDrawerOpen(false);
-          navigate(`/dashboard/employees?employee=${employeeId}`);
-        }}
-        onProbationDecision={(item) => {
-          setAlertsDrawerOpen(false);
-          setProbationModal({
-            employeeId: item.employeeId,
-            employeeName: item.employeeName ?? item.fullName,
-            probationEndDate: item.probationEndDate ?? item.endDate,
-          });
-        }}
-      />
     </div>
   );
 }

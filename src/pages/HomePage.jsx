@@ -34,6 +34,8 @@ import {
   HOME_BTN_PRIMARY,
   HOME_BTN_SECONDARY,
   HOME_CARD,
+  HOME_LIST_DIVIDE,
+  HOME_LIST_ITEM,
   HOME_SURFACE,
   HOME_TEXT_BODY,
   HOME_TEXT_HEADING,
@@ -451,8 +453,8 @@ export default function HomePage() {
                 : t("pages.home.noEmployeesYet")}
           </p>
 
-          <ul className="mt-5 space-y-4">
-            <li className="flex items-center justify-between gap-3">
+          <ul className={`${HOME_LIST_DIVIDE} mt-5`}>
+            <li className={`${HOME_LIST_ITEM} flex items-center justify-between gap-3`}>
               <div className={`flex items-center gap-2 ${HOME_TEXT_BODY}`}>
                 <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#ECFDF5] text-[#047857] dark:bg-emerald-950/50 dark:text-emerald-300">
                   <Users className="h-4 w-4" aria-hidden />
@@ -470,7 +472,7 @@ export default function HomePage() {
                 </p>
               </div>
             </li>
-            <li className="flex items-center justify-between gap-3">
+            <li className={`${HOME_LIST_ITEM} flex items-center justify-between gap-3`}>
               <div className={`flex items-center gap-2 ${HOME_TEXT_BODY}`}>
                 <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F1F5F9] text-[#475569] dark:bg-slate-800 dark:text-white">
                   <Users className="h-4 w-4" aria-hidden />
@@ -533,31 +535,26 @@ export default function HomePage() {
             </p>
           </div>
         ) : (
-          <div className="flex flex-col gap-3">
+          <>
             {requestActionError ? (
-              <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
+              <p className="mb-3 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
                 {requestActionError}
               </p>
             ) : null}
-            {actionItems.map((item, index) => (
-              <div
-                key={item.id}
-                className={
-                  index < actionItems.length - 1
-                    ? "border-b border-[#F1F5F9] pb-3 dark:border-slate-800"
-                    : ""
-                }
-              >
-                <ActionItemRow
-                  item={item}
-                  onAction={handleActionItem}
-                  actingRequestId={actingRequestId}
-                  onApproveRequest={handleApproveRequest}
-                  onRejectRequest={handleRejectRequest}
-                />
-              </div>
-            ))}
-          </div>
+            <div className={HOME_LIST_DIVIDE}>
+              {actionItems.map((item) => (
+                <div key={item.id} className={HOME_LIST_ITEM}>
+                  <ActionItemRow
+                    item={item}
+                    onAction={handleActionItem}
+                    actingRequestId={actingRequestId}
+                    onApproveRequest={handleApproveRequest}
+                    onRejectRequest={handleRejectRequest}
+                  />
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </section>
 

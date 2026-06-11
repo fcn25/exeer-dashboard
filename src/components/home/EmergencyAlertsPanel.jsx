@@ -6,7 +6,7 @@ import {
   FileWarning,
   ShieldAlert,
 } from "lucide-react";
-import { HOME_BTN, HOME_CARD, HOME_LIST_DIVIDE, TYPE_ITEM, TYPE_META, TYPE_SECTION } from "./homeStyles.js";
+import { HOME_BTN, HOME_CARD, HOME_LIST_DIVIDE, HOME_LIST_ITEM, TYPE_ITEM, TYPE_META, TYPE_SECTION } from "./homeStyles.js";
 import { useAppLocale } from "../../i18n/useAppLocale.js";
 import { formatLocaleDate, formatLocaleNumber } from "../../i18n/formatLocale.js";
 import ImportantAlertsList from "./ImportantAlertsList.jsx";
@@ -45,7 +45,7 @@ function AlertList({ items, emptyLabel, onItemAction, actionLabel }) {
   return (
     <ul className={`${HOME_LIST_DIVIDE} max-h-[280px] overflow-y-auto`}>
       {items.map((item) => (
-        <li key={item.id} className="py-3.5 first:pt-0 last:pb-0">
+        <li key={item.id} className={HOME_LIST_ITEM}>
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 text-start">
               <p className={`${TYPE_ITEM} truncate`}>{item.fullName}</p>

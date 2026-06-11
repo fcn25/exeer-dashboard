@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { Check } from "lucide-react";
 import { useAppLocale } from "../../i18n/useAppLocale.js";
 import { formatLocaleNumber } from "../../i18n/formatLocale.js";
-import { HOME_BTN, HOME_LIST_DIVIDE, TYPE_ITEM, TYPE_META, TYPE_SECTION } from "./homeStyles.js";
+import { HOME_BTN, HOME_LIST_DIVIDE, HOME_LIST_ITEM, TYPE_ITEM, TYPE_META, TYPE_SECTION } from "./homeStyles.js";
 
 function DaysBadge({ daysLeft, severity, todayLabel, isEn }) {
   const isCritical = severity === "critical";
@@ -52,7 +52,7 @@ function AlertItemCard({
   const isCritical = item.severity === "critical";
 
   return (
-    <li className="py-4 first:pt-0 last:pb-0">
+    <li className={HOME_LIST_ITEM}>
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1 text-start">
           <div className="flex flex-wrap items-center gap-2">

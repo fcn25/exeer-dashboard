@@ -612,7 +612,11 @@ html:not(.dark) .md-theme-segment-btn-active {
 /* Nested list dividers */
 html:not(.dark) .home-list-divide > :not(:last-child),
 html:not(.dark) .divide-\[\#F0EEEA\] > :not(:last-child) {
-  border-color: var(--color-border-interactive);
+  border-color: #F0EEEA;
+}
+
+.dark .home-list-divide > :not(:last-child) {
+  border-color: rgba(255, 255, 255, 0.06);
 }
 
 /* No boxes inside boxes */

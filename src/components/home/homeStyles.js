@@ -17,8 +17,13 @@ export const HOME_CARD =
 export const HOME_SURFACE =
   "rounded-[12px] shadow-none dark:border dark:border-[var(--border-color)] dark:bg-[var(--bg-surface-hover)]";
 
+/** Hairline separators between stacked rows inside a card — not item boxes */
 export const HOME_LIST_DIVIDE =
-  "home-list-divide divide-y divide-[#F0EEEA] dark:divide-[var(--border-color)]";
+  "home-list-divide divide-y divide-[#F0EEEA] dark:divide-[rgba(255,255,255,0.06)]";
+
+/** Comfortable row padding; pair with HOME_LIST_DIVIDE on the parent list */
+export const HOME_LIST_ITEM =
+  "py-4 first:pt-0 last:pb-0";
 
 export const HOME_BTN =
   "rounded-[10px] shadow-none transition-colors";

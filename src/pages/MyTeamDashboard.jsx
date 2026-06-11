@@ -20,6 +20,8 @@ import {
   HOME_BTN,
   HOME_BTN_PRIMARY,
   HOME_CARD,
+  HOME_LIST_DIVIDE,
+  HOME_LIST_ITEM,
   HOME_SURFACE,
   HOME_TEXT_BODY,
   HOME_TEXT_HEADING,
@@ -416,7 +418,7 @@ export default function MyTeamDashboard() {
                 : `${formatArabicNumber(requests.length)} طلب يحتاج مراجعتك`}
           </p>
 
-          <ul className="mt-5 space-y-3">
+          <ul className={`${HOME_LIST_DIVIDE} mt-5`}>
             {isLoading ? (
               <li className={HOME_TEXT_HINT}>جاري التحميل...</li>
             ) : requests.length === 0 ? (
@@ -430,7 +432,7 @@ export default function MyTeamDashboard() {
                 return (
                   <li
                     key={request.id}
-                    className="flex items-center justify-between gap-3 border-b border-[#F0EEEA] pb-3 last:border-0 last:pb-0 dark:border-[var(--border-color)]"
+                    className={`${HOME_LIST_ITEM} flex items-center justify-between gap-3`}
                   >
                     <div className="min-w-0">
                       <p className={`truncate ${HOME_TEXT_BODY}`}>
@@ -480,19 +482,12 @@ export default function MyTeamDashboard() {
             <p className={HOME_TEXT_LABEL}>لا توجد طلبات معلقة بانتظار موافقتك</p>
           </div>
         ) : (
-          <div className="flex flex-col gap-3">
-            {requests.map((request, index) => {
+          <div className={HOME_LIST_DIVIDE}>
+            {requests.map((request) => {
               const member = teamById.get(Number(request.employee_id));
 
               return (
-                <div
-                  key={request.id}
-                  className={
-                    index < requests.length - 1
-                      ? "border-b border-[#F0EEEA] pb-4 dark:border-[var(--border-color)]"
-                      : ""
-                  }
-                >
+                <div key={request.id} className={HOME_LIST_ITEM}>
                   <PendingRequestCard
                     request={request}
                     employeeName={member?.full_name}

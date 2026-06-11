@@ -14,6 +14,8 @@ import {
   HOME_BTN,
   HOME_BTN_PRIMARY,
   HOME_CARD,
+  HOME_LIST_DIVIDE,
+  HOME_LIST_ITEM,
   HOME_TEXT_BODY,
   HOME_TEXT_HEADING,
   HOME_TEXT_HINT,
@@ -198,31 +200,26 @@ export default function MobileManagerHomeContent({
             <p className={`text-[13px] ${HOME_TEXT_LABEL}`}>{t("pages.home.allClear")}</p>
           </div>
         ) : (
-          <div className="flex flex-col gap-4">
+          <>
             {requestActionError ? (
-              <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
+              <p className="mb-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
                 {requestActionError}
               </p>
             ) : null}
-            {actionItems.map((item, index) => (
-              <div
-                key={item.id}
-                className={
-                  index < actionItems.length - 1
-                    ? "border-b border-exeer-border pb-4 dark:border-[var(--border-color)]"
-                    : ""
-                }
-              >
-                <ActionItemRow
-                  item={item}
-                  onAction={handleActionItem}
-                  actingRequestId={actingRequestId}
-                  onApproveRequest={handleApproveRequest}
-                  onRejectRequest={handleRejectRequest}
-                />
-              </div>
-            ))}
-          </div>
+            <div className={HOME_LIST_DIVIDE}>
+              {actionItems.map((item) => (
+                <div key={item.id} className={HOME_LIST_ITEM}>
+                  <ActionItemRow
+                    item={item}
+                    onAction={handleActionItem}
+                    actingRequestId={actingRequestId}
+                    onApproveRequest={handleApproveRequest}
+                    onRejectRequest={handleRejectRequest}
+                  />
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </section>
 

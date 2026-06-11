@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { Check, X } from "lucide-react";
 import { useAppLocale } from "../../i18n/useAppLocale.js";
 import { formatLocaleNumber } from "../../i18n/formatLocale.js";
@@ -108,7 +109,16 @@ function AlertItemCard({
   );
 }
 
-function AlertSection({ title, emoji, items, todayLabel, isEn, t, onViewEmployee, onProbationDecision }) {
+function AlertSection({
+  title,
+  emoji,
+  items,
+  todayLabel,
+  isEn,
+  t,
+  onViewEmployee,
+  onProbationDecision,
+}) {
   if (!items.length) return null;
 
   return (
@@ -174,17 +184,12 @@ export default function AlertsDrawer({
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose]);
 
-  const [isVisible, setIsVisible] = useState(false);
-
   useEffect(() => {
     if (!isOpen) return undefined;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    const frame = requestAnimationFrame(() => setIsVisible(true));
     return () => {
-      cancelAnimationFrame(frame);
       document.body.style.overflow = previousOverflow;
-      setIsVisible(false);
     };
   }, [isOpen]);
 
@@ -192,8 +197,8 @@ export default function AlertsDrawer({
 
   const isEmpty = criticalItems.length === 0 && warningItems.length === 0;
 
-  return (
-    <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-[2px]">
+  return createPortal(
+    <div className="fixed inset-0 z-[70] flex justify-end bg-black/40 backdrop-blur-[2px]">
       <button
         type="button"
         className="absolute inset-0 cursor-default"
@@ -206,9 +211,7 @@ export default function AlertsDrawer({
         role="dialog"
         aria-modal="true"
         aria-labelledby="alerts-drawer-title"
-        className={`fixed left-0 top-0 flex h-full w-full max-w-md flex-col border-e border-[#E2E8F0] bg-[var(--bg-main)] shadow-xl transition-transform duration-300 ease-out dark:border-[var(--border-color)] ${
-          isVisible ? "translate-x-0" : "-translate-x-full"
-        }`}
+        className="relative flex h-full w-full max-w-md flex-col border-s border-[#E2E8F0] bg-white shadow-xl dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)]"
       >
         <header className="flex items-start justify-between gap-3 border-b border-[#F1F5F9] px-5 py-4 dark:border-[var(--border-color)]">
           <div className="flex min-w-0 flex-1 items-center gap-2">
@@ -268,6 +271,7 @@ export default function AlertsDrawer({
           )}
         </div>
       </aside>
-    </div>
+    </div>,
+    document.body,
   );
 }

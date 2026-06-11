@@ -6,7 +6,6 @@ import {
   CalendarClock,
   Check,
   ClipboardList,
-  Download,
   FileText,
   GraduationCap,
   MessageSquare,
@@ -57,27 +56,6 @@ const ACTION_ICONS = {
   requests: ClipboardList,
   evaluation: Target,
 };
-
-const HEADER_ACTIONS = [
-  {
-    id: "add-employee",
-    labelKey: "pages.home.addEmployee",
-    primary: true,
-    href: "/dashboard/employees?add=1",
-  },
-  {
-    id: "create-request",
-    labelKey: "pages.home.createRequest",
-    primary: false,
-    href: "/dashboard/my-team",
-  },
-  {
-    id: "export",
-    labelKey: "pages.home.export",
-    primary: false,
-    href: "/dashboard/payroll",
-  },
-];
 
 const QUICK_ACTIONS = [
   { id: "one-on-one", labelKey: "pages.home.oneOnOne", icon: MessageSquare, href: "/dashboard/my-team" },
@@ -345,18 +323,6 @@ export default function HomePage() {
   const totalDeductions = payrollHero?.totalDeductions ?? 0;
   const totalOvertime = payrollHero?.totalOvertime ?? 0;
 
-  const headerActions = useMemo(
-    () =>
-      HEADER_ACTIONS.map((action) => ({
-        ...action,
-        label: t(action.labelKey),
-        ...(action.id === "export" && !showPayroll
-          ? { href: "/dashboard/employees" }
-          : {}),
-      })),
-    [t, showPayroll],
-  );
-
   const quickActions = useMemo(
     () =>
       QUICK_ACTIONS.map((action) => ({
@@ -367,37 +333,10 @@ export default function HomePage() {
   );
 
   return (
-    <div className="-mx-6 -my-8 flex flex-col gap-5 bg-[#FFFFFF] px-6 py-8 dark:bg-[var(--bg-main)] md:-mx-8 md:px-8">
+    <div className="-mx-6 -my-8 flex flex-col gap-5 bg-md-surface-dim px-6 py-8 dark:bg-[var(--bg-main)] md:-mx-8 md:px-8">
       {/* ─── 1. ترويسة ─── */}
       <header className={`${HOME_SHELL} p-6`}>
         <div className="flex flex-col gap-4">
-          <div className="flex flex-wrap justify-end gap-2">
-            {headerActions.map((action) =>
-              action.primary ? (
-                <button
-                  key={action.id}
-                  type="button"
-                  onClick={() => navigate(action.href)}
-                  className={`${HOME_BTN} ${HOME_BTN_PRIMARY}`}
-                >
-                  {action.label}
-                </button>
-              ) : (
-                <button
-                  key={action.id}
-                  type="button"
-                  onClick={() => navigate(action.href)}
-                  className={`${HOME_BTN} ${HOME_BTN_SECONDARY}`}
-                >
-                  {action.id === "export" ? (
-                    <Download className="h-4 w-4" aria-hidden />
-                  ) : null}
-                  {action.label}
-                </button>
-              ),
-            )}
-          </div>
-
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-1 text-start">
               <p className={`text-[13px] font-normal ${HOME_TEXT_LABEL}`}>{getGreeting(t)}</p>

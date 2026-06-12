@@ -1,3 +1,5 @@
+import { MOBILE_CARD } from "../../home/homeStyles.js";
+
 function SkeletonBlock({ className = "" }) {
   return (
     <div
@@ -9,7 +11,7 @@ function SkeletonBlock({ className = "" }) {
 
 export function AttendanceWidgetSkeleton() {
   return (
-    <div className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+    <div className={`${MOBILE_CARD} flex items-center gap-3`}>
       <SkeletonBlock className="h-11 w-11 shrink-0 rounded-xl" />
       <div className="flex-1 space-y-2">
         <SkeletonBlock className="h-3 w-16" />
@@ -35,7 +37,7 @@ export function TabListSkeleton() {
   return (
     <div className="space-y-3" aria-label="جاري تحميل القائمة">
       {Array.from({ length: 3 }).map((_, index) => (
-        <SkeletonBlock key={index} className="h-[76px]" />
+        <SkeletonBlock key={index} className={`${MOBILE_CARD} h-[76px]`} />
       ))}
     </div>
   );

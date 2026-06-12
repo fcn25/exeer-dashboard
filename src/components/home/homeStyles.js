@@ -25,6 +25,30 @@ export const HOME_LIST_DIVIDE =
 export const HOME_LIST_ITEM =
   "py-4 first:pt-0 last:pb-0";
 
+/** Native mobile — warm canvas shell (managers + employees) */
+export const MOBILE_SHELL =
+  "native-mobile-shell mx-auto min-h-screen w-full max-w-[480px] bg-md-surface-dim font-sans text-exeer-primary dark:bg-[var(--bg-main)] dark:text-[var(--text-primary)]";
+
+/** Standalone mobile routes without native-mobile-shell class */
+export const MOBILE_PAGE_SHELL =
+  "mobile-page-shell mx-auto min-h-screen w-full max-w-[480px] bg-md-surface-dim font-sans text-exeer-primary dark:bg-[var(--bg-main)] dark:text-[var(--text-primary)]";
+
+/** Mobile card — same light tokens as HOME_CARD, tighter padding */
+export const MOBILE_CARD =
+  "home-card-interactive rounded-[12px] bg-white p-4 shadow-none dark:border dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)]";
+
+export const MOBILE_APP_BAR =
+  "native-mobile-app-bar sticky top-0 z-40 border-b border-exeer-border bg-md-surface-dim/95 backdrop-blur-md dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)]/95";
+
+export const MOBILE_BACK_BTN =
+  "home-btn-outlined flex h-11 w-11 shrink-0 items-center justify-center rounded-[10px] border border-[#F0EEEA] bg-white text-exeer-primary hover:bg-[#F7F6F3] dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)] dark:text-[var(--text-primary)] dark:hover:bg-[var(--bg-surface-hover)]";
+
+export const MOBILE_TAB_ACTIVE =
+  "rounded-full bg-[#0F172A] px-4 py-2 text-[13px] font-medium text-white shadow-none dark:border dark:border-[var(--border-color)] dark:bg-[var(--bg-surface-hover)] dark:text-[var(--text-primary)]";
+
+export const MOBILE_TAB_INACTIVE =
+  "rounded-full bg-[#F7F6F3] px-4 py-2 text-[13px] font-medium text-[#6B7280] hover:bg-[#F0EEEA] hover:text-[#111111] dark:border dark:border-[var(--border-color)] dark:bg-[var(--bg-main)] dark:text-[var(--text-secondary)] dark:hover:text-[var(--text-primary)]";
+
 export const HOME_BTN =
   "rounded-[10px] shadow-none transition-colors";
 

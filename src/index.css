@@ -615,6 +615,11 @@ html:not(.dark) .divide-\[\#F0EEEA\] > :not(:last-child) {
   border-color: #F0EEEA;
 }
 
+html:not(.dark) .mobile-page-shell,
+html:not(.dark) .native-mobile-shell.bg-md-surface-dim {
+  background-color: #F7F6F3;
+}
+
 .dark .home-list-divide > :not(:last-child) {
   border-color: rgba(255, 255, 255, 0.06);
 }

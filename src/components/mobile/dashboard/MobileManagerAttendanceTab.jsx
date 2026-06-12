@@ -9,6 +9,7 @@ import {
   Settings2,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { MOBILE_CARD } from "../../home/homeStyles.js";
 import AttendancePunchButton from "../../attendance/mobile/AttendancePunchButton.jsx";
 import AttendancePunchCamera from "../../attendance/mobile/AttendancePunchCamera.jsx";
 import BiometricEnrollmentSection from "../../attendance/mobile/BiometricEnrollmentSection.jsx";
@@ -40,7 +41,7 @@ function AdminAttendanceSettingsSection() {
 
   return (
     <section
-      className="space-y-3 rounded-2xl border border-exeer-border bg-md-surface p-4 dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)]"
+      className={`${MOBILE_CARD} space-y-3`}
       aria-labelledby="mobile-attendance-admin-heading"
     >
       <div className="flex items-center gap-2">
@@ -358,7 +359,7 @@ export default function MobileManagerAttendanceTab({ employeeId }) {
         </p>
       ) : null}
 
-      <section className="rounded-3xl border border-exeer-border bg-gradient-to-b from-white to-slate-50/80 px-5 py-6 shadow-sm dark:border-[var(--border-color)] dark:from-[var(--bg-surface)] dark:to-[var(--bg-main)]">
+      <section className={`${MOBILE_CARD} px-5 py-6`}>
         <AttendancePunchButton
           state={buttonState}
           onPress={handleButtonPress}

@@ -1,29 +1,37 @@
 import { CalendarDays, CheckCircle2, ClipboardCheck, ClipboardList, Star } from "lucide-react";
 import { normalizeTaskStatus } from "../../../utils/taskStatus.js";
+import {
+  HOME_LIST_DIVIDE,
+  HOME_LIST_ITEM,
+  ICON_CHIP,
+  MOBILE_CARD,
+  TYPE_ITEM,
+  TYPE_META,
+} from "../../home/homeStyles.js";
 import { TabListSkeleton } from "./MobileDashboardSkeleton.jsx";
 
 function EmptyState({ message }) {
   return (
-    <div className="rounded-2xl border border-gray-100 bg-white px-4 py-10 text-center shadow-sm">
-      <p className="text-sm text-exeer-muted">{message}</p>
+    <div className={`${MOBILE_CARD} px-4 py-10 text-center`}>
+      <p className={TYPE_META}>{message}</p>
     </div>
   );
 }
 
 function RequestRow({ item }) {
   return (
-    <article className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+    <div className={HOME_LIST_ITEM}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-sm font-bold text-exeer-primary">{item.employee}</p>
-          <p className="mt-0.5 text-xs text-exeer-muted">{item.type}</p>
+          <p className={`${TYPE_ITEM} truncate`}>{item.employee}</p>
+          <p className={`${TYPE_META} mt-0.5 truncate`}>{item.type}</p>
         </div>
-        <span className="shrink-0 rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-700">
+        <span className="shrink-0 rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-700 dark:bg-blue-950/50 dark:text-blue-300">
           {item.status}
         </span>
       </div>
-      <p className="mt-2 text-[11px] text-exeer-muted">{item.date}</p>
-    </article>
+      <p className={`${TYPE_META} mt-2`}>{item.date}</p>
+    </div>
   );
 }
 
@@ -32,15 +40,17 @@ function TaskRow({ item, onSubmitForReview, updatingTaskId }) {
     normalizeTaskStatus(item.status) === "قيد التنفيذ" && Boolean(onSubmitForReview);
 
   return (
-    <article className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+    <div className={HOME_LIST_ITEM}>
       <div className="flex items-start gap-3">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-exeer-primary">
+        <span className={ICON_CHIP}>
           <ClipboardList className="h-4 w-4" aria-hidden />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-bold text-exeer-primary">{item.title}</p>
-          <div className="mt-1.5 flex flex-wrap gap-2 text-[11px] text-exeer-muted">
-            <span className="rounded-full bg-gray-50 px-2 py-0.5">{item.status}</span>
+          <p className={`${TYPE_ITEM} truncate`}>{item.title}</p>
+          <div className={`${TYPE_META} mt-1.5 flex flex-wrap gap-2`}>
+            <span className="rounded-full bg-[#F7F6F3] px-2 py-0.5 dark:bg-[var(--bg-surface-hover)]">
+              {item.status}
+            </span>
             {item.deadline ? (
               <span className="inline-flex items-center gap-1">
                 <CalendarDays className="h-3 w-3" aria-hidden />
@@ -54,7 +64,7 @@ function TaskRow({ item, onSubmitForReview, updatingTaskId }) {
             type="button"
             disabled={updatingTaskId === item.id}
             onClick={() => onSubmitForReview(item.id)}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700 disabled:opacity-50"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700 disabled:opacity-50 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300"
             aria-label="تأكيد إنجاز المهمة"
             title="تأكيد الإنجاز"
           >
@@ -62,54 +72,54 @@ function TaskRow({ item, onSubmitForReview, updatingTaskId }) {
           </button>
         ) : null}
       </div>
-    </article>
+    </div>
   );
 }
 
 function EvaluationRow({ item }) {
   return (
-    <article className="rounded-2xl border border-amber-100 bg-amber-50/40 p-4 shadow-sm">
+    <div className={HOME_LIST_ITEM}>
       <div className="flex items-start gap-3">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-800">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300">
           <ClipboardCheck className="h-4 w-4" aria-hidden />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-bold text-exeer-primary">{item.title}</p>
-          <p className="mt-0.5 text-xs text-exeer-muted">
+          <p className={`${TYPE_ITEM} truncate`}>{item.title}</p>
+          <p className={`${TYPE_META} mt-0.5`}>
             {item.employee ? `${item.employee} · ${item.cycle}` : item.cycle}
           </p>
-          <p className="mt-1.5 text-[11px] font-medium text-amber-800">
+          <p className="mt-1.5 text-[11px] font-medium text-amber-800 dark:text-amber-300">
             ينتهي {item.due}
           </p>
         </div>
       </div>
-    </article>
+    </div>
   );
 }
 
 function AchievementRow({ item }) {
   return (
-    <article className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+    <div className={HOME_LIST_ITEM}>
       <div className="flex items-start gap-3">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-700">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300">
           <Star className="h-4 w-4" aria-hidden />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-bold text-exeer-primary">{item.title}</p>
-          <p className="mt-1 text-[11px] text-exeer-muted">{item.date}</p>
+          <p className={`${TYPE_ITEM} truncate`}>{item.title}</p>
+          <p className={`${TYPE_META} mt-1`}>{item.date}</p>
         </div>
       </div>
-    </article>
+    </div>
   );
 }
 
 function LogRow({ item }) {
   return (
-    <article className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
-      <p className="text-sm font-bold text-exeer-primary">{item.title}</p>
-      <p className="mt-0.5 text-xs text-exeer-muted">{item.employee}</p>
-      <p className="mt-1.5 text-[11px] text-exeer-muted">{item.date}</p>
-    </article>
+    <div className={HOME_LIST_ITEM}>
+      <p className={`${TYPE_ITEM} truncate`}>{item.title}</p>
+      <p className={`${TYPE_META} mt-0.5`}>{item.employee}</p>
+      <p className={`${TYPE_META} mt-1.5`}>{item.date}</p>
+    </div>
   );
 }
 
@@ -147,24 +157,26 @@ export default function MobileTabPanels({
   }
 
   return (
-    <div className="space-y-3">
-      {activeTab === "requests" &&
-        items.map((item) => <RequestRow key={item.id} item={item} />)}
-      {activeTab === "tasks" &&
-        items.map((item) => (
-          <TaskRow
-            key={item.id}
-            item={item}
-            onSubmitForReview={onTaskSubmitForReview}
-            updatingTaskId={updatingTaskId}
-          />
-        ))}
-      {activeTab === "evaluations" &&
-        items.map((item) => <EvaluationRow key={item.id} item={item} />)}
-      {activeTab === "achievements" &&
-        items.map((item) => <AchievementRow key={item.id} item={item} />)}
-      {activeTab === "logs" &&
-        items.map((item) => <LogRow key={item.id} item={item} />)}
+    <div className={MOBILE_CARD}>
+      <div className={HOME_LIST_DIVIDE}>
+        {activeTab === "requests" &&
+          items.map((item) => <RequestRow key={item.id} item={item} />)}
+        {activeTab === "tasks" &&
+          items.map((item) => (
+            <TaskRow
+              key={item.id}
+              item={item}
+              onSubmitForReview={onTaskSubmitForReview}
+              updatingTaskId={updatingTaskId}
+            />
+          ))}
+        {activeTab === "evaluations" &&
+          items.map((item) => <EvaluationRow key={item.id} item={item} />)}
+        {activeTab === "achievements" &&
+          items.map((item) => <AchievementRow key={item.id} item={item} />)}
+        {activeTab === "logs" &&
+          items.map((item) => <LogRow key={item.id} item={item} />)}
+      </div>
     </div>
   );
 }

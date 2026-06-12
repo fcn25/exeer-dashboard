@@ -13,7 +13,7 @@ export default function MobileManagerBottomNav({ activeId, onChange }) {
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-exeer-border bg-md-surface/95 backdrop-blur-md dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)]/95"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-exeer-border bg-md-surface-dim/95 backdrop-blur-md dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)]/95"
       aria-label={t("nav.mainNav")}
     >
       <div className="mx-auto flex max-w-[480px] items-stretch justify-around px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1.5">

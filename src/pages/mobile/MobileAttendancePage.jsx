@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { ArrowRight, CalendarClock } from "lucide-react";
+import { CalendarClock } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import AttendancePunchButton from "../../components/attendance/mobile/AttendancePunchButton.jsx";
 import AttendanceTodaySummary from "../../components/attendance/mobile/AttendanceTodaySummary.jsx";
 import AttendanceHistorySection from "../../components/attendance/mobile/AttendanceHistorySection.jsx";
+import MobilePageShell, {
+  MobileStandaloneHeader,
+} from "../../components/mobile/MobilePageShell.jsx";
+import { HOME_BTN_SECONDARY, MOBILE_CARD } from "../../components/home/homeStyles.js";
 import SuccessToast from "../../components/ui/SuccessToast.jsx";
 import ErrorToast from "../../components/ui/ErrorToast.jsx";
 import { useCurrentEmployee } from "../../hooks/useCurrentEmployee.js";
@@ -84,26 +87,12 @@ export default function MobileAttendancePage() {
   const canPunch = todayData?.canPunch !== false && !isLoading && !loadError;
 
   return (
-    <div
-      dir={pageDir}
-      lang={pageLang}
-      className="native-mobile-shell mx-auto min-h-screen w-full max-w-[480px] bg-md-surface-dim font-sans text-exeer-primary"
-    >
-      <header className="native-mobile-app-bar sticky top-0 z-40 border-b border-exeer-border bg-md-surface/95 backdrop-blur-sm">
-        <div className="flex items-center gap-3 px-4 py-3">
-          <Link
-            to="/mobile"
-            className="flex h-11 w-11 items-center justify-center rounded-2xl border border-exeer-border bg-white text-exeer-primary shadow-sm transition-colors hover:bg-exeer-hover dark:bg-slate-900"
-            aria-label="رجوع"
-          >
-            <ArrowRight className="h-5 w-5" aria-hidden />
-          </Link>
-          <div className="min-w-0 flex-1">
-            <h1 className="truncate text-lg font-bold">الحضور والبصمة</h1>
-            <p className="text-xs text-exeer-muted">تسجيل الدخول والخروج اليومي</p>
-          </div>
-        </div>
-      </header>
+    <MobilePageShell native dir={pageDir} lang={pageLang}>
+      <MobileStandaloneHeader
+        title="الحضور والبصمة"
+        subtitle="تسجيل الدخول والخروج اليومي"
+        backLabel="رجوع"
+      />
 
       <main className="space-y-5 px-4 py-6 pb-10">
         {loadError ? (
@@ -112,7 +101,7 @@ export default function MobileAttendancePage() {
           </p>
         ) : null}
 
-        <section className="rounded-3xl border border-exeer-border bg-gradient-to-b from-white to-slate-50/80 px-5 py-8 shadow-sm dark:from-slate-900 dark:to-slate-800/60">
+        <section className={`${MOBILE_CARD} px-5 py-8`}>
           {isLoading ? (
             <div className="flex flex-col items-center gap-4 py-8">
               <div className="h-36 w-36 animate-pulse rounded-full bg-slate-200 dark:bg-slate-700" />
@@ -132,7 +121,7 @@ export default function MobileAttendancePage() {
         <button
           type="button"
           onClick={handlePermissionRequest}
-          className="flex w-full items-center justify-center gap-2.5 rounded-2xl border border-exeer-border bg-white px-4 py-3.5 text-sm font-semibold text-exeer-primary shadow-sm transition-colors hover:bg-exeer-hover active:scale-[0.99] dark:bg-md-surface"
+          className={`${HOME_BTN_SECONDARY} flex w-full items-center justify-center gap-2.5 px-4 py-3.5 text-sm font-semibold active:scale-[0.99]`}
         >
           <CalendarClock className="h-4 w-4 stroke-[1.75]" aria-hidden />
           استئذان
@@ -149,6 +138,6 @@ export default function MobileAttendancePage() {
         onDismiss={() => setSuccessToast("")}
       />
       <ErrorToast message={errorToast} onDismiss={() => setErrorToast("")} />
-    </div>
+    </MobilePageShell>
   );
 }

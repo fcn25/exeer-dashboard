@@ -1,4 +1,5 @@
 import { BentoGridSkeleton } from "./MobileDashboardSkeleton.jsx";
+import { MOBILE_CARD, TYPE_META } from "../../home/homeStyles.js";
 
 export default function BentoStatGrid({ stats, isLoading }) {
   if (isLoading) {
@@ -17,14 +18,14 @@ export default function BentoStatGrid({ stats, isLoading }) {
       {stats.map((stat) => (
         <article
           key={stat.id}
-          className={`flex flex-col justify-between rounded-2xl border border-exeer-border ${stat.bg} p-4 shadow-sm dark:border-[var(--border-color)] ${
+          className={`${MOBILE_CARD} flex flex-col justify-between ${
             stat.span === 2 ? "col-span-2" : ""
           }`}
         >
           <p className={`text-2xl font-bold tracking-tight ${stat.accent}`}>
             {stat.value}
           </p>
-          <p className="mt-2 text-xs font-medium leading-snug text-exeer-muted">
+          <p className={`${TYPE_META} mt-2 font-medium leading-snug`}>
             {stat.label}
           </p>
         </article>

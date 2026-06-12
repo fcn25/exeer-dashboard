@@ -1,11 +1,19 @@
 import { LogIn, LogOut, MapPin } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import {
+  HOME_LIST_DIVIDE,
+  HOME_LIST_ITEM,
+  MOBILE_CARD,
+  TYPE_ITEM,
+  TYPE_META,
+  TYPE_SECTION,
+} from "../../home/homeStyles.js";
 
 function OperationRow({ log }) {
   const isCheckIn = log.punchType === "In";
 
   return (
-    <article className="rounded-xl border border-exeer-border bg-slate-50/80 px-4 py-3 dark:border-[var(--border-color)] dark:bg-[var(--bg-main)]">
+    <div className={HOME_LIST_ITEM}>
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-2.5">
           <span
@@ -22,25 +30,21 @@ function OperationRow({ log }) {
             )}
           </span>
           <div className="min-w-0">
-            <p className="text-sm font-bold text-exeer-primary dark:text-[var(--text-primary)]">
-              {log.punchTypeLabel}
-            </p>
-            <p className="mt-0.5 text-xs text-exeer-muted dark:text-[var(--text-secondary)]">
-              {log.punchedAtLabel}
-            </p>
+            <p className={TYPE_ITEM}>{log.punchTypeLabel}</p>
+            <p className={`${TYPE_META} mt-0.5`}>{log.punchedAtLabel}</p>
           </div>
         </div>
-        <span className="shrink-0 rounded-full bg-white px-2 py-0.5 text-[10px] font-medium text-exeer-muted ring-1 ring-slate-200 dark:bg-[var(--bg-surface)] dark:text-[var(--text-secondary)] dark:ring-[var(--border-color)]">
+        <span className="shrink-0 rounded-full border border-[#F0EEEA] bg-white px-2 py-0.5 text-[10px] font-medium text-exeer-muted dark:border-[var(--border-color)] dark:bg-[var(--bg-main)] dark:text-[var(--text-secondary)]">
           {log.branchName}
         </span>
       </div>
       {log.gpsCoordinates && log.gpsCoordinates !== "—" ? (
-        <p className="mt-2 flex items-center gap-1.5 text-[11px] text-exeer-muted dark:text-[var(--text-secondary)]">
+        <p className={`${TYPE_META} mt-2 flex items-center gap-1.5`}>
           <MapPin className="h-3 w-3 shrink-0" aria-hidden />
           {log.gpsCoordinates}
         </p>
       ) : null}
-    </article>
+    </div>
   );
 }
 
@@ -51,29 +55,21 @@ export default function AttendanceOperationsSection({
   const { t } = useTranslation();
 
   return (
-    <section
-      className="rounded-2xl border border-exeer-border bg-white shadow-sm dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)]"
-      aria-labelledby="attendance-operations-heading"
-    >
-      <header className="border-b border-exeer-border px-5 py-4 dark:border-[var(--border-color)]">
-        <h2
-          id="attendance-operations-heading"
-          className="text-sm font-bold text-exeer-primary dark:text-[var(--text-primary)]"
-        >
+    <section className={MOBILE_CARD} aria-labelledby="attendance-operations-heading">
+      <header className="border-b border-[#F0EEEA] pb-4 dark:border-[rgba(255,255,255,0.06)]">
+        <h2 id="attendance-operations-heading" className={TYPE_SECTION}>
           {t("pages.mobile.attendance.operationsTitle")}
         </h2>
-        <p className="mt-0.5 text-xs text-exeer-muted dark:text-[var(--text-secondary)]">
+        <p className={`${TYPE_META} mt-0.5`}>
           {t("pages.mobile.attendance.operationsSubtitle", { count: logs.length })}
         </p>
       </header>
 
-      <div className="space-y-2.5 px-4 py-4">
+      <div className={`${HOME_LIST_DIVIDE} pt-2`}>
         {isLoading ? (
-          <p className="py-6 text-center text-sm text-exeer-muted">
-            {t("common.loading")}
-          </p>
+          <p className={`${TYPE_META} py-6 text-center`}>{t("common.loading")}</p>
         ) : logs.length === 0 ? (
-          <p className="py-6 text-center text-sm text-exeer-muted dark:text-[var(--text-secondary)]">
+          <p className={`${TYPE_META} py-6 text-center`}>
             {t("pages.mobile.attendance.operationsEmpty")}
           </p>
         ) : (

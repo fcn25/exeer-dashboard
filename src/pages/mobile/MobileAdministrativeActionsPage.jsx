@@ -1,9 +1,17 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { ArrowRight, Plus, X } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import SuccessToast from "../../components/ui/SuccessToast.jsx";
 import CreateAdministrativeActionForm from "../../components/administrative/CreateAdministrativeActionForm.jsx";
 import AdministrativeActionCard from "../../components/administrative/AdministrativeActionCard.jsx";
+import {
+  HOME_BTN_PRIMARY,
+  HOME_LIST_DIVIDE,
+  HOME_LIST_ITEM,
+  MOBILE_CARD,
+} from "../../components/home/homeStyles.js";
+import MobilePageShell, {
+  MobileStandaloneHeader,
+} from "../../components/mobile/MobilePageShell.jsx";
 import {
   createAdministrativeAction,
   fetchAdministrativeActionsMasterLog,
@@ -11,7 +19,6 @@ import {
 import { listEmployees } from "../../services/employeesService.js";
 import { ensureArray } from "../../utils/ensureArray.js";
 import MobileLoadingState from "../../components/mobile/MobileLoadingState.jsx";
-import LocaleShell from "../../components/ui/LocaleShell.jsx";
 
 export default function MobileAdministrativeActionsPage() {
   const [employees, setEmployees] = useState([]);
@@ -58,22 +65,11 @@ export default function MobileAdministrativeActionsPage() {
   };
 
   return (
-    <LocaleShell className="mx-auto min-h-screen w-full max-w-[480px] bg-white font-sans text-slate-900 dark:bg-[var(--bg-main)] dark:text-[var(--text-primary)]">
-      <header className="native-mobile-app-bar sticky top-0 z-40 border-b border-gray-200 bg-white/95 backdrop-blur-sm dark:border-[var(--border-color)] dark:bg-[var(--bg-main)]/95">
-        <div className="flex items-center gap-3 px-4 py-3">
-          <Link
-            to="/mobile"
-            className="flex h-9 w-9 items-center justify-center rounded-md border border-gray-200 text-slate-600"
-            aria-label="رجوع"
-          >
-            <ArrowRight className="h-5 w-5" aria-hidden />
-          </Link>
-          <div className="min-w-0 flex-1">
-            <h1 className="truncate text-lg font-bold">الإجراءات الإدارية</h1>
-            <p className="text-xs text-slate-500">إصدار ومتابعة السجل</p>
-          </div>
-        </div>
-      </header>
+    <MobilePageShell>
+      <MobileStandaloneHeader
+        title="الإجراءات الإدارية"
+        subtitle="إصدار ومتابعة السجل"
+      />
 
       <main className="space-y-4 px-4 py-5 pb-24">
         {error ? (
@@ -85,20 +81,24 @@ export default function MobileAdministrativeActionsPage() {
         {isLoading ? (
           <MobileLoadingState />
         ) : rows.length === 0 ? (
-          <p className="rounded-md border border-gray-200 bg-gray-50 px-4 py-10 text-center text-sm text-slate-500">
+          <div className={`${MOBILE_CARD} px-4 py-10 text-center text-sm text-exeer-muted`}>
             لا توجد إجراءات مسجّلة
-          </p>
+          </div>
         ) : (
-          <div className="space-y-3">
-            {rows.map((action) =>
-              action?.id != null ? (
-                <AdministrativeActionCard
-                  key={action.id}
-                  action={action}
-                  showEmployee
-                />
-              ) : null,
-            )}
+          <div className={MOBILE_CARD}>
+            <div className={HOME_LIST_DIVIDE}>
+              {rows.map((action) =>
+                action?.id != null ? (
+                  <div key={action.id} className={HOME_LIST_ITEM}>
+                    <AdministrativeActionCard
+                      action={action}
+                      showEmployee
+                      embedded
+                    />
+                  </div>
+                ) : null,
+              )}
+            </div>
           </div>
         )}
       </main>
@@ -106,7 +106,7 @@ export default function MobileAdministrativeActionsPage() {
       <button
         type="button"
         onClick={() => setIsFormOpen(true)}
-        className="fixed bottom-6 end-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-slate-900 text-white shadow-none"
+        className={`${HOME_BTN_PRIMARY} fixed bottom-6 end-6 z-50 flex h-14 w-14 items-center justify-center rounded-full`}
         aria-label="إصدار إجراء"
       >
         <Plus className="h-6 w-6" aria-hidden />
@@ -144,6 +144,6 @@ export default function MobileAdministrativeActionsPage() {
         message={successToast}
         onDismiss={() => setSuccessToast("")}
       />
-    </LocaleShell>
+    </MobilePageShell>
   );
 }

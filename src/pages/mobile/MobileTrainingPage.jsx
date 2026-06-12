@@ -1,9 +1,19 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { ArrowRight, GraduationCap, Loader2 } from "lucide-react";
+import { GraduationCap, Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import LocaleShell from "../../components/ui/LocaleShell.jsx";
 import SuccessToast from "../../components/ui/SuccessToast.jsx";
+import {
+  HOME_LIST_DIVIDE,
+  HOME_LIST_ITEM,
+  MOBILE_CARD,
+  MOBILE_TAB_ACTIVE,
+  MOBILE_TAB_INACTIVE,
+  TYPE_ITEM,
+  TYPE_META,
+} from "../../components/home/homeStyles.js";
+import MobilePageShell, {
+  MobileStandaloneHeader,
+} from "../../components/mobile/MobilePageShell.jsx";
 import { formatLocaleDate } from "../../i18n/formatLocale.js";
 import { listMyTeamEmployees } from "../../services/myTeamService.js";
 import {
@@ -122,29 +132,13 @@ export default function MobileTrainingPage() {
   };
 
   return (
-    <LocaleShell className="mx-auto min-h-screen w-full max-w-[480px] overflow-x-hidden bg-white font-sans text-slate-900 dark:bg-[var(--bg-main)] dark:text-[var(--text-primary)]">
-      <header className="native-mobile-app-bar sticky top-0 z-40 border-b border-gray-200 bg-white/95 backdrop-blur-sm dark:border-[var(--border-color)] dark:bg-[var(--bg-main)]/95">
-        <div className="flex items-center gap-3 px-4 py-3">
-          <Link
-            to="/mobile"
-            className="flex h-11 w-11 items-center justify-center rounded-md border border-gray-200 text-slate-600 dark:border-[var(--border-color)] dark:text-[var(--text-primary)]"
-            aria-label={t("common.back")}
-          >
-            <ArrowRight className="h-5 w-5" aria-hidden />
-          </Link>
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <GraduationCap className="h-4 w-4 shrink-0" aria-hidden />
-              <h1 className="truncate text-lg font-bold">
-                {t("pages.mobile.training.title")}
-              </h1>
-            </div>
-            <p className="text-xs text-slate-500 dark:text-[var(--text-secondary)]">
-              {t("pages.mobile.training.subtitle")}
-            </p>
-          </div>
-        </div>
-
+    <MobilePageShell>
+      <MobileStandaloneHeader
+        title={t("pages.mobile.training.title")}
+        subtitle={t("pages.mobile.training.subtitle")}
+        icon={GraduationCap}
+        backLabel={t("common.back")}
+      >
         <nav
           className="flex gap-1 overflow-x-auto overscroll-x-contain px-3 pb-3"
           aria-label={t("pages.mobile.training.tabsLabel")}
@@ -154,17 +148,15 @@ export default function MobileTrainingPage() {
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id)}
-              className={`min-h-[40px] shrink-0 rounded-md px-3 text-xs font-semibold transition-colors ${
-                activeTab === tab.id
-                  ? "bg-slate-900 text-white dark:bg-[var(--text-primary)] dark:text-[var(--bg-main)]"
-                  : "border border-gray-200 bg-white text-slate-700 dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)] dark:text-[var(--text-primary)]"
+              className={`min-h-[40px] shrink-0 text-xs font-semibold transition-colors ${
+                activeTab === tab.id ? MOBILE_TAB_ACTIVE : MOBILE_TAB_INACTIVE
               }`}
             >
               {t(tab.labelKey)}
             </button>
           ))}
         </nav>
-      </header>
+      </MobileStandaloneHeader>
 
       <main className="space-y-4 px-4 py-5 pb-8">
         {loadError ? (
@@ -239,51 +231,48 @@ export default function MobileTrainingPage() {
         {!isLoading && activeTab === "courses" ? (
           <section className="space-y-3">
             {courses.length === 0 ? (
-              <p className="rounded-2xl border border-dashed border-exeer-border px-4 py-10 text-center text-sm text-exeer-muted dark:border-[var(--border-color)]">
+              <div className={`${MOBILE_CARD} px-4 py-10 text-center text-sm text-exeer-muted`}>
                 {t("pages.mobile.training.coursesEmpty")}
-              </p>
+              </div>
             ) : (
-              <ul className="space-y-3">
-                {courses.map((row) => {
-                  const employeeName =
-                    row.employees?.full_name ?? t("pages.mobile.training.unknownEmployee");
-                  const statusLabel =
-                    REQUEST_STATUS_LABELS[row.status] ?? row.status ?? "—";
+              <div className={MOBILE_CARD}>
+                <ul className={HOME_LIST_DIVIDE}>
+                  {courses.map((row) => {
+                    const employeeName =
+                      row.employees?.full_name ?? t("pages.mobile.training.unknownEmployee");
+                    const statusLabel =
+                      REQUEST_STATUS_LABELS[row.status] ?? row.status ?? "—";
 
-                  return (
-                    <li
-                      key={row.id}
-                      className="rounded-2xl border border-exeer-border bg-md-surface p-4 dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)]"
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <p className="text-sm font-semibold text-exeer-primary dark:text-[var(--text-primary)]">
-                          {employeeName}
+                    return (
+                      <li key={row.id} className={HOME_LIST_ITEM}>
+                        <div className="flex items-start justify-between gap-2">
+                          <p className={`${TYPE_ITEM} truncate`}>{employeeName}</p>
+                          <span className="shrink-0 rounded-full bg-[#F7F6F3] px-2 py-0.5 text-[10px] font-medium text-exeer-muted dark:bg-[var(--bg-surface-hover)] dark:text-[var(--text-secondary)]">
+                            {statusLabel}
+                          </span>
+                        </div>
+                        <p className={`${TYPE_META} mt-1`}>
+                          {formatLocaleDate(row.created_at, {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          })}
                         </p>
-                        <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600 dark:bg-[var(--bg-surface-hover)] dark:text-[var(--text-secondary)]">
-                          {statusLabel}
-                        </span>
-                      </div>
-                      <p className="mt-1 text-[11px] text-exeer-muted dark:text-[var(--text-secondary)]">
-                        {formatLocaleDate(row.created_at, {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                        })}
-                      </p>
-                      <p className="mt-2 whitespace-pre-wrap text-xs leading-relaxed text-exeer-muted dark:text-[var(--text-secondary)]">
-                        {stripTrainingRequestMarker(row.details)}
-                      </p>
-                    </li>
-                  );
-                })}
-              </ul>
+                        <p className={`${TYPE_META} mt-2 whitespace-pre-wrap leading-relaxed`}>
+                          {stripTrainingRequestMarker(row.details)}
+                        </p>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
             )}
           </section>
         ) : null}
 
         {!isLoading && activeTab === "skills" ? (
           <div className="space-y-5">
-            <form onSubmit={handleSkillSubmit} className="space-y-4 rounded-2xl border border-exeer-border bg-md-surface-dim p-4 dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)]">
+            <form onSubmit={handleSkillSubmit} className={`${MOBILE_CARD} space-y-4`}>
               <h2 className="text-sm font-bold text-exeer-primary dark:text-[var(--text-primary)]">
                 {t("pages.mobile.training.addSkillTitle")}
               </h2>
@@ -361,38 +350,35 @@ export default function MobileTrainingPage() {
                 {t("pages.mobile.training.skillsListTitle")}
               </h2>
               {skills.length === 0 ? (
-                <p className="rounded-2xl border border-dashed border-exeer-border px-4 py-8 text-center text-sm text-exeer-muted dark:border-[var(--border-color)]">
+                <div className={`${MOBILE_CARD} px-4 py-8 text-center text-sm text-exeer-muted`}>
                   {t("pages.mobile.training.skillsEmpty")}
-                </p>
+                </div>
               ) : (
-                <ul className="space-y-2">
-                  {skills.map((entry) => (
-                    <li
-                      key={entry.id}
-                      className="rounded-2xl border border-exeer-border bg-md-surface p-4 dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)]"
-                    >
-                      <p className="text-sm font-semibold text-exeer-primary dark:text-[var(--text-primary)]">
-                        {entry.employeeName}
-                      </p>
-                      {entry.skill ? (
-                        <p className="mt-1 text-xs text-exeer-muted dark:text-[var(--text-secondary)]">
-                          <span className="font-medium">
-                            {t("pages.mobile.training.skillLabel")}:
-                          </span>{" "}
-                          {entry.skill}
-                        </p>
-                      ) : null}
-                      {entry.talent ? (
-                        <p className="mt-1 text-xs leading-relaxed text-exeer-muted dark:text-[var(--text-secondary)]">
-                          <span className="font-medium">
-                            {t("pages.mobile.training.talentLabel")}:
-                          </span>{" "}
-                          {entry.talent}
-                        </p>
-                      ) : null}
-                    </li>
-                  ))}
-                </ul>
+                <div className={MOBILE_CARD}>
+                  <ul className={HOME_LIST_DIVIDE}>
+                    {skills.map((entry) => (
+                      <li key={entry.id} className={HOME_LIST_ITEM}>
+                        <p className={`${TYPE_ITEM} truncate`}>{entry.employeeName}</p>
+                        {entry.skill ? (
+                          <p className={`${TYPE_META} mt-1`}>
+                            <span className="font-medium">
+                              {t("pages.mobile.training.skillLabel")}:
+                            </span>{" "}
+                            {entry.skill}
+                          </p>
+                        ) : null}
+                        {entry.talent ? (
+                          <p className={`${TYPE_META} mt-1 leading-relaxed`}>
+                            <span className="font-medium">
+                              {t("pages.mobile.training.talentLabel")}:
+                            </span>{" "}
+                            {entry.talent}
+                          </p>
+                        ) : null}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               )}
             </section>
           </div>
@@ -403,6 +389,6 @@ export default function MobileTrainingPage() {
         message={successToast}
         onDismiss={() => setSuccessToast("")}
       />
-    </LocaleShell>
+    </MobilePageShell>
   );
 }

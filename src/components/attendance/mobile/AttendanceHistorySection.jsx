@@ -1,19 +1,23 @@
 import { useState } from "react";
 import { ChevronDown, LogIn, LogOut } from "lucide-react";
+import {
+  HOME_LIST_DIVIDE,
+  HOME_LIST_ITEM,
+  MOBILE_CARD,
+  TYPE_ITEM,
+  TYPE_META,
+  TYPE_SECTION,
+} from "../../home/homeStyles.js";
 
 function HistoryDayRow({ record, isExpanded }) {
   const isLeave = record.status === "leave";
 
   return (
-    <article
-      className={`rounded-xl border border-exeer-border bg-slate-50/80 px-4 py-3.5 transition-colors dark:bg-slate-900/40 ${
-        isExpanded ? "shadow-sm" : ""
-      }`}
-    >
+    <div className={HOME_LIST_ITEM}>
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-sm font-bold text-exeer-primary">{record.dayLabel}</p>
-          <p className="text-xs text-exeer-muted">{record.dateLabel}</p>
+          <p className={TYPE_ITEM}>{record.dayLabel}</p>
+          <p className={TYPE_META}>{record.dateLabel}</p>
         </div>
         <div className="text-end">
           {isLeave ? (
@@ -22,7 +26,7 @@ function HistoryDayRow({ record, isExpanded }) {
             </span>
           ) : (
             <>
-              <p className="text-sm font-bold text-exeer-primary">{record.workingHours}</p>
+              <p className={`${TYPE_ITEM} tabular-nums`}>{record.workingHours}</p>
               {record.delayMinutes > 0 ? (
                 <p className="text-[11px] text-amber-700 dark:text-amber-400">
                   تأخير {record.delayMinutes} د
@@ -34,18 +38,18 @@ function HistoryDayRow({ record, isExpanded }) {
       </div>
 
       {isExpanded && !isLeave ? (
-        <div className="mt-3 flex flex-wrap gap-2 border-t border-exeer-border pt-3">
-          <span className="inline-flex items-center gap-1.5 rounded-lg bg-white px-2.5 py-1.5 text-xs font-medium text-exeer-primary shadow-sm ring-1 ring-slate-200/70 dark:bg-slate-800 dark:ring-slate-700">
+        <div className="mt-3 flex flex-wrap gap-2 border-t border-[#F0EEEA] pt-3 dark:border-[rgba(255,255,255,0.06)]">
+          <span className="inline-flex items-center gap-1.5 rounded-lg border border-[#F0EEEA] bg-white px-2.5 py-1.5 text-xs font-medium text-exeer-primary dark:border-[var(--border-color)] dark:bg-[var(--bg-main)]">
             <LogIn className="h-3.5 w-3.5 text-emerald-600" aria-hidden />
             دخول {record.checkIn}
           </span>
-          <span className="inline-flex items-center gap-1.5 rounded-lg bg-white px-2.5 py-1.5 text-xs font-medium text-exeer-primary shadow-sm ring-1 ring-slate-200/70 dark:bg-slate-800 dark:ring-slate-700">
+          <span className="inline-flex items-center gap-1.5 rounded-lg border border-[#F0EEEA] bg-white px-2.5 py-1.5 text-xs font-medium text-exeer-primary dark:border-[var(--border-color)] dark:bg-[var(--bg-main)]">
             <LogOut className="h-3.5 w-3.5 text-rose-600" aria-hidden />
             خروج {record.checkOut}
           </span>
         </div>
       ) : null}
-    </article>
+    </div>
   );
 }
 
@@ -58,16 +62,16 @@ export default function AttendanceHistorySection({ records = [], isLoading = fal
   };
 
   return (
-    <section className="rounded-2xl border border-exeer-border bg-white shadow-sm dark:bg-md-surface">
+    <section className={MOBILE_CARD}>
       <button
         type="button"
         onClick={() => setIsOpen((open) => !open)}
-        className="flex w-full items-center justify-between gap-3 px-5 py-4 text-start"
+        className="flex w-full items-center justify-between gap-3 text-start"
         aria-expanded={isOpen}
       >
         <div>
-          <h2 className="text-sm font-bold text-exeer-primary">سجل آخر شهر</h2>
-          <p className="mt-0.5 text-xs text-exeer-muted">
+          <h2 className={TYPE_SECTION}>سجل آخر شهر</h2>
+          <p className={`${TYPE_META} mt-0.5`}>
             {records.length} يوم مسجّل
           </p>
         </div>
@@ -80,11 +84,11 @@ export default function AttendanceHistorySection({ records = [], isLoading = fal
       </button>
 
       {isOpen ? (
-        <div className="space-y-2.5 border-t border-exeer-border px-4 py-4">
+        <div className={`${HOME_LIST_DIVIDE} mt-4 border-t border-[#F0EEEA] pt-2 dark:border-[rgba(255,255,255,0.06)]`}>
           {isLoading ? (
-            <p className="py-6 text-center text-sm text-exeer-muted">جاري التحميل...</p>
+            <p className={`${TYPE_META} py-6 text-center`}>جاري التحميل...</p>
           ) : records.length === 0 ? (
-            <p className="py-6 text-center text-sm text-exeer-muted">
+            <p className={`${TYPE_META} py-6 text-center`}>
               لا توجد سجلات حضور سابقة.
             </p>
           ) : null}

@@ -4,6 +4,7 @@ import { useAuth } from "../../../context/AuthContext.jsx";
 import { useCurrentEmployee } from "../../../hooks/useCurrentEmployee.js";
 import { countUnreadNotifications } from "../../../services/notificationsService.js";
 import { getTimeBasedGreeting } from "../../../utils/portalGreeting.js";
+import { MOBILE_APP_BAR } from "../../home/homeStyles.js";
 import NotificationsDrawer from "../NotificationsDrawer.jsx";
 
 function HeaderIconButton({ label, onClick, children, badge }) {
@@ -58,13 +59,9 @@ export default function CompactMobileAppBar({
 
   const isManager = variant === "manager";
 
-  const headerClassName = isManager
-    ? "sticky top-0 z-40 border-b border-exeer-border bg-md-surface shadow-[0_1px_0_rgba(0,0,0,0.04)] dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)] dark:shadow-none"
-    : "native-mobile-app-bar sticky top-0 z-40 border-b border-exeer-border bg-md-surface/95 shadow-[0_1px_0_rgba(0,0,0,0.04)] backdrop-blur-md dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)]/95 dark:shadow-none";
-
   return (
     <>
-      <header className={headerClassName}>
+      <header className={MOBILE_APP_BAR}>
         <div
           className={`mx-auto flex max-w-[480px] px-4 py-3 ${
             isManager

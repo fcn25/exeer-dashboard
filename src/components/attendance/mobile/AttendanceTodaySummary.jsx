@@ -1,11 +1,19 @@
 import { Clock, Timer, AlertCircle } from "lucide-react";
 import { formatWorkingDuration } from "../../../utils/attendance/summary.js";
+import {
+  HOME_LIST_DIVIDE,
+  HOME_LIST_ITEM,
+  ICON_CHIP,
+  MOBILE_CARD,
+  TYPE_META,
+  TYPE_SECTION,
+} from "../../home/homeStyles.js";
 
 function SummaryRow({ icon: Icon, label, value, accent }) {
   return (
-    <div className="flex items-center justify-between gap-3 py-2.5">
+    <div className={`${HOME_LIST_ITEM} flex items-center justify-between gap-3`}>
       <div className="flex items-center gap-2.5 text-sm text-exeer-muted">
-        <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 text-exeer-primary dark:bg-slate-800">
+        <span className={`${ICON_CHIP} h-8 w-8`}>
           <Icon className="h-4 w-4 stroke-[1.75]" aria-hidden />
         </span>
         {label}
@@ -19,11 +27,11 @@ export default function AttendanceTodaySummary({ data }) {
   const { lastPunch, workingMinutes, delayMinutes } = data;
 
   return (
-    <section className="rounded-2xl border border-exeer-border bg-white p-5 shadow-sm dark:bg-md-surface">
-      <h2 className="mb-1 text-sm font-bold text-exeer-primary">ملخص اليوم</h2>
-      <p className="mb-4 text-xs text-exeer-muted">آخر تحديث من سجل البصمة</p>
+    <section className={MOBILE_CARD}>
+      <h2 className={TYPE_SECTION}>ملخص اليوم</h2>
+      <p className={`${TYPE_META} mb-4 mt-1`}>آخر تحديث من سجل البصمة</p>
 
-      <div className="divide-y divide-exeer-border">
+      <div className={HOME_LIST_DIVIDE}>
         <SummaryRow
           icon={Clock}
           label="آخر تسجيل"

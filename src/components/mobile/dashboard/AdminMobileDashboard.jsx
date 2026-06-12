@@ -13,6 +13,7 @@ import NotificationsDrawer from "../NotificationsDrawer.jsx";
 import MobileSettingsDrawer from "../MobileSettingsDrawer.jsx";
 import SuccessToast from "../../ui/SuccessToast.jsx";
 import ErrorToast from "../../ui/ErrorToast.jsx";
+import { MOBILE_CARD, MOBILE_SHELL } from "../../home/homeStyles.js";
 import CompactMobileAppBar from "./CompactMobileAppBar.jsx";
 import MobileManagerBottomNav from "./MobileManagerBottomNav.jsx";
 import MobileManagerHomeContent from "./MobileManagerHomeContent.jsx";
@@ -106,7 +107,7 @@ export default function AdminMobileDashboard({
     <div
       dir={pageDir}
       lang={pageLang}
-      className="native-mobile-shell native-mobile-shell--bottom-nav mx-auto min-h-screen w-full max-w-[480px] bg-md-surface font-sans text-exeer-primary dark:bg-[var(--bg-surface)] dark:text-[var(--text-primary)]"
+      className={`${MOBILE_SHELL} native-mobile-shell--bottom-nav`}
       style={{ paddingTop: "env(safe-area-inset-top)" }}
     >
       <CompactMobileAppBar
@@ -132,7 +133,7 @@ export default function AdminMobileDashboard({
         ) : null}
 
         {activeNav === "calendar" ? (
-          <div className="-mx-4 overflow-hidden rounded-2xl border border-exeer-border dark:border-[var(--border-color)]">
+          <div className={`-mx-4 overflow-hidden ${MOBILE_CARD} p-0`}>
             <SystemCalendarPanel embedded onClose={() => setActiveNav("home")} />
           </div>
         ) : null}

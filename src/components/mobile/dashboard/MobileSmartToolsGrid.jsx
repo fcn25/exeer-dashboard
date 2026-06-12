@@ -1,5 +1,6 @@
 import { getMobileVisibleSmartTools } from "../../../constants/smartTools.js";
 import { useSmartToolsModals } from "../../../hooks/useSmartToolsModals.js";
+import { ICON_CHIP, MOBILE_CARD, TYPE_SECTION } from "../../home/homeStyles.js";
 import SmartToolsModals from "../../smart-tools/SmartToolsModals.jsx";
 
 function MobileSmartToolCard({ label, icon: Icon, onClick, disabled = false }) {
@@ -8,12 +9,12 @@ function MobileSmartToolCard({ label, icon: Icon, onClick, disabled = false }) {
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="flex min-h-[108px] flex-col items-center justify-center gap-2.5 rounded-2xl border border-gray-100 bg-white px-3 py-4 text-center shadow-sm transition-colors active:scale-[0.98] active:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+      className={`${MOBILE_CARD} flex min-h-[108px] flex-col items-center justify-center gap-2.5 px-3 py-4 text-center transition-colors active:bg-[#F7F6F3] disabled:cursor-not-allowed disabled:opacity-50 dark:active:bg-[var(--bg-surface-hover)]`}
     >
-      <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-gray-100 bg-slate-50 text-exeer-primary">
+      <span className={ICON_CHIP}>
         <Icon className="h-5 w-5 stroke-[1.75]" aria-hidden />
       </span>
-      <span className="text-xs font-semibold leading-snug text-exeer-primary">
+      <span className="text-xs font-semibold leading-snug text-exeer-primary dark:text-[var(--text-primary)]">
         {label}
       </span>
     </button>
@@ -31,7 +32,7 @@ export default function MobileSmartToolsGrid() {
       <section className="space-y-3" aria-labelledby="mobile-achievements-record-heading">
         <h2
           id="mobile-achievements-record-heading"
-          className="text-sm font-bold text-exeer-primary"
+          className={TYPE_SECTION}
         >
           سجل الإنجازات
         </h2>

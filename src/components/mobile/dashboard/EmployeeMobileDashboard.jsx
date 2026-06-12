@@ -8,6 +8,7 @@ import SuccessToast from "../../ui/SuccessToast.jsx";
 import ErrorToast from "../../ui/ErrorToast.jsx";
 import { performAttendancePunch } from "../../../services/attendancePunchService.js";
 import { submitEmployeeTaskCompletion } from "../../../services/tasksService.js";
+import { MOBILE_SHELL } from "../../home/homeStyles.js";
 import CompactMobileAppBar from "./CompactMobileAppBar.jsx";
 import AttendanceHorizontalWidget from "./AttendanceHorizontalWidget.jsx";
 import BentoStatGrid from "./BentoStatGrid.jsx";
@@ -129,7 +130,7 @@ export default function EmployeeMobileDashboard({
     <div
       dir={pageDir}
       lang={pageLang}
-      className="native-mobile-shell native-mobile-shell--tabbed mx-auto min-h-screen w-full max-w-[480px] bg-md-surface-dim font-sans text-exeer-primary dark:bg-[var(--bg-main)] dark:text-[var(--text-primary)]"
+      className={`${MOBILE_SHELL} native-mobile-shell--tabbed`}
     >
       <CompactMobileAppBar
         employeeName={displayName}

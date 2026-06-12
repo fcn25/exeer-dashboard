@@ -11,6 +11,7 @@ import {
   canManageAdministrativeActions,
   isOwner,
 } from "../../../utils/rbac.js";
+import { ICON_CHIP, MOBILE_CARD, TYPE_SECTION } from "../../home/homeStyles.js";
 import MobilePromotionRequestModal from "../MobilePromotionRequestModal.jsx";
 import MobileSmartToolsGrid from "./MobileSmartToolsGrid.jsx";
 import SuccessToast from "../../ui/SuccessToast.jsx";
@@ -47,13 +48,12 @@ const QUICK_LINKS = [
 ];
 
 function QuickLinkCard({ icon: Icon, label, onClick, to }) {
-  const className =
-    "flex min-h-[88px] w-full flex-col items-center justify-center gap-2 rounded-2xl border border-exeer-border bg-md-surface px-3 py-3 text-center transition-colors active:bg-exeer-hover dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)] dark:active:bg-[var(--bg-surface-hover)]";
+  const className = `${MOBILE_CARD} flex min-h-[88px] w-full flex-col items-center justify-center gap-2 px-3 py-3 text-center transition-colors active:bg-[#F7F6F3] dark:active:bg-[var(--bg-surface-hover)]`;
 
   if (to) {
     return (
       <Link to={to} className={className}>
-        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-md-primary-container text-exeer-primary dark:bg-[var(--bg-surface-hover)] dark:text-[var(--text-primary)]">
+        <span className={ICON_CHIP}>
           <Icon className="h-5 w-5 stroke-[1.75]" aria-hidden />
         </span>
         <span className="text-[11px] font-semibold leading-snug text-exeer-primary dark:text-[var(--text-primary)]">
@@ -65,7 +65,7 @@ function QuickLinkCard({ icon: Icon, label, onClick, to }) {
 
   return (
     <button type="button" onClick={onClick} className={className}>
-      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-md-primary-container text-exeer-primary dark:bg-[var(--bg-surface-hover)] dark:text-[var(--text-primary)]">
+      <span className={ICON_CHIP}>
         <Icon className="h-5 w-5 stroke-[1.75]" aria-hidden />
       </span>
       <span className="text-[11px] font-semibold leading-snug text-exeer-primary dark:text-[var(--text-primary)]">
@@ -86,7 +86,7 @@ export default function MobileManagerQuickTools() {
       <section className="space-y-4" aria-labelledby="mobile-quick-tools-heading">
         <h2
           id="mobile-quick-tools-heading"
-          className="text-sm font-bold text-exeer-primary dark:text-[var(--text-primary)]"
+          className={TYPE_SECTION}
         >
           {t("pages.home.quickTools")}
         </h2>

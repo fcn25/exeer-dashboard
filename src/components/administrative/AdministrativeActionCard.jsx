@@ -17,6 +17,7 @@ function formatDate(value) {
 export default function AdministrativeActionCard({
   action,
   showEmployee = false,
+  embedded = false,
 }) {
   if (!action || typeof action !== "object") return null;
 
@@ -26,14 +27,26 @@ export default function AdministrativeActionCard({
     "—";
 
   return (
-    <article className="rounded-md border border-gray-200 bg-white p-4 shadow-none">
+    <article
+      className={
+        embedded
+          ? ""
+          : "rounded-md border border-gray-200 bg-white p-4 shadow-none dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)]"
+      }
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1 space-y-1">
-          <p className="text-sm font-bold text-slate-900">{label}</p>
+          <p className="text-sm font-bold text-exeer-primary dark:text-[var(--text-primary)]">
+            {label}
+          </p>
           {showEmployee ? (
-            <p className="text-xs text-slate-500">{action?.employeeName ?? "—"}</p>
+            <p className="text-xs text-exeer-muted dark:text-[var(--text-secondary)]">
+              {action?.employeeName ?? "—"}
+            </p>
           ) : null}
-          <p className="text-xs text-slate-500">{formatDate(action?.actionDate)}</p>
+          <p className="text-xs text-exeer-muted dark:text-[var(--text-secondary)]">
+            {formatDate(action?.actionDate)}
+          </p>
         </div>
         {action?.actionType === SALARY_DEDUCTION_ACTION_TYPE &&
         action?.penaltyAmount != null ? (

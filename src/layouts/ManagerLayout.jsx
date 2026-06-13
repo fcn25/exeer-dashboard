@@ -4,17 +4,19 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Smartphone,
+  UserPlus,
 } from "lucide-react";
 import ErrorToast from "../components/ui/ErrorToast.jsx";
 import DashboardTopBar from "../components/layout/DashboardTopBar.jsx";
 import SystemCalendarPanel from "../components/calendar/SystemCalendarPanel.jsx";
 import QuickStickyNote from "../components/notes/QuickStickyNote.jsx";
+import AddEmployeeModalHost from "../components/employees/AddEmployeeModalHost.jsx";
 import { getMyQuickNote } from "../services/quickNotesService.js";
 import { signOut } from "../utils/mobileAuth.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import ExeerLogo from "../components/brand/ExeerLogo.jsx";
 import { useAppLocale } from "../i18n/useAppLocale.js";
-import { resolveSidebarNavItems } from "../constants/roleNav.js";
+import { resolveSidebarNavItems, roleHasNavKey } from "../constants/roleNav.js";
 import { isOwner } from "../utils/rbac.js";
 
 function SidebarLink({ to, label, icon: Icon, end, collapsed }) {
@@ -48,6 +50,8 @@ export default function ManagerLayout() {
   const [unauthorizedToast, setUnauthorizedToast] = useState("");
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isStickyNoteOpen, setIsStickyNoteOpen] = useState(false);
+  const [isAddEmployeeOpen, setIsAddEmployeeOpen] = useState(false);
+  const showAddEmployeeNav = roleHasNavKey(role, "employees");
 
   useEffect(() => {
     let cancelled = false;
@@ -141,16 +145,40 @@ export default function ManagerLayout() {
           className="flex flex-1 flex-col gap-0.5"
           aria-label={t("nav.mainNav")}
         >
-          {mainNavItems.map((item) => (
-            <SidebarLink
-              key={item.key}
-              to={item.to}
-              label={item.label}
-              icon={item.icon}
-              end={item.end}
-              collapsed={isSidebarCollapsed}
-            />
-          ))}
+          {mainNavItems.map((item) => {
+            if (item.key === "employees" && showAddEmployeeNav && !isSidebarCollapsed) {
+              return (
+                <div key={item.key} className="flex flex-col gap-0.5">
+                  <SidebarLink
+                    to={item.to}
+                    label={item.label}
+                    icon={item.icon}
+                    end={item.end}
+                    collapsed={isSidebarCollapsed}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setIsAddEmployeeOpen(true)}
+                    className="flex w-full items-center gap-3 rounded-md py-2 pe-3 ps-9 text-sm font-medium text-slate-500 transition-colors hover:bg-gray-50 hover:text-slate-900 dark:hover:bg-slate-800/60 dark:hover:text-slate-100"
+                  >
+                    <UserPlus className="h-[16px] w-[16px] shrink-0 stroke-[1.75]" aria-hidden />
+                    <span>إضافة موظف جديد</span>
+                  </button>
+                </div>
+              );
+            }
+
+            return (
+              <SidebarLink
+                key={item.key}
+                to={item.to}
+                label={item.label}
+                icon={item.icon}
+                end={item.end}
+                collapsed={isSidebarCollapsed}
+              />
+            );
+          })}
 
           {systemNavItems.length && !isSidebarCollapsed ? (
             <p className="mt-4 px-3 pb-1 text-[11px] font-semibold tracking-wide text-exeer-muted uppercase">
@@ -227,6 +255,11 @@ export default function ManagerLayout() {
       <ErrorToast
         message={unauthorizedToast}
         onDismiss={() => setUnauthorizedToast("")}
+      />
+
+      <AddEmployeeModalHost
+        isOpen={isAddEmployeeOpen}
+        onClose={() => setIsAddEmployeeOpen(false)}
       />
     </div>
   );

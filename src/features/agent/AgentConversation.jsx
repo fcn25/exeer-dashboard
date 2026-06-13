@@ -29,6 +29,8 @@ function resizeComposer(textarea) {
 export default function AgentConversation({
   role,
   onConfirmChange,
+  initialPrefill = "",
+  prefillKey = 0,
   className = "",
 }) {
   const normalizedRole = normalizeAppRole(role) ?? "Direct_Manager";
@@ -42,6 +44,16 @@ export default function AgentConversation({
     inputRef.current?.focus();
     resizeComposer(inputRef.current);
   }, []);
+
+  useEffect(() => {
+    setInput(initialPrefill ?? "");
+    requestAnimationFrame(() => {
+      resizeComposer(inputRef.current);
+      if (initialPrefill) {
+        inputRef.current?.focus();
+      }
+    });
+  }, [initialPrefill, prefillKey]);
 
   useEffect(() => {
     threadEndRef.current?.scrollIntoView({ behavior: "smooth" });

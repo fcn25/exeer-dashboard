@@ -19,15 +19,25 @@ function StatusBadge({ status }) {
   );
 }
 
-export default function CommandHistory({ onSelectItem, className = "" }) {
+export default function CommandHistory({
+  onSelectItem,
+  className = "",
+  variant = "sidebar",
+}) {
+  const isCompact = variant === "compact";
+
   return (
     <aside
-      className={`flex h-full min-h-0 flex-col border-s border-[#E2E8F0] bg-[#F8FAFC] ${className}`.trim()}
+      className={`flex h-full min-h-0 flex-col bg-[#F8FAFC] ${
+        isCompact ? "" : "border-s border-[#E2E8F0]"
+      } ${className}`.trim()}
       aria-label="سجل الأوامر السابقة"
     >
       <div className="flex items-center gap-2 border-b border-[#E2E8F0] px-4 py-3">
         <History className="h-4 w-4 shrink-0 text-[#64748B]" aria-hidden />
-        <h2 className="text-sm font-semibold text-[#0F172A]">سجل الأوامر السابقة</h2>
+        <h2 className="text-sm font-semibold text-[#0F172A]">
+          {isCompact ? "أوامر حديثة" : "سجل الأوامر السابقة"}
+        </h2>
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3">

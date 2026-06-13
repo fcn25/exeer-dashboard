@@ -13,3 +13,11 @@ export const AGENT_PILL =
 
 export const AGENT_INPUT =
   "w-full rounded-2xl border border-[#E2E8F0] bg-white px-4 py-3 text-sm font-normal text-[#0F172A] outline-none placeholder:text-[#64748B] focus:border-[#0F172A]";
+
+export const AGENT_PANEL_DESKTOP =
+  "inset-y-0 right-0 w-[50vw] min-w-[560px] border-s border-[#E2E8F0]";
+
+export const AGENT_PANEL_MOBILE = "inset-0";
+
+export const AGENT_ENTITY_ROW =
+  "flex w-full items-center justify-between gap-3 rounded-2xl border border-[#E2E8F0] bg-white px-3 py-2.5 text-start transition-colors hover:bg-[#F8FAFC]";

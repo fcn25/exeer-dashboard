@@ -53,9 +53,9 @@ import {
 } from "../i18n/formatLocale.js";
 import {
   AgentDrawer,
-  DashboardActionStack,
+  DashboardAgentActions,
+  QueryPanel,
 } from "../features/agent/index.js";
-import AddEmployeeModalHost from "../components/employees/AddEmployeeModalHost.jsx";
 import { roleHasNavKey } from "../constants/roleNav.js";
 import { useAuth } from "../context/AuthContext.jsx";
 
@@ -232,8 +232,16 @@ export default function HomePage() {
   const user = getUserDisplay();
   const headerDate = formatLocaleHeaderDate();
   const showDashboardActions = roleHasNavKey(role, "employees");
-  const [isAgentOpen, setIsAgentOpen] = useState(false);
-  const [isAddEmployeeOpen, setIsAddEmployeeOpen] = useState(false);
+  const [isExecutorOpen, setIsExecutorOpen] = useState(false);
+  const [isQueryOpen, setIsQueryOpen] = useState(false);
+  const [executorPrefill, setExecutorPrefill] = useState("");
+  const [executorPrefillKey, setExecutorPrefillKey] = useState(0);
+  const openExecutor = useCallback((prefill = "") => {
+    setIsQueryOpen(false);
+    setExecutorPrefill(String(prefill ?? ""));
+    setExecutorPrefillKey((key) => key + 1);
+    setIsExecutorOpen(true);
+  }, []);
   const { resolveToolAction, modalProps } = useSmartToolsModals();
   const showPayroll = canViewPayroll();
 
@@ -348,9 +356,9 @@ export default function HomePage() {
     <div className="-mx-6 -my-8 flex flex-col gap-8 bg-md-surface-dim px-6 py-8 dark:bg-[var(--bg-main)] md:-mx-8 md:px-8">
       {showDashboardActions ? (
         <div className="flex w-full justify-end rtl:justify-start">
-          <DashboardActionStack
-            onOpenAgent={() => setIsAgentOpen(true)}
-            onOpenAddEmployee={() => setIsAddEmployeeOpen(true)}
+          <DashboardAgentActions
+            onOpenExecutor={() => openExecutor("")}
+            onOpenQuery={() => setIsQueryOpen(true)}
           />
         </div>
       ) : null}
@@ -384,12 +392,17 @@ export default function HomePage() {
         </div>
       </header>
 
-      <AgentDrawer isOpen={isAgentOpen} onClose={() => setIsAgentOpen(false)} />
+      <AgentDrawer
+        isOpen={isExecutorOpen}
+        onClose={() => setIsExecutorOpen(false)}
+        initialPrefill={executorPrefill}
+        prefillKey={executorPrefillKey}
+      />
 
-      <AddEmployeeModalHost
-        isOpen={isAddEmployeeOpen}
-        onClose={() => setIsAddEmployeeOpen(false)}
-        onCreated={loadDashboard}
+      <QueryPanel
+        isOpen={isQueryOpen}
+        onClose={() => setIsQueryOpen(false)}
+        onOpenExecutor={openExecutor}
       />
 
       {successMessage ? (

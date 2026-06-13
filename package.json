@@ -13,7 +13,8 @@
     "cap:ios": "npx cap open ios",
     "preview": "npm run build && wrangler dev",
     "deploy": "npm run build && wrangler deploy",
-    "seed": "node scripts/seed.js"
+    "seed": "node scripts/seed.js",
+    "db:apply-agent-query": "node scripts/apply-agent-query-migration.mjs"
   },
   "dependencies": {
     "@aparajita/capacitor-biometric-auth": "^10.0.0",

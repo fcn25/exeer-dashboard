@@ -649,7 +649,7 @@ begin
     left join public.employees emp on emp.id = r.employee_id
     where r.company_id = public.get_my_company_id()
     order by r.created_at desc
-    limit 6
+    limit 5
   ) x;
 
   return jsonb_build_object('items', coalesce(v_items, '[]'::jsonb));
@@ -675,7 +675,7 @@ begin
     where e.company_id = public.get_my_company_id()
       and public.agent_is_active_status(e.employment_status)
     order by coalesce(e.hire_date, e.created_at::date) desc nulls last
-    limit 6
+    limit 5
   ) x;
 
   return jsonb_build_object('items', coalesce(v_items, '[]'::jsonb));
@@ -711,7 +711,7 @@ begin
         or e.contract_expiry is not null
       )
     order by e.updated_at desc
-    limit 6
+    limit 5
   ) x;
 
   return jsonb_build_object('items', coalesce(v_items, '[]'::jsonb));
@@ -742,7 +742,7 @@ begin
     left join public.employees emp on emp.id = a.employee_id
     where a.company_id = public.get_my_company_id()
     order by a.created_at desc
-    limit 6
+    limit 5
   ) x;
 
   if jsonb_array_length(coalesce(v_items, '[]'::jsonb)) = 0 then
@@ -759,7 +759,7 @@ begin
         and e.updated_at >= now() - interval '30 days'
         and e.updated_at > e.created_at + interval '1 day'
       order by e.updated_at desc
-      limit 6
+      limit 5
     ) x;
   end if;
 

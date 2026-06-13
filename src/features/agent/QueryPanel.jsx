@@ -3,8 +3,10 @@ import { Search, Sparkles, UserRound } from "lucide-react";
 import { submitAgentQueryFallback } from "../../services/agentQueryService.js";
 import {
   callQueryRpc,
+  callQueryRpcZero,
   fetchEmployeeSummary,
   fetchQueryDigest,
+  resolveRpcParams,
   searchEmployees,
 } from "../../services/queryPanelService.js";
 import AgentPanelShell from "./AgentPanelShell.jsx";
@@ -121,7 +123,11 @@ export default function QueryPanel({ isOpen, onClose, onOpenExecutor }) {
       setLoading(true);
       setError("");
       try {
-        const data = await callQueryRpc(rpc, params);
+        const resolved = resolveRpcParams(rpc, params);
+        const data =
+          resolved === null
+            ? await callQueryRpcZero(rpc)
+            : await callQueryRpc(rpc, resolved);
         commitResult(data, searchText);
       } catch (rpcError) {
         setError(rpcError instanceof Error ? rpcError.message : "تعذّر إكمال الاستعلام.");
@@ -155,7 +161,11 @@ export default function QueryPanel({ isOpen, onClose, onOpenExecutor }) {
 
     const intentMatch = matchQueryIntent(trimmed);
     if (intentMatch) {
-      await runRpcIntent(intentMatch.intent.rpc, intentMatch.params, trimmed);
+      await runRpcIntent(
+        intentMatch.intent.rpc,
+        intentMatch.params,
+        trimmed,
+      );
       return;
     }
 
@@ -190,13 +200,9 @@ export default function QueryPanel({ isOpen, onClose, onOpenExecutor }) {
   };
 
   const handleIntentSelect = async (intent) => {
-    const params = {};
-    if (intent.daysSlot) {
-      const match = matchQueryIntent(intent.label);
-      params.p_days = match?.params?.p_days ?? (intent.rpc === "q_contracts_expiring" ? 90 : 30);
-    }
+    const match = matchQueryIntent(intent.label);
     setQuery(intent.label);
-    await runRpcIntent(intent.rpc, params, intent.label);
+    await runRpcIntent(intent.rpc, match?.params ?? {}, intent.label);
   };
 
   const handleEmployeeSelect = async (employee) => {

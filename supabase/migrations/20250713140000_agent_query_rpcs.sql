@@ -626,7 +626,7 @@ begin
 end;
 $$;
 
--- ─── Digest RPCs ────────────────────────────────────────────────────────────
+-- ─── Digest RPCs (self-contained; no agent_* helper dependencies) ───────────
 
 create or replace function public.digest_recent_requests()
 returns jsonb
@@ -634,17 +634,35 @@ language plpgsql stable security invoker set search_path = public
 as $$
 declare v_items jsonb;
 begin
-  select coalesce(jsonb_agg(row_to_json(x)::jsonb order by x.created_at desc), '[]'::jsonb)
+  select coalesce(jsonb_agg(row_to_json(x)::jsonb), '[]'::jsonb)
   into v_items
   from (
     select
       r.id,
       coalesce(emp.full_name, 'موظف') as title,
-      case r.request_type when 'Leave' then 'طلب إجازة' when 'Financial' then 'طلب مالي' else 'طلب عام' end
-        || ' — ' || left(coalesce(r.details, ''), 40) as subtitle,
+      case r.request_type
+        when 'Leave' then 'طلب إجازة'
+        when 'Financial' then 'طلب مالي'
+        else 'طلب عام'
+      end || ' — ' || left(coalesce(r.details, ''), 40) as subtitle,
       r.status,
       r.created_at,
-      (r.status = 'Pending' and public.agent_request_needs_my_approval(r.routing_to)) as needs_approval
+      (
+        r.status = 'Pending'
+        and (
+          coalesce(public.get_my_role(), '') in (
+            'owner', 'Executive', 'HR_Manager', 'HR_Assistant'
+          )
+          or (
+            coalesce(public.get_my_role(), '') = 'Direct_Manager'
+            and coalesce(r.routing_to, '') in ('Direct_Manager', '')
+          )
+          or (
+            coalesce(public.get_my_role(), '') in ('HR_Manager', 'HR_Assistant')
+            and r.routing_to = 'HR_Manager'
+          )
+        )
+      ) as needs_approval
     from public.requests r
     left join public.employees emp on emp.id = r.employee_id
     where r.company_id = public.get_my_company_id()
@@ -662,7 +680,7 @@ language plpgsql stable security invoker set search_path = public
 as $$
 declare v_items jsonb;
 begin
-  select coalesce(jsonb_agg(row_to_json(x)::jsonb order by x.hire_date desc nulls last), '[]'::jsonb)
+  select coalesce(jsonb_agg(row_to_json(x)::jsonb), '[]'::jsonb)
   into v_items
   from (
     select
@@ -673,7 +691,7 @@ begin
       e.created_at
     from public.employees e
     where e.company_id = public.get_my_company_id()
-      and public.agent_is_active_status(e.employment_status)
+      and coalesce(trim(e.employment_status), '') not in ('منتهي الخدمة', 'موقوف')
     order by coalesce(e.hire_date, e.created_at::date) desc nulls last
     limit 5
   ) x;
@@ -688,17 +706,17 @@ language plpgsql stable security invoker set search_path = public
 as $$
 declare v_items jsonb;
 begin
-  select coalesce(jsonb_agg(row_to_json(x)::jsonb order by x.updated_at desc), '[]'::jsonb)
+  select coalesce(jsonb_agg(row_to_json(x)::jsonb), '[]'::jsonb)
   into v_items
   from (
     select
       e.id,
       e.full_name as title,
       case
-        when e.iqama_expiry_date is not null and e.iqama_expiry_date > current_date + 30
-          then 'تحديث إقامة — تنتهي ' || e.iqama_expiry_date::text
         when e.contract_expiry is not null
           then 'تحديث عقد — ينتهي ' || e.contract_expiry::text
+        when e.hire_date is not null
+          then 'تحديث — ذكرى التعيين ' || e.hire_date::text
         else 'تحديث بيانات'
       end as subtitle,
       e.updated_at
@@ -706,10 +724,7 @@ begin
     where e.company_id = public.get_my_company_id()
       and e.updated_at >= now() - interval '60 days'
       and e.updated_at > e.created_at + interval '1 day'
-      and (
-        e.iqama_expiry_date > current_date + 30
-        or e.contract_expiry is not null
-      )
+      and (e.contract_expiry is not null or e.hire_date is not null)
     order by e.updated_at desc
     limit 5
   ) x;
@@ -724,29 +739,28 @@ language plpgsql stable security invoker set search_path = public
 as $$
 declare v_items jsonb;
 begin
-  select coalesce(jsonb_agg(row_to_json(x)::jsonb order by x.created_at desc), '[]'::jsonb)
-  into v_items
-  from (
-    select
-      a.id,
-      coalesce(emp.full_name, 'موظف') as title,
-      case a.action_type
-        when 'Alert' then 'تنبيه'
-        when 'First Warning' then 'إنذار أول'
-        when 'Second Warning' then 'إنذار ثاني'
-        when 'Third Warning' then 'إنذار ثالث'
-        else coalesce(a.action_type, 'إجراء إداري')
-      end || ' — ' || left(coalesce(a.reason, ''), 40) as subtitle,
-      a.created_at
-    from public.administrative_actions a
-    left join public.employees emp on emp.id = a.employee_id
-    where a.company_id = public.get_my_company_id()
-    order by a.created_at desc
-    limit 5
-  ) x;
+  v_items := '[]'::jsonb;
+
+  if to_regclass('public.administrative_actions') is not null then
+    execute $sql$
+      select coalesce(jsonb_agg(row_to_json(x)::jsonb), '[]'::jsonb)
+      from (
+        select
+          a.id,
+          coalesce(emp.full_name, 'موظف') as title,
+          coalesce(a.action_type, 'إجراء') || ' — ' || left(coalesce(a.reason, ''), 40) as subtitle,
+          a.created_at
+        from public.administrative_actions a
+        left join public.employees emp on emp.id = a.employee_id
+        where a.company_id = public.get_my_company_id()
+        order by a.created_at desc
+        limit 5
+      ) x
+    $sql$ into v_items;
+  end if;
 
   if jsonb_array_length(coalesce(v_items, '[]'::jsonb)) = 0 then
-    select coalesce(jsonb_agg(row_to_json(x)::jsonb order by x.updated_at desc), '[]'::jsonb)
+    select coalesce(jsonb_agg(row_to_json(x)::jsonb), '[]'::jsonb)
     into v_items
     from (
       select

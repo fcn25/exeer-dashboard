@@ -105,9 +105,9 @@ export default function AgentDrawer({ isOpen, onClose }) {
           </div>
         </header>
 
-        <div className="flex min-h-0 flex-1">
+        <div className="flex min-h-0 flex-1 bg-[#F8FAFC]">
           {isMobile && showHistoryMobile ? (
-            <CommandHistory className="w-full border-s-0" />
+            <CommandHistory className="w-full border-s-0 bg-white" />
           ) : (
             <>
               <AgentConversation

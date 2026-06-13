@@ -1,16 +1,29 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowUp } from "lucide-react";
 import { normalizeAppRole } from "../../constants/roles.js";
 import { MOCK_JOB_TITLE_CHANGE } from "./constants/mockData.js";
 import ExampleChips from "./ExampleChips.jsx";
 import UserBubble from "./UserBubble.jsx";
 import AgentMessage from "./AgentMessage.jsx";
-import { AGENT_INPUT, AGENT_PRIMARY_BTN } from "./agentStyles.js";
+import { AGENT_PRIMARY_BTN } from "./agentStyles.js";
+
+const COMPOSER_MIN_HEIGHT = 96;
+const COMPOSER_MAX_HEIGHT = 160;
 
 let messageCounter = 0;
 function nextId(prefix) {
   messageCounter += 1;
   return `${prefix}-${messageCounter}`;
+}
+
+function resizeComposer(textarea) {
+  if (!textarea) return;
+  textarea.style.height = "auto";
+  const nextHeight = Math.min(
+    Math.max(textarea.scrollHeight, COMPOSER_MIN_HEIGHT),
+    COMPOSER_MAX_HEIGHT,
+  );
+  textarea.style.height = `${nextHeight}px`;
 }
 
 export default function AgentConversation({
@@ -27,6 +40,7 @@ export default function AgentConversation({
 
   useEffect(() => {
     inputRef.current?.focus();
+    resizeComposer(inputRef.current);
   }, []);
 
   useEffect(() => {
@@ -38,22 +52,23 @@ export default function AgentConversation({
       const text = String(textOverride ?? input).trim();
       if (!text || isThinking) return;
 
-      const userMessageId = nextId("user");
       setMessages((current) => [
         ...current,
-        { id: userMessageId, type: "user", text },
+        { id: nextId("user"), type: "user", text },
       ]);
       setInput("");
+      if (inputRef.current) {
+        inputRef.current.style.height = `${COMPOSER_MIN_HEIGHT}px`;
+      }
       setIsThinking(true);
 
       window.setTimeout(() => {
-        const cardId = nextId("card");
         setMessages((current) => [
           ...current,
           {
             id: nextId("agent"),
             type: "confirmation",
-            cardId,
+            cardId: nextId("card"),
             status: "pending",
             payload: { ...MOCK_JOB_TITLE_CHANGE },
           },
@@ -87,7 +102,7 @@ export default function AgentConversation({
   const isEmpty = messages.length === 0 && !isThinking;
 
   return (
-    <div className={`flex h-full min-h-0 flex-col ${className}`.trim()}>
+    <div className={`agent-drawer-conversation flex h-full min-h-0 flex-col bg-white ${className}`.trim()}>
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
         {isEmpty ? (
           <div className="flex h-full flex-col justify-center py-6">
@@ -103,6 +118,7 @@ export default function AgentConversation({
                 onSelect={(text) => {
                   setInput(text);
                   inputRef.current?.focus();
+                  resizeComposer(inputRef.current);
                 }}
               />
             </div>
@@ -140,31 +156,39 @@ export default function AgentConversation({
         )}
       </div>
 
-      <div className="shrink-0 border-t border-[#E2E8F0] bg-white px-4 py-3">
+      <div className="agent-drawer-composer shrink-0 border-t border-[#E2E8F0] bg-white px-4 py-4">
         <form
-          className="flex items-center gap-2"
           onSubmit={(event) => {
             event.preventDefault();
             handleSend();
           }}
         >
-          <input
-            ref={inputRef}
-            type="text"
-            value={input}
-            onChange={(event) => setInput(event.target.value)}
-            placeholder="اكتب أمراً أو استفساراً للوكيل…"
-            className={AGENT_INPUT}
-            aria-label="اكتب أمراً أو استفساراً للوكيل"
-          />
-          <button
-            type="submit"
-            disabled={!input.trim() || isThinking}
-            className={`${AGENT_PRIMARY_BTN} h-11 w-11 shrink-0 rounded-full p-0`}
-            aria-label="إرسال"
-          >
-            <ArrowUp className="h-4 w-4" aria-hidden />
-          </button>
+          <div className="relative">
+            <textarea
+              ref={inputRef}
+              value={input}
+              onChange={(event) => {
+                setInput(event.target.value);
+                resizeComposer(event.target);
+              }}
+              rows={4}
+              placeholder="اكتب أمرك أو استفسارك كاملاً…  مثال: غيّر مسمى أحمد الحربي إلى «مدير مبيعات أول»"
+              className="min-h-[96px] max-h-[160px] w-full resize-none rounded-2xl border border-[#E2E8F0] bg-white px-4 py-3 pe-14 text-sm font-normal leading-relaxed text-[#0F172A] outline-none placeholder:text-[#64748B] focus:border-[#0F172A]"
+              aria-label="اكتب أمرك أو استفسارك كاملاً"
+              style={{ height: `${COMPOSER_MIN_HEIGHT}px` }}
+            />
+            <button
+              type="submit"
+              disabled={!input.trim() || isThinking}
+              className={`${AGENT_PRIMARY_BTN} absolute bottom-3 end-3 h-10 w-10 rounded-full p-0`}
+              aria-label="إرسال"
+            >
+              <ArrowUp className="h-4 w-4" aria-hidden />
+            </button>
+          </div>
+          <p className="mt-2 text-xs font-normal text-[#64748B]">
+            صِغ أمرك بالكامل في جملة واحدة واضحة
+          </p>
         </form>
       </div>
     </div>

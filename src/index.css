@@ -624,6 +624,16 @@ html:not(.dark) .native-mobile-shell.bg-md-surface-dim {
   border-color: rgba(255, 255, 255, 0.06);
 }
 
+/* Smart Agent drawer — light theme segmentation only */
+html:not(.dark) .agent-drawer-conversation {
+  background-color: #ffffff;
+}
+
+html:not(.dark) .agent-drawer-composer {
+  background-color: #ffffff;
+  border-top: 1px solid #e2e8f0;
+}
+
 /* No boxes inside boxes */
 html:not(.dark) .border-\[\#E2E8F0\].bg-\[\#F8FAFC\],
 html:not(.dark) .md-surface .bg-exeer-surface,

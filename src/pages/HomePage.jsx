@@ -55,6 +55,7 @@ import {
   AgentDrawer,
   DashboardActionStack,
 } from "../features/agent/index.js";
+import AddEmployeeModalHost from "../components/employees/AddEmployeeModalHost.jsx";
 import { roleHasNavKey } from "../constants/roleNav.js";
 import { useAuth } from "../context/AuthContext.jsx";
 
@@ -232,6 +233,7 @@ export default function HomePage() {
   const headerDate = formatLocaleHeaderDate();
   const showDashboardActions = roleHasNavKey(role, "employees");
   const [isAgentOpen, setIsAgentOpen] = useState(false);
+  const [isAddEmployeeOpen, setIsAddEmployeeOpen] = useState(false);
   const { resolveToolAction, modalProps } = useSmartToolsModals();
   const showPayroll = canViewPayroll();
 
@@ -344,19 +346,22 @@ export default function HomePage() {
 
   return (
     <div className="-mx-6 -my-8 flex flex-col gap-8 bg-md-surface-dim px-6 py-8 dark:bg-[var(--bg-main)] md:-mx-8 md:px-8">
+      {showDashboardActions ? (
+        <div className="flex w-full justify-end rtl:justify-start">
+          <DashboardActionStack
+            onOpenAgent={() => setIsAgentOpen(true)}
+            onOpenAddEmployee={() => setIsAddEmployeeOpen(true)}
+          />
+        </div>
+      ) : null}
+
       {/* ─── 1. ترويسة ─── */}
       <header className={HOME_CARD}>
         <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div className="space-y-1 text-start">
-              <p className={HOME_TEXT_LABEL}>{getGreeting(t)}</p>
-              <h1 className={`text-[24px] font-semibold ${HOME_TEXT_TITLE}`}>{user.name}</h1>
-              <p className={HOME_TEXT_HINT}>{headerDate}</p>
-            </div>
-
-            {showDashboardActions ? (
-              <DashboardActionStack onOpenAgent={() => setIsAgentOpen(true)} />
-            ) : null}
+          <div className="space-y-1 text-start">
+            <p className={HOME_TEXT_LABEL}>{getGreeting(t)}</p>
+            <h1 className={`text-[24px] font-semibold ${HOME_TEXT_TITLE}`}>{user.name}</h1>
+            <p className={HOME_TEXT_HINT}>{headerDate}</p>
           </div>
 
           <div className="flex flex-wrap gap-2">
@@ -380,6 +385,12 @@ export default function HomePage() {
       </header>
 
       <AgentDrawer isOpen={isAgentOpen} onClose={() => setIsAgentOpen(false)} />
+
+      <AddEmployeeModalHost
+        isOpen={isAddEmployeeOpen}
+        onClose={() => setIsAddEmployeeOpen(false)}
+        onCreated={loadDashboard}
+      />
 
       {successMessage ? (
         <p className={`${HOME_CARD} px-4 py-3 text-[13px] font-normal text-[#047857]`}

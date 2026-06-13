@@ -1,11 +1,11 @@
 import AgentButton from "./AgentButton.jsx";
 import AddEmployeeButton from "./AddEmployeeButton.jsx";
 
-export default function DashboardActionStack({ onOpenAgent }) {
+export default function DashboardActionStack({ onOpenAgent, onOpenAddEmployee }) {
   return (
-    <div className="flex w-full min-w-[200px] max-w-[240px] flex-col gap-[10px] sm:w-[220px]">
+    <div className="flex w-[220px] max-w-full flex-col gap-[10px]">
       <AgentButton onClick={onOpenAgent} />
-      <AddEmployeeButton />
+      <AddEmployeeButton onClick={onOpenAddEmployee} />
     </div>
   );
 }

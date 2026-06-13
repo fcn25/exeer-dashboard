@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Eye, Mail, Pencil, Plus, Search, Trophy } from "lucide-react";
 import EmployeeFormSections from "./components/employees/EmployeeFormSections.jsx";
+import AddEmployeeSlideOver from "./components/employees/AddEmployeeSlideOver.jsx";
 import ResendInviteButton from "./components/employees/ResendInviteButton.jsx";
 import LogAchievementModal from "./components/achievements/LogAchievementModal.jsx";
 import {
@@ -9,13 +10,12 @@ import {
   getInitials,
   mapRowToEmployeeForm,
 } from "./components/employees/employeeFormShared.js";
-import SlideOver, { BulkImportButton } from "./components/employees/SlideOver.jsx";
+import SlideOver from "./components/employees/SlideOver.jsx";
 import ExeerEmptyState from "./components/brand/ExeerEmptyState.jsx";
 import BulkImportModal from "./components/employees/BulkImportModal.jsx";
 import SuccessToast from "./components/ui/SuccessToast.jsx";
 import { fetchCompanyBilling } from "./services/billingService.js";
 import {
-  createEmployee,
   getEmployeeById,
   inviteEmployeesWithoutAccounts,
   listEmployees,
@@ -27,10 +27,6 @@ import WorkLocationSelect, {
   resolveWorkLocationLabel,
 } from "./components/attendance/WorkLocationSelect.jsx";
 import { listDepartments, listJobTitles } from "./services/catalogService.js";
-import {
-  canAddEmployeeCount,
-  EMPLOYEE_LIMIT_ERROR_AR,
-} from "./utils/employeeLimitGuard.js";
 import {
   canEditEmployeeRecords,
   getCurrentUserRole,
@@ -77,135 +73,6 @@ function StatusBadge({ status }) {
     >
       {status}
     </span>
-  );
-}
-
-function AddEmployeeSlideOver({
-  isOpen,
-  onClose,
-  onCreated,
-  onOpenBulkImport,
-  departmentOptions,
-  jobTitleOptions,
-  managerOptions = [],
-  employeeCount = 0,
-  subscriptionTier = "trial",
-}) {
-  const [form, setForm] = useState({ ...EMPTY_EMPLOYEE_FORM });
-  const [branchOptions, setBranchOptions] = useState([]);
-  const [branchesLoading, setBranchesLoading] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
-  const [limitToast, setLimitToast] = useState("");
-
-  useEffect(() => {
-    if (isOpen) {
-      setForm({ ...EMPTY_EMPLOYEE_FORM });
-      setError("");
-      setSuccessMessage("");
-      setLimitToast("");
-      setIsSaving(false);
-    }
-  }, [isOpen]);
-
-  useEffect(() => {
-    if (!isOpen) return undefined;
-
-    let cancelled = false;
-
-    async function loadBranches() {
-      setBranchesLoading(true);
-      try {
-        const branches = await listBranchSelectOptions();
-        if (!cancelled) setBranchOptions(branches);
-      } catch {
-        if (!cancelled) setBranchOptions([]);
-      } finally {
-        if (!cancelled) setBranchesLoading(false);
-      }
-    }
-
-    loadBranches();
-    return () => {
-      cancelled = true;
-    };
-  }, [isOpen]);
-
-  const handleSave = async (event) => {
-    event.preventDefault();
-    if (!form.full_name.trim()) {
-      setError("الاسم الكامل مطلوب.");
-      return;
-    }
-    if (!form.email?.trim()) {
-      setError("البريد الإلكتروني مطلوب.");
-      return;
-    }
-
-    const limitCheck = canAddEmployeeCount(employeeCount, 1, subscriptionTier);
-    if (!limitCheck.allowed) {
-      setLimitToast(EMPLOYEE_LIMIT_ERROR_AR);
-      return;
-    }
-
-    setIsSaving(true);
-    setError("");
-    setSuccessMessage("");
-
-    try {
-      await createEmployee(form);
-      await onCreated();
-      onClose();
-    } catch (err) {
-      setError(err.message || "تعذّر إضافة الموظف.");
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  return (
-    <SlideOver
-      isOpen={isOpen}
-      onClose={onClose}
-      title="إضافة موظف جديد"
-      subtitle="أدخل بيانات الموظف في الأقسام التالية"
-      topAction={<BulkImportButton onClick={onOpenBulkImport} />}
-      footer={
-        <button
-          type="submit"
-          form="add-employee-form"
-          disabled={isSaving}
-          className="md-btn-primary w-full"
-        >
-          {isSaving ? "جاري الحفظ..." : "حفظ الموظف"}
-        </button>
-      }
-    >
-      <SuccessToast message={limitToast} onDismiss={() => setLimitToast("")} />
-      {error ? (
-        <p className="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-          {error}
-        </p>
-      ) : null}
-      {successMessage ? (
-        <p className="mb-4 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
-          {successMessage}
-        </p>
-      ) : null}
-
-      <form id="add-employee-form" onSubmit={handleSave}>
-        <EmployeeFormSections
-          form={form}
-          onChange={setForm}
-          departmentOptions={departmentOptions}
-          jobTitleOptions={jobTitleOptions}
-          branchOptions={branchOptions}
-          branchesLoading={branchesLoading}
-          managerOptions={managerOptions}
-        />
-      </form>
-    </SlideOver>
   );
 }
 

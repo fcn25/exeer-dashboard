@@ -36,7 +36,7 @@ export default function CommandHistory({ onSelectItem, className = "" }) {
             <h3 className="mb-2 px-1 text-[11px] font-medium text-[#64748B]">
               {group.dateLabel}
             </h3>
-            <ul className="space-y-1">
+            <ul className="space-y-2">
               {group.items.map((item) => (
                 <li key={item.id}>
                   <button
@@ -45,7 +45,7 @@ export default function CommandHistory({ onSelectItem, className = "" }) {
                       console.log("reopen thread", item.id);
                       onSelectItem?.(item.id);
                     }}
-                    className="flex w-full items-start justify-between gap-2 rounded-xl border border-transparent bg-white px-3 py-2.5 text-start transition-colors hover:border-[#E2E8F0] hover:bg-[#F8FAFC]"
+                    className="flex w-full items-start justify-between gap-2 rounded-2xl border border-[#E2E8F0] bg-white px-3 py-2.5 text-start transition-colors hover:bg-[#F8FAFC]"
                   >
                     <span className="min-w-0 flex-1 text-xs font-normal leading-relaxed text-[#0F172A]">
                       {item.text}

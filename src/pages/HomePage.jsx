@@ -51,6 +51,12 @@ import {
   formatLocaleHeaderDate,
   formatLocaleNumber,
 } from "../i18n/formatLocale.js";
+import {
+  AgentDrawer,
+  DashboardActionStack,
+} from "../features/agent/index.js";
+import { roleHasNavKey } from "../constants/roleNav.js";
+import { useAuth } from "../context/AuthContext.jsx";
 
 const ACTION_ICONS = {
   iqama: AlertTriangle,
@@ -221,8 +227,11 @@ function MiniStatCard({ label, value, sublabel, sparkline }) {
 export default function HomePage() {
   const { t } = useAppLocale();
   const navigate = useNavigate();
+  const { role } = useAuth();
   const user = getUserDisplay();
   const headerDate = formatLocaleHeaderDate();
+  const showDashboardActions = roleHasNavKey(role, "employees");
+  const [isAgentOpen, setIsAgentOpen] = useState(false);
   const { resolveToolAction, modalProps } = useSmartToolsModals();
   const showPayroll = canViewPayroll();
 
@@ -338,33 +347,39 @@ export default function HomePage() {
       {/* ─── 1. ترويسة ─── */}
       <header className={HOME_CARD}>
         <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="space-y-1 text-start">
               <p className={HOME_TEXT_LABEL}>{getGreeting(t)}</p>
               <h1 className={`text-[24px] font-semibold ${HOME_TEXT_TITLE}`}>{user.name}</h1>
               <p className={HOME_TEXT_HINT}>{headerDate}</p>
             </div>
 
-            <div className="flex flex-wrap gap-2 sm:shrink-0">
-              <PulsePill
-                label={`${formatLocaleNumber(workingCount)} ${t("pages.home.workingToday")}`}
-                bg="#ECFDF5"
-                color="#047857"
-              />
-              <PulsePill
-                label={`${formatLocaleNumber(leaveCount)} ${t("pages.home.onLeave")}`}
-                bg="#FEF3C7"
-                color="#92400E"
-              />
-              <PulsePill
-                label={`${formatLocaleNumber(lateCount)} ${t("pages.home.late")}`}
-                bg="#F1F5F9"
-                color="#475569"
-              />
-            </div>
+            {showDashboardActions ? (
+              <DashboardActionStack onOpenAgent={() => setIsAgentOpen(true)} />
+            ) : null}
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <PulsePill
+              label={`${formatLocaleNumber(workingCount)} ${t("pages.home.workingToday")}`}
+              bg="#ECFDF5"
+              color="#047857"
+            />
+            <PulsePill
+              label={`${formatLocaleNumber(leaveCount)} ${t("pages.home.onLeave")}`}
+              bg="#FEF3C7"
+              color="#92400E"
+            />
+            <PulsePill
+              label={`${formatLocaleNumber(lateCount)} ${t("pages.home.late")}`}
+              bg="#F1F5F9"
+              color="#475569"
+            />
           </div>
         </div>
       </header>
+
+      <AgentDrawer isOpen={isAgentOpen} onClose={() => setIsAgentOpen(false)} />
 
       {successMessage ? (
         <p className={`${HOME_CARD} px-4 py-3 text-[13px] font-normal text-[#047857]`}

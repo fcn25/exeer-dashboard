@@ -4,7 +4,6 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Smartphone,
-  UserPlus,
 } from "lucide-react";
 import ErrorToast from "../components/ui/ErrorToast.jsx";
 import DashboardTopBar from "../components/layout/DashboardTopBar.jsx";
@@ -15,7 +14,7 @@ import { signOut } from "../utils/mobileAuth.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import ExeerLogo from "../components/brand/ExeerLogo.jsx";
 import { useAppLocale } from "../i18n/useAppLocale.js";
-import { resolveSidebarNavItems, roleHasNavKey } from "../constants/roleNav.js";
+import { resolveSidebarNavItems } from "../constants/roleNav.js";
 import { isOwner } from "../utils/rbac.js";
 
 function SidebarLink({ to, label, icon: Icon, end, collapsed }) {
@@ -82,8 +81,6 @@ export default function ManagerLayout() {
     [role, t],
   );
 
-  const showAddEmployee = roleHasNavKey(role, "employees");
-
   const handleLogout = async () => {
     await signOut();
     window.location.href = "/login";
@@ -137,28 +134,6 @@ export default function ManagerLayout() {
             aria-label={t("nav.expandSidebar")}
           >
             <PanelLeftOpen className="h-4 w-4" aria-hidden />
-          </button>
-        ) : null}
-
-        {showAddEmployee && !isSidebarCollapsed ? (
-          <button
-            type="button"
-            onClick={() => navigate("/dashboard/employees?add=1")}
-            className="mb-5 flex w-full items-center justify-center gap-2 rounded-md border border-slate-900 bg-slate-900 px-3 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-800 dark:border-[var(--border-color)] dark:bg-[var(--bg-surface-hover)] dark:text-[var(--text-primary)] dark:hover:bg-[var(--bg-surface)]"
-          >
-            <UserPlus className="h-4 w-4 stroke-[1.75]" aria-hidden />
-            {t("nav.addEmployee")}
-          </button>
-        ) : null}
-
-        {showAddEmployee && isSidebarCollapsed ? (
-          <button
-            type="button"
-            onClick={() => navigate("/dashboard/employees?add=1")}
-            title={t("nav.addEmployee")}
-            className="mb-4 flex w-full items-center justify-center rounded-md border border-slate-900 bg-slate-900 p-2.5 text-white hover:bg-slate-800 dark:border-[var(--border-color)] dark:bg-[var(--bg-surface-hover)] dark:text-[var(--text-primary)] dark:hover:bg-[var(--bg-surface)]"
-          >
-            <UserPlus className="h-4 w-4" aria-hidden />
           </button>
         ) : null}
 

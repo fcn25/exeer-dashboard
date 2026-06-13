@@ -1,43 +1,217 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Search, Sparkles } from "lucide-react";
-import { useAuth } from "../../context/AuthContext.jsx";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Search, Sparkles, UserRound } from "lucide-react";
+import { submitAgentQueryFallback } from "../../services/agentQueryService.js";
+import {
+  callQueryRpc,
+  fetchEmployeeSummary,
+  fetchQueryDigest,
+  searchEmployees,
+} from "../../services/queryPanelService.js";
 import AgentPanelShell from "./AgentPanelShell.jsx";
 import CompactSearchHistory from "./CompactSearchHistory.jsx";
+import QueryDigestGrid from "./QueryDigestGrid.jsx";
+import QueryResultView from "./QueryResultView.jsx";
 import { AGENT_ENTITY_ROW, AGENT_INPUT } from "./agentStyles.js";
 import {
-  getMatchingEmployees,
-  getMatchingSuggestions,
+  getMatchingIntents,
   hasStructuredMatches,
   looksLikeWriteCommand,
+  matchQueryIntent,
 } from "./queryPanelUtils.js";
+import { pushRecentSearch } from "./queryRecentSearches.js";
+
+function initialsFromName(name) {
+  const parts = String(name ?? "").trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return "؟";
+  if (parts.length === 1) return parts[0].slice(0, 2);
+  return `${parts[0][0] ?? ""}${parts[1][0] ?? ""}`;
+}
 
 export default function QueryPanel({ isOpen, onClose, onOpenExecutor }) {
-  const { role } = useAuth();
   const [query, setQuery] = useState("");
+  const [result, setResult] = useState(null);
+  const [quickResult, setQuickResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [employees, setEmployees] = useState([]);
+  const [digest, setDigest] = useState(null);
+  const [digestLoading, setDigestLoading] = useState(false);
+  const [digestError, setDigestError] = useState("");
+  const [recentRefreshKey, setRecentRefreshKey] = useState(0);
   const inputRef = useRef(null);
+  const searchTimerRef = useRef(null);
+
+  const trimmed = query.trim();
+  const isEmpty = trimmed.length === 0;
+  const intents = useMemo(() => getMatchingIntents(trimmed), [trimmed]);
+  const isWriteLike = trimmed.length > 0 && looksLikeWriteCommand(trimmed);
+  const showFallback =
+    trimmed.length > 0 &&
+    !hasStructuredMatches(trimmed, employees.length) &&
+    !isWriteLike;
+
+  const loadDigest = useCallback(async () => {
+    setDigestLoading(true);
+    setDigestError("");
+    try {
+      const data = await fetchQueryDigest();
+      setDigest(data);
+    } catch (digestErr) {
+      setDigestError(
+        digestErr instanceof Error ? digestErr.message : "تعذّر تحميل النظرة السريعة.",
+      );
+    } finally {
+      setDigestLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (!isOpen) {
       setQuery("");
+      setResult(null);
+      setQuickResult(null);
+      setEmployees([]);
+      setError("");
       return;
     }
     inputRef.current?.focus();
-  }, [isOpen]);
+    loadDigest();
+  }, [isOpen, loadDigest]);
 
-  const trimmed = query.trim();
-  const suggestions = useMemo(
-    () => getMatchingSuggestions(trimmed, role),
-    [trimmed, role],
+  useEffect(() => {
+    setResult(null);
+    setQuickResult(null);
+    setError("");
+
+    if (!isOpen || trimmed.length < 2) {
+      setEmployees([]);
+      return undefined;
+    }
+
+    if (searchTimerRef.current) {
+      window.clearTimeout(searchTimerRef.current);
+    }
+
+    searchTimerRef.current = window.setTimeout(async () => {
+      try {
+        const searchResult = await searchEmployees(trimmed);
+        const candidates = searchResult?.data?.candidates ?? [];
+        setEmployees(Array.isArray(candidates) ? candidates : []);
+      } catch {
+        setEmployees([]);
+      }
+    }, 300);
+
+    return () => {
+      if (searchTimerRef.current) window.clearTimeout(searchTimerRef.current);
+    };
+  }, [trimmed, isOpen]);
+
+  const commitResult = useCallback((nextResult, searchText) => {
+    setResult(nextResult);
+    setQuickResult(null);
+    if (searchText) {
+      pushRecentSearch(searchText);
+      setRecentRefreshKey((key) => key + 1);
+    }
+  }, []);
+
+  const runRpcIntent = useCallback(
+    async (rpc, params, searchText) => {
+      setLoading(true);
+      setError("");
+      try {
+        const data = await callQueryRpc(rpc, params);
+        commitResult(data, searchText);
+      } catch (rpcError) {
+        setError(rpcError instanceof Error ? rpcError.message : "تعذّر إكمال الاستعلام.");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [commitResult],
   );
-  const employees = useMemo(() => getMatchingEmployees(trimmed), [trimmed]);
-  const isWriteLike = trimmed.length > 0 && looksLikeWriteCommand(trimmed);
-  const showFallback =
-    trimmed.length > 0 && !hasStructuredMatches(trimmed, role) && !isWriteLike;
-  const isEmpty = trimmed.length === 0;
+
+  const runGeminiFallback = useCallback(
+    async (searchText) => {
+      setLoading(true);
+      setError("");
+      try {
+        const data = await submitAgentQueryFallback({ query: searchText });
+        commitResult({ ...data, gemini: true }, searchText);
+      } catch (fallbackError) {
+        setError(
+          fallbackError instanceof Error ? fallbackError.message : "تعذّر إرسال الطلب.",
+        );
+      } finally {
+        setLoading(false);
+      }
+    },
+    [commitResult],
+  );
+
+  const handleSubmit = useCallback(async () => {
+    if (!trimmed || loading || isWriteLike) return;
+
+    const intentMatch = matchQueryIntent(trimmed);
+    if (intentMatch) {
+      await runRpcIntent(intentMatch.intent.rpc, intentMatch.params, trimmed);
+      return;
+    }
+
+    if (employees.length === 1) {
+      setLoading(true);
+      setError("");
+      try {
+        const summary = await fetchEmployeeSummary(employees[0].employee_id);
+        commitResult(summary, trimmed);
+      } catch (summaryError) {
+        setError(summaryError instanceof Error ? summaryError.message : "تعذّر التحميل.");
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
+    await runGeminiFallback(trimmed);
+  }, [
+    trimmed,
+    loading,
+    isWriteLike,
+    employees,
+    runRpcIntent,
+    runGeminiFallback,
+    commitResult,
+  ]);
 
   const handleOpenExecutor = (prefill) => {
     onClose();
     onOpenExecutor?.(prefill);
+  };
+
+  const handleIntentSelect = async (intent) => {
+    const params = {};
+    if (intent.daysSlot) {
+      const match = matchQueryIntent(intent.label);
+      params.p_days = match?.params?.p_days ?? (intent.rpc === "q_contracts_expiring" ? 90 : 30);
+    }
+    setQuery(intent.label);
+    await runRpcIntent(intent.rpc, params, intent.label);
+  };
+
+  const handleEmployeeSelect = async (employee) => {
+    setLoading(true);
+    setError("");
+    const label = `ملخص ${employee.name}`;
+    setQuery(label);
+    try {
+      const summary = await fetchEmployeeSummary(employee.employee_id);
+      commitResult(summary, label);
+    } catch (employeeError) {
+      setError(employeeError instanceof Error ? employeeError.message : "تعذّر التحميل.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -49,7 +223,13 @@ export default function QueryPanel({ isOpen, onClose, onOpenExecutor }) {
       ariaLabelledBy="query-panel-title"
     >
       <div className="flex min-h-0 flex-1 flex-col bg-white">
-        <div className="shrink-0 border-b border-[#E2E8F0] px-4 py-4">
+        <form
+          className="shrink-0 border-b border-[#E2E8F0] px-4 py-4"
+          onSubmit={(event) => {
+            event.preventDefault();
+            handleSubmit();
+          }}
+        >
           <div className="relative">
             <Search
               className="pointer-events-none absolute start-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#64748B]"
@@ -65,34 +245,62 @@ export default function QueryPanel({ isOpen, onClose, onOpenExecutor }) {
               aria-label="بحث"
             />
           </div>
-        </div>
+        </form>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
-          {isEmpty ? (
-            <CompactSearchHistory onSelect={setQuery} />
-          ) : (
+          {loading ? (
+            <p className="mb-3 text-xs font-normal text-[#64748B]">جاري المعالجة…</p>
+          ) : null}
+
+          {error ? (
+            <p className="mb-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-normal text-red-800">
+              {error}
+            </p>
+          ) : null}
+
+          {result ? (
+            <div className="space-y-3">
+              <QueryResultView
+                result={result}
+                onQuickResult={setQuickResult}
+              />
+              {quickResult ? (
+                <QueryResultView result={quickResult} />
+              ) : null}
+            </div>
+          ) : null}
+
+          {!result && isEmpty ? (
+            <>
+              <QueryDigestGrid
+                digest={digest}
+                loading={digestLoading}
+                error={digestError}
+              />
+              <CompactSearchHistory
+                refreshKey={recentRefreshKey}
+                onSelect={setQuery}
+              />
+            </>
+          ) : null}
+
+          {!result && !isEmpty ? (
             <div className="space-y-5">
-              {suggestions.length > 0 ? (
+              {intents.length > 0 ? (
                 <section>
                   <h2 className="mb-2 px-1 text-xs font-medium text-[#64748B]">اقتراحات</h2>
                   <ul className="space-y-2">
-                    {suggestions.map((item) => {
-                      const Icon = item.icon;
-                      return (
-                        <li key={item.id}>
-                          <button
-                            type="button"
-                            onClick={() => setQuery(item.text)}
-                            className={AGENT_ENTITY_ROW}
-                          >
-                            <span className="flex min-w-0 flex-1 items-center gap-2">
-                              <Icon className="h-4 w-4 shrink-0 text-[#64748B]" aria-hidden />
-                              <span className="text-sm font-normal text-[#0F172A]">{item.text}</span>
-                            </span>
-                          </button>
-                        </li>
-                      );
-                    })}
+                    {intents.map((intent) => (
+                      <li key={intent.id}>
+                        <button
+                          type="button"
+                          onClick={() => handleIntentSelect(intent)}
+                          className={AGENT_ENTITY_ROW}
+                        >
+                          <span className="text-sm font-normal text-[#0F172A]">{intent.label}</span>
+                        </button>
+                      </li>
+                    ))}
                   </ul>
                 </section>
               ) : null}
@@ -102,23 +310,24 @@ export default function QueryPanel({ isOpen, onClose, onOpenExecutor }) {
                   <h2 className="mb-2 px-1 text-xs font-medium text-[#64748B]">موظفون</h2>
                   <ul className="space-y-2">
                     {employees.map((employee) => (
-                      <li key={employee.id}>
+                      <li key={employee.employee_id}>
                         <button
                           type="button"
-                          onClick={() => setQuery(`اعرض ملخص ${employee.full_name}`)}
-                          className={AGENT_ENTITY_ROW}
+                          onClick={() => handleEmployeeSelect(employee)}
+                          className={`${AGENT_ENTITY_ROW} flex items-center gap-3`}
                         >
+                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F8FAFC] text-xs font-semibold text-[#0F172A]">
+                            {initialsFromName(employee.name)}
+                          </span>
                           <div className="min-w-0 flex-1 text-start">
-                            <p className="text-sm font-medium text-[#0F172A]">{employee.full_name}</p>
+                            <p className="text-sm font-medium text-[#0F172A]">{employee.name}</p>
                             <p className="mt-0.5 text-xs font-normal text-[#64748B]">
-                              {[employee.job_title_name, employee.department]
+                              {[employee.job_title, employee.department]
                                 .filter(Boolean)
                                 .join(" · ")}
                             </p>
                           </div>
-                          <span className="shrink-0 text-xs font-normal text-[#64748B]">
-                            #{employee.id}
-                          </span>
+                          <UserRound className="h-4 w-4 shrink-0 text-[#64748B]" aria-hidden />
                         </button>
                       </li>
                     ))}
@@ -147,7 +356,7 @@ export default function QueryPanel({ isOpen, onClose, onOpenExecutor }) {
                 <section>
                   <button
                     type="button"
-                    onClick={() => handleOpenExecutor(`اسأل الوكيل الذكي عن ${trimmed}`)}
+                    onClick={() => runGeminiFallback(trimmed)}
                     className={AGENT_ENTITY_ROW}
                   >
                     <span className="flex min-w-0 flex-1 items-center gap-2 text-start">
@@ -160,7 +369,7 @@ export default function QueryPanel({ isOpen, onClose, onOpenExecutor }) {
                 </section>
               ) : null}
             </div>
-          )}
+          ) : null}
         </div>
       </div>
     </AgentPanelShell>

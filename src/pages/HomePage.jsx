@@ -402,7 +402,6 @@ export default function HomePage() {
       <QueryPanel
         isOpen={isQueryOpen}
         onClose={() => setIsQueryOpen(false)}
-        onOpenExecutor={openExecutor}
       />
 
       {successMessage ? (

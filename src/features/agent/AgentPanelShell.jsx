@@ -7,6 +7,7 @@ export default function AgentPanelShell({
   isOpen,
   onClose,
   title,
+  subtitle,
   titleIcon: TitleIcon,
   headerActions,
   children,
@@ -52,16 +53,25 @@ export default function AgentPanelShell({
         lang="ar"
       >
         <header className="flex shrink-0 items-center justify-between gap-3 border-b border-[#E2E8F0] bg-white px-4 py-3 dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)]">
-          <div className="flex min-w-0 items-center gap-2">
-            {TitleIcon ? (
-              <TitleIcon className="h-5 w-5 shrink-0 text-[#0F172A] dark:text-[var(--text-primary)]" aria-hidden />
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              {TitleIcon ? (
+                <TitleIcon className="h-5 w-5 shrink-0 text-[#0F172A] dark:text-[var(--text-primary)]" aria-hidden />
+              ) : null}
+              <h1
+                id={ariaLabelledBy}
+                className="truncate text-base font-semibold text-[#0F172A] dark:text-[var(--text-primary)]"
+              >
+                {title}
+              </h1>
+            </div>
+            {subtitle ? (
+              <p
+                className={`mt-1 truncate text-xs font-normal text-[#64748B] dark:text-[var(--text-secondary)] ${TitleIcon ? "ps-7" : ""}`}
+              >
+                {subtitle}
+              </p>
             ) : null}
-            <h1
-              id={ariaLabelledBy}
-              className="truncate text-base font-semibold text-[#0F172A] dark:text-[var(--text-primary)]"
-            >
-              {title}
-            </h1>
           </div>
 
           <div className="flex items-center gap-1">

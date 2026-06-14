@@ -1,4 +1,4 @@
-import { Search } from "lucide-react";
+import { FileBarChart } from "lucide-react";
 import { AGENT_SECONDARY_BTN } from "./agentStyles.js";
 
 export default function QueryButton({ onClick, className = "" }) {
@@ -8,8 +8,8 @@ export default function QueryButton({ onClick, className = "" }) {
       onClick={onClick}
       className={`${AGENT_SECONDARY_BTN} shrink-0 whitespace-nowrap ${className}`.trim()}
     >
-      <Search className="h-4 w-4 shrink-0 stroke-[1.75]" aria-hidden />
-      استعلام
+      <FileBarChart className="h-4 w-4 shrink-0 stroke-[1.75]" aria-hidden />
+      تقرير حسابك
     </button>
   );
 }

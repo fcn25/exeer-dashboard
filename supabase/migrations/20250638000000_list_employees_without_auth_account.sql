@@ -1,10 +1,12 @@
 -- Employees with email but no matching auth.users row (for bulk invite)
 
+drop function if exists public.list_employees_without_auth_account(bigint);
+
 create or replace function public.list_employees_without_auth_account(
   p_company_id bigint
 )
 returns table (
-  id uuid,
+  id bigint,
   full_name text,
   email text
 )

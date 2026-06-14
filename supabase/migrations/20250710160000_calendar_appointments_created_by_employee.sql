@@ -34,8 +34,20 @@ begin
   end if;
 end $$;
 
-alter table public.calendar_appointments
-  alter column created_by type bigint using created_by::bigint;
+do $$
+begin
+  if exists (
+    select 1
+    from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'calendar_appointments'
+      and column_name = 'created_by'
+      and udt_name <> 'int8'
+  ) then
+    alter table public.calendar_appointments
+      alter column created_by type bigint using created_by::bigint;
+  end if;
+end $$;
 
 alter table public.calendar_appointments
   drop constraint if exists calendar_appointments_created_by_employee_fkey;

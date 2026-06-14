@@ -7,8 +7,12 @@ alter table public.payroll_records
 comment on column public.payroll_records.delay_deductions is 'Automated lateness from attendance (time delays)';
 comment on column public.payroll_records.penalty_deductions is 'Administrative penalties (manual HR)';
 
-update public.payroll_records
+update public.payroll_records pr
 set
-  delay_deductions = coalesce(nullif(delay_deductions, 0), lateness_deduction, delays, 0),
-  penalty_deductions = coalesce(nullif(penalty_deductions, 0), penalties, 0)
-where delay_deductions = 0 and penalty_deductions = 0;
+  delay_deductions = coalesce(nullif(pr.delay_deductions, 0), pr.lateness_deduction, pr.delays, 0),
+  penalty_deductions = coalesce(nullif(pr.penalty_deductions, 0), pr.penalties, 0)
+from public.payroll_runs r
+where pr.run_id = r.id
+  and r.status is distinct from 'locked'
+  and pr.delay_deductions = 0
+  and pr.penalty_deductions = 0;

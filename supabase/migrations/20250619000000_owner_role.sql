@@ -16,6 +16,7 @@ alter table public.employees
       'HR_Manager',
       'HR_Assistant',
       'Direct_Manager',
-      'Employee'
+      'Employee',
+      'Accountant'
     )
   );

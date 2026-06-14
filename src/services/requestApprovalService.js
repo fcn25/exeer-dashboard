@@ -95,6 +95,7 @@ async function applyLeaveApproval(request) {
       ? `${request.start_date}T08:00:00`
       : new Date().toISOString(),
     location: "طلبات الموظفين",
+    source: "system",
   });
 }
 
@@ -154,6 +155,7 @@ async function applyFinancialApproval(request) {
       .join("\n"),
     datetime: `${request.start_date}T09:00:00`,
     location: "المسير — خصم أقساط",
+    source: "system",
   });
 }
 
@@ -164,6 +166,7 @@ async function applyGeneralApproval(request) {
     description: String(request.details ?? "").trim() || "—",
     datetime: new Date().toISOString(),
     location: "طلبات الموظفين",
+    source: "system",
   });
 }
 

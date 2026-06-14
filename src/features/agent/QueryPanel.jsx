@@ -48,6 +48,7 @@ export default function QueryPanel({ isOpen, onClose, onOpenExecutor }) {
   const [recentRefreshKey, setRecentRefreshKey] = useState(0);
   const inputRef = useRef(null);
   const searchTimerRef = useRef(null);
+  const searchGenerationRef = useRef(0);
 
   const trimmed = query.trim();
   const isEmpty = trimmed.length === 0;
@@ -80,16 +81,33 @@ export default function QueryPanel({ isOpen, onClose, onOpenExecutor }) {
       setQuickResult(null);
       setEmployees([]);
       setError("");
+      setLoading(false);
+      searchGenerationRef.current += 1;
       return;
     }
+    setLoading(false);
     inputRef.current?.focus();
     loadDigest();
   }, [isOpen, loadDigest]);
 
-  useEffect(() => {
+  const clearSearchOutput = useCallback(() => {
     setResult(null);
     setQuickResult(null);
     setError("");
+  }, []);
+
+  const handleQueryChange = useCallback(
+    (nextValue) => {
+      searchGenerationRef.current += 1;
+      setLoading(false);
+      setQuery(nextValue);
+      clearSearchOutput();
+    },
+    [clearSearchOutput],
+  );
+
+  useEffect(() => {
+    clearSearchOutput();
 
     if (!isOpen || trimmed.length < 2) {
       setEmployees([]);
@@ -113,7 +131,7 @@ export default function QueryPanel({ isOpen, onClose, onOpenExecutor }) {
     return () => {
       if (searchTimerRef.current) window.clearTimeout(searchTimerRef.current);
     };
-  }, [trimmed, isOpen]);
+  }, [trimmed, isOpen, clearSearchOutput]);
 
   const commitResult = useCallback((nextResult, searchText) => {
     setResult(nextResult);
@@ -126,19 +144,26 @@ export default function QueryPanel({ isOpen, onClose, onOpenExecutor }) {
 
   const runRpcIntent = useCallback(
     async (rpc, params, searchText) => {
+      const generation = searchGenerationRef.current;
       setLoading(true);
       setError("");
+      setResult(null);
+      setQuickResult(null);
       try {
         const resolved = resolveRpcParams(rpc, params);
         const data =
           resolved === null
             ? await callQueryRpcZero(rpc)
             : await callQueryRpc(rpc, resolved);
+        if (generation !== searchGenerationRef.current) return;
         commitResult(data, searchText);
       } catch (rpcError) {
+        if (generation !== searchGenerationRef.current) return;
         setError(rpcError instanceof Error ? rpcError.message : "تعذّر إكمال الاستعلام.");
       } finally {
-        setLoading(false);
+        if (generation === searchGenerationRef.current) {
+          setLoading(false);
+        }
       }
     },
     [commitResult],
@@ -146,24 +171,31 @@ export default function QueryPanel({ isOpen, onClose, onOpenExecutor }) {
 
   const runGeminiFallback = useCallback(
     async (searchText) => {
+      const generation = searchGenerationRef.current;
       setLoading(true);
       setError("");
+      setResult(null);
+      setQuickResult(null);
       try {
         const data = await submitAgentQueryFallback({ query: searchText });
+        if (generation !== searchGenerationRef.current) return;
         commitResult({ ...data, gemini: true }, searchText);
       } catch (fallbackError) {
+        if (generation !== searchGenerationRef.current) return;
         setError(
           fallbackError instanceof Error ? fallbackError.message : "تعذّر إرسال الطلب.",
         );
       } finally {
-        setLoading(false);
+        if (generation === searchGenerationRef.current) {
+          setLoading(false);
+        }
       }
     },
     [commitResult],
   );
 
   const handleSubmit = useCallback(async () => {
-    if (!trimmed || loading || isWriteLike) return;
+    if (!trimmed || isWriteLike) return;
 
     const intentMatch = matchQueryIntent(trimmed);
     if (intentMatch) {
@@ -176,15 +208,22 @@ export default function QueryPanel({ isOpen, onClose, onOpenExecutor }) {
     }
 
     if (employees.length === 1) {
+      const generation = searchGenerationRef.current;
       setLoading(true);
       setError("");
+      setResult(null);
+      setQuickResult(null);
       try {
         const summary = await fetchEmployeeSummary(employees[0].employee_id);
+        if (generation !== searchGenerationRef.current) return;
         commitResult(summary, trimmed);
       } catch (summaryError) {
+        if (generation !== searchGenerationRef.current) return;
         setError(summaryError instanceof Error ? summaryError.message : "تعذّر التحميل.");
       } finally {
-        setLoading(false);
+        if (generation === searchGenerationRef.current) {
+          setLoading(false);
+        }
       }
       return;
     }
@@ -192,7 +231,6 @@ export default function QueryPanel({ isOpen, onClose, onOpenExecutor }) {
     await runGeminiFallback(trimmed);
   }, [
     trimmed,
-    loading,
     isWriteLike,
     employees,
     runRpcIntent,
@@ -212,17 +250,24 @@ export default function QueryPanel({ isOpen, onClose, onOpenExecutor }) {
   };
 
   const handleEmployeeSelect = async (employee) => {
+    const generation = searchGenerationRef.current;
     setLoading(true);
     setError("");
+    setResult(null);
+    setQuickResult(null);
     const label = `ملخص ${employee.name}`;
     setQuery(label);
     try {
       const summary = await fetchEmployeeSummary(employee.employee_id);
+      if (generation !== searchGenerationRef.current) return;
       commitResult(summary, label);
     } catch (employeeError) {
+      if (generation !== searchGenerationRef.current) return;
       setError(employeeError instanceof Error ? employeeError.message : "تعذّر التحميل.");
     } finally {
-      setLoading(false);
+      if (generation === searchGenerationRef.current) {
+        setLoading(false);
+      }
     }
   };
 
@@ -252,7 +297,7 @@ export default function QueryPanel({ isOpen, onClose, onOpenExecutor }) {
                 ref={inputRef}
                 type="search"
                 value={query}
-                onChange={(event) => setQuery(event.target.value)}
+                onChange={(event) => handleQueryChange(event.target.value)}
                 placeholder="ابحث عن موظف، طلب، أو استفسار…"
                 className={`${AGENT_INPUT} py-3.5 pe-11 ps-4 text-base`}
                 aria-label="بحث"
@@ -300,7 +345,7 @@ export default function QueryPanel({ isOpen, onClose, onOpenExecutor }) {
               />
               <CompactSearchHistory
                 refreshKey={recentRefreshKey}
-                onSelect={setQuery}
+                onSelect={handleQueryChange}
               />
             </>
           ) : null}

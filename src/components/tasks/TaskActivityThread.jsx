@@ -9,6 +9,7 @@ import {
   subscribeTaskActivity,
   uploadTaskAttachment,
 } from "../../services/taskActivityService.js";
+import { prepareTaskAttachment, formatAttachmentSize } from "../../utils/taskAttachment.js";
 import { listEmployeesForTasks } from "../../services/employeesService.js";
 import { getEmployeeId } from "../../utils/mobileAuth.js";
 
@@ -138,6 +139,7 @@ export default function TaskActivityThread({ taskId }) {
   const [mentionQuery, setMentionQuery] = useState("");
   const [showMentions, setShowMentions] = useState(false);
   const [pendingFile, setPendingFile] = useState(null);
+  const [isPreparingFile, setIsPreparingFile] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const textareaRef = useRef(null);
   const currentEmployeeId = getEmployeeId();
@@ -326,6 +328,7 @@ export default function TaskActivityThread({ taskId }) {
           <p className="flex items-center gap-2 text-xs font-normal text-[#64748B] dark:text-[var(--text-secondary)]">
             <Paperclip className="h-3.5 w-3.5 stroke-[1.75]" aria-hidden />
             {pendingFile.name}
+            <span>({formatAttachmentSize(pendingFile.size)})</span>
             <button
               type="button"
               onClick={() => setPendingFile(null)}
@@ -337,19 +340,42 @@ export default function TaskActivityThread({ taskId }) {
         ) : null}
 
         <div className="flex items-center justify-between gap-2">
-          <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-[12px] border border-[#E2E8F0] px-3 py-2 text-xs font-normal text-[#475569] transition-colors hover:bg-[#F8FAFC] dark:border-[var(--border-color)] dark:text-[var(--text-secondary)] dark:hover:bg-[var(--bg-surface-hover)]">
-            <Paperclip className="h-4 w-4 stroke-[1.75]" aria-hidden />
-            مرفق
-            <input
-              type="file"
-              className="sr-only"
-              onChange={(event) => {
-                const file = event.target.files?.[0] ?? null;
-                setPendingFile(file);
-                event.target.value = "";
-              }}
-            />
-          </label>
+          <div className="flex flex-col gap-1">
+            <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-[12px] border border-[#E2E8F0] px-3 py-2 text-xs font-normal text-[#475569] transition-colors hover:bg-[#F8FAFC] dark:border-[var(--border-color)] dark:text-[var(--text-secondary)] dark:hover:bg-[var(--bg-surface-hover)]">
+              <Paperclip className="h-4 w-4 stroke-[1.75]" aria-hidden />
+              {isPreparingFile ? "جاري تجهيز الملف…" : "مرفق"}
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif,application/pdf"
+                className="sr-only"
+                disabled={isPreparingFile}
+                onChange={async (event) => {
+                  const file = event.target.files?.[0] ?? null;
+                  event.target.value = "";
+                  if (!file) return;
+
+                  setIsPreparingFile(true);
+                  setError("");
+                  try {
+                    const prepared = await prepareTaskAttachment(file);
+                    setPendingFile(prepared);
+                  } catch (fileErr) {
+                    setPendingFile(null);
+                    setError(
+                      fileErr instanceof Error
+                        ? fileErr.message
+                        : "تعذّر تجهيز المرفق.",
+                    );
+                  } finally {
+                    setIsPreparingFile(false);
+                  }
+                }}
+              />
+            </label>
+            <span className="text-[11px] font-normal text-[#94A3B8] dark:text-[var(--text-secondary)]">
+              صور أو PDF — بحد أقصى 1MB
+            </span>
+          </div>
 
           <button
             type="submit"

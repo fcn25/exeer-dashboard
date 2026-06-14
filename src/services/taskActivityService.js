@@ -1,13 +1,38 @@
 import { supabase } from "../utils/supabaseClient.js";
 import { getCompanyId, getEmployeeId } from "../utils/mobileAuth.js";
+import {
+  TASK_ATTACHMENT_ALLOWED_MIME,
+  TASK_ATTACHMENT_MAX_BYTES,
+  prepareTaskAttachment,
+} from "../utils/taskAttachment.js";
 
 const ACTIVITY_SELECT =
   "id, task_id, company_id, author_employee_id, kind, body, meta, attachment_url, created_at, author:employees!task_activity_author_employee_id_fkey(id, full_name)";
 
+const ACTIVITY_SELECT_PLAIN =
+  "id, task_id, company_id, author_employee_id, kind, body, meta, attachment_url, created_at";
+
 const BUCKET = "task-attachments";
+
+export const TASK_ACTIVITY_SCHEMA_HINT =
+  "جدول task_activity غير موجود بعد. نفّذ: npm run db:apply-task-activity (أو طبّق supabase/migrations/20250721120000_task_activity.sql في Supabase SQL Editor) ثم NOTIFY pgrst, 'reload schema';";
+
+function isTaskActivityUnavailableError(error) {
+  if (!error) return false;
+  const code = String(error.code ?? "");
+  const message = String(error.message ?? "").toLowerCase();
+  return (
+    code === "PGRST205" ||
+    (message.includes("task_activity") &&
+      (message.includes("could not find") ||
+        message.includes("does not exist") ||
+        message.includes("schema cache")))
+  );
+}
 
 function mapDbError(error) {
   if (!error) return "حدث خطأ غير متوقع.";
+  if (isTaskActivityUnavailableError(error)) return TASK_ACTIVITY_SCHEMA_HINT;
   return error.message || "تعذّر إكمال العملية.";
 }
 
@@ -28,17 +53,29 @@ function normalizeActivityRow(row) {
   };
 }
 
+async function selectActivityRows(buildQuery) {
+  const { data, error } = await buildQuery(ACTIVITY_SELECT);
+  if (!error) return (data ?? []).map(normalizeActivityRow);
+
+  if (isTaskActivityUnavailableError(error)) {
+    throw new Error(mapDbError(error));
+  }
+
+  const fallback = await buildQuery(ACTIVITY_SELECT_PLAIN);
+  if (fallback.error) throw new Error(mapDbError(fallback.error));
+  return (fallback.data ?? []).map(normalizeActivityRow);
+}
+
 export async function listTaskActivity(taskId) {
   if (!taskId) return [];
 
-  const { data, error } = await supabase
-    .from("task_activity")
-    .select(ACTIVITY_SELECT)
-    .eq("task_id", Number(taskId))
-    .order("created_at", { ascending: true });
-
-  if (error) throw new Error(mapDbError(error));
-  return (data ?? []).map(normalizeActivityRow);
+  return selectActivityRows((columns) =>
+    supabase
+      .from("task_activity")
+      .select(columns)
+      .eq("task_id", Number(taskId))
+      .order("created_at", { ascending: true }),
+  );
 }
 
 export async function createTaskComment({
@@ -76,7 +113,21 @@ export async function createTaskComment({
     .select(ACTIVITY_SELECT)
     .single();
 
-  if (error) throw new Error(mapDbError(error));
+  if (error) {
+    if (isTaskActivityUnavailableError(error)) {
+      throw new Error(mapDbError(error));
+    }
+
+    const { data: fallbackData, error: fallbackError } = await supabase
+      .from("task_activity")
+      .insert(payload)
+      .select(ACTIVITY_SELECT_PLAIN)
+      .single();
+
+    if (fallbackError) throw new Error(mapDbError(fallbackError));
+    return normalizeActivityRow(fallbackData);
+  }
+
   return normalizeActivityRow(data);
 }
 
@@ -89,21 +140,24 @@ export async function uploadTaskAttachment(file, taskId) {
     throw new Error("تعذّر تحديد الشركة أو الموظف.");
   }
 
-  const maxBytes = 5 * 1024 * 1024;
-  if (file.size > maxBytes) {
-    throw new Error("حجم الملف يتجاوز 5 ميجابايت.");
+  const prepared = await prepareTaskAttachment(file);
+  if (prepared.size > TASK_ATTACHMENT_MAX_BYTES) {
+    throw new Error("الحد الأقصى 1 ميجابايت.");
   }
 
-  const extension = String(file.name ?? "")
-    .split(".")
-    .pop()
-    ?.toLowerCase()
-    ?.replace(/[^a-z0-9]/g, "") || "bin";
+  const mimeType = String(prepared.type ?? "").toLowerCase();
+  if (mimeType && !TASK_ATTACHMENT_ALLOWED_MIME.includes(mimeType)) {
+    throw new Error("يُسمح برفع صور (JPEG, PNG, WebP, GIF) أو PDF فقط.");
+  }
+
+  const extension = mimeType.includes("pdf")
+    ? "pdf"
+    : "jpg";
   const timestamp = Date.now();
   const path = `${companyId}/${taskId}/${employeeId}-${timestamp}.${extension}`;
 
-  const { error } = await supabase.storage.from(BUCKET).upload(path, file, {
-    contentType: file.type || "application/octet-stream",
+  const { error } = await supabase.storage.from(BUCKET).upload(path, prepared, {
+    contentType: prepared.type || "application/octet-stream",
     upsert: false,
   });
 
@@ -159,3 +213,5 @@ export function subscribeTaskActivity(taskId, onInsert) {
     supabase.removeChannel(channel);
   };
 }
+
+export { TASK_ATTACHMENT_MAX_BYTES };

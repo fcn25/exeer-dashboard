@@ -355,10 +355,18 @@ create policy task_activity_insert_comment
 -- Storage: task-attachments bucket (path: {company_id}/{task_id}/{filename})
 -- ---------------------------------------------------------------------------
 
-insert into storage.buckets (id, name, public, file_size_limit)
-values ('task-attachments', 'task-attachments', true, 5242880)
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'task-attachments',
+  'task-attachments',
+  true,
+  1048576,
+  array['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf']
+)
 on conflict (id) do update
-set file_size_limit = 5242880;
+set
+  file_size_limit = 1048576,
+  allowed_mime_types = array['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf'];
 
 drop policy if exists task_attachments_select on storage.objects;
 drop policy if exists task_attachments_insert on storage.objects;

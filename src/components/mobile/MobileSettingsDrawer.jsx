@@ -10,7 +10,6 @@ import {
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext.jsx";
 import EmployeeProfileSummary from "../employees/EmployeeProfileSummary.jsx";
 import ThemeToggle from "../settings/ThemeToggle.jsx";
 import TermsModal from "../settings/TermsModal.jsx";
@@ -50,7 +49,6 @@ export default function MobileSettingsDrawer({
 }) {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const { user } = useAuth();
   const dir = i18n.language?.startsWith("en") ? "ltr" : "rtl";
   const [profile, setProfile] = useState(null);
   const [profileLoading, setProfileLoading] = useState(false);
@@ -272,7 +270,6 @@ export default function MobileSettingsDrawer({
       <DeleteAccountModal
         isOpen={isDeleteAccountOpen}
         onClose={() => setIsDeleteAccountOpen(false)}
-        userId={user?.id}
         onDeleted={handleAccountDeleted}
       />
     </>

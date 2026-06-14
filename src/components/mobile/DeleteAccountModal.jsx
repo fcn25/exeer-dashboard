@@ -10,7 +10,6 @@ const CONFIRMATION_TOKEN = "DELETE";
 export default function DeleteAccountModal({
   isOpen,
   onClose,
-  userId,
   onDeleted,
 }) {
   const { t } = useTranslation();
@@ -50,7 +49,7 @@ export default function DeleteAccountModal({
     setError("");
 
     try {
-      await requestAccountDeletion(userId);
+      await requestAccountDeletion();
       await signOut();
       onDeleted?.();
     } catch (err) {

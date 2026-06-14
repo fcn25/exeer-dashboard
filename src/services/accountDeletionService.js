@@ -1,26 +1,25 @@
 import { supabase } from "../utils/supabaseClient.js";
 
-function mapDbError(error) {
-  if (!error) return "حدث خطأ غير متوقع.";
-  if (error.code === "23505") {
-    return "لديك طلب حذف حساب قيد المعالجة بالفعل.";
-  }
-  if (error.code === "PGRST205") {
-    return "جدول طلبات حذف الحساب غير جاهز. نفّذ migration account_deletion_requests في Supabase.";
-  }
-  return error.message || "تعذّر تسجيل طلب حذف الحساب.";
+function mapInvokeError(error, data) {
+  if (data?.error) return data.error;
+  if (error?.message) return error.message;
+  return "تعذّر تسجيل طلب حذف الحساب.";
 }
 
-export async function requestAccountDeletion(userId) {
-  if (!userId) {
-    throw new Error("تعذّر تحديد المستخدم الحالي.");
+export async function requestAccountDeletion() {
+  const { data, error } = await supabase.functions.invoke(
+    "request-account-deletion",
+    { body: {} },
+  );
+
+  if (error || data?.error) {
+    throw new Error(mapInvokeError(error, data));
   }
 
-  const { error } = await supabase.from("account_deletion_requests").insert({
-    user_id: userId,
-    status: "pending",
-    requested_at: new Date().toISOString(),
-  });
-
-  if (error) throw new Error(mapDbError(error));
+  return {
+    ok: Boolean(data?.ok),
+    scope: data?.scope ?? "employee",
+    deletionScheduledPurgeAt: data?.deletion_scheduled_purge_at ?? null,
+    message: data?.message ?? null,
+  };
 }

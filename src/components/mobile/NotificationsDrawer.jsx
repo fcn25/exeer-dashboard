@@ -4,6 +4,7 @@ import {
   Bell,
   CheckCircle2,
   ClipboardCheck,
+  Trash2,
   UserPlus,
   X,
 } from "lucide-react";
@@ -24,6 +25,7 @@ const TYPE_ICONS = {
   new_employee: UserPlus,
   subscription_alert: AlertTriangle,
   evaluation_assigned: ClipboardCheck,
+  account_deletion_request: Trash2,
 };
 
 const TYPE_ACCENTS = {
@@ -31,6 +33,7 @@ const TYPE_ACCENTS = {
   new_employee: "text-md-primary bg-md-primary-container/60 dark:bg-[#1e3a5f]/60 dark:text-[#93c5fd]",
   subscription_alert: "text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40",
   evaluation_assigned: "text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/40",
+  account_deletion_request: "text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-950/40",
 };
 
 function NotificationItem({ item, locale, onMarkRead }) {

@@ -9,7 +9,7 @@ import {
 import ErrorToast from "../components/ui/ErrorToast.jsx";
 import DashboardTopBar from "../components/layout/DashboardTopBar.jsx";
 import SystemCalendarPanel from "../components/calendar/SystemCalendarPanel.jsx";
-import { getMyQuickNote } from "../services/quickNotesService.js";
+import NotesPanel from "../components/notes/NotesPanel.jsx";
 import { signOut } from "../utils/mobileAuth.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import {
@@ -56,31 +56,17 @@ function ManagerLayoutShell() {
   const location = useLocation();
   const { t, dir, lang } = useAppLocale();
   const { role } = useAuth();
-  const { isNoteOpen, setIsNoteOpen, openEmployeeModal } = useQuickCreate();
+  const {
+    openEmployeeModal,
+    isNotesDrawerOpen,
+    setIsNotesDrawerOpen,
+    openNoteForm,
+    notesRefreshKey,
+  } = useQuickCreate();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [unauthorizedToast, setUnauthorizedToast] = useState("");
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const showAddEmployeeNav = roleHasNavKey(role, "employees");
-
-  useEffect(() => {
-    let cancelled = false;
-
-    getMyQuickNote()
-      .then((note) => {
-        if (cancelled) return;
-        const hasContent = Boolean(String(note?.content ?? "").trim());
-        if (note?.is_pinned && hasContent) {
-          setIsNoteOpen(true);
-        }
-      })
-      .catch(() => {
-        // ignore — sticky note stays closed until user opens it
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [setIsNoteOpen]);
 
   useEffect(() => {
     const message = location.state?.unauthorizedToast;
@@ -241,8 +227,8 @@ function ManagerLayoutShell() {
             <DashboardTopBar
               isCalendarOpen={isCalendarOpen}
               onToggleCalendar={() => setIsCalendarOpen((open) => !open)}
-              isStickyNoteOpen={isNoteOpen}
-              onToggleStickyNote={() => setIsNoteOpen((open) => !open)}
+              isNotesOpen={isNotesDrawerOpen}
+              onToggleNotes={() => setIsNotesDrawerOpen((open) => !open)}
               onLogout={handleLogout}
             />
           </div>
@@ -253,6 +239,14 @@ function ManagerLayoutShell() {
 
         {isCalendarOpen ? (
           <SystemCalendarPanel onClose={() => setIsCalendarOpen(false)} />
+        ) : null}
+
+        {isNotesDrawerOpen ? (
+          <NotesPanel
+            onClose={() => setIsNotesDrawerOpen(false)}
+            onOpenNoteForm={openNoteForm}
+            refreshKey={notesRefreshKey}
+          />
         ) : null}
       </div>
 

@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Calendar,
+  FileText,
   Gavel,
   ListTodo,
-  StickyNote,
   UserPlus,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext.jsx";
@@ -20,7 +20,7 @@ const ICONS = {
   Gavel,
   ListTodo,
   Calendar,
-  StickyNote,
+  FileText,
 };
 
 const MENU_PANEL =
@@ -136,8 +136,10 @@ export default function QuickCreateMenu({
   }, [isOpen, onClose, anchorRef]);
 
   const handleSelect = (actionId) => {
-    openQuickCreate(actionId);
     onClose();
+    queueMicrotask(() => {
+      openQuickCreate(actionId);
+    });
   };
 
   if (!isOpen || actions.length === 0) return null;

@@ -18,7 +18,7 @@ export type QuickCreateIconId =
   | "Gavel"
   | "ListTodo"
   | "Calendar"
-  | "StickyNote";
+  | "FileText";
 
 export type QuickCreateAction = {
   id: string;
@@ -91,7 +91,7 @@ export const QUICK_CREATE_ACTIONS: readonly QuickCreateAction[] = [
   {
     id: "note",
     label: "ملاحظة",
-    icon: "StickyNote",
+    icon: "FileText",
     group: "work",
     openTarget: { kind: "note-modal" },
     allowedRoles: [

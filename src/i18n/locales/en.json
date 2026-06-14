@@ -66,6 +66,7 @@
     "toggleTheme": "Toggle theme",
     "toggleLanguage": "Change language",
     "quickNote": "Quick note",
+    "notes": "Notes",
     "calendar": "Calendar",
     "fingerprint": "Punch",
     "fingerprintSettings": "Attendance settings",
@@ -566,6 +567,14 @@
       "training": "Training",
       "holiday": "Public holiday"
     }
+  },
+  "notes": {
+    "panelTitle": "Notes",
+    "panelSubtitle": "Company notes log",
+    "newNote": "New note",
+    "empty": "No notes yet.",
+    "untitled": "Untitled note",
+    "countHint": "{{count}} notes"
   },
   "quickNote": {
     "title": "Quick note",

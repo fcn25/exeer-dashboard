@@ -9,9 +9,10 @@ import {
 } from "../../../context/QuickCreateContext.jsx";
 import { useCurrentEmployee } from "../../../hooks/useCurrentEmployee.js";
 import { countUnreadNotifications } from "../../../services/notificationsService.js";
-import { getMyQuickNote } from "../../../services/quickNotesService.js";
+import { listWorkspaceNotes } from "../../../services/quickNotesService.js";
 import { signOut } from "../../../utils/mobileAuth.js";
 import SystemCalendarPanel from "../../calendar/SystemCalendarPanel.jsx";
+import NotesPanel from "../../notes/NotesPanel.jsx";
 import NotificationsDrawer from "../NotificationsDrawer.jsx";
 import MobileSettingsDrawer from "../MobileSettingsDrawer.jsx";
 import SuccessToast from "../../ui/SuccessToast.jsx";
@@ -49,14 +50,19 @@ function AdminMobileDashboardShell({
   const pageDir = i18n.language?.startsWith("en") ? "ltr" : "rtl";
   const pageLang = i18n.language?.startsWith("en") ? "en" : "ar";
 
-  const { setIsNoteOpen } = useQuickCreate();
+  const {
+    isNotesDrawerOpen,
+    setIsNotesDrawerOpen,
+    openNoteForm,
+    notesRefreshKey,
+  } = useQuickCreate();
   const [activeNav, setActiveNav] = useState("home");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isQueryOpen, setIsQueryOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [hasQuickNote, setHasQuickNote] = useState(false);
+  const [notesCount, setNotesCount] = useState(0);
   const [successToast, setSuccessToast] = useState("");
   const [errorToast, setErrorToast] = useState("");
 
@@ -77,19 +83,19 @@ function AdminMobileDashboardShell({
     }
   }, [authUserId]);
 
-  const refreshQuickNoteState = useCallback(async () => {
+  const refreshNotesCount = useCallback(async () => {
     try {
-      const note = await getMyQuickNote();
-      setHasQuickNote(Boolean(String(note?.content ?? "").trim()));
+      const notes = await listWorkspaceNotes();
+      setNotesCount(notes.length);
     } catch {
-      // silent
+      setNotesCount(0);
     }
   }, []);
 
   useEffect(() => {
     refreshUnreadCount();
-    refreshQuickNoteState();
-  }, [refreshUnreadCount, refreshQuickNoteState]);
+    refreshNotesCount();
+  }, [refreshUnreadCount, refreshNotesCount]);
 
   useEffect(() => {
     const message = location.state?.unauthorizedToast;
@@ -113,7 +119,7 @@ function AdminMobileDashboardShell({
 
   const handleRefreshHome = async () => {
     await onRefresh?.();
-    await refreshQuickNoteState();
+    await refreshNotesCount();
   };
 
   return (
@@ -166,9 +172,9 @@ function AdminMobileDashboardShell({
         isOpen={isMenuOpen}
         onClose={() => setIsMenuOpen(false)}
         unreadCount={unreadCount}
-        hasQuickNote={hasQuickNote}
+        notesCount={notesCount}
         onOpenNotifications={() => setIsNotificationsOpen(true)}
-        onOpenQuickNote={() => setIsNoteOpen(true)}
+        onOpenNotes={() => setIsNotesDrawerOpen(true)}
         onLogout={handleSignOut}
       />
 
@@ -188,6 +194,25 @@ function AdminMobileDashboardShell({
       />
 
       <QueryPanel isOpen={isQueryOpen} onClose={() => setIsQueryOpen(false)} />
+
+      {isNotesDrawerOpen ? (
+        <div className="fixed inset-0 z-[75] flex justify-end bg-black/30">
+          <button
+            type="button"
+            className="absolute inset-0"
+            aria-label="إغلاق"
+            onClick={() => setIsNotesDrawerOpen(false)}
+          />
+          <div className="relative h-full w-full max-w-[420px] shadow-none">
+            <NotesPanel
+              embedded
+              onClose={() => setIsNotesDrawerOpen(false)}
+              onOpenNoteForm={openNoteForm}
+              refreshKey={notesRefreshKey}
+            />
+          </div>
+        </div>
+      ) : null}
 
       <SuccessToast message={successToast} onDismiss={() => setSuccessToast("")} />
       <ErrorToast message={errorToast} onDismiss={() => setErrorToast("")} />

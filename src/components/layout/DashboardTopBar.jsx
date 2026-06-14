@@ -2,17 +2,17 @@ import { useCallback, useEffect, useState } from "react";
 import {
   Bell,
   CalendarDays,
+  FileText,
   Languages,
   LogOut,
   Moon,
-  StickyNote,
   Sun,
 } from "lucide-react";
 import { useCurrentEmployee } from "../../hooks/useCurrentEmployee.js";
 import { useAppLocale } from "../../i18n/useAppLocale.js";
 import { useTheme } from "../../providers/ThemeProvider.jsx";
 import { countUnreadNotifications } from "../../services/notificationsService.js";
-import { getMyQuickNote } from "../../services/quickNotesService.js";
+import { listWorkspaceNotes } from "../../services/quickNotesService.js";
 import NotificationsDrawer from "../mobile/NotificationsDrawer.jsx";
 
 const ICON_BTN =
@@ -43,8 +43,8 @@ function TopBarButton({ label, onClick, children, isActive, badge }) {
 export default function DashboardTopBar({
   isCalendarOpen,
   onToggleCalendar,
-  isStickyNoteOpen,
-  onToggleStickyNote,
+  isNotesOpen,
+  onToggleNotes,
   onLogout,
 }) {
   const { t, isEn, i18n } = useAppLocale();
@@ -54,7 +54,7 @@ export default function DashboardTopBar({
 
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [hasQuickNote, setHasQuickNote] = useState(false);
+  const [notesCount, setNotesCount] = useState(0);
 
   const refreshUnreadCount = useCallback(async () => {
     if (!userId) {
@@ -69,12 +69,12 @@ export default function DashboardTopBar({
     }
   }, [userId]);
 
-  const refreshQuickNoteState = useCallback(async () => {
+  const refreshNotesCount = useCallback(async () => {
     try {
-      const note = await getMyQuickNote();
-      setHasQuickNote(Boolean(String(note?.content ?? "").trim()));
+      const notes = await listWorkspaceNotes();
+      setNotesCount(notes.length);
     } catch {
-      // silent
+      setNotesCount(0);
     }
   }, []);
 
@@ -83,16 +83,11 @@ export default function DashboardTopBar({
   }, [refreshUnreadCount]);
 
   useEffect(() => {
-    refreshQuickNoteState();
-  }, [refreshQuickNoteState]);
+    refreshNotesCount();
+  }, [refreshNotesCount, isNotesOpen]);
 
   const handleToggleLanguage = () => {
     i18n.changeLanguage(isEn ? "ar" : "en");
-  };
-
-  const handleToggleStickyNote = () => {
-    onToggleStickyNote?.();
-    window.setTimeout(() => refreshQuickNoteState(), 700);
   };
 
   return (
@@ -129,14 +124,17 @@ export default function DashboardTopBar({
         </TopBarButton>
 
         <TopBarButton
-          label={t("nav.quickNote")}
-          isActive={isStickyNoteOpen}
-          onClick={handleToggleStickyNote}
+          label={t("notes.panelTitle", { defaultValue: "الملاحظات" })}
+          isActive={isNotesOpen}
+          onClick={() => {
+            onToggleNotes?.();
+            window.setTimeout(() => refreshNotesCount(), 400);
+          }}
         >
-          <StickyNote className="h-[18px] w-[18px] stroke-[1.75]" aria-hidden />
-          {hasQuickNote && !isStickyNoteOpen ? (
+          <FileText className="h-[18px] w-[18px] stroke-[1.75]" aria-hidden />
+          {notesCount > 0 && !isNotesOpen ? (
             <span
-              className="absolute bottom-0.5 end-0.5 h-2 w-2 rounded-full bg-amber-500 ring-2 ring-white dark:ring-slate-950"
+              className="absolute bottom-0.5 end-0.5 h-2 w-2 rounded-full bg-[#0F172A] ring-2 ring-white dark:bg-[var(--accent-color)] dark:ring-slate-950"
               aria-hidden
             />
           ) : null}

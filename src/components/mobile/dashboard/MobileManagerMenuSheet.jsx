@@ -1,4 +1,4 @@
-import { Bell, LogOut, StickyNote, X } from "lucide-react";
+import { Bell, FileText, LogOut, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import ThemeToggle from "../../settings/ThemeToggle.jsx";
 import LanguageToggle from "../LanguageToggle.jsx";
@@ -36,9 +36,9 @@ export default function MobileManagerMenuSheet({
   isOpen,
   onClose,
   unreadCount = 0,
-  hasQuickNote = false,
+  notesCount = 0,
   onOpenNotifications,
-  onOpenQuickNote,
+  onOpenNotes,
   onLogout,
 }) {
   const { t, i18n } = useTranslation();
@@ -105,12 +105,19 @@ export default function MobileManagerMenuSheet({
               }}
             />
             <MenuRowButton
-              icon={StickyNote}
-              label={t("nav.quickNote")}
-              hint={hasQuickNote ? t("quickNote.hasContent") : undefined}
+              icon={FileText}
+              label={t("notes.panelTitle", { defaultValue: "الملاحظات" })}
+              hint={
+                notesCount > 0
+                  ? t("notes.countHint", {
+                      defaultValue: "{{count}} ملاحظة",
+                      count: notesCount,
+                    })
+                  : undefined
+              }
               onClick={() => {
                 onClose();
-                onOpenQuickNote?.();
+                onOpenNotes?.();
               }}
             />
           </div>

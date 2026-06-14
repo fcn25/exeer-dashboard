@@ -66,6 +66,7 @@
     "toggleTheme": "تغيير المظهر",
     "toggleLanguage": "تغيير اللغة",
     "quickNote": "ملاحظة سريعة",
+    "notes": "الملاحظات",
     "calendar": "التقويم",
     "fingerprint": "البصمة",
     "fingerprintSettings": "إعدادات البصمة",
@@ -574,6 +575,14 @@
       "training": "تدريب",
       "holiday": "عطلة رسمية"
     }
+  },
+  "notes": {
+    "panelTitle": "الملاحظات",
+    "panelSubtitle": "سجل ملاحظات المنشأة",
+    "newNote": "ملاحظة جديدة",
+    "empty": "لا توجد ملاحظات بعد.",
+    "untitled": "ملاحظة بدون عنوان",
+    "countHint": "{{count}} ملاحظة"
   },
   "quickNote": {
     "title": "ملاحظة سريعة",

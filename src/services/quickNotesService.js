@@ -1,8 +1,6 @@
 import { supabase } from "../utils/supabaseClient.js";
 import { resolveEmployeeContextFromSession } from "./currentEmployeeService.js";
 
-const NOTE_COLORS = new Set(["amber", "mint", "sky", "rose"]);
-
 function mapDbError(error) {
   if (!error) return "حدث خطأ غير متوقع.";
   if (error.code === "PGRST205") {
@@ -11,28 +9,101 @@ function mapDbError(error) {
   return error.message || "تعذّر حفظ الملاحظة.";
 }
 
-export function normalizeNoteColor(color) {
-  const value = String(color ?? "amber").trim();
-  return NOTE_COLORS.has(value) ? value : "amber";
+function mapNoteRow(row) {
+  if (!row) return null;
+  const related = row.related_employee;
+  return {
+    id: row.id,
+    title: String(row.title ?? "").trim(),
+    content: String(row.content ?? ""),
+    relatedEmployeeId: row.related_employee_id ?? null,
+    relatedDepartment:
+      String(row.related_department ?? "").trim() ||
+      String(related?.department ?? "").trim() ||
+      "",
+    relatedEmployeeName: String(related?.full_name ?? "").trim(),
+    authorEmployeeId: row.employee_id,
+    updatedAt: row.updated_at,
+    createdAt: row.created_at,
+  };
 }
 
-export async function getMyQuickNote() {
-  const { employeeId, companyId } = await resolveEmployeeContextFromSession(
-    "حفظ الملاحظة",
+export async function listWorkspaceNotes() {
+  const { data, error } = await supabase
+    .from("user_quick_notes")
+    .select(
+      "id, title, content, related_employee_id, related_department, employee_id, created_at, updated_at",
+    )
+    .order("updated_at", { ascending: false });
+
+  if (error) throw new Error(mapDbError(error));
+
+  const rows = data ?? [];
+  const relatedIds = [
+    ...new Set(
+      rows
+        .map((row) => row.related_employee_id)
+        .filter((id) => id != null)
+        .map(Number),
+    ),
+  ];
+
+  let relatedById = new Map();
+  if (relatedIds.length > 0) {
+    const { data: employees, error: employeesError } = await supabase
+      .from("employees")
+      .select("id, full_name, department")
+      .in("id", relatedIds);
+
+    if (!employeesError) {
+      relatedById = new Map(
+        (employees ?? []).map((employee) => [Number(employee.id), employee]),
+      );
+    }
+  }
+
+  return rows.map((row) =>
+    mapNoteRow({
+      ...row,
+      related_employee: relatedById.get(Number(row.related_employee_id)) ?? null,
+    }),
   );
+}
+
+export async function getWorkspaceNote(noteId) {
+  const id = Number(noteId);
+  if (!Number.isFinite(id)) throw new Error("معرّف الملاحظة غير صالح.");
 
   const { data, error } = await supabase
     .from("user_quick_notes")
-    .select("id, content, color, is_pinned, updated_at")
-    .eq("company_id", companyId)
-    .eq("employee_id", employeeId)
+    .select(
+      "id, title, content, related_employee_id, related_department, employee_id, created_at, updated_at",
+    )
+    .eq("id", id)
     .maybeSingle();
 
   if (error) throw new Error(mapDbError(error));
-  return data;
+  if (!data) return null;
+
+  let relatedEmployee = null;
+  if (data.related_employee_id) {
+    const { data: employee } = await supabase
+      .from("employees")
+      .select("id, full_name, department")
+      .eq("id", data.related_employee_id)
+      .maybeSingle();
+    relatedEmployee = employee;
+  }
+
+  return mapNoteRow({ ...data, related_employee: relatedEmployee });
 }
 
-export async function upsertMyQuickNote({ content, color, is_pinned }) {
+export async function createWorkspaceNote({
+  title,
+  content,
+  relatedEmployeeId,
+  relatedDepartment,
+}) {
   const { employeeId, companyId } = await resolveEmployeeContextFromSession(
     "حفظ الملاحظة",
   );
@@ -40,18 +111,64 @@ export async function upsertMyQuickNote({ content, color, is_pinned }) {
   const payload = {
     company_id: companyId,
     employee_id: employeeId,
-    content: String(content ?? ""),
-    color: normalizeNoteColor(color),
-    is_pinned: is_pinned !== false,
+    title: String(title ?? "").trim() || null,
+    content: String(content ?? "").trim(),
+    related_employee_id: relatedEmployeeId ? Number(relatedEmployeeId) : null,
+    related_department: String(relatedDepartment ?? "").trim() || null,
+    is_pinned: false,
     updated_at: new Date().toISOString(),
   };
 
   const { data, error } = await supabase
     .from("user_quick_notes")
-    .upsert(payload, { onConflict: "employee_id" })
-    .select("id, content, color, is_pinned, updated_at")
+    .insert(payload)
+    .select(
+      "id, title, content, related_employee_id, related_department, employee_id, created_at, updated_at",
+    )
     .single();
 
   if (error) throw new Error(mapDbError(error));
-  return data;
+  return mapNoteRow(data);
+}
+
+export async function updateWorkspaceNote(
+  noteId,
+  { title, content, relatedEmployeeId, relatedDepartment },
+) {
+  const id = Number(noteId);
+  if (!Number.isFinite(id)) throw new Error("معرّف الملاحظة غير صالح.");
+
+  const payload = {
+    title: String(title ?? "").trim() || null,
+    content: String(content ?? "").trim(),
+    related_employee_id: relatedEmployeeId ? Number(relatedEmployeeId) : null,
+    related_department: String(relatedDepartment ?? "").trim() || null,
+    updated_at: new Date().toISOString(),
+  };
+
+  const { data, error } = await supabase
+    .from("user_quick_notes")
+    .update(payload)
+    .eq("id", id)
+    .select(
+      "id, title, content, related_employee_id, related_department, employee_id, created_at, updated_at",
+    )
+    .single();
+
+  if (error) throw new Error(mapDbError(error));
+  return mapNoteRow(data);
+}
+
+export async function deleteWorkspaceNote(noteId) {
+  const id = Number(noteId);
+  if (!Number.isFinite(id)) throw new Error("معرّف الملاحظة غير صالح.");
+
+  const { error } = await supabase.from("user_quick_notes").delete().eq("id", id);
+  if (error) throw new Error(mapDbError(error));
+}
+
+/** @deprecated Use listWorkspaceNotes */
+export async function getMyQuickNote() {
+  const notes = await listWorkspaceNotes();
+  return notes[0] ?? null;
 }

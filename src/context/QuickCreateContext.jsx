@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 import AddEmployeeModalHost from "../components/employees/AddEmployeeModalHost.jsx";
 import CreateEventModal from "../components/events/CreateEventModal.jsx";
 import CreateTaskModal from "../components/tasks/CreateTaskModal.jsx";
-import QuickStickyNote from "../components/notes/QuickStickyNote.jsx";
+import NoteFormModal from "../components/notes/NoteFormModal.jsx";
 import { findQuickCreateAction } from "../constants/quickCreateActions.ts";
 import { isNative } from "../lib/platform.ts";
 import { createEvent } from "../services/eventsService.js";
@@ -25,9 +25,22 @@ export function QuickCreateProvider({ children }) {
   const [isEmployeeOpen, setIsEmployeeOpen] = useState(false);
   const [isTaskOpen, setIsTaskOpen] = useState(false);
   const [isEventOpen, setIsEventOpen] = useState(false);
-  const [isNoteOpen, setIsNoteOpen] = useState(false);
+  const [isNotesDrawerOpen, setIsNotesDrawerOpen] = useState(false);
+  const [noteFormState, setNoteFormState] = useState({
+    isOpen: false,
+    noteId: null,
+  });
+  const [notesRefreshKey, setNotesRefreshKey] = useState(0);
 
   const scopeTasksToTeam = isDirectManager(role);
+
+  const openNoteForm = useCallback((noteId = null) => {
+    setNoteFormState({ isOpen: true, noteId });
+  }, []);
+
+  const closeNoteForm = useCallback(() => {
+    setNoteFormState({ isOpen: false, noteId: null });
+  }, []);
 
   const openQuickCreate = useCallback(
     (actionId) => {
@@ -49,7 +62,7 @@ export function QuickCreateProvider({ children }) {
         return;
       }
       if (target.kind === "note-modal") {
-        setIsNoteOpen(true);
+        openNoteForm(null);
         return;
       }
       if (target.kind === "route") {
@@ -58,23 +71,38 @@ export function QuickCreateProvider({ children }) {
         navigate(path);
       }
     },
-    [navigate],
+    [navigate, openNoteForm],
   );
 
   const openEmployeeModal = useCallback(() => {
     openQuickCreate("employee");
   }, [openQuickCreate]);
 
+  const handleNoteSaved = useCallback(() => {
+    setNotesRefreshKey((key) => key + 1);
+  }, []);
+
   const value = useMemo(
     () => ({
       openQuickCreate,
       openEmployeeModal,
-      isNoteOpen,
-      setIsNoteOpen,
-      openNote: () => setIsNoteOpen(true),
-      closeNote: () => setIsNoteOpen(false),
+      isNotesDrawerOpen,
+      setIsNotesDrawerOpen,
+      toggleNotesDrawer: () => setIsNotesDrawerOpen((open) => !open),
+      openNoteForm,
+      closeNoteForm,
+      notesRefreshKey,
+      handleNoteSaved,
     }),
-    [openQuickCreate, openEmployeeModal, isNoteOpen],
+    [
+      openQuickCreate,
+      openEmployeeModal,
+      isNotesDrawerOpen,
+      openNoteForm,
+      closeNoteForm,
+      notesRefreshKey,
+      handleNoteSaved,
+    ],
   );
 
   const handleEventCreated = useCallback(async (payload) => {
@@ -102,9 +130,11 @@ export function QuickCreateProvider({ children }) {
         onCreated={handleEventCreated}
       />
 
-      <QuickStickyNote
-        isOpen={isNoteOpen}
-        onClose={() => setIsNoteOpen(false)}
+      <NoteFormModal
+        isOpen={noteFormState.isOpen}
+        noteId={noteFormState.noteId}
+        onClose={closeNoteForm}
+        onSaved={handleNoteSaved}
       />
     </QuickCreateContext.Provider>
   );

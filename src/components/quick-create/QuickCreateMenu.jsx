@@ -200,19 +200,12 @@ export default function QuickCreateMenu({
     );
   }
 
-  const anchorRect = anchorRef?.current?.getBoundingClientRect();
-  const top = anchorRect ? anchorRect.bottom + 8 : 0;
-  const insetInlineEnd = anchorRect
-    ? window.innerWidth - anchorRect.right
-    : 16;
-
   return (
     <div
       ref={panelRef}
       role="menu"
       aria-label="إنشاء سريع"
-      className={`fixed z-[70] w-[min(280px,calc(100vw-2rem))] ${MENU_PANEL}`}
-      style={{ top, insetInlineEnd }}
+      className={`absolute start-0 top-[calc(100%+8px)] z-[70] w-[min(280px,calc(100vw-2rem))] min-w-full ${MENU_PANEL}`}
     >
       {list}
     </div>

@@ -1,15 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { X } from "lucide-react";
-import { listDepartments } from "../../services/catalogService.js";
-import { listEmployeesForTasks } from "../../services/employeesService.js";
-import { listMyTeamEmployees } from "../../services/myTeamService.js";
 import {
   createWorkspaceNote,
   getWorkspaceNote,
   updateWorkspaceNote,
 } from "../../services/quickNotesService.js";
-import { isDirectManager } from "../../utils/rbac.js";
-import { useAuth } from "../../context/AuthContext.jsx";
 
 export default function NoteFormModal({
   isOpen,
@@ -17,39 +12,12 @@ export default function NoteFormModal({
   onClose,
   onSaved,
 }) {
-  const { role } = useAuth();
-  const scopeToTeam = isDirectManager(role);
   const isEditing = noteId != null;
 
-  const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [relatedEmployeeId, setRelatedEmployeeId] = useState("");
-  const [relatedDepartment, setRelatedDepartment] = useState("");
-  const [employees, setEmployees] = useState([]);
-  const [departments, setDepartments] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
-
-  const loadOptions = useCallback(async () => {
-    const [employeeRows, departmentRows] = await Promise.all([
-      scopeToTeam ? listMyTeamEmployees() : listEmployeesForTasks(),
-      listDepartments().catch(() => []),
-    ]);
-
-    const normalizedEmployees = scopeToTeam
-      ? employeeRows
-          .map((item) => ({
-            id: Number(item.id),
-            name: String(item.full_name ?? "").trim(),
-            department: String(item.department ?? "").trim(),
-          }))
-          .filter((item) => !Number.isNaN(item.id) && item.name)
-      : employeeRows;
-
-    setEmployees(normalizedEmployees);
-    setDepartments(departmentRows ?? []);
-  }, [scopeToTeam]);
 
   useEffect(() => {
     if (!isOpen) return undefined;
@@ -60,23 +28,12 @@ export default function NoteFormModal({
       setIsLoading(true);
       setError("");
       try {
-        await loadOptions();
-        if (cancelled) return;
-
         if (isEditing) {
           const note = await getWorkspaceNote(noteId);
           if (cancelled || !note) return;
-          setTitle(note.title);
           setContent(note.content);
-          setRelatedEmployeeId(
-            note.relatedEmployeeId ? String(note.relatedEmployeeId) : "",
-          );
-          setRelatedDepartment(note.relatedDepartment);
         } else {
-          setTitle("");
           setContent("");
-          setRelatedEmployeeId("");
-          setRelatedDepartment("");
         }
       } catch (loadErr) {
         if (!cancelled) {
@@ -93,15 +50,7 @@ export default function NoteFormModal({
     return () => {
       cancelled = true;
     };
-  }, [isOpen, isEditing, noteId, loadOptions]);
-
-  const handleEmployeeChange = (value) => {
-    setRelatedEmployeeId(value);
-    const employee = employees.find((item) => String(item.id) === value);
-    if (employee?.department) {
-      setRelatedDepartment(employee.department);
-    }
-  };
+  }, [isOpen, isEditing, noteId]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -115,16 +64,9 @@ export default function NoteFormModal({
     setError("");
 
     try {
-      const payload = {
-        title,
-        content: trimmedContent,
-        relatedEmployeeId: relatedEmployeeId || null,
-        relatedDepartment,
-      };
-
       const saved = isEditing
-        ? await updateWorkspaceNote(noteId, payload)
-        : await createWorkspaceNote(payload);
+        ? await updateWorkspaceNote(noteId, { content: trimmedContent })
+        : await createWorkspaceNote({ content: trimmedContent });
 
       onSaved?.(saved);
       onClose?.();
@@ -146,7 +88,7 @@ export default function NoteFormModal({
       className="fixed inset-0 z-[80] flex items-center justify-center bg-black/40 p-4 backdrop-blur-[2px]"
       role="dialog"
       aria-modal="true"
-      aria-labelledby="note-form-title"
+      aria-labelledby="note-form-heading"
     >
       <div className="relative w-full max-w-lg rounded-[16px] border border-[#E2E8F0] bg-white p-6 md:p-8 dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)]">
         <button
@@ -159,7 +101,7 @@ export default function NoteFormModal({
         </button>
 
         <h2
-          id="note-form-title"
+          id="note-form-heading"
           className="mb-6 px-10 text-center text-lg font-medium text-[#0F172A] dark:text-[var(--text-primary)]"
         >
           {isEditing ? "تعديل الملاحظة" : "ملاحظة جديدة"}
@@ -172,74 +114,22 @@ export default function NoteFormModal({
         ) : (
           <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
             <div>
-              <label htmlFor="note-title" className="mb-2 block text-sm font-medium text-[#0F172A] dark:text-[var(--text-primary)]">
-                العنوان (اختياري)
-              </label>
-              <input
-                id="note-title"
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                disabled={formDisabled}
-                className="w-full rounded-[16px] border border-[#E2E8F0] bg-white px-4 py-3 text-sm font-normal text-[#0F172A] outline-none placeholder:text-[#64748B] focus:border-[#0F172A] dark:border-[var(--border-color)] dark:bg-[var(--bg-elevated)] dark:text-[var(--text-primary)]"
-                placeholder="مثال: متابعة اجتماع الفريق"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="note-content" className="mb-2 block text-sm font-medium text-[#0F172A] dark:text-[var(--text-primary)]">
+              <label
+                htmlFor="note-content"
+                className="mb-2 block text-sm font-medium text-[#0F172A] dark:text-[var(--text-primary)]"
+              >
                 نص الملاحظة <span className="text-red-600">*</span>
               </label>
               <textarea
                 id="note-content"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                rows={5}
+                rows={6}
                 disabled={formDisabled}
+                autoFocus
                 className="w-full resize-none rounded-[16px] border border-[#E2E8F0] bg-white px-4 py-3 text-sm font-normal leading-relaxed text-[#0F172A] outline-none placeholder:text-[#64748B] focus:border-[#0F172A] dark:border-[var(--border-color)] dark:bg-[var(--bg-elevated)] dark:text-[var(--text-primary)]"
-                placeholder="اكتب تفاصيل الملاحظة…"
+                placeholder="اكتب ملاحظتك…"
               />
-            </div>
-
-            <div>
-              <label htmlFor="note-employee" className="mb-2 block text-sm font-medium text-[#0F172A] dark:text-[var(--text-primary)]">
-                ربط بموظف (اختياري)
-              </label>
-              <select
-                id="note-employee"
-                value={relatedEmployeeId}
-                onChange={(e) => handleEmployeeChange(e.target.value)}
-                disabled={formDisabled}
-                className="w-full rounded-[16px] border border-[#E2E8F0] bg-white px-4 py-3 text-sm font-normal text-[#0F172A] outline-none focus:border-[#0F172A] dark:border-[var(--border-color)] dark:bg-[var(--bg-elevated)] dark:text-[var(--text-primary)]"
-              >
-                <option value="">— بدون ربط —</option>
-                {employees.map((employee) => (
-                  <option key={employee.id} value={employee.id}>
-                    {employee.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label htmlFor="note-department" className="mb-2 block text-sm font-medium text-[#0F172A] dark:text-[var(--text-primary)]">
-                قسم (اختياري)
-              </label>
-              <input
-                id="note-department"
-                type="text"
-                list="note-departments"
-                value={relatedDepartment}
-                onChange={(e) => setRelatedDepartment(e.target.value)}
-                disabled={formDisabled}
-                className="w-full rounded-[16px] border border-[#E2E8F0] bg-white px-4 py-3 text-sm font-normal text-[#0F172A] outline-none placeholder:text-[#64748B] focus:border-[#0F172A] dark:border-[var(--border-color)] dark:bg-[var(--bg-elevated)] dark:text-[var(--text-primary)]"
-                placeholder="مثال: الموارد البشرية"
-              />
-              <datalist id="note-departments">
-                {departments.map((dept) => (
-                  <option key={dept} value={dept} />
-                ))}
-              </datalist>
             </div>
 
             {error ? (

@@ -23,7 +23,7 @@ export default function QuickCreateButton({ className = "" }) {
   if (!visible) return null;
 
   return (
-    <>
+    <div className={`relative min-w-[132px] ${className}`.trim()}>
       <button
         ref={anchorRef}
         type="button"
@@ -33,7 +33,7 @@ export default function QuickCreateButton({ className = "" }) {
         }}
         aria-expanded={isOpen}
         aria-haspopup="menu"
-        className={`${AGENT_PRIMARY_BTN} min-w-[132px] ${className}`.trim()}
+        className={`${AGENT_PRIMARY_BTN} w-full whitespace-nowrap`}
       >
         <Plus className="h-4 w-4 shrink-0 stroke-[1.75]" aria-hidden />
         الجديد
@@ -48,6 +48,6 @@ export default function QuickCreateButton({ className = "" }) {
         anchorRef={anchorRef}
         searchMode={searchMode}
       />
-    </>
+    </div>
   );
 }

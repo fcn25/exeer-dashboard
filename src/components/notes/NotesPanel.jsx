@@ -4,17 +4,31 @@ import { useAppLocale } from "../../i18n/useAppLocale.js";
 import { formatLocaleDate } from "../../i18n/formatLocale.js";
 import { listWorkspaceNotes } from "../../services/quickNotesService.js";
 
-function noteExcerpt(note) {
-  const text = String(note.content ?? "").trim();
-  if (text.length <= 100) return text;
-  return `${text.slice(0, 100).trim()}…`;
+const HEADING_MAX = 50;
+
+function noteHeading(content) {
+  const normalized = String(content ?? "")
+    .replace(/\r\n/g, "\n")
+    .trim();
+  if (!normalized) return "ملاحظة فارغة";
+
+  const firstLine = normalized.split("\n").find((line) => line.trim()) ?? normalized;
+  const trimmed = firstLine.trim();
+  if (trimmed.length <= HEADING_MAX) return trimmed;
+  return `${trimmed.slice(0, HEADING_MAX).trim()}…`;
 }
 
-function noteMetaLine(note) {
-  const parts = [];
-  if (note.relatedEmployeeName) parts.push(note.relatedEmployeeName);
-  if (note.relatedDepartment) parts.push(note.relatedDepartment);
-  return parts.join(" · ");
+function notePreview(content) {
+  const text = String(content ?? "").replace(/\r\n/g, "\n").trim();
+  const firstLine = text.split("\n").find((line) => line.trim()) ?? "";
+  const rest = text
+    .slice(firstLine.length)
+    .replace(/^\n+/, "")
+    .trim();
+
+  if (!rest) return "";
+  if (rest.length <= 100) return rest;
+  return `${rest.slice(0, 100).trim()}…`;
 }
 
 export default function NotesPanel({
@@ -112,11 +126,7 @@ export default function NotesPanel({
         ) : (
           <ul className="space-y-2">
             {notes.map((note) => {
-              const meta = noteMetaLine(note);
-              const heading =
-                note.title ||
-                noteExcerpt(note) ||
-                t("notes.untitled", { defaultValue: "ملاحظة بدون عنوان" });
+              const preview = notePreview(note.content);
 
               return (
                 <li key={note.id}>
@@ -126,19 +136,14 @@ export default function NotesPanel({
                     className="w-full rounded-[16px] border border-[#E2E8F0] bg-white px-4 py-3 text-start transition-colors hover:bg-[#F8FAFC] dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)] dark:hover:bg-[var(--bg-surface-hover)]"
                   >
                     <p className="text-sm font-medium text-[#0F172A] dark:text-[var(--text-primary)]">
-                      {heading}
+                      {noteHeading(note.content)}
                     </p>
-                    {note.title ? (
+                    {preview ? (
                       <p className="mt-1 line-clamp-2 text-xs font-normal text-[#64748B] dark:text-[var(--text-secondary)]">
-                        {noteExcerpt(note)}
+                        {preview}
                       </p>
                     ) : null}
-                    {meta ? (
-                      <p className="mt-2 text-[11px] font-normal text-[#64748B] dark:text-[var(--text-secondary)]">
-                        {meta}
-                      </p>
-                    ) : null}
-                    <p className="mt-1 text-[11px] font-normal text-[#64748B] dark:text-[var(--text-secondary)]">
+                    <p className="mt-2 text-[11px] font-normal text-[#64748B] dark:text-[var(--text-secondary)]">
                       {formatLocaleDate(note.updatedAt, {
                         dateStyle: "medium",
                         timeStyle: "short",

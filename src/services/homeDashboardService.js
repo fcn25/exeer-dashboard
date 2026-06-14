@@ -14,6 +14,7 @@ import {
   fetchPayrollHistorySummaries,
 } from "./payrollService.js";
 import { formatPayrollMonthFromPicker } from "../utils/payroll/calculations.js";
+import { calculateEvaluationScore } from "./performanceLegacyHelpers.js";
 import { fetchNitaqatDashboardSnapshot } from "./nitaqatService.js";
 
 const INACTIVE_EMPLOYMENT_STATUSES = new Set(["منتهي الخدمة", "موقوف"]);

@@ -87,7 +87,7 @@ export default function NitaqatWidget({ snapshot, isLoading }) {
             <div>
               <p className={HOME_TEXT_LABEL}>النسبة التقديرية الحالية</p>
               <p className="text-3xl font-semibold tabular-nums text-exeer-primary">
-                {formatLocaleNumber(snapshot.estimatedRate)}%
+                {formatLocaleNumber(snapshot.estimatedRate ?? 0)}%
               </p>
             </div>
             {!snapshot.needsThresholds ? (

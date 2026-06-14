@@ -2,9 +2,13 @@ import { supabase } from "../utils/supabaseClient.js";
 import { getCompanyId } from "../utils/mobileAuth.js";
 import { computeNitaqatSnapshot } from "../utils/nitaqat.js";
 import { fetchCompanySettings } from "./companySettingsService.js";
+import { isMissingColumnError } from "../utils/supabaseErrors.js";
 
-const EMPLOYEE_SELECT =
+const EMPLOYEE_SELECT_FULL =
   "id, full_name, nationality, is_saudi, basic_salary, housing_allowance, role, employment_status, is_active";
+
+const EMPLOYEE_SELECT_FALLBACK =
+  "id, full_name, nationality, is_saudi, basic_salary, housing_allowance, role, employment_status";
 
 const INACTIVE_EMPLOYMENT_STATUSES = new Set(["منتهي الخدمة", "موقوف"]);
 
@@ -25,40 +29,79 @@ function parseThreshold(value) {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-export async function fetchNitaqatDashboardSnapshot() {
-  const companyId = getCompanyId();
+async function fetchWorkforceEmployees(companyId) {
+  const full = await supabase
+    .from("employees")
+    .select(EMPLOYEE_SELECT_FULL)
+    .eq("company_id", companyId);
 
-  const [employeesResult, companyResult, settingsMap] = await Promise.all([
-    supabase.from("employees").select(EMPLOYEE_SELECT).eq("company_id", companyId),
-    supabase
+  if (!full.error) return full.data ?? [];
+
+  if (isMissingColumnError(full.error)) {
+    const fallback = await supabase
+      .from("employees")
+      .select(EMPLOYEE_SELECT_FALLBACK)
+      .eq("company_id", companyId);
+    if (!fallback.error) return fallback.data ?? [];
+  }
+
+  return [];
+}
+
+async function fetchCompanySectorName(companyId) {
+  const withJoin = await supabase
+    .from("companies")
+    .select("id, sector_id, sectors!companies_sector_id_fkey(name_ar)")
+    .eq("id", companyId)
+    .maybeSingle();
+
+  if (!withJoin.error) {
+    return withJoin.data?.sectors?.name_ar?.trim() || null;
+  }
+
+  if (isMissingColumnError(withJoin.error)) {
+    const plain = await supabase
       .from("companies")
-      .select("id, sector_id, sectors!companies_sector_id_fkey(name_ar)")
+      .select("id, industry")
       .eq("id", companyId)
-      .maybeSingle(),
-    fetchCompanySettings(companyId),
-  ]);
+      .maybeSingle();
+    if (!plain.error) {
+      return plain.data?.industry?.trim() || null;
+    }
+  }
 
-  if (employeesResult.error) throw new Error(employeesResult.error.message);
+  return null;
+}
 
-  const workforce = (employeesResult.data ?? []).filter(isActiveWorkforceEmployee);
-  const ownerRow = workforce.find(
-    (row) => String(row.role ?? "").trim().toLowerCase() === "owner",
-  );
+export async function fetchNitaqatDashboardSnapshot() {
+  try {
+    const companyId = getCompanyId();
+    if (!companyId) return null;
 
-  const sectorName =
-    companyResult.data?.sectors?.name_ar?.trim() ||
-    (companyResult.data?.sector_id ? null : null);
+    const [employees, sectorName, settingsMap] = await Promise.all([
+      fetchWorkforceEmployees(companyId),
+      fetchCompanySectorName(companyId),
+      fetchCompanySettings(companyId).catch(() => new Map()),
+    ]);
 
-  const requiredGreen = parseThreshold(settingsMap.get("nitaqat_required_green"));
-  const requiredPlatinum = parseThreshold(
-    settingsMap.get("nitaqat_required_platinum"),
-  );
+    const workforce = employees.filter(isActiveWorkforceEmployee);
+    const ownerRow = workforce.find(
+      (row) => String(row.role ?? "").trim().toLowerCase() === "owner",
+    );
 
-  return computeNitaqatSnapshot({
-    workforce,
-    ownerEmployeeId: ownerRow?.id ?? null,
-    requiredGreen,
-    requiredPlatinum,
-    sectorName: sectorName || null,
-  });
+    const requiredGreen = parseThreshold(settingsMap.get("nitaqat_required_green"));
+    const requiredPlatinum = parseThreshold(
+      settingsMap.get("nitaqat_required_platinum"),
+    );
+
+    return computeNitaqatSnapshot({
+      workforce,
+      ownerEmployeeId: ownerRow?.id ?? null,
+      requiredGreen,
+      requiredPlatinum,
+      sectorName,
+    });
+  } catch {
+    return null;
+  }
 }

@@ -4,53 +4,56 @@ import {
   RefreshCw,
   UserPlus,
 } from "lucide-react";
+import {
+  AGENT_DIGEST_CARD,
+  AGENT_DIGEST_ITEM,
+  AGENT_PILL_WARNING,
+  AGENT_SECTION_TITLE,
+  AGENT_TEXT_MUTED,
+} from "./agentStyles.js";
 
 const DIGEST_CARDS = [
   {
     key: "requests",
     title: "آخر الطلبات",
     icon: ClipboardList,
-    tone: "warning",
-    chipBg: "#FEF3C7",
-    chipColor: "#92400E",
+    chipClass:
+      "bg-[#FEF3C7] text-[#92400E] dark:bg-[var(--color-warning-surface)] dark:text-[var(--color-warning-text)]",
   },
   {
     key: "joiners",
     title: "انضمام حديث",
     icon: UserPlus,
-    tone: "success",
-    chipBg: "#ECFDF5",
-    chipColor: "#047857",
+    chipClass:
+      "bg-[#ECFDF5] text-[#047857] dark:bg-[var(--color-success-surface)] dark:text-[var(--color-success-text)]",
   },
   {
     key: "renewals",
     title: "تجديدات حديثة",
     icon: RefreshCw,
-    tone: "info",
-    chipBg: "#EFF6FF",
-    chipColor: "#1D4ED8",
+    chipClass:
+      "bg-[#EFF6FF] text-[#1D4ED8] dark:bg-[var(--color-info-surface)] dark:text-[var(--color-info-text)]",
   },
   {
     key: "adminActions",
     title: "إجراءات إدارية",
     icon: AlertTriangle,
-    tone: "neutral",
-    chipBg: "#F1F5F9",
-    chipColor: "#475569",
+    chipClass:
+      "bg-[#F1F5F9] text-[#475569] dark:bg-[var(--bg-surface-hover)] dark:text-[var(--text-secondary)]",
   },
 ];
 
 function DigestItem({ item }) {
   return (
-    <li className="rounded-xl border border-[#E2E8F0] bg-white px-3 py-2">
-      <p className="text-sm font-medium text-[#0F172A]">{item.title}</p>
+    <li className={AGENT_DIGEST_ITEM}>
+      <p className="text-sm font-medium text-[#0F172A] dark:text-[var(--text-primary)]">
+        {item.title}
+      </p>
       {item.subtitle ? (
-        <p className="mt-0.5 text-xs font-normal text-[#64748B]">{item.subtitle}</p>
+        <p className={`mt-1 ${AGENT_TEXT_MUTED}`}>{item.subtitle}</p>
       ) : null}
       {item.needs_approval ? (
-        <span className="mt-1 inline-flex rounded-full bg-[#FEF3C7] px-2 py-0.5 text-[10px] font-medium text-[#92400E]">
-          يحتاج موافقتك
-        </span>
+        <span className={`mt-2 ${AGENT_PILL_WARNING}`}>يحتاج موافقتك</span>
       ) : null}
     </li>
   );
@@ -58,40 +61,40 @@ function DigestItem({ item }) {
 
 export default function QueryDigestGrid({ digest, loading, error }) {
   if (loading) {
-    return <p className="text-sm font-normal text-[#64748B]">جاري تحميل النظرة السريعة…</p>;
+    return <p className={AGENT_TEXT_MUTED}>جاري تحميل النظرة السريعة…</p>;
   }
 
   if (error) {
-    return <p className="text-sm font-normal text-red-700">{error}</p>;
+    return (
+      <p className="text-sm font-normal text-red-700 dark:text-[var(--color-error-text)]">
+        {error}
+      </p>
+    );
   }
 
   return (
     <section>
-      <h2 className="mb-3 text-sm font-semibold text-[#0F172A]">نظرة سريعة على بياناتك</h2>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <h2 className={`mb-4 ${AGENT_SECTION_TITLE}`}>نظرة سريعة على بياناتك</h2>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
         {DIGEST_CARDS.map((card) => {
           const Icon = card.icon;
           const items = digest?.[card.key] ?? [];
 
           return (
-            <article
-              key={card.key}
-              className="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-3"
-            >
-              <div className="mb-3 flex items-center gap-2">
+            <article key={card.key} className={AGENT_DIGEST_CARD}>
+              <div className="mb-4 flex items-center gap-3 border-b border-[#E2E8F0] pb-4 dark:border-[rgba(255,255,255,0.06)]">
                 <span
-                  className="flex h-8 w-8 items-center justify-center rounded-xl"
-                  style={{ backgroundColor: card.chipBg, color: card.chipColor }}
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[12px] ${card.chipClass}`}
                 >
                   <Icon className="h-4 w-4" aria-hidden />
                 </span>
-                <h3 className="text-sm font-medium text-[#0F172A]">{card.title}</h3>
+                <h3 className={`${AGENT_SECTION_TITLE} text-[15px]`}>{card.title}</h3>
               </div>
 
               {items.length === 0 ? (
-                <p className="text-xs font-normal text-[#64748B]">لا توجد عناصر حديثة.</p>
+                <p className={AGENT_TEXT_MUTED}>لا توجد عناصر حديثة.</p>
               ) : (
-                <ul className="space-y-2">
+                <ul>
                   {items.slice(0, 4).map((item) => (
                     <DigestItem key={`${card.key}-${item.id}`} item={item} />
                   ))}

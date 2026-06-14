@@ -15,7 +15,8 @@
     "deploy": "npm run build && wrangler deploy",
     "seed": "node scripts/seed.js",
     "db:apply-agent-query": "node scripts/apply-agent-query-migration.mjs",
-    "db:apply-digest": "node scripts/apply-digest-functions.mjs"
+    "db:apply-digest": "node scripts/apply-digest-functions.mjs",
+    "db:apply-digest-migration": "node scripts/apply-digest-migration.mjs"
   },
   "dependencies": {
     "@aparajita/capacitor-biometric-auth": "^10.0.0",

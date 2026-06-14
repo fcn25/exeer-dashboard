@@ -712,20 +712,35 @@ begin
     select
       e.id,
       e.full_name as title,
-      case
-        when e.contract_expiry is not null
-          then 'تحديث عقد — ينتهي ' || e.contract_expiry::text
-        when e.hire_date is not null
-          then 'تحديث — ذكرى التعيين ' || e.hire_date::text
-        else 'تحديث بيانات'
-      end as subtitle,
-      e.updated_at
+      'تجديد العقد — '
+        || renewal.renewal_date::text
+        || ' (بعد '
+        || (renewal.renewal_date - current_date)::int
+        || ' يوم)' as subtitle,
+      renewal.renewal_date,
+      (renewal.renewal_date - current_date) as days_remaining
     from public.employees e
+    cross join lateral (
+      select (
+        e.hire_date + (
+          (
+            extract(year from current_date)::int
+            - extract(year from e.hire_date)::int
+            + case
+                when to_char(e.hire_date, 'MMDD') <= to_char(current_date, 'MMDD')
+                then 1
+                else 0
+              end
+          ) || ' years'
+        )::interval
+      )::date as renewal_date
+    ) renewal
     where e.company_id = public.get_my_company_id()
-      and e.updated_at >= now() - interval '60 days'
-      and e.updated_at > e.created_at + interval '1 day'
-      and (e.contract_expiry is not null or e.hire_date is not null)
-    order by e.updated_at desc
+      and e.hire_date is not null
+      and coalesce(trim(e.employment_status), '') not in ('منتهي الخدمة', 'موقوف')
+      and renewal.renewal_date >= current_date
+      and renewal.renewal_date <= current_date + interval '3 months'
+    order by renewal.renewal_date asc
     limit 5
   ) x;
 

@@ -1,3 +1,5 @@
+-- Fix digest_recent_renewals: use hire_date (+ 1 year cycles), not contract_expiry.
+
 create or replace function public.digest_recent_renewals()
 returns jsonb
 language plpgsql stable security invoker set search_path = public

@@ -13,7 +13,13 @@ import AgentPanelShell from "./AgentPanelShell.jsx";
 import CompactSearchHistory from "./CompactSearchHistory.jsx";
 import QueryDigestGrid from "./QueryDigestGrid.jsx";
 import QueryResultView from "./QueryResultView.jsx";
-import { AGENT_ENTITY_ROW, AGENT_INPUT } from "./agentStyles.js";
+import {
+  AGENT_CANVAS,
+  AGENT_ENTITY_ROW,
+  AGENT_INPUT,
+  AGENT_PRIMARY_BTN,
+  AGENT_TEXT_MUTED,
+} from "./agentStyles.js";
 import {
   getMatchingIntents,
   hasStructuredMatches,
@@ -228,38 +234,47 @@ export default function QueryPanel({ isOpen, onClose, onOpenExecutor }) {
       titleIcon={Search}
       ariaLabelledBy="query-panel-title"
     >
-      <div className="flex min-h-0 flex-1 flex-col bg-white">
+      <div className={`flex min-h-0 flex-1 flex-col ${AGENT_CANVAS}`}>
         <form
-          className="shrink-0 border-b border-[#E2E8F0] px-4 py-4"
+          className={`shrink-0 border-b border-[#E2E8F0] px-4 py-4 dark:border-[var(--border-color)] ${AGENT_CANVAS}`}
           onSubmit={(event) => {
             event.preventDefault();
             handleSubmit();
           }}
         >
-          <div className="relative">
-            <Search
-              className="pointer-events-none absolute start-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#64748B]"
-              aria-hidden
-            />
-            <input
-              ref={inputRef}
-              type="search"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="ابحث عن موظف، طلب، أو استفسار…"
-              className={`${AGENT_INPUT} py-3.5 ps-11 text-base`}
-              aria-label="بحث"
-            />
+          <div className="flex items-stretch gap-2">
+            <div className="relative min-w-0 flex-1">
+              <Search
+                className="pointer-events-none absolute end-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#64748B] dark:text-[var(--text-secondary)]"
+                aria-hidden
+              />
+              <input
+                ref={inputRef}
+                type="search"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="ابحث عن موظف، طلب، أو استفسار…"
+                className={`${AGENT_INPUT} py-3.5 pe-11 ps-4 text-base`}
+                aria-label="بحث"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={!trimmed || loading || isWriteLike}
+              className={`${AGENT_PRIMARY_BTN} shrink-0 px-5 py-3.5`}
+            >
+              بحث
+            </button>
           </div>
         </form>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
+        <div className={`min-h-0 flex-1 overflow-y-auto px-4 py-5 ${AGENT_CANVAS}`}>
           {loading ? (
-            <p className="mb-3 text-xs font-normal text-[#64748B]">جاري المعالجة…</p>
+            <p className={`mb-3 ${AGENT_TEXT_MUTED}`}>جاري المعالجة…</p>
           ) : null}
 
           {error ? (
-            <p className="mb-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-normal text-red-800">
+            <p className="mb-3 rounded-[16px] border border-red-200 bg-red-50 px-4 py-3 text-sm font-normal text-red-800 dark:border-[var(--color-error-text)]/30 dark:bg-[var(--color-error-surface)] dark:text-[var(--color-error-text)]">
               {error}
             </p>
           ) : null}
@@ -294,7 +309,7 @@ export default function QueryPanel({ isOpen, onClose, onOpenExecutor }) {
             <div className="space-y-5">
               {intents.length > 0 ? (
                 <section>
-                  <h2 className="mb-2 px-1 text-xs font-medium text-[#64748B]">اقتراحات</h2>
+                  <h2 className={`mb-2 px-1 ${AGENT_TEXT_MUTED}`}>اقتراحات</h2>
                   <ul className="space-y-2">
                     {intents.map((intent) => (
                       <li key={intent.id}>
@@ -303,7 +318,7 @@ export default function QueryPanel({ isOpen, onClose, onOpenExecutor }) {
                           onClick={() => handleIntentSelect(intent)}
                           className={AGENT_ENTITY_ROW}
                         >
-                          <span className="text-sm font-normal text-[#0F172A]">{intent.label}</span>
+                          <span className="text-sm font-normal text-[#0F172A] dark:text-[var(--text-primary)]">{intent.label}</span>
                         </button>
                       </li>
                     ))}
@@ -313,7 +328,7 @@ export default function QueryPanel({ isOpen, onClose, onOpenExecutor }) {
 
               {employees.length > 0 ? (
                 <section>
-                  <h2 className="mb-2 px-1 text-xs font-medium text-[#64748B]">موظفون</h2>
+                  <h2 className={`mb-2 px-1 ${AGENT_TEXT_MUTED}`}>موظفون</h2>
                   <ul className="space-y-2">
                     {employees.map((employee) => (
                       <li key={employee.employee_id}>
@@ -322,18 +337,18 @@ export default function QueryPanel({ isOpen, onClose, onOpenExecutor }) {
                           onClick={() => handleEmployeeSelect(employee)}
                           className={`${AGENT_ENTITY_ROW} flex items-center gap-3`}
                         >
-                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F8FAFC] text-xs font-semibold text-[#0F172A]">
+                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F8FAFC] text-xs font-semibold text-[#0F172A] dark:bg-[var(--bg-elevated)] dark:text-[var(--text-primary)]">
                             {initialsFromName(employee.name)}
                           </span>
                           <div className="min-w-0 flex-1 text-start">
-                            <p className="text-sm font-medium text-[#0F172A]">{employee.name}</p>
-                            <p className="mt-0.5 text-xs font-normal text-[#64748B]">
+                            <p className="text-sm font-medium text-[#0F172A] dark:text-[var(--text-primary)]">{employee.name}</p>
+                            <p className={`mt-0.5 ${AGENT_TEXT_MUTED}`}>
                               {[employee.job_title, employee.department]
                                 .filter(Boolean)
                                 .join(" · ")}
                             </p>
                           </div>
-                          <UserRound className="h-4 w-4 shrink-0 text-[#64748B]" aria-hidden />
+                          <UserRound className="h-4 w-4 shrink-0 text-[#64748B] dark:text-[var(--text-secondary)]" aria-hidden />
                         </button>
                       </li>
                     ))}
@@ -346,11 +361,11 @@ export default function QueryPanel({ isOpen, onClose, onOpenExecutor }) {
                   <button
                     type="button"
                     onClick={() => handleOpenExecutor(trimmed)}
-                    className={`${AGENT_ENTITY_ROW} border-[#0F172A] bg-[#F8FAFC]`}
+                    className={`${AGENT_ENTITY_ROW} border-[#0F172A] bg-white dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)]`}
                   >
                     <span className="flex min-w-0 flex-1 items-center gap-2 text-start">
-                      <Sparkles className="h-4 w-4 shrink-0 text-[#0F172A]" aria-hidden />
-                      <span className="text-sm font-normal text-[#0F172A]">
+                      <Sparkles className="h-4 w-4 shrink-0 text-[#0F172A] dark:text-[var(--text-primary)]" aria-hidden />
+                      <span className="text-sm font-normal text-[#0F172A] dark:text-[var(--text-primary)]">
                         هذا أمر تنفيذ — افتحه في الوكيل الذكي
                       </span>
                     </span>
@@ -366,8 +381,8 @@ export default function QueryPanel({ isOpen, onClose, onOpenExecutor }) {
                     className={AGENT_ENTITY_ROW}
                   >
                     <span className="flex min-w-0 flex-1 items-center gap-2 text-start">
-                      <Sparkles className="h-4 w-4 shrink-0 text-[#64748B]" aria-hidden />
-                      <span className="text-sm font-normal text-[#0F172A]">
+                      <Sparkles className="h-4 w-4 shrink-0 text-[#64748B] dark:text-[var(--text-secondary)]" aria-hidden />
+                      <span className="text-sm font-normal text-[#0F172A] dark:text-[var(--text-primary)]">
                         {`اسأل الوكيل الذكي عن «${trimmed}»`}
                       </span>
                     </span>

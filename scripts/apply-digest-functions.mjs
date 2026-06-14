@@ -165,51 +165,13 @@ function buildDigestRecentRenewals(cols) {
   if (!has(e, "id") || !has(e, "company_id") || !has(e, "full_name")) {
     throw new Error("employees table missing required columns for renewals");
   }
-
-  const hasIqama = has(e, "iqama_expiry_date");
-  const hasContractExpiry = has(e, "contract_expiry");
-  const hasUpdated = has(e, "updated_at");
-  const hasCreated = has(e, "created_at");
-
-  if (!hasUpdated) {
-    throw new Error("employees.updated_at required for digest_recent_renewals");
+  if (!has(e, "hire_date")) {
+    throw new Error("employees.hire_date required for digest_recent_renewals");
   }
 
-  let subtitleCase = "'تحديث بيانات'";
-  if (hasIqama && hasContractExpiry) {
-    subtitleCase = `case
-        when e.iqama_expiry_date is not null and e.iqama_expiry_date > current_date + 30
-          then 'تحديث إقامة — تنتهي ' || e.iqama_expiry_date::text
-        when e.contract_expiry is not null
-          then 'تحديث عقد — ينتهي ' || e.contract_expiry::text
-        else 'تحديث بيانات'
-      end`;
-  } else if (hasIqama) {
-    subtitleCase = `case
-        when e.iqama_expiry_date is not null
-          then 'تحديث إقامة — تنتهي ' || e.iqama_expiry_date::text
-        else 'تحديث بيانات'
-      end`;
-  } else if (hasContractExpiry) {
-    subtitleCase = `case
-        when e.contract_expiry is not null
-          then 'تحديث عقد — ينتهي ' || e.contract_expiry::text
-        else 'تحديث بيانات'
-      end`;
-  }
-
-  const filterParts = [];
-  if (hasIqama) filterParts.push("e.iqama_expiry_date > current_date + 30");
-  if (hasContractExpiry) filterParts.push("e.contract_expiry is not null");
-  if (has(e, "hire_date")) filterParts.push("e.hire_date is not null");
-
-  const whereExtra =
-    filterParts.length > 0 ? `and (${filterParts.join(" or ")})` : "";
-
-  const createdGuard =
-    hasCreated
-      ? "and e.updated_at > e.created_at + interval '1 day'"
-      : "";
+  const activeFilter = has(e, "employment_status")
+    ? "and coalesce(trim(e.employment_status), '') not in ('منتهي الخدمة', 'موقوف')"
+    : "";
 
   return `
 create or replace function public.digest_recent_renewals()
@@ -224,14 +186,35 @@ begin
     select
       e.id,
       e.full_name as title,
-      ${subtitleCase} as subtitle,
-      e.updated_at
+      'تجديد العقد — '
+        || renewal.renewal_date::text
+        || ' (بعد '
+        || (renewal.renewal_date - current_date)::int
+        || ' يوم)' as subtitle,
+      renewal.renewal_date,
+      (renewal.renewal_date - current_date) as days_remaining
     from public.employees e
+    cross join lateral (
+      select (
+        e.hire_date + (
+          (
+            extract(year from current_date)::int
+            - extract(year from e.hire_date)::int
+            + case
+                when to_char(e.hire_date, 'MMDD') <= to_char(current_date, 'MMDD')
+                then 1
+                else 0
+              end
+          ) || ' years'
+        )::interval
+      )::date as renewal_date
+    ) renewal
     where e.company_id = public.get_my_company_id()
-      and e.updated_at >= now() - interval '60 days'
-      ${createdGuard}
-      ${whereExtra}
-    order by e.updated_at desc
+      and e.hire_date is not null
+      ${activeFilter}
+      and renewal.renewal_date >= current_date
+      and renewal.renewal_date <= current_date + interval '3 months'
+    order by renewal.renewal_date asc
     limit 5
   ) x;
 

@@ -42,7 +42,7 @@ export default function AgentPanelShell({
       />
 
       <div
-        className={`fixed z-[75] flex flex-col bg-white ${
+        className={`fixed z-[75] flex flex-col bg-white dark:bg-[var(--bg-surface)] ${
           isMobile ? AGENT_PANEL_MOBILE : AGENT_PANEL_DESKTOP
         }`}
         role="dialog"
@@ -51,14 +51,14 @@ export default function AgentPanelShell({
         dir="rtl"
         lang="ar"
       >
-        <header className="flex shrink-0 items-center justify-between gap-3 border-b border-[#E2E8F0] px-4 py-3">
+        <header className="flex shrink-0 items-center justify-between gap-3 border-b border-[#E2E8F0] bg-white px-4 py-3 dark:border-[var(--border-color)] dark:bg-[var(--bg-surface)]">
           <div className="flex min-w-0 items-center gap-2">
             {TitleIcon ? (
-              <TitleIcon className="h-5 w-5 shrink-0 text-[#0F172A]" aria-hidden />
+              <TitleIcon className="h-5 w-5 shrink-0 text-[#0F172A] dark:text-[var(--text-primary)]" aria-hidden />
             ) : null}
             <h1
               id={ariaLabelledBy}
-              className="truncate text-base font-semibold text-[#0F172A]"
+              className="truncate text-base font-semibold text-[#0F172A] dark:text-[var(--text-primary)]"
             >
               {title}
             </h1>
@@ -69,7 +69,7 @@ export default function AgentPanelShell({
             <button
               type="button"
               onClick={onClose}
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-[#E2E8F0] text-[#0F172A] transition-colors hover:bg-[#F8FAFC]"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-[#E2E8F0] text-[#0F172A] transition-colors hover:bg-[#F8FAFC] dark:border-[var(--border-color)] dark:text-[var(--text-primary)] dark:hover:bg-[var(--bg-surface-hover)]"
               aria-label="إغلاق"
             >
               <X className="h-4 w-4" aria-hidden />
@@ -77,7 +77,7 @@ export default function AgentPanelShell({
           </div>
         </header>
 
-        <div className="flex min-h-0 flex-1 flex-col bg-[#F8FAFC]">{children}</div>
+        <div className="flex min-h-0 flex-1 flex-col bg-[#F8FAFC] dark:bg-[var(--bg-main)]">{children}</div>
       </div>
     </>
   );

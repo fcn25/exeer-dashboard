@@ -39,6 +39,8 @@ export const DEFAULT_COMPANY_SETTINGS = [
   { key: "work_start_time", value: "08:00" },
   { key: "work_end_time", value: "17:00" },
   { key: "calendar_type", value: "hijri" },
+  { key: "nitaqat_required_green", value: null },
+  { key: "nitaqat_required_platinum", value: null },
 ];
 
 export const COMPANY_SETTING_KEYS = DEFAULT_COMPANY_SETTINGS.map((row) => row.key);

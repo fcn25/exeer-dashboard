@@ -8,7 +8,6 @@ import {
   Sparkles,
   Target,
   TrendingUp,
-  Users,
 } from "lucide-react";
 import { canAccessStrategicAI, canViewPayroll } from "../utils/rbac.js";
 import { SMART_TOOLS } from "../constants/smartTools.js";
@@ -16,7 +15,7 @@ import { useSmartToolsModals } from "../hooks/useSmartToolsModals.js";
 import SmartToolsModals from "../components/smart-tools/SmartToolsModals.jsx";
 import { getUserDisplay } from "../utils/mobileAuth.js";
 import { fetchHomeDashboardData } from "../services/homeDashboardService.js";
-import EmergencyAlertsPanel from "../components/home/EmergencyAlertsPanel.jsx";
+import NitaqatWidget from "../components/home/NitaqatWidget.jsx";
 import PendingRequestCard from "../components/requests/PendingRequestCard.jsx";
 import {
   approveEmployeeRequest,
@@ -319,11 +318,6 @@ export default function HomePage() {
 
   const employeeTotal = stats?.employeeCount ?? 0;
   const saudiCount = stats?.saudiCount ?? 0;
-  const nonSaudiCount = stats?.nonSaudiCount ?? 0;
-  const saudiPercent =
-    employeeTotal > 0 ? Math.round((saudiCount / employeeTotal) * 100) : 0;
-  const nonSaudiPercent =
-    employeeTotal > 0 ? Math.round((nonSaudiCount / employeeTotal) * 100) : 0;
 
   const payrollTotal = payrollHero?.total ?? 0;
   const payrollMonthLabel =
@@ -458,72 +452,7 @@ export default function HomePage() {
           </div>
         </article>
 
-        <article className={HOME_CARD}>
-          <h2 className={HOME_TEXT_HEADING}>
-            {t("pages.home.workforceTitle")}
-          </h2>
-          <p className={`${HOME_TEXT_HINT} mt-1`}>
-            {isLoading
-              ? t("common.loading")
-              : stats?.hasEmployeeData
-                ? t("pages.home.activeEmployees", {
-                    count: formatLocaleNumber(employeeTotal),
-                  })
-                : t("pages.home.noEmployeesYet")}
-          </p>
-
-          <ul className={`${HOME_LIST_DIVIDE} mt-5`}>
-            <li className={`${HOME_LIST_ITEM} flex items-center justify-between gap-3`}>
-              <div className={`flex items-center gap-2 ${HOME_TEXT_BODY}`}>
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#ECFDF5] text-[#047857] dark:bg-emerald-950/50 dark:text-emerald-300">
-                  <Users className="h-4 w-4" aria-hidden />
-                </span>
-                {t("pages.home.saudi")}
-              </div>
-              <div className="text-end">
-                <p className={`${HOME_TEXT_TITLE} tabular-nums`}>
-                  {formatLocaleNumber(saudiPercent)}%
-                </p>
-                <p className={HOME_TEXT_LABEL}>
-                  {t("pages.home.employeeCount", {
-                    count: formatLocaleNumber(saudiCount),
-                  })}
-                </p>
-              </div>
-            </li>
-            <li className={`${HOME_LIST_ITEM} flex items-center justify-between gap-3`}>
-              <div className={`flex items-center gap-2 ${HOME_TEXT_BODY}`}>
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F1F5F9] text-[#475569] dark:bg-slate-800 dark:text-white">
-                  <Users className="h-4 w-4" aria-hidden />
-                </span>
-                {t("pages.home.nonSaudi")}
-              </div>
-              <div className="text-end">
-                <p className={`${HOME_TEXT_TITLE} tabular-nums`}>
-                  {formatLocaleNumber(nonSaudiPercent)}%
-                </p>
-                <p className={HOME_TEXT_LABEL}>
-                  {t("pages.home.employeeCount", {
-                    count: formatLocaleNumber(nonSaudiCount),
-                  })}
-                </p>
-              </div>
-            </li>
-          </ul>
-
-          <div className="mt-6 h-2 overflow-hidden rounded-full bg-[#F1F5F9] dark:bg-slate-800">
-            <div className="flex h-full w-full">
-              <div
-                className="h-full bg-[#0F172A] dark:bg-[var(--text-primary)]"
-                style={{ width: `${saudiPercent}%` }}
-              />
-              <div
-                className="h-full bg-[#94A3B8] dark:bg-slate-500"
-                style={{ width: `${nonSaudiPercent}%` }}
-              />
-            </div>
-          </div>
-        </article>
+        <NitaqatWidget snapshot={dashboard?.nitaqat} isLoading={isLoading} />
       </section>
 
       {/* ─── 3. يحتاج اهتمامك ─── */}

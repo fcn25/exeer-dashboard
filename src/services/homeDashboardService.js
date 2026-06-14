@@ -14,7 +14,7 @@ import {
   fetchPayrollHistorySummaries,
 } from "./payrollService.js";
 import { formatPayrollMonthFromPicker } from "../utils/payroll/calculations.js";
-import { calculateEvaluationScore } from "./performanceLegacyHelpers.js";
+import { fetchNitaqatDashboardSnapshot } from "./nitaqatService.js";
 
 const INACTIVE_EMPLOYMENT_STATUSES = new Set(["منتهي الخدمة", "موقوف"]);
 
@@ -851,6 +851,7 @@ export async function fetchHomeDashboardData({ includePayroll = false } = {}) {
     pendingRequests,
     topPerformers,
     monthlyRequests,
+    nitaqat,
   ] = await Promise.all([
     safeCall(() => fetchTodayAttendancePulse(companyId, today), {
       working: 0,
@@ -874,6 +875,7 @@ export async function fetchHomeDashboardData({ includePayroll = false } = {}) {
       hasData: false,
       sparkline: [],
     }),
+    safeCall(() => fetchNitaqatDashboardSnapshot(), null),
   ]);
 
   const leaveFromStatus = employees.filter(
@@ -938,5 +940,6 @@ export async function fetchHomeDashboardData({ includePayroll = false } = {}) {
       monthlyRequestsSparkline: monthlyRequests.sparkline,
       payrollMonthLabel: formatPayrollMonthFromPicker(monthPicker),
     },
+    nitaqat,
   };
 }

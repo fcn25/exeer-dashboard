@@ -1,71 +1,114 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  DEFAULT_INDUSTRY,
-  INDUSTRY_OPTIONS,
-} from "../../constants/companyProfile.js";
-import {
   getCompanyProfile,
-  updateCompanyIndustry,
+  updateCompanySector,
 } from "../../services/companyService.js";
+import {
+  fetchCompanySettings,
+  upsertCompanySettings,
+} from "../../services/companySettingsService.js";
+import { listSectors } from "../../services/sectorsService.js";
 import CompanyWpsBankSection from "./CompanyWpsBankSection.jsx";
 import { isOwner } from "../../utils/rbac.js";
-
 
 export default function GeneralSettingsTab() {
   const { t, i18n } = useTranslation();
   const showWpsBankSettings = isOwner();
-  const [industry, setIndustry] = useState(DEFAULT_INDUSTRY);
-  const [isIndustryLoading, setIsIndustryLoading] = useState(true);
-  const [isIndustrySaving, setIsIndustrySaving] = useState(false);
-  const [industryError, setIndustryError] = useState("");
-  const [industrySuccess, setIndustrySuccess] = useState("");
+  const [sectors, setSectors] = useState([]);
+  const [sectorId, setSectorId] = useState("");
+  const [requiredGreen, setRequiredGreen] = useState("");
+  const [requiredPlatinum, setRequiredPlatinum] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSavingSector, setIsSavingSector] = useState(false);
+  const [isSavingNitaqat, setIsSavingNitaqat] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   useEffect(() => {
     let cancelled = false;
 
-    async function loadIndustry() {
-      setIsIndustryLoading(true);
-      setIndustryError("");
+    async function load() {
+      setIsLoading(true);
+      setError("");
 
       try {
-        const profile = await getCompanyProfile();
-        if (!cancelled) setIndustry(profile.industry || DEFAULT_INDUSTRY);
+        const [profile, sectorRows, settings] = await Promise.all([
+          getCompanyProfile(),
+          listSectors(),
+          fetchCompanySettings(),
+        ]);
+
+        if (cancelled) return;
+        setSectors(sectorRows);
+        setSectorId(profile.sector_id ? String(profile.sector_id) : "");
+        setRequiredGreen(
+          settings.get("nitaqat_required_green") != null
+            ? String(settings.get("nitaqat_required_green"))
+            : "",
+        );
+        setRequiredPlatinum(
+          settings.get("nitaqat_required_platinum") != null
+            ? String(settings.get("nitaqat_required_platinum"))
+            : "",
+        );
       } catch (err) {
         if (!cancelled) {
-          setIndustryError(err.message || "تعذّر تحميل قطاع المنشأة.");
+          setError(err.message || "تعذّر تحميل إعدادات المنشأة.");
         }
       } finally {
-        if (!cancelled) setIsIndustryLoading(false);
+        if (!cancelled) setIsLoading(false);
       }
     }
 
-    loadIndustry();
+    load();
     return () => {
       cancelled = true;
     };
   }, []);
 
   useEffect(() => {
-    if (!industrySuccess) return undefined;
-    const timer = setTimeout(() => setIndustrySuccess(""), 3000);
+    if (!success) return undefined;
+    const timer = setTimeout(() => setSuccess(""), 3000);
     return () => clearTimeout(timer);
-  }, [industrySuccess]);
+  }, [success]);
 
-  const handleIndustryChange = async (event) => {
-    const nextIndustry = event.target.value;
-    setIndustry(nextIndustry);
-    setIsIndustrySaving(true);
-    setIndustryError("");
-    setIndustrySuccess("");
+  const handleSectorChange = async (event) => {
+    const nextId = event.target.value;
+    setSectorId(nextId);
+    setIsSavingSector(true);
+    setError("");
+    setSuccess("");
 
     try {
-      await updateCompanyIndustry(nextIndustry);
-      setIndustrySuccess("تم تحديث قطاع المنشأة");
+      await updateCompanySector(nextId);
+      setSuccess("تم تحديث قطاع المنشأة");
     } catch (err) {
-      setIndustryError(err.message || "تعذّر حفظ قطاع المنشأة.");
+      setError(err.message || "تعذّر حفظ قطاع المنشأة.");
     } finally {
-      setIsIndustrySaving(false);
+      setIsSavingSector(false);
+    }
+  };
+
+  const handleSaveNitaqatThresholds = async (event) => {
+    event.preventDefault();
+    setIsSavingNitaqat(true);
+    setError("");
+    setSuccess("");
+
+    const greenValue = requiredGreen.trim();
+    const platinumValue = requiredPlatinum.trim();
+
+    try {
+      await upsertCompanySettings({
+        nitaqat_required_green: greenValue ? Number(greenValue) : null,
+        nitaqat_required_platinum: platinumValue ? Number(platinumValue) : null,
+      });
+      setSuccess("تم حفظ نسب نطاقات المطلوبة");
+    } catch (err) {
+      setError(err.message || "تعذّر حفظ نسب نطاقات.");
+    } finally {
+      setIsSavingNitaqat(false);
     }
   };
 
@@ -99,37 +142,102 @@ export default function GeneralSettingsTab() {
       </div>
 
       <div className="md-surface-muted max-w-md space-y-3 p-5">
-        <label htmlFor="settings-industry" className="md-label block">
+        <label htmlFor="settings-sector" className="md-label block">
           {t("settings.general.industryLabel")}
         </label>
         <select
-          id="settings-industry"
-          value={industry}
-          onChange={handleIndustryChange}
-          disabled={isIndustryLoading || isIndustrySaving}
+          id="settings-sector"
+          value={sectorId}
+          onChange={handleSectorChange}
+          disabled={isLoading || isSavingSector}
           className="md-input"
         >
-          {INDUSTRY_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
+          <option value="">— اختر قطاع النشاط —</option>
+          {sectors.map((sector) => (
+            <option key={sector.id} value={String(sector.id)}>
+              {sector.nameAr}
             </option>
           ))}
         </select>
         <p className="text-xs leading-relaxed text-exeer-muted">
-          {t("settings.general.industryHint")}
+          قطاع النشاط الاقتصادي حسب دليل نطاقات — يُستخدم في متتبّع السعودة.
         </p>
-        {isIndustrySaving ? (
+        {isSavingSector ? (
           <p className="text-xs text-exeer-muted">جاري الحفظ...</p>
         ) : null}
-        {industrySuccess ? (
-          <p className="text-xs font-medium text-emerald-700 dark:text-emerald-300">
-            {industrySuccess}
-          </p>
-        ) : null}
-        {industryError ? (
-          <p className="text-xs text-red-700 dark:text-red-300">{industryError}</p>
-        ) : null}
       </div>
+
+      {showWpsBankSettings ? (
+        <form
+          onSubmit={handleSaveNitaqatThresholds}
+          className="md-surface-muted max-w-md space-y-3 p-5"
+        >
+          <h3 className="text-sm font-semibold text-exeer-primary">
+            نسب نطاقات المطلوبة (تقديري)
+          </h3>
+          <p className="text-xs leading-relaxed text-exeer-muted">
+            أدخل النسب من{" "}
+            <a
+              href="https://nitaqat.mlsd.gov.sa"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline"
+            >
+              nitaqat.mlsd.gov.sa
+            </a>{" "}
+            حسب قطاعك وحجم منشأتك.
+          </p>
+
+          <label htmlFor="nitaqat-green" className="md-label block">
+            الحد الأدنى للأخضر (%)
+          </label>
+          <input
+            id="nitaqat-green"
+            type="number"
+            min="0"
+            max="100"
+            step="0.1"
+            value={requiredGreen}
+            onChange={(event) => setRequiredGreen(event.target.value)}
+            className="md-input"
+            placeholder="مثال: 25"
+            disabled={isLoading}
+          />
+
+          <label htmlFor="nitaqat-platinum" className="md-label block">
+            الحد الأدنى للبلاتيني (%)
+          </label>
+          <input
+            id="nitaqat-platinum"
+            type="number"
+            min="0"
+            max="100"
+            step="0.1"
+            value={requiredPlatinum}
+            onChange={(event) => setRequiredPlatinum(event.target.value)}
+            className="md-input"
+            placeholder="اختياري"
+            disabled={isLoading}
+          />
+
+          <button
+            type="submit"
+            disabled={isLoading || isSavingNitaqat}
+            className="md-btn-primary"
+          >
+            {isSavingNitaqat ? "جاري الحفظ..." : "حفظ نسب نطاقات"}
+          </button>
+        </form>
+      ) : null}
+
+      {success ? (
+        <p className="text-xs font-medium text-emerald-700 dark:text-emerald-300">
+          {success}
+        </p>
+      ) : null}
+      {error ? (
+        <p className="text-xs text-red-700 dark:text-red-300">{error}</p>
+      ) : null}
 
       {showWpsBankSettings ? <CompanyWpsBankSection /> : null}
     </div>

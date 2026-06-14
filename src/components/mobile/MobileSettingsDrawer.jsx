@@ -3,7 +3,6 @@ import {
   LogOut,
   Shield,
   SlidersHorizontal,
-  Trash2,
   User,
   X,
 } from "lucide-react";
@@ -14,7 +13,7 @@ import EmployeeProfileSummary from "../employees/EmployeeProfileSummary.jsx";
 import ThemeToggle from "../settings/ThemeToggle.jsx";
 import TermsModal from "../settings/TermsModal.jsx";
 import PrivacyPolicyModal from "../settings/PrivacyPolicyModal.jsx";
-import DeleteAccountModal from "./DeleteAccountModal.jsx";
+import AccountDeletionSection from "../settings/AccountDeletionSection.jsx";
 import LanguageToggle from "./LanguageToggle.jsx";
 import { fetchEmployeeProfileById } from "../../services/employeeProfileService.js";
 import { signOut } from "../../utils/mobileAuth.js";
@@ -55,7 +54,6 @@ export default function MobileSettingsDrawer({
   const [profileError, setProfileError] = useState("");
   const [isTermsOpen, setIsTermsOpen] = useState(false);
   const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
-  const [isDeleteAccountOpen, setIsDeleteAccountOpen] = useState(false);
   const owner = isOwner();
 
   useEffect(() => {
@@ -93,16 +91,6 @@ export default function MobileSettingsDrawer({
   const handleSignOut = async () => {
     await signOut();
     navigate("/login", { replace: true });
-  };
-
-  const handleAccountDeleted = () => {
-    onClose();
-    navigate("/login", {
-      replace: true,
-      state: {
-        accountDeletionSuccess: t("settings.accountDeletion.successMessage"),
-      },
-    });
   };
 
   return (
@@ -197,24 +185,7 @@ export default function MobileSettingsDrawer({
                 <ThemeToggle />
               </div>
 
-              <div className="space-y-3 rounded-md border border-red-200 bg-red-50/60 p-4">
-                <p className="md-label text-red-800">
-                  {t("settings.accountDeletion.dangerZone")}
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setIsDeleteAccountOpen(true)}
-                  className="flex w-full items-center gap-3 rounded-md border border-red-200 bg-white px-4 py-3.5 text-start text-sm font-semibold text-red-700 transition-colors hover:bg-red-50"
-                >
-                  <Trash2 className="h-5 w-5 shrink-0 stroke-[1.75]" aria-hidden />
-                  <span className="min-w-0">
-                    <span className="block">{t("settings.accountDeletion.button")}</span>
-                    <span className="block text-xs font-normal text-red-600/80">
-                      {t("settings.accountDeletion.buttonHint")}
-                    </span>
-                  </span>
-                </button>
-              </div>
+              <AccountDeletionSection onBeforeNavigate={onClose} />
 
               <div className="md-surface-muted space-y-3 rounded-md p-4">
                 <p className="md-label">{t("settings.legal.title")}</p>
@@ -266,11 +237,6 @@ export default function MobileSettingsDrawer({
       <PrivacyPolicyModal
         isOpen={isPrivacyOpen}
         onClose={() => setIsPrivacyOpen(false)}
-      />
-      <DeleteAccountModal
-        isOpen={isDeleteAccountOpen}
-        onClose={() => setIsDeleteAccountOpen(false)}
-        onDeleted={handleAccountDeleted}
       />
     </>
   );

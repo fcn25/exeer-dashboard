@@ -14,6 +14,7 @@ import { TabSaveButton } from "../../components/settings/system/SettingControls.
 import SystemCustomizationPanels from "../../components/settings/system/SystemCustomizationPanels.jsx";
 import { SYSTEM_CUSTOMIZATION_TABS } from "../../components/settings/system/systemCustomizationConfig.js";
 import { useSystemCustomizationForm } from "../../hooks/useSystemCustomizationForm.js";
+import AccountDeletionSection from "../../components/settings/AccountDeletionSection.jsx";
 
 export default function MobileSystemCustomizationPage() {
   const { t, i18n } = useTranslation();
@@ -92,6 +93,8 @@ export default function MobileSystemCustomizationPage() {
             </>
           )}
         </section>
+
+        <AccountDeletionSection />
       </main>
 
       <SuccessToast

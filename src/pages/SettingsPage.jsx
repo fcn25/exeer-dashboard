@@ -13,6 +13,7 @@ import AppearanceSettingsTab from "../components/settings/AppearanceSettingsTab.
 import SupportSettingsTab from "../components/settings/SupportSettingsTab.jsx";
 import SubscriptionSettingsTab from "../components/settings/SubscriptionSettingsTab.jsx";
 import SystemUpdatesTab from "../components/settings/SystemUpdatesTab.jsx";
+import AccountDeletionSection from "../components/settings/AccountDeletionSection.jsx";
 import { isOwner } from "../utils/rbac.js";
 
 const TAB_DEFS = [
@@ -123,6 +124,8 @@ export default function SettingsPage() {
               <SubscriptionSettingsTab />
             </TabPanel>
           ) : null}
+
+          <AccountDeletionSection className="mt-8 border-t border-exeer-border pt-8" />
         </section>
       </div>
     </div>

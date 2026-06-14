@@ -1,7 +1,17 @@
 import { getPlanLimitsForTier } from "../constants/subscriptionPlans.js";
+import { canShowBilling } from "../lib/platform.ts";
 
 export const EMPLOYEE_LIMIT_ERROR_AR =
   "عفواً، لقد وصلت للحد الأقصى لعدد الموظفين. يرجى الترقية لإضافة المزيد.";
+
+export const EMPLOYEE_LIMIT_ERROR_NO_BILLING_AR =
+  "عفواً، لقد وصلت للحد الأقصى لعدد الموظفين المسموح به في خطتك.";
+
+export function getEmployeeLimitErrorMessage() {
+  return canShowBilling()
+    ? EMPLOYEE_LIMIT_ERROR_AR
+    : EMPLOYEE_LIMIT_ERROR_NO_BILLING_AR;
+}
 
 export function getEmployeeSlotsLeft(currentCount, tier) {
   const { maxEmployees } = getPlanLimitsForTier(tier);
@@ -31,9 +41,13 @@ export function buildBulkImportLimitMessage({ currentCount, importCount, tier })
 
   if (importN <= slotsLeft) return null;
 
+  const upgradeHint = canShowBilling()
+    ? "يرجى الترقية أو تقليل عدد الصفوف."
+    : "يرجى تقليل عدد الصفوف.";
+
   return (
     `لا يمكن الاستيراد: لديك ${current} موظف من أصل ${maxEmployees} المسموح بها، ` +
     `وتبقى ${slotsLeft} مقعد${slotsLeft === 1 ? "" : "اً"} فقط، ` +
-    `بينما الملف يحتوي على ${importN} موظف. يرجى الترقية أو تقليل عدد الصفوف.`
+    `بينما الملف يحتوي على ${importN} موظف. ${upgradeHint}`
   );
 }

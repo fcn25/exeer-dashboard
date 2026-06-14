@@ -11,6 +11,7 @@ import {
   SUPPORT_WHATSAPP_DISPLAY,
   SUPPORT_WHATSAPP_HREF,
 } from "../../constants/supportContact.js";
+import { canShowBilling } from "../../lib/platform.ts";
 
 export default function SupportSettingsTab() {
   const { t } = useTranslation();
@@ -112,7 +113,7 @@ export default function SupportSettingsTab() {
             </span>
           </button>
 
-          <PostSubscriptionGuide />
+          {canShowBilling() ? <PostSubscriptionGuide /> : null}
         </div>
       </div>
 

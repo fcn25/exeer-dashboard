@@ -1,7 +1,9 @@
 import { ArrowRight, X } from "lucide-react";
 import SubscriptionPanel from "../subscription/SubscriptionPanel.jsx";
+import { canShowBilling } from "../../lib/platform.ts";
 
 export default function MobileSubscriptionView({ isOpen, onClose }) {
+  if (!canShowBilling()) return null;
   if (!isOpen) return null;
 
   return (

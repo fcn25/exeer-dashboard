@@ -11,7 +11,6 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import { ar, enUS } from "date-fns/locale";
 import { useTranslation } from "react-i18next";
-import { useLocation } from "react-router-dom";
 import ExeerEmptyState from "../brand/ExeerEmptyState.jsx";
 import {
   listUserNotifications,
@@ -19,6 +18,7 @@ import {
   markNotificationRead,
 } from "../../services/notificationsService.js";
 import { ensureArray } from "../../utils/ensureArray.js";
+import { useCanShowBilling } from "../../hooks/useCanShowBilling.js";
 
 const TYPE_ICONS = {
   request_approved: CheckCircle2,
@@ -102,8 +102,8 @@ function filterMobileNotifications(items, hideSubscriptionAlerts) {
 
 export default function NotificationsDrawer({ isOpen, onClose, userId, onUnreadChange }) {
   const { i18n } = useTranslation();
-  const location = useLocation();
-  const hideSubscriptionAlerts = location.pathname.startsWith("/mobile");
+  const allowBilling = useCanShowBilling();
+  const hideSubscriptionAlerts = !allowBilling;
   const locale = i18n.language?.startsWith("en") ? enUS : ar;
   const dir = i18n.language?.startsWith("en") ? "ltr" : "rtl";
 

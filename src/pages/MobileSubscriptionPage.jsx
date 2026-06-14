@@ -1,10 +1,15 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import SubscriptionPanel from "../components/subscription/SubscriptionPanel.jsx";
 import LocaleShell from "../components/ui/LocaleShell.jsx";
+import { canShowBilling } from "../lib/platform.ts";
 
 export default function MobileSubscriptionPage() {
   const navigate = useNavigate();
+
+  if (!canShowBilling()) {
+    return <Navigate to="/mobile" replace />;
+  }
 
   return (
     <LocaleShell className="min-h-screen bg-md-surface-dim pb-8">

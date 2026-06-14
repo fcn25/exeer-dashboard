@@ -35,6 +35,7 @@ import AppLoadingScreen from "./components/ui/AppLoadingScreen.jsx";
 import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
 import { CurrentEmployeeProvider } from "./context/CurrentEmployeeContext.jsx";
 import MobileOrientationController from "./components/mobile/MobileOrientationController.jsx";
+import BillingRouteRedirect from "./components/routing/BillingRouteRedirect.jsx";
 
 function MobileRoute({ children }) {
   return <ErrorBoundary>{children}</ErrorBoundary>;
@@ -122,7 +123,7 @@ function DashboardRoutes() {
           <Route
             path="subscription"
             element={
-              <Navigate to="/dashboard/settings?tab=subscription" replace />
+              <BillingRouteRedirect billingTarget="/dashboard/settings?tab=subscription" />
             }
           />
           <Route path="permissions" element={<PermissionsPage />} />
@@ -194,7 +195,12 @@ function AppRoutes() {
       />
       <Route
         path="/mobile/subscription"
-        element={<Navigate to="/mobile" replace />}
+        element={
+          <BillingRouteRedirect
+            billingTarget="/dashboard/settings?tab=subscription"
+            fallbackTarget="/mobile"
+          />
+        }
       />
       <Route
         path="/mobile"

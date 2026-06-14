@@ -7,7 +7,7 @@ import { createEmployee } from "../../services/employeesService.js";
 import { listBranchSelectOptions } from "../../services/branchService.js";
 import {
   canAddEmployeeCount,
-  EMPLOYEE_LIMIT_ERROR_AR,
+  getEmployeeLimitErrorMessage,
 } from "../../utils/employeeLimitGuard.js";
 
 export default function AddEmployeeSlideOver({
@@ -75,7 +75,7 @@ export default function AddEmployeeSlideOver({
 
     const limitCheck = canAddEmployeeCount(employeeCount, 1, subscriptionTier);
     if (!limitCheck.allowed) {
-      setLimitToast(EMPLOYEE_LIMIT_ERROR_AR);
+      setLimitToast(getEmployeeLimitErrorMessage());
       return;
     }
 

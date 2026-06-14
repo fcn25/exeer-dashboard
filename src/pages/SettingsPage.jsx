@@ -15,6 +15,7 @@ import SubscriptionSettingsTab from "../components/settings/SubscriptionSettings
 import SystemUpdatesTab from "../components/settings/SystemUpdatesTab.jsx";
 import AccountDeletionSection from "../components/settings/AccountDeletionSection.jsx";
 import { isOwner } from "../utils/rbac.js";
+import { useCanShowBilling } from "../hooks/useCanShowBilling.js";
 
 const TAB_DEFS = [
   { id: "general", icon: Settings2, adminOnly: false },
@@ -33,7 +34,8 @@ export default function SettingsPage() {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const showUpdates = isOwner();
-  const showSubscription = isOwner();
+  const allowBilling = useCanShowBilling();
+  const showSubscription = isOwner() && allowBilling;
   const visibleTabs = useMemo(
     () =>
       TAB_DEFS.filter((tab) => {
@@ -53,10 +55,15 @@ export default function SettingsPage() {
     : visibleTabs[0]?.id ?? "general";
 
   useEffect(() => {
+    if (!allowBilling && tabFromUrl === "subscription") {
+      setSearchParams({}, { replace: true });
+      setActiveTab("general");
+      return;
+    }
     if (tabFromUrl && visibleTabs.some((tab) => tab.id === tabFromUrl)) {
       setActiveTab(tabFromUrl);
     }
-  }, [tabFromUrl, visibleTabs]);
+  }, [allowBilling, tabFromUrl, visibleTabs, setSearchParams]);
 
   const selectTab = (tabId) => {
     setActiveTab(tabId);

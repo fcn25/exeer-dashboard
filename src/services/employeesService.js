@@ -1,7 +1,7 @@
 import {
   buildBulkImportLimitMessage,
   canAddEmployeeCount,
-  EMPLOYEE_LIMIT_ERROR_AR,
+  getEmployeeLimitErrorMessage,
 } from "../utils/employeeLimitGuard.js";
 import { supabase } from "../utils/supabaseClient.js";
 import { getCompanyId } from "../utils/mobileAuth.js";
@@ -72,7 +72,7 @@ async function assertCanAddEmployees(toAdd) {
   if (!check.allowed) {
     throw new Error(
       toAdd === 1
-        ? EMPLOYEE_LIMIT_ERROR_AR
+        ? getEmployeeLimitErrorMessage()
         : buildBulkImportLimitMessage({
             currentCount: employeeCount,
             importCount: toAdd,

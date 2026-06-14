@@ -11,6 +11,7 @@ import {
 import { handleTapPayment } from "../../services/tapPaymentService.js";
 import { formatLocaleDate } from "../../i18n/formatLocale.js";
 import { getTrialCountdown } from "../../utils/trialCountdown.js";
+import { canShowBilling } from "../../lib/platform.ts";
 
 const PLAN_LABELS = {
   trial: "تجريبي",
@@ -103,6 +104,8 @@ export default function SubscriptionPanel({
     }
   };
 
+  if (!canShowBilling()) return null;
+
   return (
     <div className={isMobile ? "space-y-5" : "space-y-8"}>
       <SuccessToast
@@ -120,7 +123,7 @@ export default function SubscriptionPanel({
               {t("settings.subscription.description")}
             </p>
           </div>
-          {showCreateSubscriber && CreateSubscriberButton ? (
+          {canShowBilling() && showCreateSubscriber && CreateSubscriberButton ? (
             <CreateSubscriberButton />
           ) : null}
         </header>
@@ -135,7 +138,7 @@ export default function SubscriptionPanel({
         </header>
       )}
 
-      {showPayNow ? (
+      {canShowBilling() && showPayNow ? (
         <button
           type="button"
           onClick={handlePayNow}
@@ -146,7 +149,7 @@ export default function SubscriptionPanel({
         </button>
       ) : null}
 
-      {payMessage ? (
+      {canShowBilling() && payMessage ? (
         <p className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100">
           {payMessage}
         </p>
@@ -207,6 +210,7 @@ export default function SubscriptionPanel({
         </div>
       </article>
 
+      {canShowBilling() ? (
       <section className="space-y-4">
         <div className="space-y-1">
           <h3 className="text-base font-bold text-exeer-primary">الباقات المتاحة</h3>
@@ -250,7 +254,9 @@ export default function SubscriptionPanel({
           ))}
         </div>
       </section>
+      ) : null}
 
+      {canShowBilling() ? (
       <section className="md-surface space-y-4 p-5">
         <div className="flex items-start gap-3">
           <Tag className="h-5 w-5 shrink-0 text-md-primary" aria-hidden />
@@ -283,6 +289,7 @@ export default function SubscriptionPanel({
           <p className="text-sm text-red-700">{promoError}</p>
         ) : null}
       </section>
+      ) : null}
     </div>
   );
 }

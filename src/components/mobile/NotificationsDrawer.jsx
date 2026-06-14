@@ -4,8 +4,10 @@ import {
   Bell,
   CheckCircle2,
   ClipboardCheck,
+  MessageSquare,
   Trash2,
   UserPlus,
+  AtSign,
   X,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
@@ -26,6 +28,8 @@ const TYPE_ICONS = {
   subscription_alert: AlertTriangle,
   evaluation_assigned: ClipboardCheck,
   account_deletion_request: Trash2,
+  task_comment: MessageSquare,
+  task_mention: AtSign,
 };
 
 const TYPE_ACCENTS = {
@@ -34,6 +38,8 @@ const TYPE_ACCENTS = {
   subscription_alert: "text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40",
   evaluation_assigned: "text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/40",
   account_deletion_request: "text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-950/40",
+  task_comment: "text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-950/40",
+  task_mention: "text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/40",
 };
 
 function NotificationItem({ item, locale, onMarkRead }) {

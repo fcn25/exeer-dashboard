@@ -5,6 +5,7 @@ import ExeerEmptyState from "../components/brand/ExeerEmptyState.jsx";
 import CreateTaskModal, {
   mapCreateTaskRow,
 } from "../components/tasks/CreateTaskModal.jsx";
+import TaskDetailDrawer from "../components/tasks/TaskDetailDrawer.jsx";
 import {
   listTasks,
   updateTaskStatus,
@@ -51,9 +52,20 @@ function mapTaskRow(row) {
   };
 }
 
-function TaskCard({ task, onStatusChange, isUpdating }) {
+function TaskCard({ task, onStatusChange, isUpdating, onOpen }) {
   return (
-    <article className="md-surface flex flex-col gap-3 p-4 transition-opacity">
+    <article
+      role="button"
+      tabIndex={0}
+      onClick={() => onOpen?.(task)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onOpen?.(task);
+        }
+      }}
+      className="md-surface flex cursor-pointer flex-col gap-3 p-4 transition-opacity hover:opacity-95"
+    >
       <div className="space-y-1">
         <h3 className="text-sm font-bold leading-snug text-exeer-primary">
           {task.title}
@@ -82,6 +94,7 @@ function TaskCard({ task, onStatusChange, isUpdating }) {
         <select
           value={task.status}
           onChange={(e) => onStatusChange(task.id, e.target.value)}
+          onClick={(event) => event.stopPropagation()}
           disabled={isUpdating}
           className="md-input py-2 text-base md:text-sm"
           aria-label="تغيير حالة المهمة"
@@ -106,6 +119,7 @@ export default function TasksPage() {
   const [error, setError] = useState("");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [updatingTaskId, setUpdatingTaskId] = useState(null);
+  const [selectedTask, setSelectedTask] = useState(null);
   const scopeToTeam = isDirectManager(role);
 
   useEffect(() => {
@@ -224,6 +238,7 @@ export default function TasksPage() {
                         task={task}
                         onStatusChange={handleStatusChange}
                         isUpdating={updatingTaskId === task.id}
+                        onOpen={setSelectedTask}
                       />
                     ))
                   )}
@@ -242,6 +257,14 @@ export default function TasksPage() {
           setTasks((prev) => [task, ...prev]);
           setError("");
         }}
+      />
+
+      <TaskDetailDrawer
+        task={selectedTask}
+        isOpen={Boolean(selectedTask)}
+        onClose={() => setSelectedTask(null)}
+        onStatusChange={handleStatusChange}
+        isUpdating={selectedTask ? updatingTaskId === selectedTask.id : false}
       />
     </div>
   );

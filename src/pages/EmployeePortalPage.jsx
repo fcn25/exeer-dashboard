@@ -30,6 +30,7 @@ import {
   submitEmployeeTaskCompletion,
   updateTaskStatus,
 } from "../services/tasksService.js";
+import TaskDetailDrawer from "../components/tasks/TaskDetailDrawer.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import { isAccountantRole } from "../utils/rbac.js";
 import { useCurrentEmployee } from "../hooks/useCurrentEmployee.js";
@@ -84,6 +85,7 @@ function PortalTaskCard({
   onStatusChange,
   onSubmitForReview,
   isUpdating,
+  onOpen,
 }) {
   const status = normalizeTaskStatus(task.status);
   const canStart = status === "قيد الانتظار";
@@ -91,7 +93,18 @@ function PortalTaskCard({
   const awaitingReview = status === "للمراجعة";
 
   return (
-    <article className="md-surface flex items-start gap-3 p-4">
+    <article
+      role="button"
+      tabIndex={0}
+      onClick={() => onOpen?.(task)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onOpen?.(task);
+        }
+      }}
+      className="md-surface flex cursor-pointer items-start gap-3 p-4 transition-opacity hover:opacity-95"
+    >
       <div className="min-w-0 flex-1 space-y-4">
         <div className="space-y-1">
           <h3 className="text-sm font-bold text-exeer-primary">
@@ -122,7 +135,10 @@ function PortalTaskCard({
             <button
               type="button"
               disabled={isUpdating}
-              onClick={() => onStatusChange(task.id, "قيد التنفيذ")}
+              onClick={(event) => {
+                event.stopPropagation();
+                onStatusChange(task.id, "قيد التنفيذ");
+              }}
               className="md-btn-tonal inline-flex items-center gap-2 px-3 py-2 text-xs"
             >
               <PlayCircle className="h-4 w-4" aria-hidden />
@@ -136,7 +152,10 @@ function PortalTaskCard({
         <button
           type="button"
           disabled={isUpdating}
-          onClick={() => onSubmitForReview(task.id)}
+          onClick={(event) => {
+            event.stopPropagation();
+            onSubmitForReview(task.id);
+          }}
           className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700 transition-colors hover:bg-emerald-100 disabled:opacity-50 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300 dark:hover:bg-emerald-950/60"
           aria-label="تأكيد إنجاز المهمة وإرسالها للمراجعة"
           title="تأكيد الإنجاز"
@@ -191,6 +210,7 @@ export default function EmployeePortalPage() {
   const [snapshot, setSnapshot] = useState(null);
   const [requests, setRequests] = useState([]);
   const [updatingTaskId, setUpdatingTaskId] = useState(null);
+  const [selectedTask, setSelectedTask] = useState(null);
   const [isRequestOpen, setIsRequestOpen] = useState(false);
   const [isAchievementOpen, setIsAchievementOpen] = useState(false);
   const [successToast, setSuccessToast] = useState("");
@@ -461,6 +481,19 @@ export default function EmployeePortalPage() {
                         onStatusChange={handleTaskStatusChange}
                         onSubmitForReview={handleTaskSubmitForReview}
                         isUpdating={updatingTaskId === task.id}
+                        onOpen={(openedTask) =>
+                          setSelectedTask({
+                            id: openedTask.id,
+                            title:
+                              openedTask.title ||
+                              openedTask.description?.slice(0, 80) ||
+                              "مهمة",
+                            description: openedTask.description,
+                            assignedTo: openedTask.assigned_to_name ?? "—",
+                            dueDate: openedTask.deadline,
+                            status: openedTask.status,
+                          })
+                        }
                       />
                     ) : null,
                   )}
@@ -599,6 +632,12 @@ export default function EmployeePortalPage() {
         employeeId={employeeId}
         employeeName={employeeName}
         onSuccess={loadPortal}
+      />
+
+      <TaskDetailDrawer
+        task={selectedTask}
+        isOpen={Boolean(selectedTask)}
+        onClose={() => setSelectedTask(null)}
       />
 
       <SuccessToast

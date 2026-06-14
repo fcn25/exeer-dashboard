@@ -1,5 +1,5 @@
 import { supabase } from "../utils/supabaseClient.js";
-import { getCompanyId } from "../utils/mobileAuth.js";
+import { getCompanyId, getEmployeeId } from "../utils/mobileAuth.js";
 import {
   isMissingColumnError,
   SCHEMA_FIX_HINT,
@@ -11,7 +11,7 @@ const IN_PROGRESS_STATUS = "قيد التنفيذ";
 const REVIEW_STATUS = "للمراجعة";
 
 const TASK_SELECT_FULL =
-  "id, company_id, title, description, assigned_to_id, assigned_to_name, deadline, status, created_at, updated_at, ai_source";
+  "id, company_id, title, description, assigned_to_id, assigned_to_name, created_by_id, deadline, status, created_at, updated_at, ai_source";
 
 const TASK_SELECT_NO_AI =
   "id, company_id, title, description, assigned_to_id, assigned_to_name, deadline, status, created_at, updated_at";
@@ -76,7 +76,10 @@ function normalizeTaskRow(row) {
   };
 }
 
-function stripOptionalTaskColumns(payload, { dropTitle = false, dropAiSource = false } = {}) {
+function stripOptionalTaskColumns(
+  payload,
+  { dropTitle = false, dropAiSource = false, dropCreatedBy = false } = {},
+) {
   const next = { ...payload };
   if (dropTitle) {
     const title = next.title;
@@ -85,6 +88,9 @@ function stripOptionalTaskColumns(payload, { dropTitle = false, dropAiSource = f
   }
   if (dropAiSource) {
     delete next.ai_source;
+  }
+  if (dropCreatedBy) {
+    delete next.created_by_id;
   }
   return next;
 }
@@ -141,13 +147,18 @@ async function insertTaskWithFallbacks(payload) {
   const attempts = [
     { payload, select: TASK_SELECT_FULL },
     {
-      payload: stripOptionalTaskColumns(payload, { dropAiSource: true }),
+      payload: stripOptionalTaskColumns(payload, { dropCreatedBy: true }),
+      select: TASK_SELECT_FULL.replace(", created_by_id", ""),
+    },
+    {
+      payload: stripOptionalTaskColumns(payload, { dropAiSource: true, dropCreatedBy: true }),
       select: TASK_SELECT_NO_AI,
     },
     {
       payload: stripOptionalTaskColumns(payload, {
         dropAiSource: true,
         dropTitle: true,
+        dropCreatedBy: true,
       }),
       select: TASK_SELECT_NO_TITLE,
     },
@@ -176,12 +187,44 @@ async function insertTaskWithFallbacks(payload) {
 
 export async function createTask(form) {
   const companyId = getCompanyId();
+  const createdById = getEmployeeId();
   const payload = {
     company_id: companyId,
     ...taskFormToRow(form),
   };
 
+  if (createdById) {
+    payload.created_by_id = createdById;
+  }
+
   return insertTaskWithFallbacks(payload);
+}
+
+export async function getTaskById(taskId) {
+  const companyId = getCompanyId();
+  if (!taskId) return null;
+
+  const attempts = [TASK_SELECT_FULL, TASK_SELECT_NO_AI, TASK_SELECT_NO_TITLE];
+  let lastError = null;
+
+  for (const columns of attempts) {
+    const { data, error } = await supabase
+      .from("tasks")
+      .select(columns)
+      .eq("company_id", companyId)
+      .eq("id", Number(taskId))
+      .maybeSingle();
+
+    if (!error) {
+      return data ? normalizeTaskRow(data) : null;
+    }
+    if (!isMissingColumnError(error)) {
+      throw new Error(mapDbError(error));
+    }
+    lastError = error;
+  }
+
+  throw new Error(mapDbError(lastError));
 }
 
 async function getTaskAssignedToEmployee(taskId, employeeId) {

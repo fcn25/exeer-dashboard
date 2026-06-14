@@ -5,6 +5,7 @@ import TermsModal from "./TermsModal.jsx";
 import PrivacyPolicyModal from "./PrivacyPolicyModal.jsx";
 import PostSubscriptionGuide from "./PostSubscriptionGuide.jsx";
 import FeedbackSettingsSection from "./FeedbackSettingsSection.jsx";
+import AccountDeletionSection from "./AccountDeletionSection.jsx";
 import {
   SUPPORT_EMAIL_ADDRESS,
   SUPPORT_EMAIL_HREF,
@@ -114,6 +115,8 @@ export default function SupportSettingsTab() {
           </button>
 
           {canShowBilling() ? <PostSubscriptionGuide /> : null}
+
+          <AccountDeletionSection className="mt-4 border-0 bg-transparent p-0 dark:bg-transparent" />
         </div>
       </div>
 

@@ -185,10 +185,8 @@ export default function MobileSettingsDrawer({
                 <ThemeToggle />
               </div>
 
-              <AccountDeletionSection onBeforeNavigate={onClose} />
-
               <div className="md-surface-muted space-y-3 rounded-md p-4">
-                <p className="md-label">{t("settings.legal.title")}</p>
+                <p className="md-label">{t("settings.tabs.support")}</p>
                 <button
                   type="button"
                   onClick={() => setIsTermsOpen(true)}
@@ -215,6 +213,7 @@ export default function MobileSettingsDrawer({
                     </span>
                   </span>
                 </button>
+                <AccountDeletionSection onBeforeNavigate={onClose} />
               </div>
             </div>
           </div>

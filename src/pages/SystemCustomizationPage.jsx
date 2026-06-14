@@ -7,7 +7,6 @@ import { TabSaveButton } from "../components/settings/system/SettingControls.jsx
 import SystemCustomizationPanels from "../components/settings/system/SystemCustomizationPanels.jsx";
 import { SYSTEM_CUSTOMIZATION_TABS } from "../components/settings/system/systemCustomizationConfig.js";
 import { useSystemCustomizationForm } from "../hooks/useSystemCustomizationForm.js";
-import AccountDeletionSection from "../components/settings/AccountDeletionSection.jsx";
 
 export default function SystemCustomizationPage() {
   const { t } = useTranslation();
@@ -96,8 +95,6 @@ export default function SystemCustomizationPage() {
               disabled={!tabDirty}
             />
           </div>
-
-          <AccountDeletionSection className="mt-8 border-t border-exeer-border pt-8" />
         </section>
       </div>
 

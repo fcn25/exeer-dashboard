@@ -1,16 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   AlertTriangle,
-  Briefcase,
   CalendarClock,
   Check,
   ClipboardList,
-  FileText,
-  GraduationCap,
-  MessageSquare,
   Sparkles,
-  Star,
   Target,
   TrendingUp,
   Users,
@@ -32,7 +27,6 @@ import SparkLine from "../components/home/SparkLine.jsx";
 import {
   HOME_BTN,
   HOME_BTN_PRIMARY,
-  HOME_BTN_SECONDARY,
   HOME_CARD,
   HOME_LIST_DIVIDE,
   HOME_LIST_ITEM,
@@ -67,15 +61,6 @@ const ACTION_ICONS = {
   requests: ClipboardList,
   evaluation: Target,
 };
-
-const QUICK_ACTIONS = [
-  { id: "one-on-one", labelKey: "pages.home.oneOnOne", icon: MessageSquare, href: "/dashboard/my-team" },
-  { id: "appreciation", labelKey: "pages.home.appreciation", icon: Star, href: "/dashboard/employees" },
-  { id: "note", labelKey: "pages.home.addNote", icon: FileText, href: "/dashboard/administrative-actions" },
-  { id: "training", labelKey: "pages.home.trainingRequest", icon: GraduationCap, href: "/dashboard/my-team#hr-requests" },
-  { id: "promotion", labelKey: "pages.home.promotionRequest", icon: TrendingUp, href: "/dashboard/my-team#hr-requests" },
-  { id: "administrative", labelKey: "pages.home.adminAction", icon: Briefcase, href: "/dashboard/administrative-actions" },
-];
 
 function getGreeting(t) {
   const hour = new Date().getHours();
@@ -345,15 +330,6 @@ export default function HomePage() {
     payrollHero?.monthLabel ?? stats?.payrollMonthLabel ?? "الشهر";
   const totalDeductions = payrollHero?.totalDeductions ?? 0;
   const totalOvertime = payrollHero?.totalOvertime ?? 0;
-
-  const quickActions = useMemo(
-    () =>
-      QUICK_ACTIONS.map((action) => ({
-        ...action,
-        label: t(action.labelKey),
-      })),
-    [t],
-  );
 
   return (
     <div className="-mx-6 -my-8 flex flex-col gap-8 bg-md-surface-dim px-6 py-8 dark:bg-[var(--bg-main)] md:-mx-8 md:px-8">
@@ -650,26 +626,7 @@ export default function HomePage() {
         />
       </section>
 
-      {/* ─── 5. أدوات سريعة ─── */}
-      <section className="space-y-4">
-        <h2 className={HOME_TEXT_HEADING}>
-          {t("pages.home.quickTools")}
-        </h2>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
-          {quickActions.map((action) => (
-            <Link
-              key={action.id}
-              to={action.href}
-              className={`${HOME_BTN} ${HOME_BTN_SECONDARY} flex items-center gap-2 px-4 py-3 [&_svg]:h-5 [&_svg]:w-5`}
-            >
-              <action.icon className="shrink-0" aria-hidden />
-              <span>{action.label}</span>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* ─── 6. المهام الذكية ─── */}
+      {/* ─── 5. المهام الذكية ─── */}
       {canAccessStrategicAI() ? (
         <section className="mt-10 space-y-4">
           <div className="flex items-center gap-2">

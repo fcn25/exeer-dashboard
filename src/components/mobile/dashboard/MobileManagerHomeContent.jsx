@@ -32,7 +32,6 @@ import { hasQuickCreateAccess } from "../../../constants/quickCreateActions.ts";
 import { roleHasNavKey } from "../../../constants/roleNav.js";
 import QuickCreateButton from "../../quick-create/QuickCreateButton.jsx";
 import { QueryButton } from "../../../features/agent/index.js";
-import MobileManagerQuickTools from "./MobileManagerQuickTools.jsx";
 
 const ACTION_ICONS = {
   iqama: AlertTriangle,
@@ -238,8 +237,6 @@ export default function MobileManagerHomeContent({
           </>
         )}
       </section>
-
-      <MobileManagerQuickTools />
 
       <ProbationDecisionModal
         isOpen={Boolean(probationModal)}

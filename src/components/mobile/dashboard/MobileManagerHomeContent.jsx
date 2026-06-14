@@ -27,6 +27,11 @@ import {
   rejectEmployeeRequest,
 } from "../../../services/requestApprovalService.js";
 import { useAppLocale } from "../../../i18n/useAppLocale.js";
+import { useAuth } from "../../../context/AuthContext.jsx";
+import { hasQuickCreateAccess } from "../../../constants/quickCreateActions.ts";
+import { roleHasNavKey } from "../../../constants/roleNav.js";
+import QuickCreateButton from "../../quick-create/QuickCreateButton.jsx";
+import { QueryButton } from "../../../features/agent/index.js";
 import MobileManagerQuickTools from "./MobileManagerQuickTools.jsx";
 
 const ACTION_ICONS = {
@@ -87,9 +92,13 @@ export default function MobileManagerHomeContent({
   homeEssentials,
   isLoading,
   onRefresh,
+  onOpenQuery,
 }) {
   const { t } = useAppLocale();
+  const { role } = useAuth();
   const navigate = useNavigate();
+  const showHeaderActions =
+    hasQuickCreateAccess(role) || roleHasNavKey(role, "home");
   const [actingRequestId, setActingRequestId] = useState(null);
   const [requestActionError, setRequestActionError] = useState("");
   const [probationModal, setProbationModal] = useState(null);
@@ -155,6 +164,13 @@ export default function MobileManagerHomeContent({
 
   return (
     <div className="space-y-5">
+      {showHeaderActions ? (
+        <div className="flex items-stretch gap-2.5">
+          <QuickCreateButton className="flex-1" />
+          <QueryButton onClick={onOpenQuery} className="flex-1 min-w-0" />
+        </div>
+      ) : null}
+
       {successMessage ? (
         <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200">
           {successMessage}

@@ -53,9 +53,11 @@ import {
 } from "../i18n/formatLocale.js";
 import {
   AgentDrawer,
-  DashboardAgentActions,
+  DashboardHeaderActions,
   QueryPanel,
 } from "../features/agent/index.js";
+import { ENABLE_AI_AGENT } from "../constants/featureFlags.js";
+import { hasQuickCreateAccess } from "../constants/quickCreateActions.ts";
 import { roleHasNavKey } from "../constants/roleNav.js";
 import { useAuth } from "../context/AuthContext.jsx";
 
@@ -231,7 +233,8 @@ export default function HomePage() {
   const { role } = useAuth();
   const user = getUserDisplay();
   const headerDate = formatLocaleHeaderDate();
-  const showDashboardActions = roleHasNavKey(role, "employees");
+  const showHeaderActions =
+    hasQuickCreateAccess(role) || roleHasNavKey(role, "home");
   const [isExecutorOpen, setIsExecutorOpen] = useState(false);
   const [isQueryOpen, setIsQueryOpen] = useState(false);
   const [executorPrefill, setExecutorPrefill] = useState("");
@@ -354,9 +357,9 @@ export default function HomePage() {
 
   return (
     <div className="-mx-6 -my-8 flex flex-col gap-8 bg-md-surface-dim px-6 py-8 dark:bg-[var(--bg-main)] md:-mx-8 md:px-8">
-      {showDashboardActions ? (
+      {showHeaderActions ? (
         <div className="flex w-full justify-end rtl:justify-start">
-          <DashboardAgentActions
+          <DashboardHeaderActions
             onOpenExecutor={() => openExecutor("")}
             onOpenQuery={() => setIsQueryOpen(true)}
           />
@@ -392,12 +395,14 @@ export default function HomePage() {
         </div>
       </header>
 
-      <AgentDrawer
-        isOpen={isExecutorOpen}
-        onClose={() => setIsExecutorOpen(false)}
-        initialPrefill={executorPrefill}
-        prefillKey={executorPrefillKey}
-      />
+      {ENABLE_AI_AGENT ? (
+        <AgentDrawer
+          isOpen={isExecutorOpen}
+          onClose={() => setIsExecutorOpen(false)}
+          initialPrefill={executorPrefill}
+          prefillKey={executorPrefillKey}
+        />
+      ) : null}
 
       <QueryPanel
         isOpen={isQueryOpen}

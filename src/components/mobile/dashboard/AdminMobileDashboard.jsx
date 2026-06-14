@@ -3,12 +3,15 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ROLE_LABELS } from "../../../constants/roles.js";
 import { useAuth } from "../../../context/AuthContext.jsx";
+import {
+  QuickCreateProvider,
+  useQuickCreate,
+} from "../../../context/QuickCreateContext.jsx";
 import { useCurrentEmployee } from "../../../hooks/useCurrentEmployee.js";
 import { countUnreadNotifications } from "../../../services/notificationsService.js";
 import { getMyQuickNote } from "../../../services/quickNotesService.js";
 import { signOut } from "../../../utils/mobileAuth.js";
 import SystemCalendarPanel from "../../calendar/SystemCalendarPanel.jsx";
-import QuickStickyNote from "../../notes/QuickStickyNote.jsx";
 import NotificationsDrawer from "../NotificationsDrawer.jsx";
 import MobileSettingsDrawer from "../MobileSettingsDrawer.jsx";
 import SuccessToast from "../../ui/SuccessToast.jsx";
@@ -19,8 +22,17 @@ import MobileManagerBottomNav from "./MobileManagerBottomNav.jsx";
 import MobileManagerHomeContent from "./MobileManagerHomeContent.jsx";
 import MobileManagerMenuSheet from "./MobileManagerMenuSheet.jsx";
 import MobileManagerAttendanceTab from "./MobileManagerAttendanceTab.jsx";
+import { QueryPanel } from "../../../features/agent/index.js";
 
-export default function AdminMobileDashboard({
+export default function AdminMobileDashboard(props) {
+  return (
+    <QuickCreateProvider>
+      <AdminMobileDashboardShell {...props} />
+    </QuickCreateProvider>
+  );
+}
+
+function AdminMobileDashboardShell({
   employeeName,
   profileImageUrl,
   role,
@@ -37,11 +49,12 @@ export default function AdminMobileDashboard({
   const pageDir = i18n.language?.startsWith("en") ? "ltr" : "rtl";
   const pageLang = i18n.language?.startsWith("en") ? "en" : "ar";
 
+  const { setIsNoteOpen } = useQuickCreate();
   const [activeNav, setActiveNav] = useState("home");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-  const [isStickyNoteOpen, setIsStickyNoteOpen] = useState(false);
+  const [isQueryOpen, setIsQueryOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [hasQuickNote, setHasQuickNote] = useState(false);
   const [successToast, setSuccessToast] = useState("");
@@ -129,6 +142,7 @@ export default function AdminMobileDashboard({
             homeEssentials={dashboardData?.homeEssentials}
             isLoading={isLoading}
             onRefresh={handleRefreshHome}
+            onOpenQuery={() => setIsQueryOpen(true)}
           />
         ) : null}
 
@@ -154,7 +168,7 @@ export default function AdminMobileDashboard({
         unreadCount={unreadCount}
         hasQuickNote={hasQuickNote}
         onOpenNotifications={() => setIsNotificationsOpen(true)}
-        onOpenQuickNote={() => setIsStickyNoteOpen(true)}
+        onOpenQuickNote={() => setIsNoteOpen(true)}
         onLogout={handleSignOut}
       />
 
@@ -173,13 +187,7 @@ export default function AdminMobileDashboard({
         imageUrl={profileImageUrl}
       />
 
-      <QuickStickyNote
-        isOpen={isStickyNoteOpen}
-        onClose={() => {
-          setIsStickyNoteOpen(false);
-          refreshQuickNoteState();
-        }}
-      />
+      <QueryPanel isOpen={isQueryOpen} onClose={() => setIsQueryOpen(false)} />
 
       <SuccessToast message={successToast} onDismiss={() => setSuccessToast("")} />
       <ErrorToast message={errorToast} onDismiss={() => setErrorToast("")} />

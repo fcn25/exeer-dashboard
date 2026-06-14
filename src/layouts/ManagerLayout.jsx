@@ -9,11 +9,13 @@ import {
 import ErrorToast from "../components/ui/ErrorToast.jsx";
 import DashboardTopBar from "../components/layout/DashboardTopBar.jsx";
 import SystemCalendarPanel from "../components/calendar/SystemCalendarPanel.jsx";
-import QuickStickyNote from "../components/notes/QuickStickyNote.jsx";
-import AddEmployeeModalHost from "../components/employees/AddEmployeeModalHost.jsx";
 import { getMyQuickNote } from "../services/quickNotesService.js";
 import { signOut } from "../utils/mobileAuth.js";
 import { useAuth } from "../context/AuthContext.jsx";
+import {
+  QuickCreateProvider,
+  useQuickCreate,
+} from "../context/QuickCreateContext.jsx";
 import ExeerLogo from "../components/brand/ExeerLogo.jsx";
 import { useAppLocale } from "../i18n/useAppLocale.js";
 import { resolveSidebarNavItems, roleHasNavKey } from "../constants/roleNav.js";
@@ -42,15 +44,22 @@ function SidebarLink({ to, label, icon: Icon, end, collapsed }) {
 }
 
 export default function ManagerLayout() {
+  return (
+    <QuickCreateProvider>
+      <ManagerLayoutShell />
+    </QuickCreateProvider>
+  );
+}
+
+function ManagerLayoutShell() {
   const navigate = useNavigate();
   const location = useLocation();
   const { t, dir, lang } = useAppLocale();
   const { role } = useAuth();
+  const { isNoteOpen, setIsNoteOpen, openEmployeeModal } = useQuickCreate();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [unauthorizedToast, setUnauthorizedToast] = useState("");
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-  const [isStickyNoteOpen, setIsStickyNoteOpen] = useState(false);
-  const [isAddEmployeeOpen, setIsAddEmployeeOpen] = useState(false);
   const showAddEmployeeNav = roleHasNavKey(role, "employees");
 
   useEffect(() => {
@@ -61,7 +70,7 @@ export default function ManagerLayout() {
         if (cancelled) return;
         const hasContent = Boolean(String(note?.content ?? "").trim());
         if (note?.is_pinned && hasContent) {
-          setIsStickyNoteOpen(true);
+          setIsNoteOpen(true);
         }
       })
       .catch(() => {
@@ -71,7 +80,7 @@ export default function ManagerLayout() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [setIsNoteOpen]);
 
   useEffect(() => {
     const message = location.state?.unauthorizedToast;
@@ -158,7 +167,7 @@ export default function ManagerLayout() {
                   />
                   <button
                     type="button"
-                    onClick={() => setIsAddEmployeeOpen(true)}
+                    onClick={openEmployeeModal}
                     className="flex w-full items-center gap-3 rounded-md py-2 pe-3 ps-9 text-sm font-medium text-slate-500 transition-colors hover:bg-gray-50 hover:text-slate-900 dark:hover:bg-slate-800/60 dark:hover:text-slate-100"
                   >
                     <UserPlus className="h-[16px] w-[16px] shrink-0 stroke-[1.75]" aria-hidden />
@@ -232,8 +241,8 @@ export default function ManagerLayout() {
             <DashboardTopBar
               isCalendarOpen={isCalendarOpen}
               onToggleCalendar={() => setIsCalendarOpen((open) => !open)}
-              isStickyNoteOpen={isStickyNoteOpen}
-              onToggleStickyNote={() => setIsStickyNoteOpen((open) => !open)}
+              isStickyNoteOpen={isNoteOpen}
+              onToggleStickyNote={() => setIsNoteOpen((open) => !open)}
               onLogout={handleLogout}
             />
           </div>
@@ -247,19 +256,9 @@ export default function ManagerLayout() {
         ) : null}
       </div>
 
-      <QuickStickyNote
-        isOpen={isStickyNoteOpen}
-        onClose={() => setIsStickyNoteOpen(false)}
-      />
-
       <ErrorToast
         message={unauthorizedToast}
         onDismiss={() => setUnauthorizedToast("")}
-      />
-
-      <AddEmployeeModalHost
-        isOpen={isAddEmployeeOpen}
-        onClose={() => setIsAddEmployeeOpen(false)}
       />
     </div>
   );
